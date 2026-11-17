@@ -12,17 +12,8 @@ msgstr ""
 "Language: ar_SA\n"
 "PO-Revision-Date: 2026-04-27 09:11\n"
 
-msgid "%(amount)d more..."
-msgstr "%(amount)d أكثر..."
-
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "تمت إضافة %(duration)s، وتم دفع رسوم الحساب حتى %(expiry)s."
-
-#. The label for the QUIC port option.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgid "%(wireguard)s port"
-msgstr "منفذ %(wireguard)s"
 
 msgid "1 day"
 msgid_plural "%d days"
@@ -129,14 +120,8 @@ msgstr "الاتصال"
 msgid "Connected"
 msgstr "متصل"
 
-msgid "CONNECTED"
-msgstr "متصل"
-
 msgid "Connecting"
 msgstr "جارٍ الاتصال"
-
-msgid "CONNECTING..."
-msgstr "جارٍ الاتصال..."
 
 msgid "Create"
 msgstr "إنشاء"
@@ -180,14 +165,8 @@ msgstr "قطع الاتصال والخروج"
 msgid "Disconnected"
 msgstr "تم قطع الاتصال"
 
-msgid "DISCONNECTED"
-msgstr "تم قطع الاتصال"
-
 msgid "Disconnecting"
 msgstr "جارٍ قطع الاتصال"
-
-msgid "DISCONNECTING..."
-msgstr "جارٍ قطع الاتصال..."
 
 msgid "Edit"
 msgstr "تعديل"
@@ -202,16 +181,8 @@ msgstr "التفعيل على أي حال"
 msgid "Enable direct only"
 msgstr "تفعيل \"المباشر فقط\""
 
-#. Error message shown trying to login but the app fails
-#. to fetch the list of registered devices.
-msgid "Failed to fetch list of devices"
-msgstr "فشل جلب قائمة الأجهزة"
-
 msgid "FAILED TO SECURE CONNECTION"
 msgstr "فشل تأمين الاتصال"
-
-msgid "Filters"
-msgstr "عوامل التصفية"
 
 #. Button label for system settings.
 msgid "Go to System Settings"
@@ -258,9 +229,6 @@ msgstr "لم يتم العثور على خوادم مطابقة"
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "لم يتم العثور على نتائج للبحث عن <b>%(searchTerm)s</b>."
 
-msgid "None"
-msgstr "لا يوجد"
-
 msgid "Off"
 msgstr "إيقاف"
 
@@ -293,10 +261,6 @@ msgstr "مغادرة"
 
 msgid "Reconnect"
 msgstr "إعادة الاتصال"
-
-#. Button label in confirmation dialog that confirms a remove action.
-msgid "Remove"
-msgstr "إزالة"
 
 msgid "Required"
 msgstr "مطلوب"
@@ -347,23 +311,9 @@ msgstr "استخدام"
 msgid "Username"
 msgstr "اسم المستخدم"
 
-#. Text for screen readers to describe the LWO settings navigation button.
-#. Available placeholders:
-#. %(lwo)s - will be replaced with LWO
-msgctxt "accessibility"
-msgid "%(lwo)s settings"
-msgstr "إعدادات %(lwo)s"
-
 msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s، تم تحميل الشاشة"
-
-#. Text for screen readers to describe the QUIC port settings navigation button.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgctxt "accessibility"
-msgid "%(wireguard)s port settings"
-msgstr "إعدادات منفذ %(wireguard)s"
 
 #. This is an accessibility label for a button that adds a location to a custom list.
 #. Available placeholders:
@@ -393,12 +343,6 @@ msgctxt "accessibility"
 msgid "Connect to %(location)s"
 msgstr "الاتصال بـ %(location)s"
 
-#. Provided to accessibility tools such as screenreaders to describe a button
-#. which copies the account number to the clipboard.
-msgctxt "accessibility"
-msgid "Copy account number"
-msgstr "نسخ رقم الحساب"
-
 #. Accessibility label for a carousel that explains the DAITA feature to the user.
 msgctxt "accessibility"
 msgid "DAITA information carousel"
@@ -426,21 +370,6 @@ msgctxt "accessibility"
 msgid "Expand %(location)s"
 msgstr "توسيع %(location)s"
 
-#. This is used by screenreaders to communicate the "x" button next to a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the account number to the left of the button
-msgctxt "accessibility"
-msgid "Forget account number %(accountNumber)s"
-msgstr "نسيت رقم الحساب %(accountNumber)s"
-
-#. Accessibility label for link to VPN settings where
-#. the user can change QUIC port.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "accessibility"
-msgid "Go to anti-censorship settings to change %(wireGuard)s port"
-msgstr "انتقل إلى إعدادات مكافحة الرقابة لتغيير منفذ %(wireGuard)s"
-
 #. Accessibility label for link to app upgrade view.
 msgctxt "accessibility"
 msgid "Go to app update page"
@@ -453,12 +382,6 @@ msgctxt "accessibility"
 msgid "Go to slide %(index)s"
 msgstr "الانتقال إلى الشريحة %(index)s"
 
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which obscures the account number.
-msgctxt "accessibility"
-msgid "Hide account number"
-msgstr "إخفاء رقم الحساب"
-
 #. Alt text for an illustration showing VPN traffic with DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic with DAITA enabled"
@@ -468,18 +391,6 @@ msgstr "رسم توضيحي يبين حركة بيانات VPN مع تمكين D
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic without DAITA"
 msgstr "رسم توضيحي يبين حركة بيانات VPN من دون DAITA"
-
-#. This is used by screenreaders to communicate the login button.
-msgctxt "accessibility"
-msgid "Login"
-msgstr "تسجيل الدخول"
-
-#. This is used by screenreaders to communicate logging in with a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the saved account number
-msgctxt "accessibility"
-msgid "Login with account number %(accountNumber)s"
-msgstr "تسجيل الدخول برقم الحساب %(accountNumber)s"
 
 msgctxt "accessibility"
 msgid "More information"
@@ -539,14 +450,6 @@ msgctxt "accessibility"
 msgid "Remove %(location)s from %(customList)s"
 msgstr "إزالة %(location)s من %(customList)s"
 
-#. Button action description provided to accessibility tools such as screen
-#. readers.
-#. Available placeholders:
-#. %(deviceName)s - The device name to remove.
-msgctxt "accessibility"
-msgid "Remove device named %(deviceName)s"
-msgstr "إزالة الجهاز الذي يحمل اسم %(deviceName)s"
-
 msgctxt "accessibility"
 msgid "Remove item"
 msgstr "إزالة العنصر"
@@ -555,32 +458,10 @@ msgctxt "accessibility"
 msgid "Select location. Current location is %(location)s"
 msgstr "حدِّد الموقع. الموقع الحالي هو %(location)s"
 
-msgctxt "accessibility"
-msgid "Shadowsocks settings"
-msgstr "إعدادات Shadowsocks"
-
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which unobscures the account number.
-msgctxt "accessibility"
-msgid "Show account number"
-msgstr "إظهار رقم الحساب"
-
-msgctxt "accessibility"
-msgid "UDP-over-TCP settings"
-msgstr "إعدادات UDP-over-TCP"
-
-msgctxt "accessibility"
-msgid "Use the right arrow key to focus the settings button."
-msgstr "استخدم مفتاح السهم الأيمن للتركيز على زر الإعدادات."
-
 #. Title label in navigation bar
 msgctxt "account-view"
 msgid "Account"
 msgstr "الحساب"
-
-msgctxt "account-view"
-msgid "Account number"
-msgstr "رقم الحساب"
 
 msgctxt "account-view"
 msgid "Currently unavailable"
@@ -590,11 +471,6 @@ msgstr "غير متاح حاليًا"
 msgctxt "account-view"
 msgid "Log out"
 msgstr "تسجيل الخروج"
-
-#. Link text in the account view to navigate to the manage devices view.
-msgctxt "account-view"
-msgid "Manage devices"
-msgstr "إدارة الأجهزة"
 
 msgctxt "account-view"
 msgid "OUT OF TIME"
@@ -641,21 +517,6 @@ msgstr "إيقاف"
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
 msgstr "مكافحة الرقابة"
-
-#. The title for the obfuscation method selector.
-msgctxt "anti-censorship-view"
-msgid "Method"
-msgstr "الطريقة"
-
-#. Second paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "Please note that these methods do not improve performance, and may increase system utilization and battery consumption."
-msgstr "يُرجى ملاحظة أن هذه الطرق لا تعمل على تحسين الأداء، وقد تؤدي إلى زيادة استخدام النظام واستهلاك البطارية."
-
-#. First paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "قد تكون هذه الطرق مفيدة في حال تم حظر وصولك إلى Warren. عند اختيار \"تلقائي\"، سيحاول التطبيق استخدام جميع الطرق حتى تنجح إحداها."
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -887,12 +748,6 @@ msgctxt "app-upgrade-view"
 msgid "Connection blocked. Try changing server or other settings."
 msgstr "تم حظر الاتصال. جرِّب تغيير الخادم أو أي إعدادات أخرى."
 
-#. Label displayed when an error occurred due to the installer failing to start
-#. and the suggested resolution is to download the update again.
-msgctxt "app-upgrade-view"
-msgid "Could not open installer, please try again or send a problem report."
-msgstr "تعذَّر فتح برنامج التثبيت، يُرجى إعادة المحاولة أو إرسال بلاغ بالمشكلة."
-
 #. Button text to download and install an update
 msgctxt "app-upgrade-view"
 msgid "Download & install"
@@ -907,11 +762,6 @@ msgstr "اكتمل التنزيل!"
 msgctxt "app-upgrade-view"
 msgid "Download failed"
 msgstr "فشل التنزيل"
-
-#. Label displayed when an error occurred due to the download failing
-msgctxt "app-upgrade-view"
-msgid "Download failed, please check your connection/firewall and try again, or send a problem report."
-msgstr "فشل التنزيل، يُرجى التحقُّق من اتصالك/جدار الحماية لديك وإعادة المحاولة، أو إرسال بلاغ بالمشكلة."
 
 #. Status text displayed below a progress bar when the download of an update has been paused
 #. Label displayed above a progress bar when the update is verified successfully
@@ -941,11 +791,6 @@ msgctxt "app-upgrade-view"
 msgid "Install update"
 msgstr "تثبيت التحديث"
 
-#. Label displayed when an error occurred within the installer
-msgctxt "app-upgrade-view"
-msgid "Installer quit unexpectedly, please try again or send a problem report."
-msgstr "تم إغلاق برنامج التثبيت بشكلٍ غير متوقع، يُرجى إعادة المحاولة أو إرسال بلاغ بالمشكلة."
-
 #. Info about which directory the app update will be downloaded to
 msgctxt "app-upgrade-view"
 msgid "Installer will be downloaded to <b>%(cacheDir)s</b>."
@@ -964,11 +809,6 @@ msgstr "لم يتم إجراء أي تحديثات أو تغييرات في هذ
 msgctxt "app-upgrade-view"
 msgid "Pause"
 msgstr "إيقاف مؤقت"
-
-#. Button text to report a problem
-msgctxt "app-upgrade-view"
-msgid "Report a problem"
-msgstr "الإبلاغ عن مشكلة"
 
 #. Button text to resume updating
 msgctxt "app-upgrade-view"
@@ -995,21 +835,11 @@ msgctxt "app-upgrade-view"
 msgid "Starting installer..."
 msgstr "جارٍ تشغيل أداة التثبيت..."
 
-#. Label displayed when an unknown error occurred
-msgctxt "app-upgrade-view"
-msgid "Unknown error occurred. Please try again or send a problem report."
-msgstr "حدث خطأ غير مُتوقَّع. يُرجى إعادة المحاولة أو إرسال بلاغ بالمشكلة."
-
 #. Title in navigation bar
 #. Main title for the update available view
 msgctxt "app-upgrade-view"
 msgid "Update available"
 msgstr "يتوفَّر تحديث جديد"
-
-#. Label displayed when an error occurred due to the installer failed verification
-msgctxt "app-upgrade-view"
-msgid "Verification failed, please try again or send a problem report."
-msgstr "فشل التحقُّق، يُرجى إعادة المحاولة أو إرسال بلاغ بالمشكلة."
 
 #. Label displayed above a progress bar when the update is verified successfully
 msgctxt "app-upgrade-view"
@@ -1080,14 +910,6 @@ msgstr "الإنترنت محظور: انتهى وقت الحساب"
 msgctxt "auth-failure"
 msgid "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly."
 msgstr "هناك الكثير من الاتصالات المتزامنة على هذا الحساب. يُرجى قطع اتصال جهاز آخر أو محاولة الاتصال مجددًا بعد قليل."
-
-msgctxt "auth-failure"
-msgid "Unable to authenticate account. Please send a problem report."
-msgstr "تتعذَّر مصادقة الحساب. يُرجى إرسال بلاغ بالمشكلة."
-
-msgctxt "auth-failure"
-msgid "You are logged in with an invalid account number. Please log out and try another one."
-msgstr "لقد سجَّلت دخولك برقم حساب غير صالح. يُرجى تسجيل الخروج وتجربة حساب آخر."
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
@@ -1186,10 +1008,6 @@ msgstr[4] "%(count)d تطبيقًا في دول أخرى"
 msgstr[5] "%(count)d تطبيق في دول أخرى"
 
 msgctxt "connect-view"
-msgid "Active features"
-msgstr "الميزات النشطة"
-
-msgctxt "connect-view"
 msgid "Congrats!"
 msgstr "تهانينا!"
 
@@ -1213,10 +1031,6 @@ msgstr "أدخل رمز القسيمة"
 msgctxt "connect-view"
 msgid "Go ahead and start using the app to begin reclaiming your online privacy."
 msgstr "انطلق وابدأ في استخدام التطبيق للبدء في استعادة خصوصيتك عبر الإنترنت."
-
-msgctxt "connect-view"
-msgid "Here’s your account number. Save it!"
-msgstr "هذا هو رقم حسابك. احفظه!"
 
 #. Button label for opening privacy information link.
 msgctxt "connect-view"
@@ -1425,43 +1239,6 @@ msgctxt "custom-list-feature"
 msgid "Relay"
 msgstr "الخادم الوسيط"
 
-#. Button for continuing login process.
-msgctxt "device-management"
-msgid "Continue with login"
-msgstr "المتابعة بتسجيل الدخول"
-
-#. Label informing the user when a device was created.
-#. Available placeholders:
-#. %(createdDate)s - The creation date of the device.
-msgctxt "device-management"
-msgid "Created: %(createdDate)s"
-msgstr "تاريخ الإنشاء: %(createdDate)s"
-
-#. Label indicating that this device is the current device.
-msgctxt "device-management"
-msgid "Current device"
-msgstr "الجهاز الحالي"
-
-msgctxt "device-management"
-msgid "Device is inactive"
-msgstr "الجهاز غير نشط"
-
-msgctxt "device-management"
-msgid "Device name"
-msgstr "اسم الجهاز"
-
-#. A label that will display the newly created device name to inform the user
-#. about it.
-#. Available placeholders:
-#. %(deviceName)s - The name of the current device
-msgctxt "device-management"
-msgid "Device name: %(deviceName)s"
-msgstr "اسم الجهاز: %(deviceName)s"
-
-msgctxt "device-management"
-msgid "Failed to remove device"
-msgstr "فشلت إزالة الجهاز"
-
 #. Button label for navigating to login.
 msgctxt "device-management"
 msgid "Go to login"
@@ -1471,10 +1248,6 @@ msgctxt "device-management"
 msgid "Going to login will unblock the Internet on this device."
 msgstr "سيؤدي تسجيل الدخول إلى إلغاء حظر الإنترنت على هذا الجهاز."
 
-msgctxt "device-management"
-msgid "If you log out, the device and the device name is removed. When you log back in again, the device will get a new name."
-msgstr "عند تسجيل الخروج، سيتم حذف الجهاز واسمه. وعند تسجيل الدخول مجددًا، سيحصل الجهاز على اسم جديد."
-
 #. Title label in navigation bar for the manage devices view.
 #. Title text in the manage devices view
 msgctxt "device-management"
@@ -1482,68 +1255,13 @@ msgid "Manage devices"
 msgstr "إدارة الأجهزة"
 
 msgctxt "device-management"
-msgid "Please log out of at least one by removing it from the list below. You can find the corresponding device name under the device’s Account settings."
-msgstr "يُرجى تسجيل الخروج من جهاز واحد على الأقل عن طريق إزالته من القائمة أدناه. يمكنك العثور على اسم الجهاز المقابل في إعدادات الحساب على ذلك الجهاز."
-
-#. Button label for confirming removing a device.
-msgctxt "device-management"
-msgid "Remove"
-msgstr "إزالة"
-
-#. Text displayed above button which logs out another device.
-#. The text enclosed in "<b></b>" will appear bold.
-#. Available placeholders:
-#. %(deviceName)s - The name of the device to log out.
-msgctxt "device-management"
-msgid "Remove <em>%(deviceName)s?</em>"
-msgstr "هل تريد إزالة <em>%(deviceName)s؟</em>"
-
-#. Page title informing user that enough devices has been removed to continue
-#. login process.
-msgctxt "device-management"
-msgid "Super!"
-msgstr "رائع!"
-
-msgctxt "device-management"
-msgid "The device will be removed from the list and logged out."
-msgstr "ستتم إزالة الجهاز من القائمة وتسجيل الخروج."
-
-msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "هذا هو الاسم المُخصَّص للجهاز. يحصل كل جهاز مُسجَّل منه الدخول إلى حساب Warren على اسم فريد يساعدك على تمييزه عند إدارة أجهزتك في التطبيق أو على الموقع الإلكتروني."
-
-msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
 msgstr "الوقت المتبقي: %(timeLeft)s"
-
-#. Page title informing user that the login failed due to too many registered
-#. devices on account.
-msgctxt "device-management"
-msgid "Too many devices"
-msgstr "هناك عدد كبير جدًا من الأجهزة"
 
 #. Button text to retry fetching devices.
 msgctxt "device-management"
 msgid "Try again"
 msgstr "إعادة المحاولة"
-
-#. Subtitle text in the manage devices view, explaining
-#. devices and what they can do in the manage devices view.
-msgctxt "device-management"
-msgid "View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily."
-msgstr "يمكنك عرض جميع أجهزتك المُسجَّلة وإدارتها. يمكنك ربط ما يصل إلى 5 أجهزة بحسابٍ واحد في الوقت نفسه. يحصل كل جهاز على اسم عند تسجيل الدخول ليسهُل عليك تمييزه."
-
-msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Warren account."
-msgstr "يمكنك تسجيل الدخول إلى ما يصل إلى 5 أجهزة على حساب Warren واحد."
-
-msgctxt "device-management"
-msgid "You can now continue logging in on this device."
-msgstr "يمكنك الآن متابعة تسجيل الدخول على هذا الجهاز."
-
-msgctxt "device-management"
-msgid "You have removed this device. To connect again, you will need to log back in."
-msgstr "لقد أزلت هذا الجهاز. للاتصال مجددًا، ستحتاج إلى تسجيل الدخول مرة أخرى."
 
 #. The message displayed to the user in case of critical error in the GUI
 #. Available placeholders:
@@ -1703,10 +1421,6 @@ msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
 msgstr "قد يكون هناك تسريب في حركة بيانات الشبكة"
 
 msgctxt "in-app-notifications"
-msgid "NEW DEVICE CREATED"
-msgstr "تم إنشاء جهاز جديد"
-
-msgctxt "in-app-notifications"
 msgid "NEW VERSION INSTALLED"
 msgstr "تم تثبيت إصدار جديد"
 
@@ -1737,11 +1451,6 @@ msgctxt "in-app-notifications"
 msgid "Retry installation"
 msgstr "إعادة محاولة التثبيت"
 
-#. Button label to send a problem report.
-msgctxt "in-app-notifications"
-msgid "Send problem report"
-msgstr "إرسال بلاغ بالمشكلة"
-
 msgctxt "in-app-notifications"
 msgid "SERVER MAINTENANCE"
 msgstr "صيانة الخادم"
@@ -1760,20 +1469,6 @@ msgstr "فشلت أداة التثبيت في الإكمال."
 msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "لم بنجح تشغيل أداة التثبيت."
-
-#. Notification subtitle indicating the user is using an unsupported port for QUIC.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "in-app-notifications"
-msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
-msgstr "منفذ %(wireGuard)s المُحدَّد غير مدعوم، يُرجى <a>تغييره ضمن إعدادات شبكة VPN.</a>"
-
-#. Notification text when a new device has been created.
-#. Available placeholders:
-#. - %(deviceName)s: Name of created device.
-msgctxt "in-app-notifications"
-msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
-msgstr "تم تغيير اسم هذا الجهاز الآن إلى <em>%(deviceName)s</em>. للمزيد من المعلومات، يُرجى مراجعة <a>إدارة الأجهزة</a> في الحساب."
 
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
@@ -1864,11 +1559,6 @@ msgctxt "launch-view"
 msgid "Failed to start the app, please try again or click “Details” for more info"
 msgstr "فشل تشغيل التطبيق، يُرجى إعادة المحاولة أو النقر على \"التفاصيل\" للمزيد من المعلومات"
 
-#. Message in troubleshooting modal advising user to send a problem report if the steps do not work.
-msgctxt "launch-view"
-msgid "If these steps do not work please send a problem report."
-msgstr "إذا لم تنجح هذه الخطوات، يُرجى إرسال بلاغ بالمشكلة."
-
 #. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
 msgid "Only the account that set Warren up, or an administrator, can use it here."
@@ -1914,11 +1604,6 @@ msgctxt "launch-view"
 msgid "Restarting your computer"
 msgstr "إعادة تشغيل الكمبيوتر"
 
-#. Button label for sending a problem report.
-msgctxt "launch-view"
-msgid "Send problem report"
-msgstr "إرسال بلاغ بالمشكلة"
-
 #. Status text shown when app is starting.
 msgctxt "launch-view"
 msgid "Starting up...."
@@ -1933,11 +1618,6 @@ msgstr "فشل تشغيل عملية Warren في الخلفية. هذه العم
 msgctxt "launch-view"
 msgid "Try again"
 msgstr "إعادة المحاولة"
-
-#. Message in launch view when the mullvad service cannot be contacted.
-msgctxt "launch-view"
-msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "يتعذَّر الاتصال بخدمة نظام Warren، قد يكون اتصالك غير آمن. يُرجى استكشاف المشكلة أو إرسال بلاغ بها من خلال النقر على الزر \"معرفة المزيد\"."
 
 #. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
 msgctxt "launch-view"
@@ -1994,109 +1674,16 @@ msgctxt "login-view"
 msgid "<b>%(lockdownModeSettingName)s</b> is enabled. Disable it to unblock your connection."
 msgstr "تم تفعيل <b>%(lockdownModeSettingName)s</b>. أوقفه لإلغاء حظر اتصالك."
 
-msgctxt "login-view"
-msgid "Account created"
-msgstr "تم إنشاء الحساب"
-
-msgctxt "login-view"
-msgid "Checking account number"
-msgstr "جارٍ التحقُّق من رقم الحساب"
-
 #. Text in button that allows user to create a new account.
 msgctxt "login-view"
 msgid "Create a new account"
 msgstr "إنشاء حساب جديد"
-
-#. Button which confirms the action to create a new account.
-msgctxt "login-view"
-msgid "Create new account"
-msgstr "إنشاء حساب جديد"
-
-msgctxt "login-view"
-msgid "Creating account..."
-msgstr "جارٍ إنشاء حساب جديد..."
-
-#. Text that asks the user if they really want to create a new account.
-msgctxt "login-view"
-msgid "Do you want to create a new account?"
-msgstr "هل تريد إنشاء حساب جديد؟"
-
-#. Text that asks the user if they really want to remove the saved account.
-msgctxt "login-view"
-msgid "Do you want to remove the saved account number?"
-msgstr "هل تريد إزالة رقم الحساب المحفوظ؟"
-
-msgctxt "login-view"
-msgid "Enter your account number"
-msgstr "أدخل رقم حسابك"
-
-msgctxt "login-view"
-msgid "Error"
-msgstr "خطأ"
-
-msgctxt "login-view"
-msgid "Failed to create account"
-msgstr "فشل إنشاء الحساب"
-
-msgctxt "login-view"
-msgid "Finishing upgrade."
-msgstr "جارٍ الانتهاء من الترقية."
-
-#. Error message shown above login input when trying to login with a
-#. non-existent account number.
-msgctxt "login-view"
-msgid "Invalid account number"
-msgstr "رقم الحساب غير صالح"
-
-msgctxt "login-view"
-msgid "Logged in"
-msgstr "مُسجَّل الدخول"
-
-msgctxt "login-view"
-msgid "Logging in..."
-msgstr "جارٍ تسجيل الدخول..."
-
-#. Label for the login button.
-msgctxt "login-view"
-msgid "Login"
-msgstr "تسجيل الدخول"
-
-msgctxt "login-view"
-msgid "Login failed"
-msgstr "فشل تسجيل الدخول"
-
-#. Text shown between two horizontal lines above the "create account" button.
-#. In this context it is used to separate the users alternative of logging in
-#. or creating a new account, "Login or Create a new account".
-msgctxt "login-view"
-msgid "Or"
-msgstr "أو"
 
 #. This is a warning message shown when the app is blocking the users
 #. internet connection while logged out.
 msgctxt "login-view"
 msgid "Our kill switch is currently blocking your connection."
 msgstr "مفتاح الإيقاف التلقائي لدينا يحظر اتصالك في الوقت الحالي."
-
-msgctxt "login-view"
-msgid "Please wait"
-msgstr "يُرجى الانتظار"
-
-#. Text that informs the user about the consequences of clearing the saved
-#. account number.
-msgctxt "login-view"
-msgid "Removing the saved account number from this device cannot be undone."
-msgstr "لا يمكن التراجع عن إزالة رقم الحساب المحفوظ من هذا الجهاز."
-
-#. Error message shown above login input when trying to login to an account
-#. with too many registered devices.
-msgctxt "login-view"
-msgid "Too many devices"
-msgstr "هناك عدد كبير جدًا من الأجهزة"
-
-msgctxt "login-view"
-msgid "Unknown error"
-msgstr "خطأ غير معروف"
 
 msgctxt "login-view"
 msgid "Upgrading..."
@@ -2106,42 +1693,6 @@ msgstr "جارٍ الترقية..."
 msgctxt "login-view"
 msgid "Warren could not restore your account right now. Check your internet connection and try again."
 msgstr "تعذّر على Warren استعادة حسابك الآن. تحقّق من اتصالك بالإنترنت ثم أعد المحاولة."
-
-msgctxt "login-view"
-msgid "Valid account number"
-msgstr "رقم حساب صالح"
-
-#. Text that informs the users about consequences of creating a new account.
-msgctxt "login-view"
-msgid "You already have a saved account number, by creating a new account the saved account number will be removed from this device. This cannot be undone."
-msgstr "لديك رقم حساب محفوظ بالفعل، بإنشاء حساب جديد، سيتم حذفه من هذا الجهاز. لا يمكن التراجع عن هذا الإجراء."
-
-#. The title for the LWO port selector.
-msgctxt "lwo-settings-view"
-msgid "Port"
-msgstr "المنفذ"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "lwo-settings-view"
-msgid "Port: %(port)s"
-msgstr "المنفذ: %(port)s"
-
-msgctxt "lwo-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "سيختار الإعداد التلقائي عشوائيًا من نطاقات المنافذ الصالحة المُوضَّحة أدناه."
-
-msgctxt "lwo-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "يمكن أن يكون المنفذ المُخصَّص أي قيمة ضمن النطاقات الصالحة: %(portRanges)s."
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "lwo-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "النطاقات الصالحة: %(portRanges)s"
 
 #. Title label in navigation bar
 msgctxt "navigation-bar"
@@ -2317,32 +1868,8 @@ msgid "Unable to apply firewall rules. Try updating your kernel."
 msgstr "يتعذَّر تطبيق قواعد جدار الحماية. جرِّب تحديث النواة."
 
 msgctxt "notifications"
-msgid "Unable to block all network traffic. Please troubleshoot or send a problem report."
-msgstr "يتعذَّر حظر جميع بيانات الشبكة. يُرجى استكشاف المشكلة وإصلاحها أو إرسال بلاغ بالمشكلة."
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software or send a problem report."
-msgstr "يتعذَّر حظر جميع بيانات الشبكة. جرِّب إيقاف أي برنامج مكافحة فيروسات أو حماية تابع لجهة خارجية مؤقتًا أو إرسال بلاغ بالمشكلة."
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try updating your kernel or send a problem report."
-msgstr "يتعذَّر حظر جميع بيانات الشبكة. حاول تحديث نواة جهازك أو إرسال بلاغ بالمشكلة."
-
-msgctxt "notifications"
-msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
-msgstr "يتعذَّر الاتصال ببرنامج تشغيل نواة Warren. جرِّب إعادة الاتصال أو إرسال بلاغ بالمشكلة."
-
-msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
 msgstr "يتعذَّر حل مشكلة مضيف النفق المُخصَّص. جرِّب تغيير إعداداتك."
-
-msgctxt "notifications"
-msgid "Unable to set system DNS server. Please send a problem report."
-msgstr "يتعذَّر ضبط خادم DNS للنظام. يُرجى إرسال بلاغ بالمشكلة."
-
-msgctxt "notifications"
-msgid "Unable to start tunnel connection. Please send a problem report."
-msgstr "يتعذَّر بدء اتصال النفق. يُرجى إرسال بلاغ بالمشكلة."
 
 msgctxt "notifications"
 msgid "Unable to start tunnel connection. This could be because of conflicts with VMware, please troubleshoot."
@@ -2475,10 +2002,6 @@ msgstr "استرداد قسيمة"
 msgctxt "redeem-voucher-view"
 msgid "An error occurred."
 msgstr "حدث خطأ."
-
-msgctxt "redeem-voucher-view"
-msgid "It looks like you’ve entered an account number instead of a voucher code. If you would like to change the active account, please log out first."
-msgstr "يبدو أنك أدخلت رقم حساب بدلًا من رمز قسيمة. لتغيير الحساب النشط، يُرجى تسجيل الخروج أولًا."
 
 #. Button label for voucher redemption.
 msgctxt "redeem-voucher-view"
@@ -2724,10 +2247,6 @@ msgid "Choose"
 msgstr "اختيار"
 
 msgctxt "split-tunneling-view"
-msgid "Choose the apps you want to exclude from the VPN tunnel."
-msgstr "اختر التطبيقات التي تريد استثناؤها من نفق شبكة VPN."
-
-msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
 msgstr "مدن %(country)s"
 
@@ -2828,10 +2347,6 @@ msgstr "لا يمكن لتطبيقات Snap استخدام دولة بعد"
 msgctxt "split-tunneling-view"
 msgid "To use %(splitTunneling)s, please update to a Linux kernel version that supports cgroup v2."
 msgstr "لاستخدام %(splitTunneling)s، يُرجى التحديث إلى إصدار النواة على Linux الذي يدعم cgroup v2."
-
-msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
-msgstr "لاستخدام الانقسام النفقي، يُرجى تفعيل \"الوصول الكامل للقرص\" لـ \"Warren VPN\" في إعدادات نظام macOS."
 
 msgctxt "split-tunneling-view"
 msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
@@ -3002,107 +2517,15 @@ msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
 msgstr "إذا كان التطبيق قيد التشغيل بالفعل، فأغلق %(applicationName)s قبل تشغيله من هنا. وإلا، فقد لا يستخدم VPN."
 
-#. Button label for continuing problem report submission with an outdated app version.
-msgctxt "support-view"
-msgid "Continue anyway"
-msgstr "المتابعة على أي حال"
-
-#. Button text to edit the message after a failed attempt to send the problem report.
-msgctxt "support-view"
-msgid "Edit message"
-msgstr "تعديل الرسالة"
-
-msgctxt "support-view"
-msgid "Failed to send"
-msgstr "فشل الإرسال"
-
 #. Link to the webpage
 msgctxt "support-view"
 msgid "FAQs & Guides"
 msgstr "الأسئلة الشائعة والأدلة"
 
-#. The message displayed to the user after submitting the problem report, given that the user left his or her email for us to reach back.
-#. Available placeholders:
-#. %(email)s
-msgctxt "support-view"
-msgid "If needed we will contact you at %(email)s"
-msgstr "إذا لزم الأمر، سنتواصل معك على %(email)s"
-
-msgctxt "support-view"
-msgid "If you exit the form and try again later, the information you already entered will still be here."
-msgstr "إذا خرجت من النموذج وحاولت مرة أخرى لاحقًا، فستظل المعلومات التي أدخلتها موجودة هنا."
-
-#. Title label in navigation bar
-#. Navigation button to the 'Report a problem' help view
-msgctxt "support-view"
-msgid "Report a problem"
-msgstr "الإبلاغ عن مشكلة"
-
-#. Button label for sending the problem report.
-msgctxt "support-view"
-msgid "Send"
-msgstr "إرسال"
-
-#. Button label for sending the problem report without an email address.
-msgctxt "support-view"
-msgid "Send anyway"
-msgstr "الإرسال على أي حال"
-
-msgctxt "support-view"
-msgid "Sending..."
-msgstr "جارٍ الإرسال..."
-
-msgctxt "support-view"
-msgid "Sent"
-msgstr "تم الإرسال"
-
 #. Title label in navigation bar
 msgctxt "support-view"
 msgid "Support"
 msgstr "الدعم"
-
-msgctxt "support-view"
-msgid "Thanks!"
-msgstr "شكرًا لك!"
-
-msgctxt "support-view"
-msgid "To assist you better, please write in English or Swedish and include which country you are connecting from."
-msgstr "لمساعدتك بشكلٍ أفضل، يُرجى الكتابة باللغة الإنجليزية أو السويدية مع ذكر البلد الذي تتصل منه."
-
-msgctxt "support-view"
-msgid "To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel."
-msgstr "لمساعدتك بشكلٍ أكثر فعالية، سيتم إرفاق ملف سجل تطبيقك بهذه الرسالة. ستبقى بياناتك آمنة وسرية، حيث يتم إخفاء هويتها قبل إرسالها عبر قناة مشفرة."
-
-#. Button label for retrying problem report submission after a failure.
-msgctxt "support-view"
-msgid "Try again"
-msgstr "إعادة المحاولة"
-
-#. Button label for updating the app to the latest version.
-msgctxt "support-view"
-msgid "Update app"
-msgstr "تحديث التطبيق"
-
-#. Button label for opening app logs.
-msgctxt "support-view"
-msgid "View app logs"
-msgstr "عرض سجلات التطبيق"
-
-msgctxt "support-view"
-msgid "We will look into this."
-msgstr "سوف ننظر في هذا الأمر."
-
-msgctxt "support-view"
-msgid "You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address."
-msgstr "أنت على وشك إرسال بلاغ بالمشكلة دون توفير وسيلة لنا للرد عليك. إذا كنت تريد الرد على بلاغك، فسيتعين عليك إدخال عنوان بريد إلكتروني."
-
-msgctxt "support-view"
-msgid "You are using an old version of the app. Please upgrade and see if the problem still exists before sending a report."
-msgstr "أنت تستخدم إصدارًا قديمًا من التطبيق. يُرجى تحديثه والتحقُّق من استمرار المشكلة قبل إرسال البلاغ."
-
-msgctxt "support-view"
-msgid "Your email (optional)"
-msgstr "بريدك الإلكتروني (اختياري)"
 
 #. Link to the refund policy webpage
 msgctxt "support-view"
@@ -3140,10 +2563,6 @@ msgstr "فعِّل \"الوصول الكامل للقرص\" لـ \"Warren VPN\" 
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
 msgstr "فشل تفعيل الانقسام النفقي لأن التطبيق لا يملك أذونات النظام. يمكنك إجراء ما يلي:"
-
-msgctxt "troubleshoot"
-msgid "If these steps do not work please send a problem report."
-msgstr "إذا لم تنجح هذه الخطوات، يُرجى إرسال بلاغ بالمشكلة."
 
 msgctxt "troubleshoot"
 msgid "If you have installed another VPN then try to uninstall that."
@@ -3214,14 +2633,6 @@ msgstr "التطبيقات المختارة وحدها محمية"
 msgctxt "tunnel-control"
 msgid "Connection interrupted"
 msgstr "انقطع الاتصال"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map"
-msgstr "تحريك الخريطة"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map movements."
-msgstr "تحريك انتقالات الخريطة."
 
 msgctxt "user-interface-settings-view"
 msgid "Enable or disable system notifications. The critical notifications will always be displayed."
@@ -3643,44 +3054,13 @@ msgctxt "warren-pubkey-warning"
 msgid "The key changed again before it could be trusted. Review the new key and try again."
 msgstr "تغيَّر المفتاح مرة أخرى قبل أن يتم منحه الثقة. راجع المفتاح الجديد وأعد المحاولة."
 
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "UDP-over-TCP"
-msgstr "UDP-over-TCP"
-
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s (%(daitaFull)s) hides patterns in your encrypted VPN traffic."
 msgstr "يقوم ميزة %(daita)s (%(daitaFull)s) بإخفاء الأنماط في حركة بيانات VPN المُشفَّرة لديك."
 
 msgctxt "wireguard-settings-view"
-msgid "%(daita)s does this by carefully adding network noise and making all network packets the same size."
-msgstr "تُجرى ميزة %(daita)s ذلك من خلال إضافة ضوضاء الشبكة بعناية وجعل جميع حزم الشبكة بالحجم نفسه."
-
-msgctxt "wireguard-settings-view"
-msgid "%(wireguard)s port"
-msgstr "منفذ %(wireguard)s"
-
-#. Page title for QUIC port view
-msgctxt "wireguard-settings-view"
-msgid "%(wireGuard)s port"
-msgstr "منفذ %(wireGuard)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans."
-msgstr "تنبيه: يزيد ذلك من حركة بيانات الشبكة، ويؤثر سلبًا على السرعة وزمن الوصول واستهلاك البطارية. يُرجى توخي الحذر عند استخدام الباقات المحدودة."
-
-msgctxt "wireguard-settings-view"
 msgid "By enabling “%(directOnly)s” you will have to manually select a server that is %(daita)s-enabled. This can cause you to end up in a blocked state until you have selected a compatible server in the “Select location” view."
 msgstr "بتفعيل \"%(directOnly)s\"، سيتعين عليك اختيار خادم مُفعَّل عليه ميزة %(daita)s يدويًا. قد يؤدي ذلك إلى حظرك حتى تختار خادمًا متوافقًا في شاشة \"تحديد الموقع\"."
-
-msgctxt "wireguard-settings-view"
-msgid "By using sophisticated AI it’s possible to analyze the traffic of data packets going in and out of your device (even if the traffic is encrypted)."
-msgstr "من خلال استخدام الذكاء الاصطناعي المتطور، من الممكن تحليل حركة حزم البيانات الداخلة والخارجة من جهازك (حتى لو كانت حركة البيانات مشفرة)."
 
 msgctxt "wireguard-settings-view"
 msgid "Cancel"
@@ -3690,10 +3070,6 @@ msgstr "إلغاء"
 msgctxt "wireguard-settings-view"
 msgid "Device IP version"
 msgstr "نسخة عنوان IP للجهاز"
-
-msgctxt "wireguard-settings-view"
-msgid "If an observer monitors these data packets, %(daita)s makes it significantly harder for them to identify which websites you are visiting or with whom you are communicating."
-msgstr "إذا رصد مراقب حزم البيانات هذه، فإن ميزة %(daita)s تجعل من الصعب عليه بشكلٍ كبير تحديد المواقع الإلكترونية التي تزورها أو الأشخاص الذين تتواصل معهم."
 
 msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
@@ -3707,37 +3083,13 @@ msgid "MTU"
 msgstr "MTU"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop"
-msgstr "القفز المتعدد"
-
-msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "يتم استخدام القفز المتعدد لتفعيل DAITA لموقعك المُحدَّد"
-
-msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
-msgstr "يمرّر Multihop حركة مرورك عبر خادم QUIC ويُخرجها من خادم آخر، فيضيف خادمًا بينك وبين المواقع التي تزورها. يؤدي ذلك إلى زيادة زمن الاستجابة."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. In order to use the internet, you might have to select a new location after enabling."
 msgstr "ليست كل خوادمنا تدعم ميزة %(daita)s. قد تحتاج إلى اختيار موقع جديد بعد تفعيلها لاستخدام الإنترنت."
-
-msgctxt "wireguard-settings-view"
-msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
-msgstr "لم يتم تفعيل ميزة %(daita)s لكل خوادمنا. لذلك، فإننا نستخدم القفز المتعدد تلقائيًا لتفعيل ميزة %(daita)s مع أي خادم."
-
-#. The title for the QUIC port selector.
-msgctxt "wireguard-settings-view"
-msgid "Port"
-msgstr "المنفذ"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "wireguard-settings-view"
-msgid "Port: %(port)s"
-msgstr "المنفذ: %(port)s"
 
 #. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
@@ -3760,14 +3112,6 @@ msgid "Shadowsocks"
 msgstr "Shadowsocks"
 
 msgctxt "wireguard-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "سيختار الإعداد التلقائي عشوائيًا من نطاقات المنافذ الصالحة المُوضَّحة أدناه."
-
-msgctxt "wireguard-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "يمكن أن يكون المنفذ المُخصَّص أي قيمة ضمن النطاقات الصالحة: %(portRanges)s."
-
-msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "تحمي هذه الميزة حركة بياناتك نحو خادم الخروج من الهجمات المحتملة من الحواسيب الكمومية."
 
@@ -3775,951 +3119,8 @@ msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
 msgstr "UDP-over-TCP"
 
-#. Text describing the valid port range for a port selector.
-msgctxt "wireguard-settings-view"
-msgid "Valid range: %(min)s - %(max)s"
-msgstr "النطاق الصالح: %(min)s - %(max)s"
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "wireguard-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "النطاقات الصالحة: %(portRanges)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
-msgstr "أي منفذ TCP ينبغي أن يتصل به بروتوكول تمويه UDP-over-TCP على خادم شبكة VPN."
-
-msgid "%1$s more..."
-msgstr "%1$s أكثر..."
-
-msgid "%1$s was added to \"%2$s\""
-msgstr "تمت إضافة %1$s إلى \"%2$s\""
-
-msgid "%1$s was removed from \"%2$s\""
-msgstr "تمت إزالة %1$s من \"%2$s\""
-
-msgid "%1$s, %2$s, %3$s"
-msgstr "%1$s، %2$s، %3$s"
-
-msgid "%s (Entry)"
-msgstr "%s (دخول)"
-
-msgid "%s (Exit)"
-msgstr "%s (خروج)"
-
-msgid "%s (added)"
-msgstr "%s (تمت إضافته)"
-
-msgid "%s (removed)"
-msgstr "%s (تمت إزالته)"
-
-msgid "%s is already selected as entry relay"
-msgstr "تم بالفعل تحديد %s كخادم دخول وسيط"
-
-msgid "%s is already selected as exit relay"
-msgstr "تم بالفعل تحديد %s كخادم خروج وسيط"
-
-msgid "%s is unavailable"
-msgstr "%s غير متاح"
-
-msgid "%s settings."
-msgstr "إعدادات %s."
-
-msgid "%s was added to your account."
-msgstr "تمت إضافة %s إلى حسابك."
-
-msgid "(%d)"
-msgstr "(%d)"
-
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
-msgstr "1. بعد النقر على الزر \"الانتقال إلى إعدادات VPN\" أدناه، انقر على الترس الموجود بجوار اسم \"Warren VPN\"."
-
-msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
-msgstr "2. لتفعيل الاتصال التلقائي، انقر على زر التبديل بجوار \"تشغيل VPN دائمًا\"."
-
-msgid "3. To enable Lockdown mode, click on the toggle next to \"Block connections without VPN\".<br /><br /><b>Warning: This setting blocks split apps and the Local Network Sharing feature.</b>"
-msgstr "3. لتفعيل وضع التأمين، انقر على زر التبديل بجوار \"حظر الاتصالات دون VPN\". <br /><br /><b>تحذير: يحظر هذا الإعداد التطبيقات المُقسَّمة وميزة مشاركة الشبكة المحلية.</b>"
-
-msgid "30 days was added to your account."
-msgstr "تمت إضافة 30 يومًا إلى حسابك."
-
-msgid "90 days was added to your account."
-msgstr "تمت إضافة 90 يومًا إلى حسابك."
-
-msgid "<b>Account recovery will not be possible.</b>"
-msgstr "<b>لن يكون من الممكن استرداد الحساب.</b>"
-
-msgid "<b>Attention:</b> Only some servers support the full port range."
-msgstr "<b>تنبيه:</b> تدعم بعض الخوادم فقط نطاق المنفذ الكامل."
-
-msgid "<b>Attention:</b> The app will close automatically and needs to be manually opened again after selecting a new icon and title. This will not impact your VPN connection."
-msgstr "<b>تنبيه:</b> سيتم إيقاف التطبيق تلقائيًا ويلزم فتحه يدويًا مرة أخرى بعد اختيار أيقونة وعنوان جديدين. لن يؤثر ذلك على اتصال VPN لديك."
-
-msgid "<b>Please note that these methods do not improve performance, and may increase system utilization and battery consumption.</b>"
-msgstr "<b>يُرجى ملاحظة أن هذه الطرق لا تعمل على تحسين الأداء، وقد تؤدي إلى زيادة استخدام النظام واستنزاف البطارية.</b>"
-
-msgid "<b>This action cannot be undone.</b>"
-msgstr "<b>لا يمكن التراجع عن هذا الإجراء.</b>"
-
-msgid "<b>Warning:</b>"
-msgstr "<b>تحذير:</b>"
-
-msgid "<b>You will lose access to this account on all devices.</b>"
-msgstr "<b>سوف تفقد صلاحية الوصول إلى هذا الحساب على جميع الأجهزة.</b>"
-
-msgid "API reachable, adding method..."
-msgstr "واجهة API يمكن الوصول إليها، جارٍ إضافة الطريقة..."
-
-msgid "API unreachable, save method anyway?"
-msgstr "واجهة API لا يمكن الوصول إليها، هل تريد حفظ الطريقة على أي حال؟"
-
-msgid "Account credit expires in a few minutes"
-msgstr "سينتهي رصيد الحساب خلال دقائق قليلة"
-
-msgid "Account deleted"
-msgstr "تم حذف الحساب"
-
-msgid "Account number is too long, please enter a valid number"
-msgstr "رقم الحساب طويل جدًا، يُرجى إدخال رقم صالح"
-
-msgid "Account number must match"
-msgstr "يجب أن يكون رقم الحساب مطابقًا"
-
-msgid "Account recovery will not be possible."
-msgstr "لن يكون من الممكن استرداد الحساب."
-
-msgid "Account time reminders"
-msgstr "تذكيرات بوقت الحساب"
-
-msgid "Add 30 days time (%s)"
-msgstr "إضافة 30 يومًا (%s)"
-
-msgid "Add 90 days time (%s)"
-msgstr "إضافة 90 يومًا (%s)"
-
-msgid "Add DNS server"
-msgstr "إضافة خادم DNS"
-
-msgid "Add locations"
-msgstr "إضافة المواقع"
-
-msgid "Add time"
-msgstr "إضافة وقت"
-
-msgid "Add to list"
-msgstr "إضافة إلى القائمة"
-
-msgid "Adding method..."
-msgstr "جارٍ إضافة الطريقة..."
-
-msgid "After updating a VPN app on Android 16, devices might end up in a state where VPN apps are no longer able to reach the internet."
-msgstr "بعد تحديث تطبيق VPN على نظام التشغيل Android 16، قد تصل الأجهزة إلى حالة تفقد فيها تطبيقات VPN قدرتها على الوصول إلى الإنترنت."
-
-msgid "Agree and continue"
-msgstr "الموافقة والمتابعة"
-
-msgid "All"
-msgstr "الكل"
-
-msgid "All applications"
-msgstr "جميع التطبيقات"
-
-msgid "All overrides will be reset and servers IP addresses, in the Select location view, will go back to default."
-msgstr "ستتم إعادة تعيين كل التجاوزات، وستعود عناوين IP الخاصة بالخوادم في شاشة تحديد الموقع إلى الإعدادات الافتراضية."
-
-msgid "Always-on VPN assigned to %s"
-msgstr "تم تعيين \"تشغيل VPN دائمًا\" إلى %s"
-
-msgid "Always-on VPN assigned to other VPN"
-msgstr "تم تعيين \"تشغيل VPN دائمًا\" إلى شبكة VPN أخرى"
-
-msgid "Android 16 has a known issue. Please restart your device and try again. To learn more,"
-msgstr "هناك مشكلة معروفة في نظام Android 16. يُرجى إعادة تشغيل جهازك وإعادة المحاولة. لمعرفة المزيد،"
-
-msgid "Any remaining time will be null and void."
-msgstr "سيتم إلغاء أي وقت متبقٍ ولن يعتد به."
-
-msgid "App icon"
-msgstr "أيقونة التطبيق"
-
-msgid "Appearance"
-msgstr "المظهر"
-
-msgid "Applying changes..."
-msgstr "يجري تطبيق التغييرات..."
-
-msgid "Are you sure you want to log <b>%s</b> out?"
-msgstr "هل تريد بالتأكيد تسجيل خروج <b>%s</b>؟"
-
-msgid "At least one method needs to be enabled"
-msgstr "يجب تفعيل طريقة واحدة على الأقل"
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, \"Local network sharing\" will not work."
-msgstr "انتبه: إذا تم تفعيل \"حظر الاتصالات دون VPN\"، فلن تعمل \"مشاركة الشبكة المحلية\"."
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, split apps will not have Internet. Always keep in mind that split tunneling is a privacy risk."
-msgstr "تنبيه: في حال تفعيل \"حظر الاتصالات دون VPN\"، لن تتمكن التطبيقات المُقسَّمة من الاتصال بالإنترنت. تذكَّر دائمًا أن الانقسام النفقي يُشكِّل خطرًا على الخصوصية."
-
-msgid "Attention: this setting cannot be used in combination with \"Use custom DNS server\"."
-msgstr "انتبه: لا يمكن استخدام هذا الإعداد مع \"استخدام خادم DNS مُخصَّص\"."
-
-msgid "Auto-connect & Lockdown mode"
-msgstr "الاتصال التلقائي ووضع التأمين"
-
-msgid "Auto-connect is called Always-on VPN in the Android system settings and it makes sure you are constantly connected to the VPN tunnel and auto connects after restart."
-msgstr "يُطلق على الاتصال التلقائي اسم \"تشغيل VPN دائمًا\" في إعدادات نظام Android، ويتأكد من اتصالك الدائم بنفق VPN ويتصل تلقائيًا بعد إعادة التشغيل."
-
-msgid "Automatically connect on device start-up."
-msgstr "الاتصال تلقائيًا عند بدء تشغيل الجهاز."
-
-msgid "Blocking internet (device offline)"
-msgstr "حظر الإنترنت (الجهاز غير متصل بالإنترنت)"
-
-msgid "Blocking..."
-msgstr "جارٍ الحظر..."
-
-msgid "Browser"
-msgstr "المتصفح"
-
-msgid "By attaching your account token it links this report to your account, which helps us resolve your issue quicker. All reports are automatically deleted after a period of time."
-msgstr "من خلال ربط رمز حسابك، يتم ربط هذا البلاغ بحسابك، مما يساعدنا على حل مشكلتك بشكلٍ أسرع. يتم حذف جميع البلاغات تلقائيًا بعد فترة زمنية مُحدَّدة."
-
-msgid "By checking this box I agree to the risks involved with deleting my account"
-msgstr "باختيار هذه الخانة، أوافق على تحمل المخاطر المتعلقة بحذف حسابي"
-
-msgid "Can't connect?"
-msgstr "هل يتعذَّر الاتصال؟"
-
-msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
-msgstr "تغيير عنوان ورمز تطبيق VPN على جهاز Android لديك. لن يؤدي ذلك إلى تغيير الرمز لأي إشعارات متعلقة بـ Warren VPN."
-
-msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
-msgstr "قد لا تدخل التغييرات المتعلقة بإعدادات DNS حيز التنفيذ فورًا بسبب النتائج المُخزَّنة مؤقتًا."
-
-msgid "Clear input"
-msgstr "مسح الإدخال"
-
-msgid "Collapse"
-msgstr "طي"
-
-msgid "Connect on device start-up"
-msgstr "الاتصال عند بدء تشغيل الجهاز"
-
-msgid "Connect to a different network"
-msgstr "الاتصال بشبكة مختلفة"
-
-msgid "Connecting..."
-msgstr "جارٍ الاتصال..."
-
 msgid "Continue"
 msgstr "استمرار"
-
-msgid "Copied Warren account number to clipboard"
-msgstr "تم نسخ رقم حساب Warren إلى الحافظة"
-
-msgid "Copied logs to clipboard"
-msgstr "تم نسخ السجلات إلى الحافظة"
-
-msgid "Copy"
-msgstr "نسخ"
-
-msgid "Could not display remaining days."
-msgstr "تعذر عرض الأيام المتبقية."
-
-msgid "Create new list"
-msgstr "إنشاء قائمة جديدة"
-
-msgid "Creating account failed"
-msgstr "فشل إنشاء الحساب"
-
-msgid "Critical error (your attention is required)"
-msgstr "خطأ فادح (يتطلَّب انتباهك)"
-
-msgid "Current: %s"
-msgstr "الحالي: %s"
-
-msgid "Custom DNS server addresses %1$s are invalid"
-msgstr "عناوين خادم DNS المُخصَّصة %1$s غير صالحة"
-
-msgid "DNS settings might not go into effect immediately"
-msgstr "قد لا يتم تطبيق إعدادات DNS على الفور"
-
-msgid "Delete \"%s\"?"
-msgstr "هل تريد حذف \"%s\"؟"
-
-msgid "Delete account"
-msgstr "حذف الحساب"
-
-msgid "Delete method"
-msgstr "حذف الطريقة"
-
-msgid "Delete method?"
-msgstr "هل تريد حذف الطريقة؟"
-
-msgid "Deleting your account cannot be undone."
-msgstr "لا يمكن التراجع عن حذف حسابك."
-
-msgid "Deleting your account:"
-msgstr "حذف حسابك:"
-
-msgid "Direct"
-msgstr "مباشر"
-
-msgid "Disable all \"%s\" above to activate this setting."
-msgstr "إيقاف كل \"%s\" أعلاه لتنشيط هذا الإعداد."
-
-msgid "Disable multihop"
-msgstr "إيقاف القفز المتعدد"
-
-msgid "Discard"
-msgstr "تجاهل"
-
-msgid "Discard changes?"
-msgstr "هل تريد تجاهل التغييرات؟"
-
-msgid "Disconnected (No VPN permission)"
-msgstr "تم قطع الاتصال (لا يوجد إذن VPN)"
-
-msgid "Disconnecting..."
-msgstr "جارٍ قطع الاتصال..."
-
-msgid "Dismiss"
-msgstr "تجاهل"
-
-msgid "Don’t have an account number?"
-msgstr "ليس لديك رقم حساب؟"
-
-msgid "Edit custom lists"
-msgstr "تعديل القوائم المُخصَّصة"
-
-msgid "Edit list"
-msgstr "تعديل القائمة"
-
-msgid "Edit lists"
-msgstr "تعديل القوائم"
-
-msgid "Edit locations"
-msgstr "تعديل المواقع"
-
-msgid "Enable %1$s"
-msgstr "تفعيل %1$s"
-
-msgid "Enable all & retry"
-msgstr "تفعيل الكل وإعادة المحاولة"
-
-msgid "Enable all access methods in the app"
-msgstr "تفعيل جميع طرق الوصول في التطبيق"
-
-msgid "Enable method"
-msgstr "تفعيل الطريقة"
-
-msgid "Enable multihop"
-msgstr "تفعيل القفز المتعدد"
-
-msgid "Enter MTU"
-msgstr "أدخل MTU"
-
-msgid "Enter account number digits"
-msgstr "أدخل رقم الحساب بالأرقام"
-
-msgid "Entry relay is the same as exit relay"
-msgstr "الخادم الوسيط للدخول هو نفسه الخادم الوسيط للخروج"
-
-msgid "Excluded applications"
-msgstr "التطبيقات المستثناة"
-
-msgid "Expand"
-msgstr "توسيع"
-
-msgid "External link"
-msgstr "رابط خارجي"
-
-msgid "FAILED TO CONNECT"
-msgstr "فشل الاتصال"
-
-msgid "Failed to apply patch"
-msgstr "فشل تطبيق التصحيح"
-
-msgid "Failed to delete account, please contact support"
-msgstr "فشل حذف الحساب، يرجى الاتصال بالدعم"
-
-msgid "Failed to load products, please try again"
-msgstr "فشل تحميل المنتجات، يُرجى إعادة المحاولة"
-
-msgid "Failed to set to current - API not reachable"
-msgstr "فشل التعيين إلى الحالي - واجهة API غير قابلة للوصول"
-
-msgid "Failed to set to current - Unknown reason"
-msgstr "فشل التعيين إلى الطريقة الحالية - السبب غير معروف"
-
-msgid "File"
-msgstr "ملف"
-
-msgid "For details, please see our %s."
-msgstr "للحصول على التفاصيل، يُرجى الاطلاع على %s لدينا."
-
-msgid "For the VPN to connect automatically on device startup, the app must have VPN permissions. You can grant these by clicking “Connect” in the map view and selecting “OK” if prompted. Additionally, ensure the app is installed on the internal storage by checking the storage information in the app details in system settings."
-msgstr "لكي تتصل شبكة VPN تلقائيًا عند بدء تشغيل الجهاز، يجب أن يمتلك التطبيق أذونات شبكة VPN. يمكنك منحها بالنقر على \"اتصال\" في عرض الخريطة واختيار \"موافق\" عند الطلب. بالإضافة إلى ذلك، تأكَّد من تثبيت التطبيق على وحدة التخزين الداخلية من خلال التحقُّق من معلومات التخزين في قسم \"تفاصيل التطبيق\" ضمن إعدادات النظام."
-
-msgid "Go to VPN settings"
-msgstr "الانتقال إلى إعدادات VPN"
-
-msgid "Going to login will unblock the internet on this device."
-msgstr "سيؤدي تسجيل الدخول إلى إلغاء حظر الإنترنت على هذا الجهاز."
-
-msgid "Google Play payment pending"
-msgstr "الدفع من خلال Google Play مُعلَّق"
-
-msgid "Google Play payment pending, this might take some time"
-msgstr "الدفع من خلال Google Play مُعلَّق، قد يستغرق هذا بعض الوقت"
-
-msgid "Google Play unavailable"
-msgstr "Google Play غير متاح"
-
-msgid "IPv4 is not available, please try changing \"Device IP version\" setting."
-msgstr "IPv4 غير متاح، يُرجى محاولة تغيير إعداد \"نسخة عنوان IP للجهاز\"."
-
-msgid "IPv6 is not available, please try changing \"Device IP version\" setting."
-msgstr "IPv6 غير متاح، يُرجى محاولة تغيير إعداد \"نسخة عنوان IP للجهاز\"."
-
-msgid "Icon and title"
-msgstr "الرمز والعنوان"
-
-msgid "If the icon and title is still not changed after the app has closed, please try restarting the device."
-msgstr "إذا لم تتغير الأيقونة والعنوان بعد إغلاق التطبيق، فالرجاء محاولة إعادة تشغيل الجهاز."
-
-msgid "If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device."
-msgstr "في حال استخدام ميزة الانقسام النفقي، يستعلم التطبيق من نظامك للحصول على قائمة بجميع التطبيقات المُثبَّتة. يتم استدعاء هذه القائمة في شاشة الانقسام النفقي فقط. ولا يتم إرسال قائمة التطبيقات المُثبَّتة من الجهاز أبدًا."
-
-msgid "If these steps don’t work, please send an email to support using the button below. It will automatically attach the logs which have been anonymized."
-msgstr "إذا لم تنجح هذه الخطوات في حال المشكلة، يُرجى مراسلة فريق الدعم عبر البريد الإلكتروني باستخدام الزر أدناه. سيتم تلقائيًا إرفاق السجلات التي تم إخفاء هويتها."
-
-msgid "Import new overrides by"
-msgstr "استيراد تجاوزات جديدة بواسطة"
-
-msgid "Import successful, overrides active"
-msgstr "تم الاستيراد بنجاح، التجاوزات نشطة"
-
-msgid "Importing new overrides might replace some previously imported overrides."
-msgstr "قد يحل استيراد التجاوزات الجديدة محل بعض التجاوزات التي تم استيرادها سابقًا."
-
-msgid "In-app products unavailable, please make sure you have the latest version of Google Play."
-msgstr "المنتجات داخل التطبيق غير متاحة، يُرجى التأكد من تثبيت أحدث إصدار من Google Play."
-
-msgid "Include my account token for faster help with payment or account related issues"
-msgstr "تضمين رمز حسابي للحصول على مساعدة أسرع فيما يتعلق بالدفع أو المشكلات المتعلقة بالحساب"
-
-msgid "Invalid IPv6 config, please try to change the VPN settings."
-msgstr "تكوين IPv6 غير صالح، يرجى تجربة تغيير إعدادات VPN."
-
-msgid "Invalid or missing value \"%1$s\""
-msgstr "القيمة \"%1$s\" غير صالحة أو مفقودة"
-
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "وتفعل ذلك من خلال إجراء تبادل مفتاح إضافي باستخدام خوارزمية آمنة ضد هجمات الحواسيب الكميّة، ودمج النتيجة في تشفير QUIC الاعتيادي. تستهلك هذه الخطوة الإضافية حوالي 500 كيلو بايت من حركة البيانات في كل مرة يتم فيها إنشاء نفق جديد."
-
-msgid "Less than a day left on this account"
-msgstr "يتبقى أقل من يوم لهذا الحساب"
-
-msgid "Lets you select apps that should access the Internet directly without going through the VPN tunnel."
-msgstr "يتيح لك تحديد التطبيقات التي يجب أن تصل إلى الإنترنت مباشرةً دون المرور عبر نفق VPN."
-
-msgid "List name"
-msgstr "اسم القائمة"
-
-msgid "Loading products"
-msgstr "جارٍ تحميل المنتجات"
-
-msgid "Locations"
-msgstr "المواقع"
-
-msgid "Locations were changed for \"%s\""
-msgstr "تم تغيير المواقع لـ \"%s\""
-
-msgid "Log in"
-msgstr "تسجيل الدخول"
-
-msgid "Makes sure the device is always on the VPN tunnel."
-msgstr "يضمن هذا الخيار بقاء الجهاز متصلًا دائمًا بنفق VPN."
-
-msgid "More actions"
-msgstr "إجراءات إضافية"
-
-msgid "Warren services unavailable"
-msgstr "خدمات Warren غير متاحة"
-
-msgid "Multihop is disabled"
-msgstr "تم تعطيل القفز المتعدد"
-
-msgid "Multihop is enabled"
-msgstr "تم تمكين القفز المتعدد"
-
-msgid "Name is already taken."
-msgstr "الاسم مُستخدَم بالفعل."
-
-msgid "Name was changed to %s"
-msgstr "تم تغيير الاسم إلى %s"
-
-msgid "Navigate"
-msgstr "تنقل"
-
-msgid "No Android app store installed, could not open link"
-msgstr "لم يتم تثبيت متجر تطبيقات Android، تعذَّر فتح الرابط"
-
-msgid "No browser app installed, could not open link"
-msgstr "لم يتم تثبيت تطبيق متصفح، تعذَّر فتح الرابط"
-
-msgid "No changelog was added for this version"
-msgstr "لم تتم إضافة سجل تغييرات لهذا الإصدار"
-
-msgid "No custom lists available"
-msgstr "لا توجد قوائم مُخصَّصة متاحة"
-
-msgid "No email app available on the device"
-msgstr "لا يتوفَّر تطبيق بريد إلكتروني على الجهاز"
-
-msgid "No entry server match your settings, try changing server or other settings."
-msgstr "لا يوجد خادم دخول متطابق مع إعداداتك، جرِّب تغيير الخادم أو أي إعدادات أخرى."
-
-msgid "No exit server match your settings, try changing server or other settings."
-msgstr "لا يوجد خادم خروج متطابق مع إعداداتك، جرِّب تغيير الخادم أو أي إعدادات أخرى."
-
-msgid "No internet connection"
-msgstr "لا يتوفَّر اتصال بالإنترنت"
-
-msgid "No matching servers found."
-msgstr "لم يتم العثور على خوادم مطابقة."
-
-msgid "No result for \"%s\", please try a different search"
-msgstr "لم يتم العثور على نتائج للبحث عن \"%s\"، يُرجى تجربة بحث مختلف"
-
-msgid "Not found"
-msgstr "غير موجود"
-
-msgid "Notes"
-msgstr "ملاحظات"
-
-msgid "Notification settings"
-msgstr "إعدادات الإشعارات"
-
-msgid "Open app details"
-msgstr "فتح تفاصيل التطبيق"
-
-msgid "Overrides active"
-msgstr "التجاوزات نشطة"
-
-msgid "Overrides cleared"
-msgstr "تم مسح التجاوزات"
-
-msgid "Overrides inactive"
-msgstr "التجاوزات غير نشطة"
-
-msgid "Password (optional)"
-msgstr "كلمة المرور (اختيارية)"
-
-msgid "Paste or write overrides to be imported"
-msgstr "الصق أو اكتب التجاوزات المراد استيرادها"
-
-msgid "Patch not matching specification"
-msgstr "التصحيح لا يطابق المواصفات"
-
-msgid "Please enter a valid IPv4 or IPv6 address"
-msgstr "يُرجى إدخال عنوان IPv4 أو IPv6 صالح"
-
-msgid "Please enter a valid remote server port"
-msgstr "يُرجى إدخال منفذ خادم بعيد صالح"
-
-msgid "Please press connect to request VPN permission"
-msgstr "يُرجى الضغط على \"اتصال\" لطلب إذن VPN"
-
-msgid "Please restart your device and try connecting again. If this does not work, please write an email to %s in Swedish or English."
-msgstr "يُرجى إعادة تشغيل جهازك ومحاولة الاتصال مرة أخرى. إذا لم ينجح ذلك، يُرجى إرسال رسالة بريد إلكتروني إلى %s باللغة السويدية أو الإنجليزية."
-
-msgid "Please try changing your filters."
-msgstr "يُرجى محاولة تغيير عوامل التصفية لديك."
-
-msgid "Privacy"
-msgstr "الخصوصية"
-
-msgid "Privacy policy"
-msgstr "سياسة الخصوصية"
-
-msgid "Recents disabled and history cleared"
-msgstr "تم إيقاف المواقع الحديثة ومسح السجل"
-
-msgid "Recursion limit"
-msgstr "حد التكرار"
-
-msgid "Refunds will not be possible."
-msgstr "لن يكون من الممكن استرداد الأموال."
-
-msgid "Remove %s?"
-msgstr "هل تريد إزالة %s؟"
-
-msgid "Remove custom port"
-msgstr "إزالة المنفذ المُخصَّص"
-
-msgid "Reset"
-msgstr "إعادة التعيين"
-
-msgid "Reset all overrides"
-msgstr "إعادة تعيين كل التجاوزات"
-
-msgid "Reset overrides"
-msgstr "إعادة تعيين التجاوزات"
-
-msgid "Reset to default"
-msgstr "إعادة التعيين إلى الإعدادات الافتراضية"
-
-msgid "Restart your device"
-msgstr "إعادة تشغيل الجهاز"
-
-msgid "Search"
-msgstr "بحث"
-
-msgid "Send email"
-msgstr "إرسال رسالة بريد إلكتروني"
-
-msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
-msgstr "قم بتعيين قيمة QUIC MTU. النطاق الصالح: %1$d - %2$d."
-
-msgid "Set as multihop entry"
-msgstr "تعيين كمدخل لقفزات متعددة"
-
-msgid "Set as multihop entry (incompatible)"
-msgstr "تعيين كمدخل لقفزات متعددة (غير متوافق)"
-
-msgid "Set as multihop exit"
-msgstr "تعيين كمخرج لقفزات متعددة"
-
-msgid "Set as multihop exit (incompatible)"
-msgstr "تعيين كمخرج لقفزات متعددة (غير متوافق)"
-
-msgid "Set port"
-msgstr "تعيين المنفذ"
-
-msgid "Share…"
-msgstr "مشاركة…"
-
-msgid "Show location in notification"
-msgstr "إظهار الموقع في الإشعار"
-
-msgid "Show system apps"
-msgstr "إظهار تطبيقات النظام"
-
-msgid "Shows current VPN tunnel status"
-msgstr "يظهر حالة نفق VPN الحالية"
-
-msgid "Shows reminders when the account time is about to expire"
-msgstr "يظهر تذكيرات عندما يكون وقت الحساب على وشك الانتهاء"
-
-msgid "Submit"
-msgstr "إرسال"
-
-msgid "TCP"
-msgstr "TCP"
-
-msgid "Test method"
-msgstr "طريقة الاختبار"
-
-msgid "Testing %s..."
-msgstr "جارٍ اختبار %s..."
-
-msgid "Text"
-msgstr "نص"
-
-msgid "Thanks for being part of our community.\\nPrivacy is for the people!"
-msgstr "نشكرك لكونك جزء من مجتمعنا.\\nالخصوصية حق للجميع!"
-
-msgid "The Auto-connect and Lockdown mode settings can be found in the Android system settings, follow this guide to enable one or both."
-msgstr "يمكن العثور على إعدادات \"الاتصال التلقائي\" و\"وضع التأمين\" في إعدادات نظام Android. اتَّبع هذا الدليل لتفعيل أحدهما أو كليهما."
-
-msgid "The IPv6 DNS server will not work unless you enable \"IPv6\" under VPN settings."
-msgstr "لن يعمل خادم IPv6 DNS ما لم يتم تفعيل \"IPv6\" ضمن إعدادات VPN."
-
-msgid "The Lockdown mode is called \"Block connections without VPN\" in the Android system settings. It helps minimize leaks, however it has some known limitations which you can read more about"
-msgstr "يُسمَّى \"وضع التأمين\" باسم \"حظر الاتصالات دون VPN\" في إعدادات نظام Android. يساعد هذا الوضع في تقليل التسريبات، لكن لديه بعض القيود المعروفة التي يمكنك قراءة المزيد عنها"
-
-msgid "The \"Current\" method represent which method the app is using to reach the API."
-msgstr "تُمثِّل الطريقة \"الحالية\" الطريقة التي يستخدمها التطبيق للوصول إلى واجهة API."
-
-msgid "The app is blocking internet, please disconnect first"
-msgstr "التطبيق يحظر الإنترنت، يُرجي قطع الاتصال أولًا"
-
-msgid "The app was unable to create an account due to not being able to reach the Warren API."
-msgstr "لم يتمكن التطبيق من إنشاء حساب لعدم قدرته على الوصول إلى Warren API."
-
-msgid "The app was unable to login due to not being able to reach the Warren API."
-msgstr "لم يتمكن التطبيق من تسجيل الدخول بسبب عدم قدرته على الوصول إلى Warren API."
-
-msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
-msgstr "لن يعمل خادم DNS المحلي ما لم يتم تفعيل خاصية \"مشاركة الشبكة المحلية\" ضمن إعدادات شبكة VPN."
-
-msgid "The selected %s port is not supported, please change it under"
-msgstr "المنفذ المُحدَّد %s غير مدعوم، يُرجى تغييره ضمن"
-
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "قد تكون هذه الطرق مفيدة في حال تم حظر وصولك إلى Warren. عند اختيار \"تلقائي\"، سيحاول التطبيق استخدام جميع الطرق حتى تنجح إحداها."
-
-msgid "This address has already been entered."
-msgstr "لقد تم إدخال هذا العنوان بالفعل."
-
-msgid "This field is required"
-msgstr "هذا الحقل مطلوب"
-
-msgid "This impacts your anonymity"
-msgstr "يؤثر ذلك على إخفاء هويتك"
-
-msgid "This is already set as current"
-msgstr "تم بالفعل تعيين هذه الطريقة كالطريقة الحالية"
-
-msgid "This might be due to censorship or network issues. Please try to:"
-msgstr "قد يكون هذا بسبب الرقابة أو مشكلات في الشبكة. يُرجى تجربة ما يلي:"
-
-msgid "Time added"
-msgstr "تمت إضافة الوقت"
-
-msgid "To add locations to a list, press the pen or long press on a country, city, or server."
-msgstr "لإضافة مواقع إلى قائمة، اضغط على القلم أو اضغط مطولًا على اسم البلد أو المدينة أو الخادم."
-
-msgid "To create a custom list press the \"+\""
-msgstr "لإنشاء قائمة مُخصَّصة، اضغط على \"+\""
-
-msgid "To delete your Warren VPN account, please enter your account number below."
-msgstr "لحذف حسابك على Warren VPN، يرجى إدخال رقم الحساب أدناه."
-
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "للتأكد من استخدامك للإصدار الأكثر أمانًا وإبلاغك بأي مشكلات في الإصدار الحالي قيد التشغيل، يُجري التطبيق عمليات فحص للإصدار تلقائيًا يتم خلالها إرسال إصدار التطبيق وإصدار نظام Android إلى خوادم Warren. تحتفظ Warren بعدادات لعدد إصدارات التطبيق وإصدارات Android المُستخدَمة. لا يتم تخزين البيانات أو استخدامها بأي طريقة يمكن من خلالها تحديد هويتك."
-
-msgid "Toggle VPN"
-msgstr "زر تبديل VPN"
-
-msgid "Too many attempts, please try again later"
-msgstr "تم إجراء عدد كبير جدًا من المحاولات، يُرجى إعادة المحاولة لاحقًا"
-
-msgid "UDP"
-msgstr "UDP"
-
-msgid "Unable to apply firewall rules. Please troubleshoot or send a problem report."
-msgstr "يتعذَّر تطبيق قواعد جدار الحماية. يُرجى استكشاف الأخطاء وإصلاحها أو إرسال بلاغ بالمشكلة."
-
-msgid "Unable to parse patch"
-msgstr "يتعذَّر تحليل التصحيح"
-
-msgid "Unable to reach API"
-msgstr "يتعذَّر الوصول إلى واجهة API"
-
-msgid "Unable to reach API, %s"
-msgstr "يتعذَّر الوصول إلى واجهة API، %s"
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
-msgstr "يتعذَّر بدء اتصال النفق. يُرجى إيقاف \"تشغيل VPN دائمًا\" قبل استخدام Warren VPN."
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
-msgstr "يتعذَّر بدء اتصال النفق. يُرجى إيقاف \"تشغيل VPN دائمًا\" لـ <b>%s</b> قبل استخدام Warren VPN."
-
-msgid "Unable to verify account number, please contact support"
-msgstr "تعذر التحقق من رقم الحساب، يرجى الاتصال بالدعم"
-
-msgid "Unavailable"
-msgstr "غير متوفر"
-
-msgid "Undo"
-msgstr "تراجع"
-
-msgid "Unknown or prohibited key \"%1$s\""
-msgstr "مفتاح غير معروف أو محظور \"%1$s\""
-
-msgid "Update DNS server"
-msgstr "تحديث خادم DNS"
-
-msgid "Update list name"
-msgstr "تحديث اسم القائمة"
-
-msgid "Update server list"
-msgstr "تحديث قائمة الخوادم"
-
-msgid "Updating server list in the background..."
-msgstr "جارٍ تحديث قائمة الخوادم في الخلفية..."
-
-msgid "Use method"
-msgstr "استخدام الطريقة"
-
-msgid "VPN Settings not available on device"
-msgstr "إعدادات شبكة VPN غير متاحة على الجهاز"
-
-msgid "VPN permission error"
-msgstr "خطأ في إذن شبكة VPN"
-
-msgid "VPN permission was denied"
-msgstr "تم رفض إذن شبكة VPN"
-
-msgid "VPN permission was denied or another app has \"Always-on VPN\" enabled"
-msgstr "تم رفض إذن شبكة VPN أو يوجد تطبيق آخر تم تفعيل خيار \"تشغيل VPN دائمًا\" عليه"
-
-msgid "VPN tunnel status"
-msgstr "حالة نفق شبكة VPN"
-
-msgid "Valid range for all servers: %s"
-msgstr "النطاق الصالح لجميع الخوادم: %s"
-
-msgid "Value: %s"
-msgstr "القيمة: %s"
-
-msgid "Verifying API method..."
-msgstr "جار التحقُّق من طريقة واجهة API..."
-
-msgid "Verifying purchase"
-msgstr "جارٍ التحقُّق من عملية الشراء"
-
-msgid "Verifying purchase..."
-msgstr "جارٍ التحقُّق من عملية الشراء..."
-
-msgid "Verifying voucher…"
-msgstr "جارٍ التحقُّق من القسيمة…"
-
-msgid "Warning"
-msgstr "تحذير"
-
-msgid "We are still verifying your purchase, this might take some time. Your time will be added if the verification is successful."
-msgstr "ما زلنا نتحقَّق من عملية الشراء، قد يستغرق ذلك بعض الوقت. ستتم إضافة مدتك في حال نجاح التحقُّق."
-
-msgid "We were unable to start the payment process, please make sure you have the latest version of Google Play."
-msgstr "لم نتمكن من بدء عملية الدفع، يُرجى التأكد من أن لديك الإصدار الأحدث من Google Play."
-
-msgid "We were unable to start the payment process, please try again later."
-msgstr "لم نتمكن من بدء عملية الدفع، يُرجى إعادة المحاولة لاحقًا."
-
-msgid "Weather"
-msgstr "الطقس"
-
-msgid "Welcome, this device is now called <b>%s</b>."
-msgstr "مرحبًا، يُسمَّى هذا الجهاز الآن <b>%s</b>."
-
-msgid "QUIC port"
-msgstr "منفذ QUIC"
-
-msgid "Yes, log out device"
-msgstr "نعم، تسجيل الخروج من الجهاز"
-
-msgid "You are about to delete your Warren VPN account."
-msgstr "أنت على وشك حذف حساب Warren VPN."
-
-msgid "You can add more time via the account view or website to continue using the VPN."
-msgstr "يمكنك إضافة المزيد من الوقت من خلال طريقة عرض الحساب أو موقع الويب لمتابعة استخدام VPN."
-
-msgid "You can add more time via the account view to continue using the VPN."
-msgstr "يمكنك إضافة المزيد من الوقت من خلال طريقة عرض الحساب لمتابعة استخدام VPN."
-
-msgid "You will lose access to this account on all devices."
-msgstr "سوف تفقد صلاحية الوصول إلى هذا الحساب على جميع الأجهزة."
-
-msgid "You will lose your remaining"
-msgstr "ستفقد المتبقي"
-
-msgid "\"%s\" was created"
-msgstr "تم إنشاء \"%s\""
-
-msgid "\"%s\" was deleted"
-msgstr "تم حذف \"%s\""
-
-msgid "click here"
-msgstr "انقر هنا"
-
-msgid "here"
-msgstr "هنا"
-
-msgid "less than one day"
-msgstr "أقل من يوم"
-
-msgid "privacy policy"
-msgstr "سياسة الخصوصية"
-
-msgid "read more here"
-msgstr "أقرأ المزيد هنا"
-
-msgid "%d day"
-msgid_plural "%d days"
-msgstr[0] "%d يوم"
-msgstr[1] "يوم واحد (%d)"
-msgstr[2] "يومان (%d)"
-msgstr[3] "%d أيام"
-msgstr[4] "%d يومًا"
-msgstr[5] "%d يوم"
-
-msgid "%d location"
-msgid_plural "%d locations"
-msgstr[0] "%d موقع"
-msgstr[1] "موقع واحد (%d)"
-msgstr[2] "موقعان (%d)"
-msgstr[3] "%d مواقع"
-msgstr[4] "%d موقعًا"
-msgstr[5] "%d موقع"
-
-msgid "%d month"
-msgid_plural "%d months"
-msgstr[0] "%d شهر"
-msgstr[1] "شهر واحد (%d)"
-msgstr[2] "شهران (%d)"
-msgstr[3] "%d أشهر"
-msgstr[4] "%d شهرًا"
-msgstr[5] "%d شهر"
-
-msgid "1 day left on this account"
-msgid_plural "%d days left on this account"
-msgstr[0] "بقي %d من الأيام على هذا الحساب"
-msgstr[1] "بقي يوم واحد على هذا الحساب"
-msgstr[2] "بقي %d من الأيام على هذا الحساب"
-msgstr[3] "بقي %d أيام على هذا الحساب"
-msgstr[4] "بقي %d يومًا على هذا الحساب"
-msgstr[5] "بقي %d يوم على هذا الحساب"
-
-msgid "1 year left on this account"
-msgid_plural "%d years left on this account"
-msgstr[0] "بقي %d من السنوات على هذا الحساب"
-msgstr[1] "بقيت سنة واحدة على هذا الحساب"
-msgstr[2] "بقي %d من السنوات على هذا الحساب"
-msgstr[3] "بقي %d سنوات على هذا الحساب"
-msgstr[4] "بقي %d سنة على هذا الحساب"
-msgstr[5] "بقي %d سنة على هذا الحساب"
-
-msgid "Account credit expires in a day"
-msgid_plural "Account credit expires in %d days"
-msgstr[0] "ستنتهي صلاحية رصيد الحساب بعد %d يوم"
-msgstr[1] "ستنتهي صلاحية رصيد الحساب بعد يوم واحد"
-msgstr[2] "ستنتهي صلاحية رصيد الحساب بعد يومين (%d)"
-msgstr[3] "ستنتهي صلاحية رصيد الحساب بعد %d أيام"
-msgstr[4] "ستنتهي صلاحية رصيد الحساب بعد %d يومًا"
-msgstr[5] "ستنتهي صلاحية رصيد الحساب بعد %d يوم"
-
-msgid "Account credit expires in an hour"
-msgid_plural "Account credit expires in %d hours"
-msgstr[0] "ستنتهي صلاحية رصيد الحساب بعد %d ساعة"
-msgstr[1] "ستنتهي صلاحية رصيد الحساب بعد ساعة واحدة"
-msgstr[2] "ستنتهي صلاحية رصيد الحساب بعد ساعتين (%d)"
-msgstr[3] "ستنتهي صلاحية رصيد الحساب بعد %d ساعات"
-msgstr[4] "ستنتهي صلاحية رصيد الحساب بعد %d ساعة"
-msgstr[5] "ستنتهي صلاحية رصيد الحساب بعد %d ساعة"
-
-msgid "You will lose your remaining day."
-msgid_plural "You will lose your remaining %d days."
-msgstr[0] "ستفقد %d من الأيام المتبقية لك."
-msgstr[1] "ستفقد %d من الأيام المتبقية لك."
-msgstr[2] "ستفقد %d من الأيام المتبقية لك."
-msgstr[3] "ستفقد %d أيام متبقية لك."
-msgstr[4] "ستفقد %d يومًا متبقيًا لك."
-msgstr[5] "ستفقد %d يوم متبق لك."
-
-
-msgctxt "port-forwarding-view"
-msgid "auto"
-msgstr "تلقائي"
-
-msgctxt "port-forwarding-view"
-msgid "Mapping failed: %(error)s"
-msgstr "فشل التعيين: %(error)s"
 
 msgctxt "port-forwarding-view"
 msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
@@ -4730,40 +3131,8 @@ msgid "Port forwarding"
 msgstr "إعادة توجيه المنافذ"
 
 msgctxt "port-forwarding-view"
-msgid "Port must be between 49152 and 65535, or empty for auto."
-msgstr "يجب أن يكون المنفذ بين 49152 و65535، أو فارغًا للوضع التلقائي."
-
-msgctxt "port-forwarding-view"
-msgid "Preferred port"
-msgstr "المنفذ المفضل"
-
-msgctxt "port-forwarding-view"
 msgid "Protocol"
 msgstr "البروتوكول"
-
-msgctxt "port-forwarding-view"
-msgid "Public port: %(port)s"
-msgstr "المنفذ العام: %(port)s"
-
-msgctxt "port-forwarding-view"
-msgid "Renewing in %(countdown)s"
-msgstr "التجديد خلال %(countdown)s"
-
-msgctxt "port-forwarding-view"
-msgid "Status: active"
-msgstr "الحالة: نشط"
-
-msgctxt "port-forwarding-view"
-msgid "Status: requesting port mapping..."
-msgstr "الحالة: جارٍ طلب تعيين المنفذ…"
-
-msgctxt "port-forwarding-view"
-msgid "Status: waiting for an active tunnel connection to set up the port mapping."
-msgstr "الحالة: في انتظار اتصال نفق نشط لإعداد تعيين المنفذ."
-
-msgctxt "port-forwarding-view"
-msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
-msgstr "قد يعيّن الخادم منفذًا مختلفًا إذا كان المنفذ المفضل مستخدمًا بالفعل. تُطبَّق التغييرات فورًا دون إعادة الاتصال."
 
 msgctxt "keys-view"
 msgid "Backup keys"
@@ -4870,16 +3239,8 @@ msgid "Could not check subscription status. Please try again."
 msgstr "تعذّر التحقق من حالة الاشتراك. يرجى المحاولة مرة أخرى."
 
 msgctxt "warren-onboarding"
-msgid "Create my new wallet (recommended)"
-msgstr "إنشاء محفظتي الجديدة (مُوصى به)"
-
-msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
 msgstr "لا تحتوي الخدمة على عبارة استرجاعية بعد، سجّل الدخول أو أعد تشغيل التطبيق."
-
-msgctxt "warren-onboarding"
-msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
-msgstr "رفضت الخدمة العبارة الاسترجاعية. تحقق من الإملاء وعدد الكلمات، ثم حاول مرة أخرى."
 
 msgctxt "warren-onboarding"
 msgid "Failed to retrieve mnemonic from daemon."
@@ -4898,16 +3259,8 @@ msgid "I have written it down in a safe place."
 msgstr "لقد دوّنتها في مكان آمن."
 
 msgctxt "warren-onboarding"
-msgid "Import an existing mnemonic"
-msgstr "استيراد عبارة استرجاعية موجودة"
-
-msgctxt "warren-onboarding"
 msgid "No active subscription found. Please purchase one first."
 msgstr "لم يُعثر على اشتراك نشط. يرجى شراء اشتراك أولاً."
-
-msgctxt "warren-onboarding"
-msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
-msgstr "الصق عبارتك الاسترجاعية BIP39 المكوّنة من 12 كلمة لاستعادة هوية Warren الموجودة لديك."
 
 msgctxt "warren-onboarding"
 msgid "Pick a country and connect"
@@ -4922,20 +3275,12 @@ msgid "Privacy preferences"
 msgstr "تفضيلات الخصوصية"
 
 msgctxt "warren-onboarding"
-msgid "Restore wallet"
-msgstr "استعادة المحفظة"
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "تخطّي المعالج (متقدّم)"
 
 msgctxt "warren-onboarding"
 msgid "View plans (opens in your browser)"
 msgstr "عرض الباقات (يُفتح في متصفحك)"
-
-msgctxt "warren-onboarding"
-msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
-msgstr "يستخدم Warren محفظة غير وصائية (Ed25519 + BIP39). أنت تملك المفاتيح؛ ولا نراها أبداً."
 
 msgctxt "warren-onboarding"
 msgid "Welcome to Warren VPN"
@@ -5061,25 +3406,9 @@ msgctxt "device-management"
 msgid "Session is inactive"
 msgstr "الجلسة غير نشطة"
 
-msgctxt "device-management"
-msgid "Your session has ended. To connect again, you will need to log back in."
-msgstr "انتهت جلستك. لإعادة الاتصال، ستحتاج إلى تسجيل الدخول مرة أخرى."
-
 msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "تم اكتشاف عدم تطابق في هوية الخادم. لقد تغيّر المفتاح العام لعقدة الخروج."
-
-msgctxt "vpn-settings-view"
-msgid "Automatic failover"
-msgstr "تجاوز الفشل التلقائي"
-
-msgctxt "vpn-settings-view"
-msgid "Automatically switch to another exit server if the current one becomes unreachable."
-msgstr "التبديل تلقائيًا إلى خادم خروج آخر إذا أصبح الخادم الحالي غير قابل للوصول."
-
-msgctxt "vpn-settings-view"
-msgid "This setting takes effect immediately without a daemon restart."
-msgstr "يسري هذا الإعداد فورًا دون إعادة تشغيل الخدمة."
 
 msgctxt "vpn-settings-view"
 msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
@@ -5098,14 +3427,6 @@ msgctxt "accessibility"
 msgid "Copy the voucher code"
 msgstr "نسخ رمز القسيمة"
 
-msgctxt "accessibility"
-msgid "Hide public key"
-msgstr "إخفاء المفتاح العام"
-
-msgctxt "accessibility"
-msgid "Show public key"
-msgstr "إظهار المفتاح العام"
-
 msgctxt "account-view"
 msgid "Backup keys"
 msgstr "النسخ الاحتياطي للمفاتيح"
@@ -5122,10 +3443,6 @@ msgstr "حدث خطأ أثناء تسجيل الخروج."
 msgctxt "account-view"
 msgid "Try again"
 msgstr "إعادة المحاولة"
-
-msgctxt "account-view"
-msgid "Public key"
-msgstr "المفتاح العام"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
@@ -5214,10 +3531,6 @@ msgstr "فشل"
 msgctxt "port-forwarding-view"
 msgid "no port available"
 msgstr "لا يوجد منفذ متاح"
-
-msgctxt "port-forwarding-view"
-msgid "not allowed"
-msgstr "غير مسموح"
 
 msgctxt "port-forwarding-view"
 msgid "open: %(port)d"
@@ -5332,10 +3645,6 @@ msgstr "تعدد قفزات Warren"
 msgctxt "warren-multi-hop-view"
 msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
 msgstr "عند التفعيل، تُوجَّه حركة المرور عبر مُرحِّلَي Warren (الدخول ثم الخروج) باستخدام تشفير HPKE من طرف إلى طرف بين العميل وعقدة الخروج. لا يرى مُرحِّل الدخول سوى النص المشفَّر؛ ولا ترى عقدة الخروج سوى الحمولة المفكوكة التشفير، ولا ترى عنوان IP الخاص بالمستخدم أبدًا."
-
-msgctxt "warren-multi-hop-view"
-msgid "auto"
-msgstr "تلقائي"
 
 msgctxt "warren-pubkey-warning"
 msgid "Cryptographic mismatch details"
@@ -5461,14 +3770,6 @@ msgstr "جارٍ التوقيع، يُرجى الانتظار."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "منتدى المجتمع"
-
-msgctxt "tunnel-control"
-msgid "Connecting..."
-msgstr "جارٍ الاتصال..."
-
-msgctxt "tunnel-control"
-msgid "Encrypting your connection"
-msgstr "جارٍ تشفير اتصالك"
 
 msgctxt "tunnel-control"
 msgid "Random location"

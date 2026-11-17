@@ -12,17 +12,8 @@ msgstr ""
 "Language: ru_RU\n"
 "PO-Revision-Date: 2026-04-27 09:12\n"
 
-msgid "%(amount)d more..."
-msgstr "Еще %(amount)d..."
-
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "Добавлено: %(duration)s. Учетная запись оплачена до %(expiry)s."
-
-#. The label for the QUIC port option.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgid "%(wireguard)s port"
-msgstr "Порт %(wireguard)s"
 
 msgid "1 day"
 msgid_plural "%d days"
@@ -117,14 +108,8 @@ msgstr "Подключить"
 msgid "Connected"
 msgstr "Подключено"
 
-msgid "CONNECTED"
-msgstr "ПОДКЛЮЧЕНО"
-
 msgid "Connecting"
 msgstr "Идет подключение"
-
-msgid "CONNECTING..."
-msgstr "ПОДКЛЮЧЕНИЕ..."
 
 msgid "Create"
 msgstr "Создать"
@@ -168,14 +153,8 @@ msgstr "Отключиться и выйти"
 msgid "Disconnected"
 msgstr "Разъединено"
 
-msgid "DISCONNECTED"
-msgstr "ОТКЛЮЧЕНО"
-
 msgid "Disconnecting"
 msgstr "Отключение"
-
-msgid "DISCONNECTING..."
-msgstr "ОТКЛЮЧЕНИЕ..."
 
 msgid "Edit"
 msgstr "Изменить"
@@ -190,16 +169,8 @@ msgstr "Всё равно включить"
 msgid "Enable direct only"
 msgstr "Включить «Только напрямую»"
 
-#. Error message shown trying to login but the app fails
-#. to fetch the list of registered devices.
-msgid "Failed to fetch list of devices"
-msgstr "Не удалось получить список устройств"
-
 msgid "FAILED TO SECURE CONNECTION"
 msgstr "НЕ УДАЛОСЬ УСТАНОВИТЬ БЕЗОПАСНОЕ ПОДКЛЮЧЕНИЕ"
-
-msgid "Filters"
-msgstr "Фильтры"
 
 #. Button label for system settings.
 msgid "Go to System Settings"
@@ -246,9 +217,6 @@ msgstr "Подходящих серверов не найдено"
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "По запросу <b>%(searchTerm)s</b> ничего не найдено."
 
-msgid "None"
-msgstr "Нет"
-
 msgid "Off"
 msgstr "Выкл."
 
@@ -281,10 +249,6 @@ msgstr "Выйти"
 
 msgid "Reconnect"
 msgstr "Переподключить"
-
-#. Button label in confirmation dialog that confirms a remove action.
-msgid "Remove"
-msgstr "Удалить"
 
 msgid "Required"
 msgstr "Обязательно"
@@ -335,23 +299,9 @@ msgstr "Использовать"
 msgid "Username"
 msgstr "Имя пользователя"
 
-#. Text for screen readers to describe the LWO settings navigation button.
-#. Available placeholders:
-#. %(lwo)s - will be replaced with LWO
-msgctxt "accessibility"
-msgid "%(lwo)s settings"
-msgstr "Настройки %(lwo)s"
-
 msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s, представление загружено"
-
-#. Text for screen readers to describe the QUIC port settings navigation button.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgctxt "accessibility"
-msgid "%(wireguard)s port settings"
-msgstr "Настройки порта %(wireguard)s"
 
 #. This is an accessibility label for a button that adds a location to a custom list.
 #. Available placeholders:
@@ -381,12 +331,6 @@ msgctxt "accessibility"
 msgid "Connect to %(location)s"
 msgstr "Подключиться к местоположению %(location)s"
 
-#. Provided to accessibility tools such as screenreaders to describe a button
-#. which copies the account number to the clipboard.
-msgctxt "accessibility"
-msgid "Copy account number"
-msgstr "Копировать номер учетной записи"
-
 #. Accessibility label for a carousel that explains the DAITA feature to the user.
 msgctxt "accessibility"
 msgid "DAITA information carousel"
@@ -414,21 +358,6 @@ msgctxt "accessibility"
 msgid "Expand %(location)s"
 msgstr "Развернуть %(location)s"
 
-#. This is used by screenreaders to communicate the "x" button next to a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the account number to the left of the button
-msgctxt "accessibility"
-msgid "Forget account number %(accountNumber)s"
-msgstr "Забыть номер учетной записи %(accountNumber)s"
-
-#. Accessibility label for link to VPN settings where
-#. the user can change QUIC port.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "accessibility"
-msgid "Go to anti-censorship settings to change %(wireGuard)s port"
-msgstr "Для изменения порта %(wireGuard)s перейдите в настройки обхода цензуры"
-
 #. Accessibility label for link to app upgrade view.
 msgctxt "accessibility"
 msgid "Go to app update page"
@@ -441,12 +370,6 @@ msgctxt "accessibility"
 msgid "Go to slide %(index)s"
 msgstr "Перейти к слайду %(index)s"
 
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which obscures the account number.
-msgctxt "accessibility"
-msgid "Hide account number"
-msgstr "Скрыть номер учетной записи"
-
 #. Alt text for an illustration showing VPN traffic with DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic with DAITA enabled"
@@ -456,18 +379,6 @@ msgstr "Иллюстрация VPN-трафика при включенной ф
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic without DAITA"
 msgstr "Иллюстрация VPN-трафика при выключенной функции DAITA"
-
-#. This is used by screenreaders to communicate the login button.
-msgctxt "accessibility"
-msgid "Login"
-msgstr "Вход"
-
-#. This is used by screenreaders to communicate logging in with a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the saved account number
-msgctxt "accessibility"
-msgid "Login with account number %(accountNumber)s"
-msgstr "Войти с номером учетной записи %(accountNumber)s"
 
 msgctxt "accessibility"
 msgid "More information"
@@ -527,14 +438,6 @@ msgctxt "accessibility"
 msgid "Remove %(location)s from %(customList)s"
 msgstr "Удалить местоположение %(location)s из списка %(customList)s"
 
-#. Button action description provided to accessibility tools such as screen
-#. readers.
-#. Available placeholders:
-#. %(deviceName)s - The device name to remove.
-msgctxt "accessibility"
-msgid "Remove device named %(deviceName)s"
-msgstr "Удалить устройство «%(deviceName)s»"
-
 msgctxt "accessibility"
 msgid "Remove item"
 msgstr "Удалить элемент"
@@ -543,32 +446,10 @@ msgctxt "accessibility"
 msgid "Select location. Current location is %(location)s"
 msgstr "Выбрать местоположение. Текущее местоположение %(location)s"
 
-msgctxt "accessibility"
-msgid "Shadowsocks settings"
-msgstr "Настройки Shadowsocks"
-
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which unobscures the account number.
-msgctxt "accessibility"
-msgid "Show account number"
-msgstr "Показать номер учетной записи"
-
-msgctxt "accessibility"
-msgid "UDP-over-TCP settings"
-msgstr "Настройки UDP через TCP"
-
-msgctxt "accessibility"
-msgid "Use the right arrow key to focus the settings button."
-msgstr "Нажмите клавишу со стрелкой вправо, чтобы перейти к кнопке настроек."
-
 #. Title label in navigation bar
 msgctxt "account-view"
 msgid "Account"
 msgstr "Учетная запись"
-
-msgctxt "account-view"
-msgid "Account number"
-msgstr "Номер учетной записи"
 
 msgctxt "account-view"
 msgid "Currently unavailable"
@@ -578,11 +459,6 @@ msgstr "Сейчас недоступно"
 msgctxt "account-view"
 msgid "Log out"
 msgstr "Выйти"
-
-#. Link text in the account view to navigate to the manage devices view.
-msgctxt "account-view"
-msgid "Manage devices"
-msgstr "Управление устройствами"
 
 msgctxt "account-view"
 msgid "OUT OF TIME"
@@ -629,21 +505,6 @@ msgstr "Отключить"
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
 msgstr "Обход цензуры"
-
-#. The title for the obfuscation method selector.
-msgctxt "anti-censorship-view"
-msgid "Method"
-msgstr "Метод"
-
-#. Second paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "Please note that these methods do not improve performance, and may increase system utilization and battery consumption."
-msgstr "Обратите внимание: эти методы не улучшают производительность, а наоборот, могут увеличить энергопотребление и нагрузку на систему."
-
-#. First paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "Эти методы могут помочь, если вам заблокировали доступ в Warren. Когда выбран вариант «Автоматически», приложение будет перебирать все методы, пока не найдет подходящий."
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -875,12 +736,6 @@ msgctxt "app-upgrade-view"
 msgid "Connection blocked. Try changing server or other settings."
 msgstr "Подключение заблокировано. Попробуйте изменить сервер или другие настройки."
 
-#. Label displayed when an error occurred due to the installer failing to start
-#. and the suggested resolution is to download the update again.
-msgctxt "app-upgrade-view"
-msgid "Could not open installer, please try again or send a problem report."
-msgstr "Не удалось открыть установщик. Повторите попытку или отправьте сообщение о проблеме."
-
 #. Button text to download and install an update
 msgctxt "app-upgrade-view"
 msgid "Download & install"
@@ -895,11 +750,6 @@ msgstr "Скачивание завершено!"
 msgctxt "app-upgrade-view"
 msgid "Download failed"
 msgstr "Не удалось скачать"
-
-#. Label displayed when an error occurred due to the download failing
-msgctxt "app-upgrade-view"
-msgid "Download failed, please check your connection/firewall and try again, or send a problem report."
-msgstr "Скачать не удалось. Проверьте подключение или брандмауэр и повторите попытку или отправьте сообщение о проблеме."
 
 #. Status text displayed below a progress bar when the download of an update has been paused
 #. Label displayed above a progress bar when the update is verified successfully
@@ -929,11 +779,6 @@ msgctxt "app-upgrade-view"
 msgid "Install update"
 msgstr "Установить обновление"
 
-#. Label displayed when an error occurred within the installer
-msgctxt "app-upgrade-view"
-msgid "Installer quit unexpectedly, please try again or send a problem report."
-msgstr "Установщик неожиданно завершил работу. Повторите попытку или отправьте сообщение о проблеме."
-
 #. Info about which directory the app update will be downloaded to
 msgctxt "app-upgrade-view"
 msgid "Installer will be downloaded to <b>%(cacheDir)s</b>."
@@ -952,11 +797,6 @@ msgstr "В этом релизе нет изменений или обновле
 msgctxt "app-upgrade-view"
 msgid "Pause"
 msgstr "Приостановить"
-
-#. Button text to report a problem
-msgctxt "app-upgrade-view"
-msgid "Report a problem"
-msgstr "Сообщить о проблеме"
 
 #. Button text to resume updating
 msgctxt "app-upgrade-view"
@@ -983,21 +823,11 @@ msgctxt "app-upgrade-view"
 msgid "Starting installer..."
 msgstr "Установщик запускается..."
 
-#. Label displayed when an unknown error occurred
-msgctxt "app-upgrade-view"
-msgid "Unknown error occurred. Please try again or send a problem report."
-msgstr "Произошла неизвестная ошибка. Повторите попытку или отправьте сообщение о проблеме."
-
 #. Title in navigation bar
 #. Main title for the update available view
 msgctxt "app-upgrade-view"
 msgid "Update available"
 msgstr "Есть обновление"
-
-#. Label displayed when an error occurred due to the installer failed verification
-msgctxt "app-upgrade-view"
-msgid "Verification failed, please try again or send a problem report."
-msgstr "Сбой проверки. Повторите попытку или отправьте сообщение о проблеме."
 
 #. Label displayed above a progress bar when the update is verified successfully
 msgctxt "app-upgrade-view"
@@ -1068,14 +898,6 @@ msgstr "Интернет блокируется: время на учетной 
 msgctxt "auth-failure"
 msgid "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly."
 msgstr "Слишком много одновременных подключений с этой учетной записи. Отключите другое устройство или попробуйте подключиться еще раз через некоторое время."
-
-msgctxt "auth-failure"
-msgid "Unable to authenticate account. Please send a problem report."
-msgstr "Не удается произвести аутентификацию учетной записи. Отправьте сообщение о проблеме."
-
-msgctxt "auth-failure"
-msgid "You are logged in with an invalid account number. Please log out and try another one."
-msgstr "Вы вошли в систему под недействительным номером учетной записи. Выйдите из системы и попробуйте еще раз."
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
@@ -1172,10 +994,6 @@ msgstr[2] "%(count)d приложений в других странах"
 msgstr[3] "%(count)d приложения в других странах"
 
 msgctxt "connect-view"
-msgid "Active features"
-msgstr "Активные функции"
-
-msgctxt "connect-view"
 msgid "Congrats!"
 msgstr "Поздравляем!"
 
@@ -1199,10 +1017,6 @@ msgstr "Введите код ваучера"
 msgctxt "connect-view"
 msgid "Go ahead and start using the app to begin reclaiming your online privacy."
 msgstr "Начните использовать приложение и верните себе право на конфиденциальность в Интернете."
-
-msgctxt "connect-view"
-msgid "Here’s your account number. Save it!"
-msgstr "Вот номер вашей учетной записи. Сохраните его!"
 
 #. Button label for opening privacy information link.
 msgctxt "connect-view"
@@ -1409,43 +1223,6 @@ msgctxt "custom-list-feature"
 msgid "Relay"
 msgstr "Сервер ретрансляции"
 
-#. Button for continuing login process.
-msgctxt "device-management"
-msgid "Continue with login"
-msgstr "Войти"
-
-#. Label informing the user when a device was created.
-#. Available placeholders:
-#. %(createdDate)s - The creation date of the device.
-msgctxt "device-management"
-msgid "Created: %(createdDate)s"
-msgstr "Создано: %(createdDate)s"
-
-#. Label indicating that this device is the current device.
-msgctxt "device-management"
-msgid "Current device"
-msgstr "Текущее устройство"
-
-msgctxt "device-management"
-msgid "Device is inactive"
-msgstr "Устройство неактивно"
-
-msgctxt "device-management"
-msgid "Device name"
-msgstr "Имя устройства"
-
-#. A label that will display the newly created device name to inform the user
-#. about it.
-#. Available placeholders:
-#. %(deviceName)s - The name of the current device
-msgctxt "device-management"
-msgid "Device name: %(deviceName)s"
-msgstr "Имя устройства: %(deviceName)s"
-
-msgctxt "device-management"
-msgid "Failed to remove device"
-msgstr "Не удалось удалить устройство"
-
 #. Button label for navigating to login.
 msgctxt "device-management"
 msgid "Go to login"
@@ -1455,10 +1232,6 @@ msgctxt "device-management"
 msgid "Going to login will unblock the Internet on this device."
 msgstr "Вход в учетную запись разблокирует Интернет на этом устройстве."
 
-msgctxt "device-management"
-msgid "If you log out, the device and the device name is removed. When you log back in again, the device will get a new name."
-msgstr "Если вы выйдете, устройство и его имя удалятся. При повторном входе устройство получит новое имя."
-
 #. Title label in navigation bar for the manage devices view.
 #. Title text in the manage devices view
 msgctxt "device-management"
@@ -1466,68 +1239,13 @@ msgid "Manage devices"
 msgstr "Управление устройствами"
 
 msgctxt "device-management"
-msgid "Please log out of at least one by removing it from the list below. You can find the corresponding device name under the device’s Account settings."
-msgstr "Выйдите из учетной записи хотя бы на одном из устройств, удалив его из списка ниже. Имя устройства указано в настройках учетной записи."
-
-#. Button label for confirming removing a device.
-msgctxt "device-management"
-msgid "Remove"
-msgstr "Удалить"
-
-#. Text displayed above button which logs out another device.
-#. The text enclosed in "<b></b>" will appear bold.
-#. Available placeholders:
-#. %(deviceName)s - The name of the device to log out.
-msgctxt "device-management"
-msgid "Remove <em>%(deviceName)s?</em>"
-msgstr "Удалить устройство <em>%(deviceName)s</em>?"
-
-#. Page title informing user that enough devices has been removed to continue
-#. login process.
-msgctxt "device-management"
-msgid "Super!"
-msgstr "Отлично!"
-
-msgctxt "device-management"
-msgid "The device will be removed from the list and logged out."
-msgstr "Устройство выйдет из профиля и будет удалено из списка."
-
-msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "Это имя, присвоенное устройству. Каждое устройство, подключенное к учетной записи Warren, получает уникальное имя, которое помогает вам идентифицировать его при управлении устройствами в приложении или на сайте."
-
-msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
 msgstr "Осталось времени: %(timeLeft)s"
-
-#. Page title informing user that the login failed due to too many registered
-#. devices on account.
-msgctxt "device-management"
-msgid "Too many devices"
-msgstr "Слишком много устройств"
 
 #. Button text to retry fetching devices.
 msgctxt "device-management"
 msgid "Try again"
 msgstr "Повторить"
-
-#. Subtitle text in the manage devices view, explaining
-#. devices and what they can do in the manage devices view.
-msgctxt "device-management"
-msgid "View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily."
-msgstr "Просмотр подключенных устройств и управление ими. К одной учетной записи можно подключить 5 устройств. При входе каждому устройству присваивается имя, чтобы их было легче различать."
-
-msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Warren account."
-msgstr "К одной учетной записи Warren можно подключить до 5 устройств."
-
-msgctxt "device-management"
-msgid "You can now continue logging in on this device."
-msgstr "Теперь можно войти в учетную запись на этом устройстве."
-
-msgctxt "device-management"
-msgid "You have removed this device. To connect again, you will need to log back in."
-msgstr "Вы удалили это устройство. Чтобы снова подключиться, нужно будет выполнить вход."
 
 #. The message displayed to the user in case of critical error in the GUI
 #. Available placeholders:
@@ -1687,10 +1405,6 @@ msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
 msgstr "ВОЗМОЖНА УТЕЧКА СЕТЕВОГО ТРАФИКА"
 
 msgctxt "in-app-notifications"
-msgid "NEW DEVICE CREATED"
-msgstr "СОЗДАНО НОВОЕ УСТРОЙСТВО"
-
-msgctxt "in-app-notifications"
 msgid "NEW VERSION INSTALLED"
 msgstr "УСТАНОВЛЕНА НОВАЯ ВЕРСИЯ"
 
@@ -1721,11 +1435,6 @@ msgctxt "in-app-notifications"
 msgid "Retry installation"
 msgstr "Повторить попытку установки"
 
-#. Button label to send a problem report.
-msgctxt "in-app-notifications"
-msgid "Send problem report"
-msgstr "Отправить сообщение о проблеме"
-
 msgctxt "in-app-notifications"
 msgid "SERVER MAINTENANCE"
 msgstr "ОБСЛУЖИВАНИЕ СЕРВЕРА"
@@ -1744,20 +1453,6 @@ msgstr "Установка не была завершена."
 msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "Не удалось запустить установщик."
-
-#. Notification subtitle indicating the user is using an unsupported port for QUIC.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "in-app-notifications"
-msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
-msgstr "Выбранный порт %(wireGuard)s не поддерживается, <a>измените его в настройках VPN</a>."
-
-#. Notification text when a new device has been created.
-#. Available placeholders:
-#. - %(deviceName)s: Name of created device.
-msgctxt "in-app-notifications"
-msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
-msgstr "Имя этого устройства изменено на <em>%(deviceName)s</em>. Подробности указаны в разделе <a>«Управление устройствами»</a> учетной записи."
 
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
@@ -1848,11 +1543,6 @@ msgctxt "launch-view"
 msgid "Failed to start the app, please try again or click “Details” for more info"
 msgstr "Не удалось запустить приложение. Попробуйте еще раз или нажмите «Подробности», чтобы узнать больше"
 
-#. Message in troubleshooting modal advising user to send a problem report if the steps do not work.
-msgctxt "launch-view"
-msgid "If these steps do not work please send a problem report."
-msgstr "Если эти действия не помогли, отправьте сообщение о проблеме."
-
 #. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
 msgid "Only the account that set Warren up, or an administrator, can use it here."
@@ -1898,11 +1588,6 @@ msgctxt "launch-view"
 msgid "Restarting your computer"
 msgstr "Перезагрузить компьютер"
 
-#. Button label for sending a problem report.
-msgctxt "launch-view"
-msgid "Send problem report"
-msgstr "Отправить сообщение о проблеме"
-
 #. Status text shown when app is starting.
 msgctxt "launch-view"
 msgid "Starting up...."
@@ -1917,11 +1602,6 @@ msgstr "Не удалось запустить фоновый процесс War
 msgctxt "launch-view"
 msgid "Try again"
 msgstr "Повторить попытку"
-
-#. Message in launch view when the mullvad service cannot be contacted.
-msgctxt "launch-view"
-msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "Не удается связаться с системной службой Warren. Возможно, ваше подключение не защищено. Устраните неполадки или отправьте сообщение о проблеме, нажав кнопку «Подробнее»."
 
 #. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
 msgctxt "launch-view"
@@ -1978,109 +1658,16 @@ msgctxt "login-view"
 msgid "<b>%(lockdownModeSettingName)s</b> is enabled. Disable it to unblock your connection."
 msgstr "Включена опция <b>%(lockdownModeSettingName)s</b>. Отключите ее, чтобы разблокировать соединение."
 
-msgctxt "login-view"
-msgid "Account created"
-msgstr "Учетная запись создана"
-
-msgctxt "login-view"
-msgid "Checking account number"
-msgstr "Проверка номера учетной записи"
-
 #. Text in button that allows user to create a new account.
 msgctxt "login-view"
 msgid "Create a new account"
 msgstr "Создать учетную запись"
-
-#. Button which confirms the action to create a new account.
-msgctxt "login-view"
-msgid "Create new account"
-msgstr "Создать учетную запись"
-
-msgctxt "login-view"
-msgid "Creating account..."
-msgstr "Создание учетной записи..."
-
-#. Text that asks the user if they really want to create a new account.
-msgctxt "login-view"
-msgid "Do you want to create a new account?"
-msgstr "Создать учетную запись?"
-
-#. Text that asks the user if they really want to remove the saved account.
-msgctxt "login-view"
-msgid "Do you want to remove the saved account number?"
-msgstr "Удалить сохраненный номер учетной записи?"
-
-msgctxt "login-view"
-msgid "Enter your account number"
-msgstr "Введите номер учетной записи"
-
-msgctxt "login-view"
-msgid "Error"
-msgstr "Ошибка"
-
-msgctxt "login-view"
-msgid "Failed to create account"
-msgstr "Не удалось создать учетную запись"
-
-msgctxt "login-view"
-msgid "Finishing upgrade."
-msgstr "Завершение обновления."
-
-#. Error message shown above login input when trying to login with a
-#. non-existent account number.
-msgctxt "login-view"
-msgid "Invalid account number"
-msgstr "Недействительный номер учетной записи"
-
-msgctxt "login-view"
-msgid "Logged in"
-msgstr "Вход выполнен"
-
-msgctxt "login-view"
-msgid "Logging in..."
-msgstr "Выполняется вход..."
-
-#. Label for the login button.
-msgctxt "login-view"
-msgid "Login"
-msgstr "Вход"
-
-msgctxt "login-view"
-msgid "Login failed"
-msgstr "Ошибка входа"
-
-#. Text shown between two horizontal lines above the "create account" button.
-#. In this context it is used to separate the users alternative of logging in
-#. or creating a new account, "Login or Create a new account".
-msgctxt "login-view"
-msgid "Or"
-msgstr "или"
 
 #. This is a warning message shown when the app is blocking the users
 #. internet connection while logged out.
 msgctxt "login-view"
 msgid "Our kill switch is currently blocking your connection."
 msgstr "Функция аварийного отключения блокирует соединение."
-
-msgctxt "login-view"
-msgid "Please wait"
-msgstr "Подождите"
-
-#. Text that informs the user about the consequences of clearing the saved
-#. account number.
-msgctxt "login-view"
-msgid "Removing the saved account number from this device cannot be undone."
-msgstr "Удаление с этого устройства сохраненного номера учетной записи нельзя будет отменить."
-
-#. Error message shown above login input when trying to login to an account
-#. with too many registered devices.
-msgctxt "login-view"
-msgid "Too many devices"
-msgstr "Слишком много устройств"
-
-msgctxt "login-view"
-msgid "Unknown error"
-msgstr "Неизвестная ошибка"
 
 msgctxt "login-view"
 msgid "Upgrading..."
@@ -2090,42 +1677,6 @@ msgstr "Обновление…"
 msgctxt "login-view"
 msgid "Warren could not restore your account right now. Check your internet connection and try again."
 msgstr "Warren не удалось восстановить ваш аккаунт прямо сейчас. Проверьте подключение к интернету и повторите попытку."
-
-msgctxt "login-view"
-msgid "Valid account number"
-msgstr "Действительный номер учетной записи"
-
-#. Text that informs the users about consequences of creating a new account.
-msgctxt "login-view"
-msgid "You already have a saved account number, by creating a new account the saved account number will be removed from this device. This cannot be undone."
-msgstr "У вас уже есть сохраненный номер учетной записи. При создании новой учетной записи сохраненный номер удалится с этого устройства. Это действие нельзя будет отменить."
-
-#. The title for the LWO port selector.
-msgctxt "lwo-settings-view"
-msgid "Port"
-msgstr "Порт"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "lwo-settings-view"
-msgid "Port: %(port)s"
-msgstr "Порт: %(port)s"
-
-msgctxt "lwo-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "При автоматической настройке порт будет выбираться случайным образом из допустимого диапазона, показанного ниже."
-
-msgctxt "lwo-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "Пользовательский порт может принимать любое значение внутри допустимых диапазонов: %(portRanges)s."
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "lwo-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "Допустимые диапазоны: %(portRanges)s"
 
 #. Title label in navigation bar
 msgctxt "navigation-bar"
@@ -2301,32 +1852,8 @@ msgid "Unable to apply firewall rules. Try updating your kernel."
 msgstr "Не удалось применить правила брандмауэра. Попробуйте обновить ядро."
 
 msgctxt "notifications"
-msgid "Unable to block all network traffic. Please troubleshoot or send a problem report."
-msgstr "Не удалось заблокировать весь сетевой трафик. Устраните неполадки или отправьте сообщение о проблеме."
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software or send a problem report."
-msgstr "Не удалось заблокировать весь сетевой трафик. Попробуйте временно отключить сторонние антивирусы и приложения, обеспечивающее безопасность, или отправьте сообщение о проблеме."
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try updating your kernel or send a problem report."
-msgstr "Не удалось заблокировать весь сетевой трафик. Попробуйте обновить ядро или отправьте сообщение о проблеме."
-
-msgctxt "notifications"
-msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
-msgstr "Не удалось связаться с драйвером ядра Warren. Попробуйте подключиться заново или отправьте сообщение о проблеме."
-
-msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
 msgstr "Не удалось преобразовать имя узла пользовательского туннеля. Попробуйте изменить настройки."
-
-msgctxt "notifications"
-msgid "Unable to set system DNS server. Please send a problem report."
-msgstr "Не удалось установить системный DNS-сервер. Отправьте сообщение о проблеме."
-
-msgctxt "notifications"
-msgid "Unable to start tunnel connection. Please send a problem report."
-msgstr "Не удалось запустить туннельное подключение. Отправьте сообщение о проблеме."
 
 msgctxt "notifications"
 msgid "Unable to start tunnel connection. This could be because of conflicts with VMware, please troubleshoot."
@@ -2459,10 +1986,6 @@ msgstr "Погасить ваучер"
 msgctxt "redeem-voucher-view"
 msgid "An error occurred."
 msgstr "Произошла ошибка."
-
-msgctxt "redeem-voucher-view"
-msgid "It looks like you’ve entered an account number instead of a voucher code. If you would like to change the active account, please log out first."
-msgstr "Вы ввели номер учетной записи вместо кода ваучера. Чтобы изменить активную учетную запись, сначала выйдите из системы."
 
 #. Button label for voucher redemption.
 msgctxt "redeem-voucher-view"
@@ -2706,10 +2229,6 @@ msgid "Choose"
 msgstr "Выбрать"
 
 msgctxt "split-tunneling-view"
-msgid "Choose the apps you want to exclude from the VPN tunnel."
-msgstr "Выберите приложения, которые нужно исключить из туннеля VPN."
-
-msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
 msgstr "%(country)s: города"
 
@@ -2810,10 +2329,6 @@ msgstr "Приложениям Snap пока нельзя назначить с�
 msgctxt "split-tunneling-view"
 msgid "To use %(splitTunneling)s, please update to a Linux kernel version that supports cgroup v2."
 msgstr "Чтобы использовать %(splitTunneling)s, обновите ядро Linux до версии, которая поддерживает cgroup v2."
-
-msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
-msgstr "Для использования раздельного туннелирования включите полный доступ к диску для Warren VPN в системных настройках macOS."
 
 msgctxt "split-tunneling-view"
 msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
@@ -2984,107 +2499,15 @@ msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
 msgstr "Если приложение уже работает, закройте %(applicationName)s, и только после этого запускайте его отсюда. Иначе оно может не использовать VPN."
 
-#. Button label for continuing problem report submission with an outdated app version.
-msgctxt "support-view"
-msgid "Continue anyway"
-msgstr "Всё равно продолжить"
-
-#. Button text to edit the message after a failed attempt to send the problem report.
-msgctxt "support-view"
-msgid "Edit message"
-msgstr "Изменить сообщение"
-
-msgctxt "support-view"
-msgid "Failed to send"
-msgstr "Ошибка отправки"
-
 #. Link to the webpage
 msgctxt "support-view"
 msgid "FAQs & Guides"
 msgstr "Ответы на вопросы и руководства"
 
-#. The message displayed to the user after submitting the problem report, given that the user left his or her email for us to reach back.
-#. Available placeholders:
-#. %(email)s
-msgctxt "support-view"
-msgid "If needed we will contact you at %(email)s"
-msgstr "При необходимости мы свяжемся с вами по адресу %(email)s"
-
-msgctxt "support-view"
-msgid "If you exit the form and try again later, the information you already entered will still be here."
-msgstr "Если вы выйдете из формы и повторите попытку позже, информация, которую вы уже ввели, сохранится."
-
-#. Title label in navigation bar
-#. Navigation button to the 'Report a problem' help view
-msgctxt "support-view"
-msgid "Report a problem"
-msgstr "Сообщение о проблеме"
-
-#. Button label for sending the problem report.
-msgctxt "support-view"
-msgid "Send"
-msgstr "Отправить"
-
-#. Button label for sending the problem report without an email address.
-msgctxt "support-view"
-msgid "Send anyway"
-msgstr "Все равно отправить"
-
-msgctxt "support-view"
-msgid "Sending..."
-msgstr "Идет отправка..."
-
-msgctxt "support-view"
-msgid "Sent"
-msgstr "Отправлено"
-
 #. Title label in navigation bar
 msgctxt "support-view"
 msgid "Support"
 msgstr "Поддержка"
-
-msgctxt "support-view"
-msgid "Thanks!"
-msgstr "Спасибо!"
-
-msgctxt "support-view"
-msgid "To assist you better, please write in English or Swedish and include which country you are connecting from."
-msgstr "Чтобы мы могли быстрее решить проблему, напишите нам на английском или шведском и укажите, из какой страны вы подключаетесь."
-
-msgctxt "support-view"
-msgid "To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel."
-msgstr "Чтобы помощь была эффективнее, к этому сообщению будет прикреплен файл журнала из приложения. Ваши данные останутся защищенными и конфиденциальными: они обезличиваются и отправляются по зашифрованному каналу."
-
-#. Button label for retrying problem report submission after a failure.
-msgctxt "support-view"
-msgid "Try again"
-msgstr "Повторить попытку"
-
-#. Button label for updating the app to the latest version.
-msgctxt "support-view"
-msgid "Update app"
-msgstr "Обновить приложение"
-
-#. Button label for opening app logs.
-msgctxt "support-view"
-msgid "View app logs"
-msgstr "Открыть журналы"
-
-msgctxt "support-view"
-msgid "We will look into this."
-msgstr "Мы рассмотрим эту проблему."
-
-msgctxt "support-view"
-msgid "You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address."
-msgstr "Вы собираетесь отправить отчет о проблеме, не оставив контакты. Если вы хотите получить ответ, введите свой адрес электронной почты."
-
-msgctxt "support-view"
-msgid "You are using an old version of the app. Please upgrade and see if the problem still exists before sending a report."
-msgstr "Вы используете старую версию приложения. Прежде чем сообщать о проблеме, обновите приложение и проверьте, не исчезла ли она."
-
-msgctxt "support-view"
-msgid "Your email (optional)"
-msgstr "Ваша электронная почта (необязательно)"
 
 #. Link to the refund policy webpage
 msgctxt "support-view"
@@ -3122,10 +2545,6 @@ msgstr "Включите «Полный доступ к диску» для Warr
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
 msgstr "Не удалось включить раздельное туннелирование: приложению не хватает системных разрешений. Что можно сделать:"
-
-msgctxt "troubleshoot"
-msgid "If these steps do not work please send a problem report."
-msgstr "Если эти действия не помогли, отправьте сообщение о проблеме."
 
 msgctxt "troubleshoot"
 msgid "If you have installed another VPN then try to uninstall that."
@@ -3196,14 +2615,6 @@ msgstr "Защищены только выбранные приложения"
 msgctxt "tunnel-control"
 msgid "Connection interrupted"
 msgstr "Подключение прервано"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map"
-msgstr "Анимировать карту"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map movements."
-msgstr "Анимировать перемещение карты."
 
 msgctxt "user-interface-settings-view"
 msgid "Enable or disable system notifications. The critical notifications will always be displayed."
@@ -3625,44 +3036,13 @@ msgctxt "warren-pubkey-warning"
 msgid "The key changed again before it could be trusted. Review the new key and try again."
 msgstr "Ключ снова изменился, прежде чем ему было установлено доверие. Проверьте новый ключ и повторите попытку."
 
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "UDP-over-TCP"
-msgstr "UDP через TCP"
-
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s (%(daitaFull)s) hides patterns in your encrypted VPN traffic."
 msgstr "%(daita)s (%(daitaFull)s) скрывает характерные признаки в зашифрованном VPN-трафике."
 
 msgctxt "wireguard-settings-view"
-msgid "%(daita)s does this by carefully adding network noise and making all network packets the same size."
-msgstr "Для этого %(daita)s добавляет в трафик сетевой шум, а все пакеты приводятся к одному размеру."
-
-msgctxt "wireguard-settings-view"
-msgid "%(wireguard)s port"
-msgstr "Порт %(wireguard)s"
-
-#. Page title for QUIC port view
-msgctxt "wireguard-settings-view"
-msgid "%(wireGuard)s port"
-msgstr "Порт %(wireGuard)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans."
-msgstr "Внимание! Включение этой функции приведет к увеличению сетевого трафика. Также снизится скорость, увеличится задержка и усилится расход заряда аккумулятора. Будьте внимательны при использовании функции на ограниченных по трафику планах."
-
-msgctxt "wireguard-settings-view"
 msgid "By enabling “%(directOnly)s” you will have to manually select a server that is %(daita)s-enabled. This can cause you to end up in a blocked state until you have selected a compatible server in the “Select location” view."
 msgstr "После включения параметра «%(directOnly)s» вы должны будете вручную выбрать сервер, который поддерживает %(daita)s. В результате вы можете оказаться заблокированы, пока не выберете совместимый сервер в окне выбора местоположения."
-
-msgctxt "wireguard-settings-view"
-msgid "By using sophisticated AI it’s possible to analyze the traffic of data packets going in and out of your device (even if the traffic is encrypted)."
-msgstr "С помощью сложных ИИ-алгоритмов можно анализировать входящий и исходящий трафик пакетов данных вашего устройства (даже если трафик зашифрован)."
 
 msgctxt "wireguard-settings-view"
 msgid "Cancel"
@@ -3672,10 +3052,6 @@ msgstr "Отмена"
 msgctxt "wireguard-settings-view"
 msgid "Device IP version"
 msgstr "Версия IP на устройстве"
-
-msgctxt "wireguard-settings-view"
-msgid "If an observer monitors these data packets, %(daita)s makes it significantly harder for them to identify which websites you are visiting or with whom you are communicating."
-msgstr "В случае, если наблюдатель отслеживает пакеты данных, %(daita)s значительно затрудняет определение того, какие веб-сайты вы посещаете или с кем общаетесь."
 
 msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
@@ -3689,37 +3065,13 @@ msgid "MTU"
 msgstr "MTU"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop"
-msgstr "Многократный переход"
-
-msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Чтобы включить DAITA для выбранного местоположения, используется многократный переход"
-
-msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
-msgstr "Multihop направляет ваш трафик через один сервер QUIC на вход и через другой на выход, добавляя ещё один сервер между вами и посещаемыми сайтами. Это увеличивает задержку."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. In order to use the internet, you might have to select a new location after enabling."
 msgstr "%(daita)s поддерживается не на всех серверах. Поэтому, чтобы выйти онлайн после включения этой функции, вам, возможно, придется выбрать новое местоположение."
-
-msgctxt "wireguard-settings-view"
-msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
-msgstr "%(daita)s поддерживается не на всех серверах. Поэтому, чтобы функция %(daita)s работала с любым сервером, мы автоматически используем многократный переход."
-
-#. The title for the QUIC port selector.
-msgctxt "wireguard-settings-view"
-msgid "Port"
-msgstr "Порт"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "wireguard-settings-view"
-msgid "Port: %(port)s"
-msgstr "Порт: %(port)s"
 
 #. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
@@ -3742,14 +3094,6 @@ msgid "Shadowsocks"
 msgstr "Shadowsocks"
 
 msgctxt "wireguard-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "При автоматической настройке порт будет выбираться случайным образом из допустимого диапазона, показанного ниже."
-
-msgctxt "wireguard-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "Пользовательский порт может принимать любое значение внутри допустимых диапазонов: %(portRanges)s."
-
-msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "Эта функция защищает ваш трафик к выходному серверу от возможных атак квантовых компьютеров."
 
@@ -3757,926 +3101,8 @@ msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
 msgstr "UDP через TCP"
 
-#. Text describing the valid port range for a port selector.
-msgctxt "wireguard-settings-view"
-msgid "Valid range: %(min)s - %(max)s"
-msgstr "Диапазон значений: %(min)s-%(max)s"
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "wireguard-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "Допустимые диапазоны: %(portRanges)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
-msgstr "TCP-порт, к которому должен подключаться протокол обфускации UDP через TCP на VPN-сервере."
-
-msgid "%1$s more..."
-msgstr "Еще %1$s..."
-
-msgid "%1$s was added to \"%2$s\""
-msgstr "Местоположение %1$s добавлено в список «%2$s»"
-
-msgid "%1$s was removed from \"%2$s\""
-msgstr "Местоположение %1$s удалено из списка «%2$s»"
-
-msgid "%1$s, %2$s, %3$s"
-msgstr "%1$s, %2$s, %3$s"
-
-msgid "%s (Entry)"
-msgstr "%s (вход)"
-
-msgid "%s (Exit)"
-msgstr "%s (выход)"
-
-msgid "%s (added)"
-msgstr "%s (добавлено)"
-
-msgid "%s (removed)"
-msgstr "%s (удалено)"
-
-msgid "%s is already selected as entry relay"
-msgstr "%s уже используется как входной сервер ретрансляции"
-
-msgid "%s is already selected as exit relay"
-msgstr "%s уже используется как выходной сервер ретрансляции"
-
-msgid "%s is unavailable"
-msgstr "%s недоступно"
-
-msgid "%s settings."
-msgstr "Настройки %s."
-
-msgid "%s was added to your account."
-msgstr "На учетную запись добавлено время: %s."
-
-msgid "(%d)"
-msgstr "(%d)"
-
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
-msgstr "1. После нажатия кнопки «Перейти к настройкам VPN» ниже нажмите на шестеренку рядом с пунктом Warren VPN."
-
-msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
-msgstr "2. Чтобы включить автоподключение, нажмите на переключатель возле пункта «Постоянная VPN»."
-
-msgid "3. To enable Lockdown mode, click on the toggle next to \"Block connections without VPN\".<br /><br /><b>Warning: This setting blocks split apps and the Local Network Sharing feature.</b>"
-msgstr "3. Чтобы включить режим блокировки, нажмите на переключатель рядом с пунктом «Блокировать соединения без VPN».<br /><br /><b>Предупреждение: этот параметр блокирует приложения из списка раздельного туннелирования и функцию «Обмен данными в локальной сети».</b>"
-
-msgid "30 days was added to your account."
-msgstr "На учетную запись добавлено 30 дней."
-
-msgid "90 days was added to your account."
-msgstr "На вашу учетную запись добавлено 90 дней."
-
-msgid "<b>Account recovery will not be possible.</b>"
-msgstr "<b>Восстановить учетную запись будет невозможно.</b>"
-
-msgid "<b>Attention:</b> Only some servers support the full port range."
-msgstr "<b>Внимание:</b> не все серверы поддерживают полный диапазон портов."
-
-msgid "<b>Attention:</b> The app will close automatically and needs to be manually opened again after selecting a new icon and title. This will not impact your VPN connection."
-msgstr "<b>Внимание:</b> после выбора нового значка и названия приложение автоматически закроется и его потребуется открыть вручную. Это не повлияет на ваше VPN-соединение."
-
-msgid "<b>Please note that these methods do not improve performance, and may increase system utilization and battery consumption.</b>"
-msgstr "<b>Обратите внимание: эти методы не улучшают производительность, а наоборот, могут увеличить энергопотребление и нагрузку на систему.</b>"
-
-msgid "<b>This action cannot be undone.</b>"
-msgstr "<b>Это действие нельзя отменить.</b>"
-
-msgid "<b>Warning:</b>"
-msgstr "<b>Предупреждение:</b>"
-
-msgid "<b>You will lose access to this account on all devices.</b>"
-msgstr "<b>Вы потеряете доступ к этой учетной записи на всех устройствах.</b>"
-
-msgid "API reachable, adding method..."
-msgstr "Есть доступ к API, добавляем метод..."
-
-msgid "API unreachable, save method anyway?"
-msgstr "Нет доступа к API. Сохранить метод?"
-
-msgid "Account credit expires in a few minutes"
-msgstr "Баланс учетной записи закончится через несколько минут"
-
-msgid "Account deleted"
-msgstr "Учетная запись удалена"
-
-msgid "Account number is too long, please enter a valid number"
-msgstr "Номер учетной записи слишком длинный, введите действительный номер"
-
-msgid "Account number must match"
-msgstr "Номер учетной записи должен совпадать"
-
-msgid "Account recovery will not be possible."
-msgstr "Восстановить учетную запись будет невозможно."
-
-msgid "Account time reminders"
-msgstr "Напоминания о времени на учетной записи"
-
-msgid "Add 30 days time (%s)"
-msgstr "Добавить 30 дней (%s)"
-
-msgid "Add 90 days time (%s)"
-msgstr "Добавить 90 дней (%s)"
-
-msgid "Add DNS server"
-msgstr "Добавить DNS-сервер"
-
-msgid "Add locations"
-msgstr "Добавление местоположений"
-
-msgid "Add time"
-msgstr "Добавить время"
-
-msgid "Add to list"
-msgstr "Добавить в список"
-
-msgid "Adding method..."
-msgstr "Добавление метода..."
-
-msgid "After updating a VPN app on Android 16, devices might end up in a state where VPN apps are no longer able to reach the internet."
-msgstr "После обновления VPN-приложения на Android 16 VPN-приложения иногда теряют доступ к Интернету."
-
-msgid "Agree and continue"
-msgstr "Согласиться и продолжить"
-
-msgid "All"
-msgstr "Все"
-
-msgid "All applications"
-msgstr "Все приложения"
-
-msgid "All overrides will be reset and servers IP addresses, in the Select location view, will go back to default."
-msgstr "Все переопределения будут сброшены, а IP-адреса серверов в представлении «Выбор местоположения­» вернутся к значениям по умолчанию."
-
-msgid "Always-on VPN assigned to %s"
-msgstr "Опция «Постоянная VPN» назначена приложению «%s»"
-
-msgid "Always-on VPN assigned to other VPN"
-msgstr "Опция «Постоянная VPN» назначена другой VPN"
-
-msgid "Android 16 has a known issue. Please restart your device and try again. To learn more,"
-msgstr "В Android 16 есть известная проблема. Перезагрузите устройство и попробуйте снова. Чтобы узнать больше,"
-
-msgid "Any remaining time will be null and void."
-msgstr "Всё оставшееся время будет аннулировано."
-
-msgid "App icon"
-msgstr "Значок приложения"
-
-msgid "Appearance"
-msgstr "Внешний вид"
-
-msgid "Applying changes..."
-msgstr "Применяем изменения..."
-
-msgid "Are you sure you want to log <b>%s</b> out?"
-msgstr "Действительно выйти из профиля на устройстве <b>%s</b>?"
-
-msgid "At least one method needs to be enabled"
-msgstr "Должен быть включен хотя бы один метод"
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, \"Local network sharing\" will not work."
-msgstr "Внимание! Если включена функция «Блокировать соединения без VPN», обмен данными в локальной сети работать не будет."
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, split apps will not have Internet. Always keep in mind that split tunneling is a privacy risk."
-msgstr "Внимание! Если включена функция «Блокировать соединения без VPN», у приложений из списка раздельного туннелирования не будет доступа в Интернет. Не забывайте, что раздельное туннелирование представляет собой риск для конфиденциальности."
-
-msgid "Attention: this setting cannot be used in combination with \"Use custom DNS server\"."
-msgstr "Внимание! Этот параметр нельзя использовать вместе с параметром «Пользовательский DNS-сервер»."
-
-msgid "Auto-connect & Lockdown mode"
-msgstr "Автоподключение и режим блокировки"
-
-msgid "Auto-connect is called Always-on VPN in the Android system settings and it makes sure you are constantly connected to the VPN tunnel and auto connects after restart."
-msgstr "В системных настройках Android автоподключение называется «Постоянная VPN». Эта опция обеспечивает постоянное подключение к туннелю VPN и автоподключение после перезапуска."
-
-msgid "Automatically connect on device start-up."
-msgstr "Автоматически подключаться при запуске устройства."
-
-msgid "Blocking internet (device offline)"
-msgstr "Блокируется доступ в Интернет (устройство офлайн)"
-
-msgid "Blocking..."
-msgstr "Блокировка..."
-
-msgid "Browser"
-msgstr "Браузер"
-
-msgid "By attaching your account token it links this report to your account, which helps us resolve your issue quicker. All reports are automatically deleted after a period of time."
-msgstr "Прикрепляя токен своей учетной записи, вы привяжете это сообщение к своей учетной записи, что поможет нам быстрее решить вашу проблему. Все сообщения автоматически удаляются через определенный период времени."
-
-msgid "By checking this box I agree to the risks involved with deleting my account"
-msgstr "Отмечая этот флажок, я принимаю риски, связанные с удалением учетной записи"
-
-msgid "Can't connect?"
-msgstr "Проблемы с подключением?"
-
-msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
-msgstr "Измените название и значок приложения Warren VPN на устройстве Android. Это не повлияет на значок уведомлений, связанных с Warren VPN."
-
-msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
-msgstr "Изменения в настройках, связанные с DNS, могут не сразу вступить в силу из-за кешированных результатов."
-
-msgid "Clear input"
-msgstr "Очистить поле ввода"
-
-msgid "Collapse"
-msgstr "Свернуть"
-
-msgid "Connect on device start-up"
-msgstr "Подключаться при запуске устройства"
-
-msgid "Connect to a different network"
-msgstr "Подключиться к другой сети."
-
-msgid "Connecting..."
-msgstr "Идет подключение..."
-
 msgid "Continue"
 msgstr "Продолжить"
-
-msgid "Copied Warren account number to clipboard"
-msgstr "Номер учетной записи Warren скопирован в буфер обмена"
-
-msgid "Copied logs to clipboard"
-msgstr "Журналы скопированы в буфер обмена"
-
-msgid "Copy"
-msgstr "Копировать"
-
-msgid "Could not display remaining days."
-msgstr "Не удалось отобразить количество оставшихся дней."
-
-msgid "Create new list"
-msgstr "Создание нового списка"
-
-msgid "Creating account failed"
-msgstr "Не удалось создать учетную запись"
-
-msgid "Critical error (your attention is required)"
-msgstr "Критическая ошибка (требуется ваше участие)"
-
-msgid "Current: %s"
-msgstr "Текущий: %s"
-
-msgid "Custom DNS server addresses %1$s are invalid"
-msgstr "Недопустимые пользовательские адреса DNS-серверов %1$s"
-
-msgid "DNS settings might not go into effect immediately"
-msgstr "Настройки DNS могут не сразу вступить в силу"
-
-msgid "Delete \"%s\"?"
-msgstr "Удалить список «%s»?"
-
-msgid "Delete account"
-msgstr "Удалить учетную запись"
-
-msgid "Delete method"
-msgstr "Удалить метод"
-
-msgid "Delete method?"
-msgstr "Удалить метод?"
-
-msgid "Deleting your account cannot be undone."
-msgstr "После удаления учетной записи вы не сможете вернуть ее."
-
-msgid "Deleting your account:"
-msgstr "При удалении учетной записи:"
-
-msgid "Direct"
-msgstr "Напрямую"
-
-msgid "Disable all \"%s\" above to activate this setting."
-msgstr "Чтобы активировать этот параметр, отключите все %s выше."
-
-msgid "Disable multihop"
-msgstr "Отключить многократный переход"
-
-msgid "Discard"
-msgstr "Сбросить"
-
-msgid "Discard changes?"
-msgstr "Сбросить изменения?"
-
-msgid "Disconnected (No VPN permission)"
-msgstr "Отключено (нет разрешения для VPN)"
-
-msgid "Disconnecting..."
-msgstr "Отключение..."
-
-msgid "Dismiss"
-msgstr "Закрыть"
-
-msgid "Don’t have an account number?"
-msgstr "Нет номера учетной записи?"
-
-msgid "Edit custom lists"
-msgstr "Изменение своих списков"
-
-msgid "Edit list"
-msgstr "Изменение списка"
-
-msgid "Edit lists"
-msgstr "Изменить списки"
-
-msgid "Edit locations"
-msgstr "Изменить местоположения"
-
-msgid "Enable %1$s"
-msgstr "Включить режим %1$s"
-
-msgid "Enable all & retry"
-msgstr "Включить все и повторить попытку"
-
-msgid "Enable all access methods in the app"
-msgstr "Включить все методы доступа в приложении"
-
-msgid "Enable method"
-msgstr "Включить метод"
-
-msgid "Enable multihop"
-msgstr "Многократный переход"
-
-msgid "Enter MTU"
-msgstr "Введите MTU"
-
-msgid "Enter account number digits"
-msgstr "Введите номер учетной записи"
-
-msgid "Entry relay is the same as exit relay"
-msgstr "Входной сервер ретрансляции совпадает с выходным сервером ретрансляции"
-
-msgid "Excluded applications"
-msgstr "Исключенные приложения"
-
-msgid "Expand"
-msgstr "Развернуть"
-
-msgid "External link"
-msgstr "Внешняя ссылка"
-
-msgid "FAILED TO CONNECT"
-msgstr "НЕ УДАЛОСЬ ПОДКЛЮЧИТЬСЯ"
-
-msgid "Failed to apply patch"
-msgstr "Не удалось применить патч"
-
-msgid "Failed to delete account, please contact support"
-msgstr "Не удалось удалить учетную запись, обратитесь в службу поддержки"
-
-msgid "Failed to load products, please try again"
-msgstr "Не удалось загрузить продукты, повторите попытку"
-
-msgid "Failed to set to current - API not reachable"
-msgstr "Не удалось установить текущий метод: API недоступен"
-
-msgid "Failed to set to current - Unknown reason"
-msgstr "Не удалось установить текущий метод: причина неизвестна"
-
-msgid "File"
-msgstr "Файл"
-
-msgid "For details, please see our %s."
-msgstr "Подробнее смотрите здесь: %s."
-
-msgid "For the VPN to connect automatically on device startup, the app must have VPN permissions. You can grant these by clicking “Connect” in the map view and selecting “OK” if prompted. Additionally, ensure the app is installed on the internal storage by checking the storage information in the app details in system settings."
-msgstr "Чтобы VPN подключался автоматически при запуске устройства, приложению нужны разрешения на использование VPN. Чтобы предоставить их, нажмите «Подключить» на карте и подтвердите выбор кнопкой «ОК». Убедитесь также, что приложение установлено во внутренней памяти устройства, это можно увидеть в сведениях о приложении в системных настройках."
-
-msgid "Go to VPN settings"
-msgstr "Перейти к настройкам VPN"
-
-msgid "Going to login will unblock the internet on this device."
-msgstr "Вход в профиль разблокирует Интернет на этом устройстве."
-
-msgid "Google Play payment pending"
-msgstr "Ожидается оплата в Google Play"
-
-msgid "Google Play payment pending, this might take some time"
-msgstr "Ожидается оплата в Google Play. Это может занять некоторое время."
-
-msgid "Google Play unavailable"
-msgstr "Google Play недоступен"
-
-msgid "IPv4 is not available, please try changing \"Device IP version\" setting."
-msgstr "Протокол IPv4 недоступен, попробуйте изменить настройку «Версия IP на устройстве»."
-
-msgid "IPv6 is not available, please try changing \"Device IP version\" setting."
-msgstr "Протокол IPv6 недоступен, попробуйте изменить настройку «Версия IP на устройстве»."
-
-msgid "Icon and title"
-msgstr "Значок и название"
-
-msgid "If the icon and title is still not changed after the app has closed, please try restarting the device."
-msgstr "Если после закрытия приложения значок и название не изменились, попробуйте перезагрузить устройство."
-
-msgid "If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device."
-msgstr "Если используется функция раздельного туннелирования, то приложение запрашивает в системе список всех установленных приложений. Этот список запрашивается только на  экране настройки раздельного туннелирования. Список установленных приложений никогда не передается за пределы устройства."
-
-msgid "If these steps don’t work, please send an email to support using the button below. It will automatically attach the logs which have been anonymized."
-msgstr "Если описанные выше шаги не помогли, отправьте письмо в службу поддержки, нажав кнопку ниже. К письму будут автоматически прикреплены анонимизированные журналы активности."
-
-msgid "Import new overrides by"
-msgstr "Импорт новых переопределений:"
-
-msgid "Import successful, overrides active"
-msgstr "Импортировано, переопределения активны"
-
-msgid "Importing new overrides might replace some previously imported overrides."
-msgstr "Импорт новых переопределений может заменить некоторые ранее импортированные переопределения."
-
-msgid "In-app products unavailable, please make sure you have the latest version of Google Play."
-msgstr "Встроенные покупки недоступны, убедитесь, что у вас установлена последняя версия Google Play."
-
-msgid "Include my account token for faster help with payment or account related issues"
-msgstr "Прикрепить токен моей учетной записи для ускоренной помощи по вопросам, связанным с оплатой или учетной записью"
-
-msgid "Invalid IPv6 config, please try to change the VPN settings."
-msgstr "Недействительная конфигурация IPv6. Попробуйте изменить настройки VPN."
-
-msgid "Invalid or missing value \"%1$s\""
-msgstr "Недопустимое или отсутствующее значение «%1$s»"
-
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "Для этого функция выполняет дополнительный обмен ключами с использованием квантово-устойчивого алгоритма и добавляет результат к обычному шифрованию QUIC. Эта дополнительная мера использует примерно 500 КиБ трафика при каждом создании нового туннеля."
-
-msgid "Less than a day left on this account"
-msgstr "На этой учетной записи осталось менее одного дня"
-
-msgid "Lets you select apps that should access the Internet directly without going through the VPN tunnel."
-msgstr "Позволяет выбрать приложения, которые должны получать доступ к Интернету напрямую, не проходя через VPN-туннель."
-
-msgid "List name"
-msgstr "Имя списка"
-
-msgid "Loading products"
-msgstr "Загрузка продуктов"
-
-msgid "Locations"
-msgstr "Местоположения"
-
-msgid "Locations were changed for \"%s\""
-msgstr "Местоположения были изменены для «%s»"
-
-msgid "Log in"
-msgstr "Войти"
-
-msgid "Makes sure the device is always on the VPN tunnel."
-msgstr "Обеспечивает постоянное подключение устройства к туннелю VPN."
-
-msgid "More actions"
-msgstr "Дополнительные действия"
-
-msgid "Warren services unavailable"
-msgstr "Службы Warren недоступны"
-
-msgid "Multihop is disabled"
-msgstr "Многократный переход отключен"
-
-msgid "Multihop is enabled"
-msgstr "Многократный переход включен"
-
-msgid "Name is already taken."
-msgstr "Такое название уже используется."
-
-msgid "Name was changed to %s"
-msgstr "Имя изменено на «%s»"
-
-msgid "Navigate"
-msgstr "Перейти"
-
-msgid "No Android app store installed, could not open link"
-msgstr "Не удалось открыть ссылку: магазин приложений Android не установлен"
-
-msgid "No browser app installed, could not open link"
-msgstr "Не удалось открыть ссылку: браузер не установлен"
-
-msgid "No changelog was added for this version"
-msgstr "Для этой версии история изменений отсутствует"
-
-msgid "No custom lists available"
-msgstr "Нет своих списков"
-
-msgid "No email app available on the device"
-msgstr "На устройстве нет приложения для работы с электронной почтой"
-
-msgid "No entry server match your settings, try changing server or other settings."
-msgstr "Нет серверов входа, соответствующих вашим настройкам. Попробуйте изменить сервер или задайте другие настройки."
-
-msgid "No exit server match your settings, try changing server or other settings."
-msgstr "Нет серверов выхода, соответствующих вашим настройкам. Попробуйте изменить сервер или задайте другие настройки."
-
-msgid "No internet connection"
-msgstr "Нет подключения к Интернету"
-
-msgid "No matching servers found."
-msgstr "Подходящих серверов не найдено."
-
-msgid "No result for \"%s\", please try a different search"
-msgstr "По запросу «%s» ничего не найдено, попробуйте другой запрос"
-
-msgid "Not found"
-msgstr "Не найдено"
-
-msgid "Notes"
-msgstr "Заметки"
-
-msgid "Notification settings"
-msgstr "Настройки уведомлений"
-
-msgid "Open app details"
-msgstr "Открыть сведения о приложении"
-
-msgid "Overrides active"
-msgstr "Переопределения активны"
-
-msgid "Overrides cleared"
-msgstr "Переопределения удалены"
-
-msgid "Overrides inactive"
-msgstr "Переопределения неактивны"
-
-msgid "Password (optional)"
-msgstr "Пароль (необязательно)"
-
-msgid "Paste or write overrides to be imported"
-msgstr "Вставьте или напишите переопределения для импорта"
-
-msgid "Patch not matching specification"
-msgstr "Патч не соответствует спецификации"
-
-msgid "Please enter a valid IPv4 or IPv6 address"
-msgstr "Введите действительный адрес IPv4 или IPv6"
-
-msgid "Please enter a valid remote server port"
-msgstr "Введите действительный порт удаленного сервера"
-
-msgid "Please press connect to request VPN permission"
-msgstr "Чтобы запросить разрешение для VPN, нажмите «Подключить»"
-
-msgid "Please restart your device and try connecting again. If this does not work, please write an email to %s in Swedish or English."
-msgstr "Перезагрузите устройство и снова попробуйте подключиться. Если это не поможет, отправьте письмо на %s на английском или шведском."
-
-msgid "Please try changing your filters."
-msgstr "Попробуйте изменить фильтры."
-
-msgid "Privacy"
-msgstr "Конфиденциальность"
-
-msgid "Privacy policy"
-msgstr "Политика конфиденциальности"
-
-msgid "Recents disabled and history cleared"
-msgstr "Недавние отключены, история очищена"
-
-msgid "Recursion limit"
-msgstr "Предел рекурсии"
-
-msgid "Refunds will not be possible."
-msgstr "Вы не сможете получить возмещение средств."
-
-msgid "Remove %s?"
-msgstr "Удалить устройство «%s»?"
-
-msgid "Remove custom port"
-msgstr "Удалить пользовательский порт"
-
-msgid "Reset"
-msgstr "Сбросить"
-
-msgid "Reset all overrides"
-msgstr "Сброс всех переопределений"
-
-msgid "Reset overrides"
-msgstr "Сбросить переопределения"
-
-msgid "Reset to default"
-msgstr "Восстановить значение по умолчанию"
-
-msgid "Restart your device"
-msgstr "Перезагрузить устройство."
-
-msgid "Search"
-msgstr "Поиск"
-
-msgid "Send email"
-msgstr "Отправить письмо"
-
-msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
-msgstr "Установите значение MTU для QUIC. Диапазон значений: %1$d-%2$d."
-
-msgid "Set as multihop entry"
-msgstr "Установить как вход многократного перехода"
-
-msgid "Set as multihop entry (incompatible)"
-msgstr "Установить как выход многократного перехода (несовместимо)"
-
-msgid "Set as multihop exit"
-msgstr "Установить как выход многократного перехода"
-
-msgid "Set as multihop exit (incompatible)"
-msgstr "Установить как выход многократного перехода (несовместимо)"
-
-msgid "Set port"
-msgstr "Установить порт"
-
-msgid "Share…"
-msgstr "Поделиться…"
-
-msgid "Show location in notification"
-msgstr "Показывать местоположение в уведомлении"
-
-msgid "Show system apps"
-msgstr "Показывать системные приложения"
-
-msgid "Shows current VPN tunnel status"
-msgstr "Показывает текущее состояние VPN-туннеля"
-
-msgid "Shows reminders when the account time is about to expire"
-msgstr "Показывает уведомления, когда время на учетной записи скоро закончится"
-
-msgid "Submit"
-msgstr "Отправить"
-
-msgid "TCP"
-msgstr "TCP"
-
-msgid "Test method"
-msgstr "Проверить метод"
-
-msgid "Testing %s..."
-msgstr "Проверка метода «%s»..."
-
-msgid "Text"
-msgstr "Текст"
-
-msgid "Thanks for being part of our community.\\nPrivacy is for the people!"
-msgstr "Спасибо, что были частью нашего сообщества.\\nКонфиденциальность, право каждого!"
-
-msgid "The Auto-connect and Lockdown mode settings can be found in the Android system settings, follow this guide to enable one or both."
-msgstr "Настройки автоподключения и режима блокировки можно найти в системных настройках Android. Чтобы включить их, следуйте этой инструкции."
-
-msgid "The IPv6 DNS server will not work unless you enable \"IPv6\" under VPN settings."
-msgstr "DNS-сервер IPv6 не будет работать, если не включить IPv6 в разделе «Настройки VPN»."
-
-msgid "The Lockdown mode is called \"Block connections without VPN\" in the Android system settings. It helps minimize leaks, however it has some known limitations which you can read more about"
-msgstr "В системных настройках Android режим блокировки называется «Блокировать соединения без VPN». Он помогает минимизировать утечки, однако имеет ряд известных ограничений, прочитать подробнее о которых можно"
-
-msgid "The \"Current\" method represent which method the app is using to reach the API."
-msgstr "«Текущий» метод, это метод, который приложение использует для связи с API."
-
-msgid "The app is blocking internet, please disconnect first"
-msgstr "Приложение блокирует интернет. Сначала отключитесь."
-
-msgid "The app was unable to create an account due to not being able to reach the Warren API."
-msgstr "Приложению не удалось создать учетную запись из-за отсутствия доступа к API Warren."
-
-msgid "The app was unable to login due to not being able to reach the Warren API."
-msgstr "Приложению не удалось выполнить вход из-за отсутствия доступа к API Warren."
-
-msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
-msgstr "Локальный DNS-сервер не будет работать, если не включить «Обмен данными в локальной сети» в разделе «Настройки VPN»."
-
-msgid "The selected %s port is not supported, please change it under"
-msgstr "Выбранный порт %s не поддерживается. Измените его в"
-
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "Эти методы могут помочь, если вам заблокировали доступ в Warren. Когда выбран вариант «Автоматически», приложение будет перебирать все методы, пока не найдет подходящий."
-
-msgid "This address has already been entered."
-msgstr "Этот адрес уже введен."
-
-msgid "This field is required"
-msgstr "Это обязательное поле"
-
-msgid "This impacts your anonymity"
-msgstr "Это влияет на вашу анонимность"
-
-msgid "This is already set as current"
-msgstr "Этот метод уже установлен как текущий"
-
-msgid "This might be due to censorship or network issues. Please try to:"
-msgstr "Это могло произойти из-за цензуры или проблем с сетью. Попробуйте следующее:"
-
-msgid "Time added"
-msgstr "Время добавлено"
-
-msgid "To add locations to a list, press the pen or long press on a country, city, or server."
-msgstr "Чтобы добавить местоположения в список, нажмите значок карандаша или нажмите и удерживайте страну, город или сервер."
-
-msgid "To create a custom list press the \"+\""
-msgstr "Чтобы создать свой список, нажмите «+»"
-
-msgid "To delete your Warren VPN account, please enter your account number below."
-msgstr "Чтобы удалить учетную запись Warren VPN, укажите номер учетной записи ниже."
-
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "Чтобы удостовериться, что вы используете наиболее безопасную версию приложения, и сообщить вам о возможных проблемах в ней, приложение автоматически проверяет свою версию. При этом на серверы Warren передаются данные о версии приложения и системы Android. Warren ведет учет количества пользователей с определенными версиями приложения и ОС Android. Эти данные не хранятся и не используются каким бы то ни было образом, позволяющим вас идентифицировать."
-
-msgid "Toggle VPN"
-msgstr "Включение VPN"
-
-msgid "Too many attempts, please try again later"
-msgstr "Слишком много попыток, пожалуйста, попробуйте позже"
-
-msgid "UDP"
-msgstr "UDP"
-
-msgid "Unable to apply firewall rules. Please troubleshoot or send a problem report."
-msgstr "Невозможно применить правила брандмауэра. Устраните неполадки или отправьте сообщение о проблеме."
-
-msgid "Unable to parse patch"
-msgstr "Не удалось проанализировать патч"
-
-msgid "Unable to reach API"
-msgstr "Невозможно подключиться к API"
-
-msgid "Unable to reach API, %s"
-msgstr "Невозможно подключиться к API, %s"
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
-msgstr "Не удалось запустить туннельное соединение. Перед использованием Warren VPN отключите опцию «Постоянная VPN»."
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
-msgstr "Не удалось запустить туннельное подключение. Перед использованием Warren VPN отключите опцию «Постоянная VPN» для приложения <b>%s</b>."
-
-msgid "Unable to verify account number, please contact support"
-msgstr "Не удалось проверить номер учетной записи, обратитесь в службу поддержки"
-
-msgid "Unavailable"
-msgstr "Недоступно"
-
-msgid "Undo"
-msgstr "Отменить"
-
-msgid "Unknown or prohibited key \"%1$s\""
-msgstr "Неизвестный или запрещенный ключ «%1$s»"
-
-msgid "Update DNS server"
-msgstr "Обновить DNS-сервер"
-
-msgid "Update list name"
-msgstr "Обновление названия списка"
-
-msgid "Update server list"
-msgstr "Обновить список серверов"
-
-msgid "Updating server list in the background..."
-msgstr "Фоновое обновление списка серверов..."
-
-msgid "Use method"
-msgstr "Использовать метод"
-
-msgid "VPN Settings not available on device"
-msgstr "Настройки VPN недоступны на устройстве"
-
-msgid "VPN permission error"
-msgstr "Ошибка разрешения для VPN"
-
-msgid "VPN permission was denied"
-msgstr "Нет разрешения на использование VPN"
-
-msgid "VPN permission was denied or another app has \"Always-on VPN\" enabled"
-msgstr "Нет разрешения на использование VPN или другое приложение работает в режиме «Постоянная VPN»"
-
-msgid "VPN tunnel status"
-msgstr "Состояние туннеля VPN"
-
-msgid "Valid range for all servers: %s"
-msgstr "Допустимый диапазон для всех серверов: %s"
-
-msgid "Value: %s"
-msgstr "Значение: %s"
-
-msgid "Verifying API method..."
-msgstr "Проверяем метод доступа к API..."
-
-msgid "Verifying purchase"
-msgstr "Идет проверка оплаты"
-
-msgid "Verifying purchase..."
-msgstr "Идет проверка оплаты..."
-
-msgid "Verifying voucher…"
-msgstr "Идет проверка ваучера…"
-
-msgid "Warning"
-msgstr "Предупреждение"
-
-msgid "We are still verifying your purchase, this might take some time. Your time will be added if the verification is successful."
-msgstr "Мы все еще проверяем, прошла ли оплата; нужно немного подождать. После успешного завершения проверки оплаченное время будет добавлено."
-
-msgid "We were unable to start the payment process, please make sure you have the latest version of Google Play."
-msgstr "Не удалось начать процесс оплаты, убедитесь, что у вас установлена последняя версия Google Play."
-
-msgid "We were unable to start the payment process, please try again later."
-msgstr "Не удалось начать процесс оплаты. Повторите попытку позже."
-
-msgid "Weather"
-msgstr "Погода"
-
-msgid "Welcome, this device is now called <b>%s</b>."
-msgstr "Добро пожаловать! Это устройство теперь называется <b>%s</b>."
-
-msgid "QUIC port"
-msgstr "Порт QUIC"
-
-msgid "Yes, log out device"
-msgstr "Выйти из профиля на устройстве"
-
-msgid "You are about to delete your Warren VPN account."
-msgstr "Вы собираетесь удалить учетную запись Warren VPN."
-
-msgid "You can add more time via the account view or website to continue using the VPN."
-msgstr "Чтобы продолжить пользоваться VPN, добавьте время через раздел учетной записи или сайт."
-
-msgid "You can add more time via the account view to continue using the VPN."
-msgstr "Чтобы продолжить пользоваться VPN, добавьте время через раздел учетной записи."
-
-msgid "You will lose access to this account on all devices."
-msgstr "Вы потеряете доступ к этой учетной записи на всех устройствах."
-
-msgid "You will lose your remaining"
-msgstr "Вы потеряете оставшееся время:"
-
-msgid "\"%s\" was created"
-msgstr "Список «%s» создан"
-
-msgid "\"%s\" was deleted"
-msgstr "Список «%s» удален"
-
-msgid "click here"
-msgstr "нажмите здесь"
-
-msgid "here"
-msgstr "здесь"
-
-msgid "less than one day"
-msgstr "менее суток"
-
-msgid "privacy policy"
-msgstr "политика конфиденциальности"
-
-msgid "read more here"
-msgstr "читать дальше здесь"
-
-msgid "%d day"
-msgid_plural "%d days"
-msgstr[0] "%d сутки"
-msgstr[1] "%d суток"
-msgstr[2] "%d суток"
-msgstr[3] "%d суток"
-
-msgid "%d location"
-msgid_plural "%d locations"
-msgstr[0] "%d местоположение"
-msgstr[1] "%d местоположения"
-msgstr[2] "%d местоположений"
-msgstr[3] "%d местоположения"
-
-msgid "%d month"
-msgid_plural "%d months"
-msgstr[0] "%d месяц"
-msgstr[1] "%d месяца"
-msgstr[2] "%d месяцев"
-msgstr[3] "%d месяца"
-
-msgid "1 day left on this account"
-msgid_plural "%d days left on this account"
-msgstr[0] "На этой учетной записи остался %d день"
-msgstr[1] "На этой учетной записи осталось %d дня"
-msgstr[2] "На этой учетной записи осталось %d дней"
-msgstr[3] "На этой учетной записи остался %d день"
-
-msgid "1 year left on this account"
-msgid_plural "%d years left on this account"
-msgstr[0] "На этой учетной записи остался 1 год"
-msgstr[1] "На этой учетной записи осталось %d года"
-msgstr[2] "На этой учетной записи осталось %d лет"
-msgstr[3] "На этой учетной записи остался %d год"
-
-msgid "Account credit expires in a day"
-msgid_plural "Account credit expires in %d days"
-msgstr[0] "Срок действия баланса учетной записи истекает через %d день"
-msgstr[1] "Срок действия баланса учетной записи истекает через %d дня"
-msgstr[2] "Срок действия баланса учетной записи истекает через %d дней"
-msgstr[3] "Срок действия баланса учетной записи истекает через %d дня"
-
-msgid "Account credit expires in an hour"
-msgid_plural "Account credit expires in %d hours"
-msgstr[0] "Срок действия баланса учетной записи истекает через %d час"
-msgstr[1] "Срок действия баланса учетной записи истекает через %d часа"
-msgstr[2] "Срок действия баланса учетной записи истекает через %d часов"
-msgstr[3] "Срок действия баланса учетной записи истекает через %d часа"
-
-msgid "You will lose your remaining day."
-msgid_plural "You will lose your remaining %d days."
-msgstr[0] "Вы потеряете %d оставшийся день."
-msgstr[1] "Вы потеряете %d оставшихся дня."
-msgstr[2] "Вы потеряете %d оставшихся дней."
-msgstr[3] "Вы потеряете оставшиеся %d дня."
 
 
 msgctxt "warren-multi-hop-view"
@@ -4692,20 +3118,12 @@ msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkabilit
 msgstr "Ожидайте примерно половину пропускной способности одиночного перехода в обмен на невозможность связать IP пользователя с IP назначения. По умолчанию отключено; включается опционально для конфиденциальности."
 
 msgctxt "warren-multi-hop-view"
-msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
-msgstr "Необязательно: закрепите страны входного и выходного реле (коды ISO 3166 alpha-2, такие как fr, de, se). Оставьте пустым для автоматического выбора."
-
-msgctxt "warren-multi-hop-view"
 msgid "Restart the Warren daemon after changing this setting."
 msgstr "Перезапустите демон Warren после изменения этого параметра."
 
 msgctxt "warren-multi-hop-view"
 msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
 msgstr "Маршрутизирует ваш трафик через два реле Warren с использованием сквозного шифрования HPKE. Входное реле видит только зашифрованный текст; выходное видит только расшифрованную полезную нагрузку, никогда ваш IP. Схема вдохновлена Apple Private Relay."
-
-msgctxt "warren-multi-hop-view"
-msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
-msgstr "Активен single-hop Warren. Полная пропускная способность, идентичные гарантии конфиденциальности, как в стандартном режиме single-hop."
 
 msgctxt "warren-multi-hop-view"
 msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
@@ -4718,10 +3136,6 @@ msgstr "Warren multi-hop"
 msgctxt "warren-multi-hop-view"
 msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
 msgstr "При включении трафик маршрутизируется через два реле Warren (вход, затем выход) с использованием сквозного шифрования HPKE между клиентом и выходом. Входное реле видит только зашифрованный текст; выходное видит только расшифрованную полезную нагрузку, никогда IP пользователя."
-
-msgctxt "warren-multi-hop-view"
-msgid "auto"
-msgstr "авто"
 
 msgctxt "warren-mnemonic"
 msgid "Copied to clipboard"
@@ -4738,10 +3152,6 @@ msgstr "VPN без компромиссов в области конфиденц
 msgctxt "warren-onboarding"
 msgid "All set"
 msgstr "Всё готово"
-
-msgctxt "warren-onboarding"
-msgid "Create my new wallet (recommended)"
-msgstr "Создать мой новый кошелёк (рекомендуется)"
 
 msgctxt "warren-onboarding"
 msgid "Check again"
@@ -4768,10 +3178,6 @@ msgid "Daemon has no mnemonic yet - log in or restart the app."
 msgstr "У демона ещё нет мнемонической фразы, войдите или перезапустите приложение."
 
 msgctxt "warren-onboarding"
-msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
-msgstr "Демон отклонил мнемоническую фразу. Проверьте орфографию и количество слов и попробуйте снова."
-
-msgctxt "warren-onboarding"
 msgid "Failed to retrieve mnemonic from daemon."
 msgstr "Не удалось получить мнемоническую фразу от демона."
 
@@ -4788,16 +3194,8 @@ msgid "I have written it down in a safe place."
 msgstr "Я записал её в надёжном месте."
 
 msgctxt "warren-onboarding"
-msgid "Import an existing mnemonic"
-msgstr "Импортировать существующую мнемоническую фразу"
-
-msgctxt "warren-onboarding"
 msgid "No active subscription found. Please purchase one first."
 msgstr "Активная подписка не найдена. Сначала приобретите её."
-
-msgctxt "warren-onboarding"
-msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
-msgstr "Вставьте свою 12-словную мнемоническую фразу BIP39, чтобы восстановить существующую Warren-идентичность."
 
 msgctxt "warren-onboarding"
 msgid "Pick a country and connect"
@@ -4812,20 +3210,12 @@ msgid "Privacy preferences"
 msgstr "Настройки конфиденциальности"
 
 msgctxt "warren-onboarding"
-msgid "Restore wallet"
-msgstr "Восстановить кошелёк"
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "Пропустить мастер (для опытных)"
 
 msgctxt "warren-onboarding"
 msgid "View plans (opens in your browser)"
 msgstr "Посмотреть тарифы (откроется в браузере)"
-
-msgctxt "warren-onboarding"
-msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
-msgstr "Warren использует некастодиальный кошелёк (Ed25519 + BIP39). Ключи принадлежат вам; мы никогда их не видим."
 
 msgctxt "warren-onboarding"
 msgid "Welcome to Warren VPN"
@@ -4917,10 +3307,6 @@ msgid "Last"
 msgstr "Последняя"
 
 msgctxt "warren-status-view"
-msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
-msgstr "Устаревшие методы обфускации (Shadowsocks, UDP-over-TCP, QUIC, LWO) не применяются, когда warren_mode включён."
-
-msgctxt "warren-status-view"
 msgid "Obfuscation"
 msgstr "Обфускация"
 
@@ -4936,15 +3322,6 @@ msgctxt "warren-status-view"
 msgid "never"
 msgstr "никогда"
 
-
-msgctxt "port-forwarding-view"
-msgid "auto"
-msgstr "авто"
-
-msgctxt "port-forwarding-view"
-msgid "Mapping failed: %(error)s"
-msgstr "Не удалось сопоставить: %(error)s"
-
 msgctxt "port-forwarding-view"
 msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
 msgstr "Открывает публичный порт на подключённом выходном сервере и перенаправляет его на ваше устройство. Полезно для одноранговых приложений, обмена файлами или собственных сервисов."
@@ -4954,40 +3331,8 @@ msgid "Port forwarding"
 msgstr "Переадресация портов"
 
 msgctxt "port-forwarding-view"
-msgid "Port must be between 49152 and 65535, or empty for auto."
-msgstr "Порт должен быть в диапазоне от 49152 до 65535 или пустым для автоматического выбора."
-
-msgctxt "port-forwarding-view"
-msgid "Preferred port"
-msgstr "Предпочитаемый порт"
-
-msgctxt "port-forwarding-view"
 msgid "Protocol"
 msgstr "Протокол"
-
-msgctxt "port-forwarding-view"
-msgid "Public port: %(port)s"
-msgstr "Публичный порт: %(port)s"
-
-msgctxt "port-forwarding-view"
-msgid "Renewing in %(countdown)s"
-msgstr "Обновление через %(countdown)s"
-
-msgctxt "port-forwarding-view"
-msgid "Status: active"
-msgstr "Статус: активно"
-
-msgctxt "port-forwarding-view"
-msgid "Status: requesting port mapping..."
-msgstr "Статус: запрос сопоставления порта…"
-
-msgctxt "port-forwarding-view"
-msgid "Status: waiting for an active tunnel connection to set up the port mapping."
-msgstr "Статус: ожидание активного туннельного соединения для настройки переадресации порта."
-
-msgctxt "port-forwarding-view"
-msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
-msgstr "Сервер может назначить другой порт, если предпочитаемый уже занят. Изменения применяются немедленно, без переподключения."
 
 msgctxt "keys-view"
 msgid "Backup keys"
@@ -5149,25 +3494,9 @@ msgctxt "device-management"
 msgid "Session is inactive"
 msgstr "Сеанс неактивен"
 
-msgctxt "device-management"
-msgid "Your session has ended. To connect again, you will need to log back in."
-msgstr "Ваш сеанс завершён. Чтобы подключиться снова, вам потребуется войти заново."
-
 msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "Обнаружено несоответствие идентификатора сервера. Открытый ключ выходного узла изменился."
-
-msgctxt "vpn-settings-view"
-msgid "Automatic failover"
-msgstr "Автоматическое переключение"
-
-msgctxt "vpn-settings-view"
-msgid "Automatically switch to another exit server if the current one becomes unreachable."
-msgstr "Автоматически переключаться на другой выходной сервер, если текущий становится недоступен."
-
-msgctxt "vpn-settings-view"
-msgid "This setting takes effect immediately without a daemon restart."
-msgstr "Этот параметр вступает в силу немедленно, без перезапуска службы."
 
 msgctxt "vpn-settings-view"
 msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
@@ -5186,14 +3515,6 @@ msgctxt "accessibility"
 msgid "Copy the voucher code"
 msgstr "Скопировать код ваучера"
 
-msgctxt "accessibility"
-msgid "Hide public key"
-msgstr "Скрыть открытый ключ"
-
-msgctxt "accessibility"
-msgid "Show public key"
-msgstr "Показать открытый ключ"
-
 msgctxt "account-view"
 msgid "Backup keys"
 msgstr "Резервная копия ключей"
@@ -5210,10 +3531,6 @@ msgstr "При выходе из учетной записи что-то пош�
 msgctxt "account-view"
 msgid "Try again"
 msgstr "Повторить"
-
-msgctxt "account-view"
-msgid "Public key"
-msgstr "Открытый ключ"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
@@ -5302,10 +3619,6 @@ msgstr "сбой"
 msgctxt "port-forwarding-view"
 msgid "no port available"
 msgstr "нет доступных портов"
-
-msgctxt "port-forwarding-view"
-msgid "not allowed"
-msgstr "не разрешено"
 
 msgctxt "port-forwarding-view"
 msgid "open: %(port)d"
@@ -5440,14 +3753,6 @@ msgstr "Подписываем, подождите."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Форум сообщества"
-
-msgctxt "tunnel-control"
-msgid "Connecting..."
-msgstr "Подключение..."
-
-msgctxt "tunnel-control"
-msgid "Encrypting your connection"
-msgstr "Шифрование вашего соединения"
 
 msgctxt "tunnel-control"
 msgid "Random location"

@@ -12,17 +12,8 @@ msgstr ""
 "X-Crowdin-File: messages.pot\n"
 "X-Crowdin-File-ID: 12\n"
 
-msgid "%(amount)d more..."
-msgstr "%(amount)d de plus..."
-
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "%(duration)s ont été ajouté(es), compte payé jusqu’au %(expiry)s."
-
-#. The label for the QUIC port option.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgid "%(wireguard)s port"
-msgstr "Port %(wireguard)s"
 
 msgid "1 day"
 msgid_plural "%d days"
@@ -105,14 +96,8 @@ msgstr "Connexion"
 msgid "Connected"
 msgstr "Connecté"
 
-msgid "CONNECTED"
-msgstr "CONNEXION ÉTABLIE"
-
 msgid "Connecting"
 msgstr "Connexion"
-
-msgid "CONNECTING..."
-msgstr "CONNEXION EN COURS..."
 
 msgid "Create"
 msgstr "Créer"
@@ -156,14 +141,8 @@ msgstr "Se déconnecter et quitter"
 msgid "Disconnected"
 msgstr "Déconnecté"
 
-msgid "DISCONNECTED"
-msgstr "DÉCONNECTÉ"
-
 msgid "Disconnecting"
 msgstr "Déconnexion en cours"
-
-msgid "DISCONNECTING..."
-msgstr "DÉCONNEXION EN COURS..."
 
 msgid "Edit"
 msgstr "Modifier"
@@ -178,16 +157,8 @@ msgstr "Activer quand même"
 msgid "Enable direct only"
 msgstr "Activer Directe uniquement"
 
-#. Error message shown trying to login but the app fails
-#. to fetch the list of registered devices.
-msgid "Failed to fetch list of devices"
-msgstr "Impossible de récupérer la liste des appareils"
-
 msgid "FAILED TO SECURE CONNECTION"
 msgstr "ÉCHEC DE LA SÉCURISATION DE LA CONNEXION"
-
-msgid "Filters"
-msgstr "Filtres "
 
 #. Button label for system settings.
 msgid "Go to System Settings"
@@ -234,9 +205,6 @@ msgstr "Aucun serveur correspondant trouvé"
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "Aucun résultat pour <b>%(searchTerm)s</b>."
 
-msgid "None"
-msgstr "Aucun"
-
 msgid "Off"
 msgstr "Désactivé"
 
@@ -272,10 +240,6 @@ msgstr "Quitter"
 
 msgid "Reconnect"
 msgstr "Reconnexion"
-
-#. Button label in confirmation dialog that confirms a remove action.
-msgid "Remove"
-msgstr "Supprimer"
 
 msgid "Required"
 msgstr "Requis"
@@ -326,23 +290,9 @@ msgstr "Utiliser"
 msgid "Username"
 msgstr "Nom d'utilisateur"
 
-#. Text for screen readers to describe the LWO settings navigation button.
-#. Available placeholders:
-#. %(lwo)s - will be replaced with LWO
-msgctxt "accessibility"
-msgid "%(lwo)s settings"
-msgstr "Paramètres de %(lwo)s"
-
 msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s, vue chargée"
-
-#. Text for screen readers to describe the QUIC port settings navigation button.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgctxt "accessibility"
-msgid "%(wireguard)s port settings"
-msgstr "Paramètres du port %(wireguard)s"
 
 #. This is an accessibility label for a button that adds a location to a custom list.
 #. Available placeholders:
@@ -411,21 +361,6 @@ msgctxt "accessibility"
 msgid "Expand %(location)s"
 msgstr "Maximiser %(location)s"
 
-#. This is used by screenreaders to communicate the "x" button next to a saved public key.
-#. Available placeholders:
-#. %(pubkey)s - the public key to the left of the button
-msgctxt "accessibility"
-msgid "Forget public key %(pubkey)s"
-msgstr "Oublier la clé publique %(pubkey)s"
-
-#. Accessibility label for link to VPN settings where
-#. the user can change QUIC port.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "accessibility"
-msgid "Go to anti-censorship settings to change %(wireGuard)s port"
-msgstr "Accédez aux paramètres anti-censure pour modifier le port %(wireGuard)s"
-
 #. Accessibility label for link to app upgrade view.
 msgctxt "accessibility"
 msgid "Go to app update page"
@@ -438,12 +373,6 @@ msgctxt "accessibility"
 msgid "Go to slide %(index)s"
 msgstr "Aller à la diapositive %(index)s"
 
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which obscures the public key.
-msgctxt "accessibility"
-msgid "Hide public key"
-msgstr "Masquer la clé publique"
-
 #. Alt text for an illustration showing VPN traffic with DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic with DAITA enabled"
@@ -453,18 +382,6 @@ msgstr "Illustration montrant le trafic VPN avec DAITA activé"
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic without DAITA"
 msgstr "Illustration montrant le trafic VPN sans DAITA"
-
-#. This is used by screenreaders to communicate the login button.
-msgctxt "accessibility"
-msgid "Login"
-msgstr "Connexion"
-
-#. This is used by screenreaders to communicate logging in with a saved public key.
-#. Available placeholders:
-#. %(pubkey)s - the saved public key
-msgctxt "accessibility"
-msgid "Login with public key %(pubkey)s"
-msgstr "Se connecter avec la clé publique %(pubkey)s"
 
 msgctxt "accessibility"
 msgid "More information"
@@ -524,14 +441,6 @@ msgctxt "accessibility"
 msgid "Remove %(location)s from %(customList)s"
 msgstr "Supprimer %(location)s de %(customList)s"
 
-#. Button action description provided to accessibility tools such as screen
-#. readers.
-#. Available placeholders:
-#. %(deviceName)s - The device name to remove.
-msgctxt "accessibility"
-msgid "Remove device named %(deviceName)s"
-msgstr "Supprimer l'appareil nommé %(deviceName)s"
-
 msgctxt "accessibility"
 msgid "Remove item"
 msgstr "Supprimer l'élément"
@@ -539,24 +448,6 @@ msgstr "Supprimer l'élément"
 msgctxt "accessibility"
 msgid "Select location. Current location is %(location)s"
 msgstr "Sélectionnez une localisation. La localisation actuelle est %(location)s"
-
-msgctxt "accessibility"
-msgid "Shadowsocks settings"
-msgstr "Paramètres Shadowsocks"
-
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which unobscures the public key.
-msgctxt "accessibility"
-msgid "Show public key"
-msgstr "Afficher la clé publique"
-
-msgctxt "accessibility"
-msgid "UDP-over-TCP settings"
-msgstr "Paramètres UDP-over-TCP"
-
-msgctxt "accessibility"
-msgid "Use the right arrow key to focus the settings button."
-msgstr "Utilisez la flèche de droite pour mettre en évidence le bouton « Paramètres »."
 
 #. Title label in navigation bar
 msgctxt "account-view"
@@ -590,11 +481,6 @@ msgstr "Actuellement indisponible"
 msgctxt "account-view"
 msgid "Log out"
 msgstr "Déconnexion"
-
-#. Link text in the account view to navigate to the manage devices view.
-msgctxt "account-view"
-msgid "Manage devices"
-msgstr "Gérer les appareils"
 
 msgctxt "account-view"
 msgid "OUT OF TIME"
@@ -645,21 +531,6 @@ msgstr "Désactiver"
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
 msgstr "Anti-censure"
-
-#. The title for the obfuscation method selector.
-msgctxt "anti-censorship-view"
-msgid "Method"
-msgstr "Méthode"
-
-#. Second paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "Please note that these methods do not improve performance, and may increase system utilization and battery consumption."
-msgstr "Veuillez noter que ces méthodes n'améliorent pas la performance et pourraient augmenter l'utilisation du système et la consommation de batterie."
-
-#. First paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "Ces méthodes peuvent servir dans les situations où il vous est empêché d'atteindre Warren. Quand « Automatique » est sélectionné, l'application essaiera toutes les méthodes jusqu'à ce que l'une d'entre elles fonctionne."
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -891,12 +762,6 @@ msgctxt "app-upgrade-view"
 msgid "Connection blocked. Try changing server or other settings."
 msgstr "Connexion bloquée. Essayez de changer de serveur ou de modifier certains paramètres."
 
-#. Label displayed when an error occurred due to the installer failing to start
-#. and the suggested resolution is to download the update again.
-msgctxt "app-upgrade-view"
-msgid "Could not open installer, please try again or send a problem report."
-msgstr "Impossible d'ouvrir l'installateur. Veuillez réessayer ou envoyer un rapport de problème."
-
 #. Button text to download and install an update
 msgctxt "app-upgrade-view"
 msgid "Download & install"
@@ -911,11 +776,6 @@ msgstr "Téléchargement terminé !"
 msgctxt "app-upgrade-view"
 msgid "Download failed"
 msgstr "Échec du téléchargement"
-
-#. Label displayed when an error occurred due to the download failing
-msgctxt "app-upgrade-view"
-msgid "Download failed, please check your connection/firewall and try again, or send a problem report."
-msgstr "Échec du téléchargement. Veuillez vérifier votre connexion / pare-feu et réessayer, ou envoyer un rapport de problème."
 
 #. Status text displayed below a progress bar when the download of an update has been paused
 #. Label displayed above a progress bar when the update is verified successfully
@@ -945,11 +805,6 @@ msgctxt "app-upgrade-view"
 msgid "Install update"
 msgstr "Installer la mise à jour"
 
-#. Label displayed when an error occurred within the installer
-msgctxt "app-upgrade-view"
-msgid "Installer quit unexpectedly, please try again or send a problem report."
-msgstr "L'installateur s'est arrêté de manière inattendue. Veuillez réessayer ou envoyer un rapport de problème."
-
 #. Info about which directory the app update will be downloaded to
 msgctxt "app-upgrade-view"
 msgid "Installer will be downloaded to <b>%(cacheDir)s</b>."
@@ -968,11 +823,6 @@ msgstr "Aucune mise à jour ou modification n'ont été apportées à cette vers
 msgctxt "app-upgrade-view"
 msgid "Pause"
 msgstr "Pause"
-
-#. Button text to report a problem
-msgctxt "app-upgrade-view"
-msgid "Report a problem"
-msgstr "Signaler un problème"
 
 #. Button text to resume updating
 msgctxt "app-upgrade-view"
@@ -999,21 +849,11 @@ msgctxt "app-upgrade-view"
 msgid "Starting installer..."
 msgstr "Démarrage de l'installateur…"
 
-#. Label displayed when an unknown error occurred
-msgctxt "app-upgrade-view"
-msgid "Unknown error occurred. Please try again or send a problem report."
-msgstr "Une erreur inconnue est survenue. Veuillez réessayer ou envoyer un rapport de problème."
-
 #. Title in navigation bar
 #. Main title for the update available view
 msgctxt "app-upgrade-view"
 msgid "Update available"
 msgstr "Mise à jour disponible"
-
-#. Label displayed when an error occurred due to the installer failed verification
-msgctxt "app-upgrade-view"
-msgid "Verification failed, please try again or send a problem report."
-msgstr "Échec de la vérification. Veuillez réessayer ou envoyer un rapport de problème."
 
 #. Label displayed above a progress bar when the update is verified successfully
 msgctxt "app-upgrade-view"
@@ -1048,10 +888,6 @@ msgstr "Internet bloqué : votre accès a été révoqué pour non-respect des c
 msgctxt "auth-failure"
 msgid "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly."
 msgstr "Trop de connexions simultanées sur ce compte. Déconnectez un autre appareil ou réessayez de vous connecter dans un instant."
-
-msgctxt "auth-failure"
-msgid "Unable to authenticate account. Please send a problem report."
-msgstr "Impossible d'authentifier le compte. Veuillez envoyer un rapport de problème."
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
@@ -1136,10 +972,6 @@ msgid "%(DAITA)s: Multihop"
 msgstr "%(DAITA)s : multihop"
 
 msgctxt "connect-view"
-msgid "Active features"
-msgstr "Fonctionnalités activées"
-
-msgctxt "connect-view"
 msgid "Reduced MTU"
 msgstr "MTU réduite"
 
@@ -1148,10 +980,6 @@ msgstr "MTU réduite"
 msgctxt "connect-view"
 msgid "Reduced MTU (%(mtu)s)"
 msgstr "MTU réduite (%(mtu)s)"
-
-msgctxt "connect-view"
-msgid "Port forwarding: %(port)d %(protocol)s"
-msgstr "Port forwarding : %(port)d %(protocol)s"
 
 msgctxt "connect-view"
 msgid "Port forwarding: %(ports)s"
@@ -1367,43 +1195,6 @@ msgctxt "custom-list-feature"
 msgid "Relay"
 msgstr "Relai"
 
-#. Button for continuing login process.
-msgctxt "device-management"
-msgid "Continue with login"
-msgstr "Continuer avec la connexion"
-
-#. Label informing the user when a device was created.
-#. Available placeholders:
-#. %(createdDate)s - The creation date of the device.
-msgctxt "device-management"
-msgid "Created: %(createdDate)s"
-msgstr "Création : %(createdDate)s"
-
-#. Label indicating that this device is the current device.
-msgctxt "device-management"
-msgid "Current device"
-msgstr "Appareil actuel"
-
-msgctxt "device-management"
-msgid "Device is inactive"
-msgstr "L'appareil est inactif"
-
-msgctxt "device-management"
-msgid "Device name"
-msgstr "Nom de l'appareil"
-
-#. A label that will display the newly created device name to inform the user
-#. about it.
-#. Available placeholders:
-#. %(deviceName)s - The name of the current device
-msgctxt "device-management"
-msgid "Device name: %(deviceName)s"
-msgstr "Nom de l'appareil : %(deviceName)s"
-
-msgctxt "device-management"
-msgid "Failed to remove device"
-msgstr "Impossible de supprimer l'appareil"
-
 #. Button label for navigating to login.
 msgctxt "device-management"
 msgid "Go to login"
@@ -1413,10 +1204,6 @@ msgctxt "device-management"
 msgid "Going to login will unblock the Internet on this device."
 msgstr "Aller à la connexion débloquera la connexion Internet sur cet appareil."
 
-msgctxt "device-management"
-msgid "If you log out, the device and the device name is removed. When you log back in again, the device will get a new name."
-msgstr "Si vous vous déconnectez, l'appareil et son nom sont supprimés. Lorsque vous vous reconnectez, l'appareil reçoit un nouveau nom."
-
 #. Title label in navigation bar for the manage devices view.
 #. Title text in the manage devices view
 msgctxt "device-management"
@@ -1424,68 +1211,13 @@ msgid "Manage devices"
 msgstr "Gérer les appareils"
 
 msgctxt "device-management"
-msgid "Please log out of at least one by removing it from the list below. You can find the corresponding device name under the device’s Account settings."
-msgstr "Merci de vous déconnecter d'au moins un appareil en le supprimant de la liste ci-dessous. Vous trouverez le nom de l'appareil correspondant dans les paramètres du compte de l'appareil."
-
-#. Button label for confirming removing a device.
-msgctxt "device-management"
-msgid "Remove"
-msgstr "Supprimer"
-
-#. Text displayed above button which logs out another device.
-#. The text enclosed in "<b></b>" will appear bold.
-#. Available placeholders:
-#. %(deviceName)s - The name of the device to log out.
-msgctxt "device-management"
-msgid "Remove <em>%(deviceName)s?</em>"
-msgstr "Supprimer <em>%(deviceName)s ?</em>"
-
-#. Page title informing user that enough devices has been removed to continue
-#. login process.
-msgctxt "device-management"
-msgid "Super!"
-msgstr "Super !"
-
-msgctxt "device-management"
-msgid "The device will be removed from the list and logged out."
-msgstr "L'appareil sera supprimé de la liste et déconnecté."
-
-msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "Il s'agit du nom attribué à l'appareil. Chaque appareil connecté à un compte Warren reçoit un nom unique qui vous aide à l'identifier lorsque vous gérez vos appareils dans l'application ou sur le site Web."
-
-msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
 msgstr "Temps restant : %(timeLeft)s"
-
-#. Page title informing user that the login failed due to too many registered
-#. devices on account.
-msgctxt "device-management"
-msgid "Too many devices"
-msgstr "Trop d'appareils"
 
 #. Button text to retry fetching devices.
 msgctxt "device-management"
 msgid "Try again"
 msgstr "Réessayer"
-
-#. Subtitle text in the manage devices view, explaining
-#. devices and what they can do in the manage devices view.
-msgctxt "device-management"
-msgid "View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily."
-msgstr "Affichez et gérez tous vos appareils connectés. Vous pouvez avoir jusqu'à 5 appareils sur un même compte. Chaque appareil reçoit un nom lorsqu'il est connecté, ce qui vous permet de le distinguer facilement."
-
-msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Warren account."
-msgstr "Vous pouvez connecter jusqu'à 5 appareils au même compte Warren."
-
-msgctxt "device-management"
-msgid "You can now continue logging in on this device."
-msgstr "Vous pouvez maintenant continuer la connexion sur cet appareil."
-
-msgctxt "device-management"
-msgid "You have removed this device. To connect again, you will need to log back in."
-msgstr "Vous avez supprimé cet appareil. Vous devrez vous reconnecter pour connecter cet appareil à nouveau."
 
 #. The message displayed to the user in case of critical error in the GUI
 #. Available placeholders:
@@ -1649,10 +1381,6 @@ msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
 msgstr "IL Y A PEUT-ÊTRE UNE FUITE DE TRAFIC RÉSEAU"
 
 msgctxt "in-app-notifications"
-msgid "NEW DEVICE CREATED"
-msgstr "NOUVEL APPAREIL CRÉÉ"
-
-msgctxt "in-app-notifications"
 msgid "NEW VERSION INSTALLED"
 msgstr "NOUVELLE VERSION INSTALLÉE"
 
@@ -1687,11 +1415,6 @@ msgctxt "in-app-notifications"
 msgid "Retry installation"
 msgstr "Réessayer l'installation"
 
-#. Button label to send a problem report.
-msgctxt "in-app-notifications"
-msgid "Send problem report"
-msgstr "Envoyer un rapport de problème"
-
 msgctxt "in-app-notifications"
 msgid "SERVER MAINTENANCE"
 msgstr "MAINTENANCE DU SERVEUR"
@@ -1710,20 +1433,6 @@ msgstr "L'installateur n'a pas pu se terminer."
 msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "L'installateur n'a pas pu démarrer."
-
-#. Notification subtitle indicating the user is using an unsupported port for QUIC.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "in-app-notifications"
-msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
-msgstr "Le port %(wireGuard)s sélectionné n'est pas pris en charge. Veuillez <a>le modifier sous Paramètres VPN.</a>"
-
-#. Notification text when a new device has been created.
-#. Available placeholders:
-#. - %(deviceName)s: Name of created device.
-msgctxt "in-app-notifications"
-msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
-msgstr "Cet appareil s'appelle à présent <em>%(deviceName)s</em>. Retrouvez plus d'informations sous <a>Gérer les appareils</a> dans Compte."
 
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
@@ -1864,11 +1573,6 @@ msgctxt "launch-view"
 msgid "Failed to start the app, please try again or click “Details” for more info"
 msgstr "Échec du démarrage de l'application. Veuillez réessayer ou cliquer sur « Détails » pour obtenir plus d'informations"
 
-#. Message in troubleshooting modal advising user to send a problem report if the steps do not work.
-msgctxt "launch-view"
-msgid "If these steps do not work please send a problem report."
-msgstr "Si ces étapes ne fonctionnent pas, veuillez envoyer un rapport de problème."
-
 #. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
 msgid "Only the account that set Warren up, or an administrator, can use it here."
@@ -1921,11 +1625,6 @@ msgctxt "launch-view"
 msgid "Restarting your computer"
 msgstr "Redémarrer votre ordinateur"
 
-#. Button label for sending a problem report.
-msgctxt "launch-view"
-msgid "Send problem report"
-msgstr "Envoyer un rapport de problème"
-
 #. Status text shown when app is starting.
 msgctxt "launch-view"
 msgid "Starting up...."
@@ -1940,11 +1639,6 @@ msgstr "Le démarrage du processus Warren en arrière-plan a échoué. Le proces
 msgctxt "launch-view"
 msgid "Try again"
 msgstr "Réessayer"
-
-#. Message in launch view when the mullvad service cannot be contacted.
-msgctxt "launch-view"
-msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "Impossible de contacter le service système Warren, votre connexion n'est peut-être pas sécurisée. Merci de résoudre le problème ou d'envoyer un rapport de problème en cliquant sur le bouton « En savoir plus »."
 
 msgctxt "launch-view"
 msgid "Warren VPN will restore internet access without VPN protection."
@@ -1979,109 +1673,16 @@ msgctxt "login-view"
 msgid "<b>%(lockdownModeSettingName)s</b> is enabled. Disable it to unblock your connection."
 msgstr "<b>%(lockdownModeSettingName)s</b> est activé. Désactivez-le pour débloquer votre connexion."
 
-msgctxt "login-view"
-msgid "Account created"
-msgstr "Compte créé"
-
-msgctxt "login-view"
-msgid "Checking public key"
-msgstr "Vérification de la clé publique"
-
 #. Text in button that allows user to create a new account.
 msgctxt "login-view"
 msgid "Create a new account"
 msgstr "Créer un nouveau compte"
-
-#. Button which confirms the action to create a new account.
-msgctxt "login-view"
-msgid "Create new account"
-msgstr "Créer un nouveau compte"
-
-msgctxt "login-view"
-msgid "Creating account..."
-msgstr "Création du compte…"
-
-#. Text that asks the user if they really want to create a new account.
-msgctxt "login-view"
-msgid "Do you want to create a new account?"
-msgstr "Voulez-vous créer un nouveau compte ?"
-
-#. Text that asks the user if they really want to remove the saved public key.
-msgctxt "login-view"
-msgid "Do you want to remove the saved public key?"
-msgstr "Voulez-vous supprimer la clé publique enregistrée ?"
-
-msgctxt "login-view"
-msgid "Enter your public key"
-msgstr "Saisissez votre clé publique"
-
-msgctxt "login-view"
-msgid "Error"
-msgstr "Erreur"
-
-msgctxt "login-view"
-msgid "Failed to create account"
-msgstr "Échec de la création du compte"
-
-msgctxt "login-view"
-msgid "Finishing upgrade."
-msgstr "Finalisation de la mise à niveau."
-
-#. Error message shown above login input when trying to login with a
-#. non-existent public key.
-msgctxt "login-view"
-msgid "Invalid public key"
-msgstr "Clé publique non valide"
-
-msgctxt "login-view"
-msgid "Logged in"
-msgstr "Connecté"
-
-msgctxt "login-view"
-msgid "Logging in..."
-msgstr "Connexion..."
-
-#. Label for the login button.
-msgctxt "login-view"
-msgid "Login"
-msgstr "Connexion"
-
-msgctxt "login-view"
-msgid "Login failed"
-msgstr "Échec de la connexion"
-
-#. Text shown between two horizontal lines above the "create account" button.
-#. In this context it is used to separate the users alternative of logging in
-#. or creating a new account, "Login or Create a new account".
-msgctxt "login-view"
-msgid "Or"
-msgstr "Ou"
 
 #. This is a warning message shown when the app is blocking the users
 #. internet connection while logged out.
 msgctxt "login-view"
 msgid "Our kill switch is currently blocking your connection."
 msgstr "Notre kill switch bloque actuellement votre connexion."
-
-msgctxt "login-view"
-msgid "Please wait"
-msgstr "Veuillez patienter"
-
-#. Text that informs the user about the consequences of clearing the saved
-#. public key.
-msgctxt "login-view"
-msgid "Removing the saved public key from this device cannot be undone."
-msgstr "Supprimer la clé publique enregistrée de cet appareil est irréversible."
-
-#. Error message shown above login input when trying to login to an account
-#. with too many registered devices.
-msgctxt "login-view"
-msgid "Too many devices"
-msgstr "Trop d'appareils"
-
-msgctxt "login-view"
-msgid "Unknown error"
-msgstr "Erreur inconnue"
 
 msgctxt "login-view"
 msgid "Upgrading..."
@@ -2091,42 +1692,6 @@ msgstr "Mise à niveau..."
 msgctxt "login-view"
 msgid "Warren could not restore your account right now. Check your internet connection and try again."
 msgstr "Warren n'a pas pu restaurer votre compte pour le moment. Vérifiez votre connexion internet, puis réessayez."
-
-msgctxt "login-view"
-msgid "Valid public key"
-msgstr "Clé publique valide"
-
-#. Text that informs the users about consequences of creating a new account.
-msgctxt "login-view"
-msgid "You already have a saved public key, by creating a new account the saved public key will be removed from this device. This cannot be undone."
-msgstr "Vous avez déjà une clé publique enregistrée ; en créant un nouveau compte, la clé publique enregistrée sera supprimée de cet appareil. Cette action est irréversible."
-
-#. The title for the LWO port selector.
-msgctxt "lwo-settings-view"
-msgid "Port"
-msgstr "Port"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "lwo-settings-view"
-msgid "Port: %(port)s"
-msgstr "Port : %(port)s"
-
-msgctxt "lwo-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "Le réglage automatique choisira au hasard parmi la plage de ports valide affichée ci-dessous."
-
-msgctxt "lwo-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "Le port personnalisé peut prendre n'importe quelle valeur dans les plages valides : %(portRanges)s."
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "lwo-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "Plages valides : %(portRanges)s"
 
 #. Title label in navigation bar
 msgctxt "navigation-bar"
@@ -2302,32 +1867,8 @@ msgid "Unable to apply firewall rules. Try updating your kernel."
 msgstr "Impossible d'appliquer les règles du pare-feu. Essayez de mettre votre noyau à jour."
 
 msgctxt "notifications"
-msgid "Unable to block all network traffic. Please troubleshoot or send a problem report."
-msgstr "Impossible de bloquer tout le trafic réseau. Veuillez dépanner ou envoyer un rapport de problème."
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software or send a problem report."
-msgstr "Impossible de bloquer tout le trafic réseau. Essayez de désactiver temporairement les antivirus ou logiciels de sécurité tiers, ou envoyez un rapport de problème."
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try updating your kernel or send a problem report."
-msgstr "Impossible de bloquer tout le trafic réseau. Essayez de mettre votre noyau à jour ou envoyez un rapport de problème."
-
-msgctxt "notifications"
-msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
-msgstr "Impossible de communiquer avec le pilote du noyau Warren. Essayez de vous reconnecter ou envoyez un rapport de problème."
-
-msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
 msgstr "Échec de la résolution de l'hôte du tunnel personnalisé. Essayez de modifier vos paramètres."
-
-msgctxt "notifications"
-msgid "Unable to set system DNS server. Please send a problem report."
-msgstr "Impossible de définir le serveur DNS système. Veuillez envoyer un rapport de problème."
-
-msgctxt "notifications"
-msgid "Unable to start tunnel connection. Please send a problem report."
-msgstr "Impossible de démarrer la connexion au tunnel. Veuillez envoyer un rapport de problème."
 
 msgctxt "notifications"
 msgid "Unable to start tunnel connection. This could be because of conflicts with VMware, please troubleshoot."
@@ -2395,10 +1936,6 @@ msgid "How to set up your torrent client"
 msgstr "Comment configurer votre client torrent"
 
 msgctxt "port-forwarding-view"
-msgid "Mapping failed: %(error)s"
-msgstr "Échec du mappage : %(error)s"
-
-msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
 msgstr "M'avertir quand un port public change"
 
@@ -2407,56 +1944,12 @@ msgid "Port forwarding"
 msgstr "Port forwarding"
 
 msgctxt "port-forwarding-view"
-msgid "Public port: %(port)s"
-msgstr "Port public : %(port)s"
-
-msgctxt "port-forwarding-view"
-msgid "Renewing in %(countdown)s"
-msgstr "Renouvellement dans %(countdown)s"
-
-msgctxt "port-forwarding-view"
-msgid "Requesting port mapping..."
-msgstr "Demande de mappage de port..."
-
-msgctxt "port-forwarding-view"
 msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
 msgstr "Ouvre un port public sur le serveur de sortie connecté et le redirige vers votre appareil. Utile pour les applications pair-à-pair, le partage de fichiers ou les services auto-hébergés."
 
 msgctxt "port-forwarding-view"
-msgid "Port %(port)d is already in use. Choose another one."
-msgstr "Le port %(port)d est déjà utilisé. Choisissez-en un autre."
-
-msgctxt "port-forwarding-view"
-msgid "The requested port is already in use. Choose another one."
-msgstr "Le port demandé est déjà utilisé. Choisissez-en un autre."
-
-msgctxt "port-forwarding-view"
-msgid "No port is available right now. Try again in a moment."
-msgstr "Aucun port disponible pour le moment. Réessayez dans un instant."
-
-msgctxt "port-forwarding-view"
-msgid "Port forwarding is not allowed on this server."
-msgstr "Le port forwarding n'est pas autorisé sur ce serveur."
-
-msgctxt "port-forwarding-view"
-msgid "Too many port changes. Wait %(countdown)s before changing the port again."
-msgstr "Trop de changements de port. Attendez %(countdown)s avant de changer de port à nouveau."
-
-msgctxt "port-forwarding-view"
-msgid "Too many port changes. Retrying the port mapping now…"
-msgstr "Trop de changements de port. Nouvelle tentative de mappage en cours…"
-
-msgctxt "port-forwarding-view"
 msgid "Last port change before a temporary block. Wait a moment before changing it again."
 msgstr "Dernier changement de port avant un blocage temporaire. Patientez un instant avant d'en changer à nouveau."
-
-msgctxt "port-forwarding-view"
-msgid "Too many recent changes. You can change the port again in %(countdown)s."
-msgstr "Trop de changements récents. Vous pourrez changer de port à nouveau dans %(countdown)s."
-
-msgctxt "port-forwarding-view"
-msgid "Too many port changes. You can change the port again in %(countdown)s."
-msgstr "Trop de changements de port. Vous pourrez en changer à nouveau dans %(countdown)s."
 
 msgctxt "port-forwarding-view"
 msgid "+ Add a port"
@@ -2790,17 +2283,9 @@ msgctxt "settings-view"
 msgid "VPN settings"
 msgstr "Paramètres VPN"
 
-msgctxt "settings-view"
-msgid "Warren multi-hop"
-msgstr "Multi-hop Warren"
-
 msgctxt "split-tunneling-view"
 msgid "%(applicationName)s is problematic and can’t be excluded from the VPN tunnel."
 msgstr "L'application %(applicationName)s pose problème et ne peut pas être exclue du tunnel VPN."
-
-msgctxt "split-tunneling-view"
-msgid "Choose the apps you want to exclude from the VPN tunnel."
-msgstr "Choisissez les applications que vous souhaitez exclure du tunnel VPN."
 
 msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
@@ -2840,116 +2325,20 @@ msgctxt "split-tunneling-view"
 msgid "To use %(splitTunneling)s, please update to a Linux kernel version that supports cgroup v2."
 msgstr "Pour utiliser le %(splitTunneling)s, veuillez passer à une version de noyau de Linux qui prend en charge cgroup v2."
 
-msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
-msgstr "Pour utiliser le Split tunneling, activez « Accès complet au disque » pour « Warren VPN » dans les paramètres système de macOS."
-
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
 msgid "Unable to launch selection. %(detailedErrorMessage)s"
 msgstr "Impossible de démarrer la sélection. %(detailedErrorMessage)s"
-
-#. Button label for continuing problem report submission with an outdated app version.
-msgctxt "support-view"
-msgid "Continue anyway"
-msgstr "Continuer quand même"
-
-#. Button text to edit the message after a failed attempt to send the problem report.
-msgctxt "support-view"
-msgid "Edit message"
-msgstr "Modifier le message"
-
-msgctxt "support-view"
-msgid "Failed to send"
-msgstr "Échec de l'envoi"
 
 #. Link to the webpage
 msgctxt "support-view"
 msgid "FAQs & Guides"
 msgstr "FAQ et guides"
 
-#. The message displayed to the user after submitting the problem report, given that the user left his or her email for us to reach back.
-#. Available placeholders:
-#. %(email)s
-msgctxt "support-view"
-msgid "If needed we will contact you at %(email)s"
-msgstr "Si nécessaire, nous vous contacterons à l'adresse %(email)s"
-
-msgctxt "support-view"
-msgid "If you exit the form and try again later, the information you already entered will still be here."
-msgstr "Si vous quittez le formulaire et réessayez plus tard, les informations que vous avez déjà saisies seront toujours là."
-
-#. Title label in navigation bar
-#. Navigation button to the 'Report a problem' help view
-msgctxt "support-view"
-msgid "Report a problem"
-msgstr "Signaler un problème"
-
-#. Button label for sending the problem report.
-msgctxt "support-view"
-msgid "Send"
-msgstr "Envoyer"
-
-#. Button label for sending the problem report without an email address.
-msgctxt "support-view"
-msgid "Send anyway"
-msgstr "Envoyer quand même"
-
-msgctxt "support-view"
-msgid "Sending..."
-msgstr "Envoi..."
-
-msgctxt "support-view"
-msgid "Sent"
-msgstr "Envoyé"
-
 #. Title label in navigation bar
 msgctxt "support-view"
 msgid "Support"
 msgstr "Assistance"
-
-msgctxt "support-view"
-msgid "Thanks!"
-msgstr "Merci !"
-
-msgctxt "support-view"
-msgid "To assist you better, please write in English or Swedish and include which country you are connecting from."
-msgstr "Pour nous permettre de mieux vous assister, merci d'écrire en anglais ou en suédois et d'indiquer le pays à partir duquel vous vous connectez."
-
-msgctxt "support-view"
-msgid "To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel."
-msgstr "Pour mieux vous aider, le fichier journal de l'application est joint à ce message. Vos données restent privées et en sécurité dans la mesure où elles sont rendues anonymes avant d'être envoyées via un canal chiffré."
-
-#. Button label for retrying problem report submission after a failure.
-msgctxt "support-view"
-msgid "Try again"
-msgstr "Réessayer"
-
-#. Button label for updating the app to the latest version.
-msgctxt "support-view"
-msgid "Update app"
-msgstr "Mettre à jour l'application"
-
-#. Button label for opening app logs.
-msgctxt "support-view"
-msgid "View app logs"
-msgstr "Afficher les journaux de l'application"
-
-msgctxt "support-view"
-msgid "We will look into this."
-msgstr "Nous allons nous pencher dessus."
-
-msgctxt "support-view"
-msgid "You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address."
-msgstr "Vous êtes sur le point d'envoyer un signalement de problème sans nous fournir un moyen de vous contacter. Si vous désirez une réponse à votre signalement, vous devez saisir une adresse e-mail."
-
-msgctxt "support-view"
-msgid "You are using an old version of the app. Please upgrade and see if the problem still exists before sending a report."
-msgstr "Vous utilisez une ancienne version de l'application. Veuillez la mettre à niveau et voir si le problème persiste avant d'envoyer un rapport."
-
-msgctxt "support-view"
-msgid "Your email (optional)"
-msgstr "Votre e-mail (facultatif)"
 
 #. Link to the refund policy webpage
 msgctxt "support-view"
@@ -2987,10 +2376,6 @@ msgstr "Activez « Accès complet au disque » pour « Warren VPN » dans les pa
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
 msgstr "Échec de l'activation du split tunneling. Cela est dû au fait que l'application ne dispose pas des autorisations système nécessaires. Ce que vous pouvez faire :"
-
-msgctxt "troubleshoot"
-msgid "If these steps do not work please send a problem report."
-msgstr "Si ces étapes ne fonctionnent pas, veuillez envoyer un rapport de problème."
 
 msgctxt "troubleshoot"
 msgid "If you have installed another VPN then try to uninstall that."
@@ -3047,14 +2432,6 @@ msgstr "Mettez votre noyau à jour."
 msgctxt "tunnel-control"
 msgid "Connect"
 msgstr "Connexion"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map"
-msgstr "Animer la carte"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map movements."
-msgstr "Animer les mouvements de la carte."
 
 msgctxt "user-interface-settings-view"
 msgid "Enable or disable system notifications. The critical notifications will always be displayed."
@@ -3261,10 +2638,6 @@ msgid "Reset to default"
 msgstr "Rétablir les valeurs par défaut"
 
 msgctxt "vpn-settings-view"
-msgid "Restart the daemon for the change to take effect."
-msgstr "Redémarrez le service pour que le changement prenne effet."
-
-msgctxt "vpn-settings-view"
 msgid "Server IP override"
 msgstr "Substitution d'IP de serveur"
 
@@ -3329,10 +2702,6 @@ msgid "Until the new pins are established the substitution-detection guard is br
 msgstr "Tant que les nouveaux épinglages ne sont pas établis, la détection de substitution est temporairement désactivée : un attaquant qui aurait remplacé un serveur entre deux réinitialisations ne serait pas signalé lors de la première reconnexion."
 
 msgctxt "vpn-settings-view"
-msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to default). Restart the daemon for the change to take effect."
-msgstr "URL du serveur warren-api. Format http(s)://hôte:port. Vide = non défini (repli sur la valeur par défaut). Redémarrez le service pour que le changement prenne effet."
-
-msgctxt "vpn-settings-view"
 msgid "Use custom DNS server"
 msgstr "Utiliser un serveur DNS personnalisé"
 
@@ -3348,18 +2717,6 @@ msgstr "Avertissement : le bloqueur de malware n'est pas un anti-virus et ne doi
 msgctxt "vpn-settings-view"
 msgid "Warren api URL"
 msgstr "URL de l'API Warren"
-
-msgctxt "vpn-settings-view"
-msgid "Warren local account"
-msgstr "Compte Warren local"
-
-msgctxt "vpn-settings-view"
-msgid "Warren tunnel mode"
-msgstr "Mode tunnel Warren"
-
-msgctxt "vpn-settings-view"
-msgid "When enabled, the daemon uses a self-hosted account derived from the local Warren mnemonic instead of contacting a remote account API."
-msgstr "Lorsqu'activé, le service utilise un compte auto-hébergé dérivé de la phrase mnémonique Warren locale au lieu de contacter une API de compte distante."
 
 msgctxt "vpn-settings-view"
 msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
@@ -3428,10 +2785,6 @@ msgid "Exit ID"
 msgstr "Identifiant du serveur"
 
 msgctxt "warren-multi-hop-view"
-msgid "auto"
-msgstr "auto"
-
-msgctxt "warren-multi-hop-view"
 msgid "Entry country"
 msgstr "Pays d'entrée"
 
@@ -3444,20 +2797,12 @@ msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkabilit
 msgstr "Attendez-vous à environ la moitié de la bande passante du single-hop, en échange d'une non-corrélation entre l'IP utilisateur et l'IP de destination. Désactivé par défaut ; à activer pour la vie privée."
 
 msgctxt "warren-multi-hop-view"
-msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
-msgstr "Optionnel : fixer les pays des relais d'entrée et de sortie (codes ISO 3166 alpha-2 tels que fr, de, se). Laisser vide pour sélection automatique."
-
-msgctxt "warren-multi-hop-view"
 msgid "Restart the Warren daemon after changing this setting."
 msgstr "Redémarrez le service Warren après avoir modifié ce paramètre."
 
 msgctxt "warren-multi-hop-view"
 msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
 msgstr "Achemine votre trafic à travers deux relais Warren avec chiffrement HPKE de bout en bout. Le relais d'entrée ne voit que du chiffré ; le relais de sortie ne voit que la charge déchiffrée, jamais votre IP. Schéma inspiré d'Apple Private Relay."
-
-msgctxt "warren-multi-hop-view"
-msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
-msgstr "Warren single-hop actif. Bande passante maximale, mêmes garanties de vie privée que le mode single-hop par défaut."
 
 msgctxt "warren-multi-hop-view"
 msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
@@ -3512,10 +2857,6 @@ msgid "Could not check subscription status. Please try again."
 msgstr "Impossible de vérifier l'état de l'abonnement. Veuillez réessayer."
 
 msgctxt "warren-onboarding"
-msgid "Create my new wallet (recommended)"
-msgstr "Créer mon nouveau portefeuille (recommandé)"
-
-msgctxt "warren-onboarding"
 msgid "Configuration complete. Pick a country and connect to Warren."
 msgstr "Configuration terminée. Choisissez un pays et connectez-vous à Warren."
 
@@ -3526,10 +2867,6 @@ msgstr "Continuer"
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
 msgstr "Le service n'a pas encore de phrase de récupération. Connectez-vous ou redémarrez l'application."
-
-msgctxt "warren-onboarding"
-msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
-msgstr "Le service a rejeté la phrase mnémonique. Vérifiez l'orthographe et le nombre de mots, puis réessayez."
 
 msgctxt "warren-onboarding"
 msgid "Failed to retrieve mnemonic from daemon."
@@ -3548,16 +2885,8 @@ msgid "I have written it down in a safe place."
 msgstr "Je l'ai notée dans un endroit sûr."
 
 msgctxt "warren-onboarding"
-msgid "Import an existing mnemonic"
-msgstr "Importer une phrase mnémonique existante"
-
-msgctxt "warren-onboarding"
 msgid "No active subscription found. Please purchase one first."
 msgstr "Aucun abonnement actif trouvé. Veuillez en acheter un d'abord."
-
-msgctxt "warren-onboarding"
-msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
-msgstr "Collez votre phrase mnémonique BIP39 de 12 mots pour restaurer votre identité Warren existante."
 
 msgctxt "warren-onboarding"
 msgid "Pick a country and connect"
@@ -3572,20 +2901,12 @@ msgid "Privacy preferences"
 msgstr "Préférences de confidentialité"
 
 msgctxt "warren-onboarding"
-msgid "Restore wallet"
-msgstr "Restaurer le portefeuille"
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "Ignorer l'assistant (avancé)"
 
 msgctxt "warren-onboarding"
 msgid "View plans (opens in your browser)"
 msgstr "Voir les offres (s'ouvre dans votre navigateur)"
-
-msgctxt "warren-onboarding"
-msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
-msgstr "Warren utilise un portefeuille non-custodial (Ed25519 + BIP39). Vous possédez les clés ; nous ne les voyons jamais."
 
 msgctxt "warren-onboarding"
 msgid "Welcome to Warren VPN"
@@ -3706,10 +3027,6 @@ msgid "Last"
 msgstr "Dernier"
 
 msgctxt "warren-status-view"
-msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
-msgstr "Les méthodes d'obfuscation classiques (Shadowsocks, UDP-over-TCP, QUIC, LWO) ne s'appliquent pas lorsque warren_mode est actif."
-
-msgctxt "warren-status-view"
 msgid "never"
 msgstr "jamais"
 
@@ -3721,23 +3038,9 @@ msgctxt "warren-status-view"
 msgid "Reconnects"
 msgstr "Reconnexions"
 
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "UDP-over-TCP"
-msgstr "UDP-over-TCP"
-
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s (%(daitaFull)s) hides patterns in your encrypted VPN traffic."
 msgstr "%(daita)s (%(daitaFull)s) masque les schémas de votre trafic VPN chiffré."
-
-msgctxt "wireguard-settings-view"
-msgid "%(daita)s does this by carefully adding network noise and making all network packets the same size."
-msgstr "%(daita)s y parvient en ajoutant soigneusement du bruit au réseau et en faisant en sorte que tous les paquets du réseau aient la même taille."
 
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s adds network noise and makes all packets the same size, so it is much harder to tell which sites you visit or who you communicate with."
@@ -3752,25 +3055,8 @@ msgid "Note: this increases network traffic and can reduce speed, latency, and b
 msgstr "Note : cette option augmente le trafic réseau et peut réduire la vitesse, la latence et l'autonomie de la batterie. À utiliser avec précaution avec un forfait limité."
 
 msgctxt "wireguard-settings-view"
-msgid "%(wireguard)s port"
-msgstr "Port %(wireguard)s"
-
-#. Page title for QUIC port view
-msgctxt "wireguard-settings-view"
-msgid "%(wireGuard)s port"
-msgstr "Port %(wireGuard)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans."
-msgstr "Attention : cette option augmente le trafic sur le réseau et peut avoir un impact négatif sur la vitesse, la latence et l'utilisation de la batterie. À utiliser avec précaution pour les forfaits limités."
-
-msgctxt "wireguard-settings-view"
 msgid "By enabling “%(directOnly)s” you will have to manually select a server that is %(daita)s-enabled. This can cause you to end up in a blocked state until you have selected a compatible server in the “Select location” view."
 msgstr "Si vous activez « %(directOnly)s », vous devez sélectionner manuellement un serveur avec %(daita)s activé. Vous risquez alors de vous retrouver dans une situation de blocage tant que vous n'avez pas sélectionné un serveur compatible dans la vue « Sélectionner une localisation »."
-
-msgctxt "wireguard-settings-view"
-msgid "By using sophisticated AI it’s possible to analyze the traffic of data packets going in and out of your device (even if the traffic is encrypted)."
-msgstr "Utiliser une IA sophistiquée peut permettre d'analyser le trafic des paquets de données entrant et sortant de votre appareil (même si le trafic est chiffré)."
 
 msgctxt "wireguard-settings-view"
 msgid "Cancel"
@@ -3780,10 +3066,6 @@ msgstr "Annuler"
 msgctxt "wireguard-settings-view"
 msgid "Device IP version"
 msgstr "Version de l'IP de l'appareil"
-
-msgctxt "wireguard-settings-view"
-msgid "If an observer monitors these data packets, %(daita)s makes it significantly harder for them to identify which websites you are visiting or with whom you are communicating."
-msgstr "Si un observateur surveille ces paquets de données, %(daita)s rend beaucoup plus difficile l'identification des sites web que vous visitez ou des personnes avec lesquelles vous communiquez."
 
 msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
@@ -3797,37 +3079,13 @@ msgid "MTU"
 msgstr "MTU"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop"
-msgstr "Multihop"
-
-msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Le multihop est utilisé pour activer DAITA pour la localisation que vous avez sélectionnée"
-
-msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
-msgstr "Le multihop fait entrer votre trafic par un serveur QUIC et le fait sortir par un autre, ce qui ajoute un serveur entre vous et les sites que vous visitez. La latence augmente."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. In order to use the internet, you might have to select a new location after enabling."
 msgstr "Tous nos serveurs ne sont pas compatibles %(daita)s. Pour utiliser l'internet, vous devrez peut-être sélectionner une nouvelle localisation après activation."
-
-msgctxt "wireguard-settings-view"
-msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
-msgstr "Tous nos serveurs ne sont pas compatibles %(daita)s. C'est pourquoi nous utilisons automatiquement le multihop pour activer %(daita)s avec n'importe quel serveur."
-
-#. The title for the QUIC port selector.
-msgctxt "wireguard-settings-view"
-msgid "Port"
-msgstr "Port"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "wireguard-settings-view"
-msgid "Port: %(port)s"
-msgstr "Port : %(port)s"
 
 #. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
@@ -3850,14 +3108,6 @@ msgid "Shadowsocks"
 msgstr "Shadowsocks"
 
 msgctxt "wireguard-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "Le réglage automatique choisira au hasard parmi la plage de ports valide affichée ci-dessous."
-
-msgctxt "wireguard-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "Le port personnalisé peut prendre n'importe quelle valeur dans les plages valides : %(portRanges)s."
-
-msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "Cette fonctionnalité protège votre trafic vers le serveur de sortie contre les attaques potentielles des ordinateurs quantiques."
 
@@ -3865,53 +3115,9 @@ msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
 msgstr "UDP-over-TCP"
 
-#. Text describing the valid port range for a port selector.
-msgctxt "wireguard-settings-view"
-msgid "Valid range: %(min)s - %(max)s"
-msgstr "Plage valide : %(min)s - %(max)s"
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "wireguard-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "Plages valides : %(portRanges)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
-msgstr "Le port TCP auquel le protocole de dissimulation UDP sur TCP doit se connecter sur le serveur VPN."
-
-msgctxt "port-forwarding-view"
-msgid "auto"
-msgstr "auto"
-
-msgctxt "port-forwarding-view"
-msgid "Port must be between 49152 and 65535, or empty for auto."
-msgstr "Le port doit être compris entre 49152 et 65535, ou vide pour automatique."
-
-msgctxt "port-forwarding-view"
-msgid "Preferred port"
-msgstr "Port préféré"
-
 msgctxt "port-forwarding-view"
 msgid "Protocol"
 msgstr "Protocole"
-
-msgctxt "port-forwarding-view"
-msgid "Status: active"
-msgstr "Statut : actif"
-
-msgctxt "port-forwarding-view"
-msgid "Status: requesting port mapping..."
-msgstr "Statut : demande de mappage de port en cours…"
-
-msgctxt "port-forwarding-view"
-msgid "Status: waiting for an active tunnel connection to set up the port mapping."
-msgstr "Statut : en attente d'une connexion tunnel active pour configurer le mappage de port."
-
-msgctxt "port-forwarding-view"
-msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
-msgstr "Le serveur peut attribuer un autre port si celui préféré est déjà pris. Les changements s'appliquent immédiatement, sans reconnexion."
 
 msgctxt "account-view"
 msgid "Back up my phrase"
@@ -4005,25 +3211,9 @@ msgctxt "device-management"
 msgid "Session is inactive"
 msgstr "Session inactive"
 
-msgctxt "device-management"
-msgid "Your session has ended. To connect again, you will need to log back in."
-msgstr "Votre session a pris fin. Pour vous reconnecter, vous devrez vous identifier à nouveau."
-
 msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "Incohérence d'identité du serveur détectée. La clé publique du nœud de sortie a changé."
-
-msgctxt "vpn-settings-view"
-msgid "Automatic failover"
-msgstr "Bascule automatique"
-
-msgctxt "vpn-settings-view"
-msgid "Automatically switch to another exit server if the current one becomes unreachable."
-msgstr "Basculer automatiquement vers un autre serveur de sortie si le serveur actuel devient injoignable."
-
-msgctxt "vpn-settings-view"
-msgid "This setting takes effect immediately without a daemon restart."
-msgstr "Ce réglage prend effet immédiatement, sans redémarrage du service."
 
 msgctxt "vpn-settings-view"
 msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
@@ -4098,16 +3288,8 @@ msgid "Community forum"
 msgstr "Forum communautaire"
 
 msgctxt "tunnel-control"
-msgid "Connecting..."
-msgstr "Connexion en cours..."
-
-msgctxt "tunnel-control"
 msgid "Connection interrupted"
 msgstr "Connexion interrompue"
-
-msgctxt "tunnel-control"
-msgid "Encrypting your connection"
-msgstr "Chiffrement de votre connexion"
 
 msgctxt "tunnel-control"
 msgid "Random location"

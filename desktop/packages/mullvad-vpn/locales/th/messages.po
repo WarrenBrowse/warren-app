@@ -12,17 +12,8 @@ msgstr ""
 "Language: th_TH\n"
 "PO-Revision-Date: 2026-04-27 09:12\n"
 
-msgid "%(amount)d more..."
-msgstr "อีก %(amount)d..."
-
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "มีการเพิ่ม %(duration)s แล้ว บัญชีได้ชำระเงินจนถึง %(expiry)s"
-
-#. The label for the QUIC port option.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgid "%(wireguard)s port"
-msgstr "พอร์ต %(wireguard)s"
 
 msgid "1 day"
 msgid_plural "%d days"
@@ -99,14 +90,8 @@ msgstr "เชื่อมต่อ"
 msgid "Connected"
 msgstr "เชื่อมต่อแล้ว"
 
-msgid "CONNECTED"
-msgstr "เชื่อมต่อแล้ว"
-
 msgid "Connecting"
 msgstr "กำลังเชื่อมต่อ"
-
-msgid "CONNECTING..."
-msgstr "กำลังเชื่อมต่อ..."
 
 msgid "Create"
 msgstr "สร้าง"
@@ -150,14 +135,8 @@ msgstr "ตัดการเชื่อมต่อและออก"
 msgid "Disconnected"
 msgstr "ตัดการเชื่อมต่อแล้ว"
 
-msgid "DISCONNECTED"
-msgstr "ยกเลิกการเชื่อมต่อแล้ว"
-
 msgid "Disconnecting"
 msgstr "กำลังตัดการเชื่อมต่อ"
-
-msgid "DISCONNECTING..."
-msgstr "กำลังยกเลิกการเชื่อมต่อ..."
 
 msgid "Edit"
 msgstr "แก้ไข"
@@ -172,16 +151,8 @@ msgstr "เปิดใช้งานต่อไป"
 msgid "Enable direct only"
 msgstr "เปิดใช้งานโดยตรงเท่านั้น"
 
-#. Error message shown trying to login but the app fails
-#. to fetch the list of registered devices.
-msgid "Failed to fetch list of devices"
-msgstr "ไม่สามารถดึงรายการอุปกรณ์มาได้"
-
 msgid "FAILED TO SECURE CONNECTION"
 msgstr "ไม่สามารถเชื่อมต่ออย่างปลอดภัยได้"
-
-msgid "Filters"
-msgstr "ตัวกรอง"
 
 #. Button label for system settings.
 msgid "Go to System Settings"
@@ -228,9 +199,6 @@ msgstr "ไม่พบเซิร์ฟเวอร์ที่ตรงกั
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "ไม่มีผลลัพธ์สำหรับ <b>%(searchTerm)s</b>"
 
-msgid "None"
-msgstr "ไม่มี"
-
 msgid "Off"
 msgstr "ปิด"
 
@@ -263,10 +231,6 @@ msgstr "ออก"
 
 msgid "Reconnect"
 msgstr "เชื่อมต่อใหม่"
-
-#. Button label in confirmation dialog that confirms a remove action.
-msgid "Remove"
-msgstr "ลบ"
 
 msgid "Required"
 msgstr "จำเป็น"
@@ -317,23 +281,9 @@ msgstr "ใช้"
 msgid "Username"
 msgstr "ชื่อผู้ใช้"
 
-#. Text for screen readers to describe the LWO settings navigation button.
-#. Available placeholders:
-#. %(lwo)s - will be replaced with LWO
-msgctxt "accessibility"
-msgid "%(lwo)s settings"
-msgstr "การตั้งค่า %(lwo)s"
-
 msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s โหลดมุมมองแล้ว"
-
-#. Text for screen readers to describe the QUIC port settings navigation button.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgctxt "accessibility"
-msgid "%(wireguard)s port settings"
-msgstr "การตั้งค่าพอร์ต %(wireguard)s"
 
 #. This is an accessibility label for a button that adds a location to a custom list.
 #. Available placeholders:
@@ -363,12 +313,6 @@ msgctxt "accessibility"
 msgid "Connect to %(location)s"
 msgstr "เชื่อมต่อกับ %(location)s"
 
-#. Provided to accessibility tools such as screenreaders to describe a button
-#. which copies the account number to the clipboard.
-msgctxt "accessibility"
-msgid "Copy account number"
-msgstr "คัดลอกหมายเลขบัญชี"
-
 #. Accessibility label for a carousel that explains the DAITA feature to the user.
 msgctxt "accessibility"
 msgid "DAITA information carousel"
@@ -396,21 +340,6 @@ msgctxt "accessibility"
 msgid "Expand %(location)s"
 msgstr "ขยาย %(location)s"
 
-#. This is used by screenreaders to communicate the "x" button next to a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the account number to the left of the button
-msgctxt "accessibility"
-msgid "Forget account number %(accountNumber)s"
-msgstr "ลืมหมายเลขบัญชี %(accountNumber)s"
-
-#. Accessibility label for link to VPN settings where
-#. the user can change QUIC port.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "accessibility"
-msgid "Go to anti-censorship settings to change %(wireGuard)s port"
-msgstr "ไปที่การตั้งค่าป้องกันการเซ็นเซอร์เพื่อเปลี่ยนพอร์ต %(wireGuard)s"
-
 #. Accessibility label for link to app upgrade view.
 msgctxt "accessibility"
 msgid "Go to app update page"
@@ -423,12 +352,6 @@ msgctxt "accessibility"
 msgid "Go to slide %(index)s"
 msgstr "ไปที่สไลด์ %(index)s"
 
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which obscures the account number.
-msgctxt "accessibility"
-msgid "Hide account number"
-msgstr "ซ่อนหมายเลขบัญชี"
-
 #. Alt text for an illustration showing VPN traffic with DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic with DAITA enabled"
@@ -438,18 +361,6 @@ msgstr "ภาพแสดงการรับส่งข้อมูล VPN �
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic without DAITA"
 msgstr "ภาพแสดงการรับส่งข้อมูล VPN โดยไม่ใช้ DAITA"
-
-#. This is used by screenreaders to communicate the login button.
-msgctxt "accessibility"
-msgid "Login"
-msgstr "เข้าสู่ระบบ"
-
-#. This is used by screenreaders to communicate logging in with a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the saved account number
-msgctxt "accessibility"
-msgid "Login with account number %(accountNumber)s"
-msgstr "เข้าสู่ระบบด้วยหมายเลขบัญชี %(accountNumber)s"
 
 msgctxt "accessibility"
 msgid "More information"
@@ -509,14 +420,6 @@ msgctxt "accessibility"
 msgid "Remove %(location)s from %(customList)s"
 msgstr "ลบ %(location)s จาก %(customList)s"
 
-#. Button action description provided to accessibility tools such as screen
-#. readers.
-#. Available placeholders:
-#. %(deviceName)s - The device name to remove.
-msgctxt "accessibility"
-msgid "Remove device named %(deviceName)s"
-msgstr "ลบอุปกรณ์ที่มีชื่อว่า %(deviceName)s"
-
 msgctxt "accessibility"
 msgid "Remove item"
 msgstr "นำรายการออก"
@@ -525,32 +428,10 @@ msgctxt "accessibility"
 msgid "Select location. Current location is %(location)s"
 msgstr "เลือกตำแหน่งที่ตั้ง ตำแหน่งที่ตั้งปัจจุบันคือ %(location)s"
 
-msgctxt "accessibility"
-msgid "Shadowsocks settings"
-msgstr "การตั้งค่า Shadowsocks"
-
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which unobscures the account number.
-msgctxt "accessibility"
-msgid "Show account number"
-msgstr "แสดงหมายเลขบัญชี"
-
-msgctxt "accessibility"
-msgid "UDP-over-TCP settings"
-msgstr "การตั้งค่า UDP-ผ่าน-TCP"
-
-msgctxt "accessibility"
-msgid "Use the right arrow key to focus the settings button."
-msgstr "ใช้ปุ่มลูกศรขวาเพื่อโฟกัสไปที่ปุ่มการตั้งค่า"
-
 #. Title label in navigation bar
 msgctxt "account-view"
 msgid "Account"
 msgstr "บัญชี"
-
-msgctxt "account-view"
-msgid "Account number"
-msgstr "หมายเลขบัญชี"
 
 msgctxt "account-view"
 msgid "Currently unavailable"
@@ -560,11 +441,6 @@ msgstr "ไม่พร้อมใช้งานในปัจจุบัน
 msgctxt "account-view"
 msgid "Log out"
 msgstr "ลงชื่อออก"
-
-#. Link text in the account view to navigate to the manage devices view.
-msgctxt "account-view"
-msgid "Manage devices"
-msgstr "จัดการอุปกรณ์"
 
 msgctxt "account-view"
 msgid "OUT OF TIME"
@@ -611,21 +487,6 @@ msgstr "ปิด"
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
 msgstr "การป้องกันการเซ็นเซอร์"
-
-#. The title for the obfuscation method selector.
-msgctxt "anti-censorship-view"
-msgid "Method"
-msgstr "วิธี"
-
-#. Second paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "Please note that these methods do not improve performance, and may increase system utilization and battery consumption."
-msgstr "โปรดทราบว่าวิธีการเหล่านี้ไม่ได้ช่วยปรับปรุงประสิทธิภาพการทำงาน แต่อาจเพิ่มการใช้งานระบบและการใช้งานแบตเตอรี่ได้"
-
-#. First paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "วิธีการเหล่านี้อาจมีประโยชน์ในสถานการณ์ที่คุณถูกบล็อกไม่ให้เข้าถึง Warren เมื่อเลือก \"อัตโนมัติ\" แอปจะพยายามใช้ทุกวิธีจนกว่าจะมีวิธีใดวิธีหนึ่งที่ใช้งานได้"
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -857,12 +718,6 @@ msgctxt "app-upgrade-view"
 msgid "Connection blocked. Try changing server or other settings."
 msgstr "การเชื่อมต่อถูกปิดกั้น ลองเปลี่ยนเซิร์ฟเวอร์หรือการตั้งค่าอื่นๆ"
 
-#. Label displayed when an error occurred due to the installer failing to start
-#. and the suggested resolution is to download the update again.
-msgctxt "app-upgrade-view"
-msgid "Could not open installer, please try again or send a problem report."
-msgstr "ไม่สามารถเปิดโปรแกรมติดตั้งได้ โปรดลองอีกครั้งหรือส่งรายงานปัญหา"
-
 #. Button text to download and install an update
 msgctxt "app-upgrade-view"
 msgid "Download & install"
@@ -877,11 +732,6 @@ msgstr "ดาวน์โหลดเสร็จแล้ว!"
 msgctxt "app-upgrade-view"
 msgid "Download failed"
 msgstr "การดาวน์โหลดล้มเหลว"
-
-#. Label displayed when an error occurred due to the download failing
-msgctxt "app-upgrade-view"
-msgid "Download failed, please check your connection/firewall and try again, or send a problem report."
-msgstr "การดาวน์โหลดล้มเหลว โปรดตรวจสอบการเชื่อมต่อ/ไฟร์วอลล์ของคุณและลองอีกครั้งหรือส่งรายงานปัญหา"
 
 #. Status text displayed below a progress bar when the download of an update has been paused
 #. Label displayed above a progress bar when the update is verified successfully
@@ -911,11 +761,6 @@ msgctxt "app-upgrade-view"
 msgid "Install update"
 msgstr "ติดตั้งการอัปเดต..."
 
-#. Label displayed when an error occurred within the installer
-msgctxt "app-upgrade-view"
-msgid "Installer quit unexpectedly, please try again or send a problem report."
-msgstr "โปรแกรมติดตั้งหยุดทำงานอย่างไม่คาดคิด โปรดลองอีกครั้งหรือส่งรายงานปัญหา"
-
 #. Info about which directory the app update will be downloaded to
 msgctxt "app-upgrade-view"
 msgid "Installer will be downloaded to <b>%(cacheDir)s</b>."
@@ -934,11 +779,6 @@ msgstr "ไม่มีอัปเดตหรือการเปลี่ย
 msgctxt "app-upgrade-view"
 msgid "Pause"
 msgstr "หยุดชั่วคราว"
-
-#. Button text to report a problem
-msgctxt "app-upgrade-view"
-msgid "Report a problem"
-msgstr "รายงานปัญหา"
 
 #. Button text to resume updating
 msgctxt "app-upgrade-view"
@@ -965,21 +805,11 @@ msgctxt "app-upgrade-view"
 msgid "Starting installer..."
 msgstr "กำลังเริ่มโปรแกรมติดตั้ง..."
 
-#. Label displayed when an unknown error occurred
-msgctxt "app-upgrade-view"
-msgid "Unknown error occurred. Please try again or send a problem report."
-msgstr "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ โปรดลองอีกครั้งหรือส่งรายงานปัญหา"
-
 #. Title in navigation bar
 #. Main title for the update available view
 msgctxt "app-upgrade-view"
 msgid "Update available"
 msgstr "มีการอัปเดตให้ใช้งาน"
-
-#. Label displayed when an error occurred due to the installer failed verification
-msgctxt "app-upgrade-view"
-msgid "Verification failed, please try again or send a problem report."
-msgstr "การตรวจสอบล้มเหลว โปรดลองอีกครั้งหรือส่งรายงานปัญหา"
 
 #. Label displayed above a progress bar when the update is verified successfully
 msgctxt "app-upgrade-view"
@@ -1050,14 +880,6 @@ msgstr "บล็อกอินเทอร์เน็ต: บัญชีห�
 msgctxt "auth-failure"
 msgid "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly."
 msgstr "มีการเชื่อมต่อพร้อมกันมากเกินไปบนบัญชีนี้ โปรดตัดการเชื่อมต่อจากอุปกรณ์อีกเครื่อง หรือลองเชื่อมต่อใหม่อีกครั้งในอีกสักครู่"
-
-msgctxt "auth-failure"
-msgid "Unable to authenticate account. Please send a problem report."
-msgstr "ไม่สามารถตรวจสอบความถูกต้องของบัญชีได้ โปรดส่งรายงานปัญหา"
-
-msgctxt "auth-failure"
-msgid "You are logged in with an invalid account number. Please log out and try another one."
-msgstr "คุณกำลังเข้าสู่ระบบโดยใช้หมายเลขบัญชีที่ไม่ถูกต้อง โปรดออกจากระบบแล้วลองใช้บัญชีอื่น"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
@@ -1151,10 +973,6 @@ msgid_plural "%(count)d apps in other countries"
 msgstr[0] "%(count)d แอปในประเทศอื่น"
 
 msgctxt "connect-view"
-msgid "Active features"
-msgstr "คุณลักษณะที่ใช้งาน"
-
-msgctxt "connect-view"
 msgid "Congrats!"
 msgstr "ยินดีด้วย!"
 
@@ -1178,10 +996,6 @@ msgstr "ป้อนรหัสบัตรกำนัล"
 msgctxt "connect-view"
 msgid "Go ahead and start using the app to begin reclaiming your online privacy."
 msgstr "เข้ามาและเริ่มใช้แอปเพื่อเริ่มยึดความเป็นส่วนตัวบนออนไลน์ของคุณคืนมา"
-
-msgctxt "connect-view"
-msgid "Here’s your account number. Save it!"
-msgstr "นี่คือหมายเลขบัญชีของคุณ จดบันทึกไว้ด้วยนะ!"
 
 #. Button label for opening privacy information link.
 msgctxt "connect-view"
@@ -1385,43 +1199,6 @@ msgctxt "custom-list-feature"
 msgid "Relay"
 msgstr "รีเลย์"
 
-#. Button for continuing login process.
-msgctxt "device-management"
-msgid "Continue with login"
-msgstr "เข้าสู่ระบบต่อ"
-
-#. Label informing the user when a device was created.
-#. Available placeholders:
-#. %(createdDate)s - The creation date of the device.
-msgctxt "device-management"
-msgid "Created: %(createdDate)s"
-msgstr "วันที่สร้าง: %(createdDate)s"
-
-#. Label indicating that this device is the current device.
-msgctxt "device-management"
-msgid "Current device"
-msgstr "อุปกรณ์ปัจจุบัน"
-
-msgctxt "device-management"
-msgid "Device is inactive"
-msgstr "อุปกรณ์ไม่ได้ใช้งาน"
-
-msgctxt "device-management"
-msgid "Device name"
-msgstr "ชื่ออุปกรณ์"
-
-#. A label that will display the newly created device name to inform the user
-#. about it.
-#. Available placeholders:
-#. %(deviceName)s - The name of the current device
-msgctxt "device-management"
-msgid "Device name: %(deviceName)s"
-msgstr "ชื่ออุปกรณ์: %(deviceName)s"
-
-msgctxt "device-management"
-msgid "Failed to remove device"
-msgstr "ไม่สามารถลบอุปกรณ์ได้"
-
 #. Button label for navigating to login.
 msgctxt "device-management"
 msgid "Go to login"
@@ -1431,10 +1208,6 @@ msgctxt "device-management"
 msgid "Going to login will unblock the Internet on this device."
 msgstr "การไปที่ส่วนเข้าสู่ระบบจะปลดบล็อกอินเทอร์เน็ตบนอุปกรณ์เครื่องนี้"
 
-msgctxt "device-management"
-msgid "If you log out, the device and the device name is removed. When you log back in again, the device will get a new name."
-msgstr "หากคุณออกจากระบบ อุปกรณ์และชื่ออุปกรณ์จะถูกลบออก และเมื่อคุณลงชื่อเข้าใช้อีกครั้ง อุปกรณ์จะได้รับชื่อใหม่"
-
 #. Title label in navigation bar for the manage devices view.
 #. Title text in the manage devices view
 msgctxt "device-management"
@@ -1442,68 +1215,13 @@ msgid "Manage devices"
 msgstr "จัดการอุปกรณ์"
 
 msgctxt "device-management"
-msgid "Please log out of at least one by removing it from the list below. You can find the corresponding device name under the device’s Account settings."
-msgstr "โปรดลงชื่อออกจากระบบบนอุปกรณ์อย่างน้อยหนึ่งเครื่อง เพื่อนำอุปกรณ์ออกจากรายการด้านล่าง คุณสามารถดูชื่ออุปกรณ์ที่เกี่ยวข้องได้ ภายใต้การตั้งค่าบัญชีของอุปกรณ์"
-
-#. Button label for confirming removing a device.
-msgctxt "device-management"
-msgid "Remove"
-msgstr "ลบ"
-
-#. Text displayed above button which logs out another device.
-#. The text enclosed in "<b></b>" will appear bold.
-#. Available placeholders:
-#. %(deviceName)s - The name of the device to log out.
-msgctxt "device-management"
-msgid "Remove <em>%(deviceName)s?</em>"
-msgstr "ลบ <em>%(deviceName)s หรือไม่</em>"
-
-#. Page title informing user that enough devices has been removed to continue
-#. login process.
-msgctxt "device-management"
-msgid "Super!"
-msgstr "เยี่ยมยอด!"
-
-msgctxt "device-management"
-msgid "The device will be removed from the list and logged out."
-msgstr "อุปกรณ์จะถูกลบออกจากรายการและออกจากระบบ"
-
-msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "นี่เป็นชื่อที่มอบหมายให้กับอุปกรณ์ อุปกรณ์แต่ละเครื่องที่ลงชื่อเข้าใช้บนบัญชี Warren จะได้รับชื่อเฉพาะ ที่จะช่วยคุณระบุอุปกรณ์ ในขณะที่คุณจัดการอุปกรณ์ของคุณในแอปหรือบนเว็บไซต์"
-
-msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
 msgstr "เหลือเวลา: %(timeLeft)s"
-
-#. Page title informing user that the login failed due to too many registered
-#. devices on account.
-msgctxt "device-management"
-msgid "Too many devices"
-msgstr "มีอุปกรณ์มากเกินไป"
 
 #. Button text to retry fetching devices.
 msgctxt "device-management"
 msgid "Try again"
 msgstr "ลองอีกครั้ง"
-
-#. Subtitle text in the manage devices view, explaining
-#. devices and what they can do in the manage devices view.
-msgctxt "device-management"
-msgid "View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily."
-msgstr "ดูและจัดการอุปกรณ์ทั้งหมดที่คุณลงชื่อเข้าใช้ คุณสามารถมีอุปกรณ์ได้สูงสุด 5 เครื่องในหนึ่งบัญชีในเวลาเดียวกัน แต่ละอุปกรณ์จะได้รับชื่อในขณะที่ลงชื่อเข้าใช้ เพื่อช่วยให้คุณแยกแยะอุปกรณ์แต่ละเครื่องได้อย่างง่ายดาย"
-
-msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Warren account."
-msgstr "คุณสามารถลงชื่อเข้าใช้อุปกรณ์ได้สูงสุด 5 เครื่อง กับบัญชี Warren หนึ่งบัญชี"
-
-msgctxt "device-management"
-msgid "You can now continue logging in on this device."
-msgstr "คุณสามารถดำเนินการเข้าสู่ระบบต่อบนอุปกรณ์เครื่องนี้ได้แล้ว"
-
-msgctxt "device-management"
-msgid "You have removed this device. To connect again, you will need to log back in."
-msgstr "คุณได้ลบอุปกรณ์เครื่องนี้แล้ว หากต้องการเชื่อมต่ออีกครั้ง คุณจะต้องเข้าสู่ระบบใหม่อีกครั้ง"
 
 #. The message displayed to the user in case of critical error in the GUI
 #. Available placeholders:
@@ -1663,10 +1381,6 @@ msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
 msgstr "การรับส่งข้อมูลทางเครือข่ายอาจรั่วไหล"
 
 msgctxt "in-app-notifications"
-msgid "NEW DEVICE CREATED"
-msgstr "สร้างอุปกรณ์ใหม่แล้ว"
-
-msgctxt "in-app-notifications"
 msgid "NEW VERSION INSTALLED"
 msgstr "ติดตั้งเวอร์ชันใหม่แล้ว"
 
@@ -1697,11 +1411,6 @@ msgctxt "in-app-notifications"
 msgid "Retry installation"
 msgstr "ลองติดตั้งใหม่อีกครั้ง"
 
-#. Button label to send a problem report.
-msgctxt "in-app-notifications"
-msgid "Send problem report"
-msgstr "ส่งรายงานปัญหา"
-
 msgctxt "in-app-notifications"
 msgid "SERVER MAINTENANCE"
 msgstr "การบำรุงรักษาเซิร์ฟเวอร์"
@@ -1720,20 +1429,6 @@ msgstr "โปรแกรมติดตั้งไม่เสร็จสม
 msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "โปรแกรมติดตั้งไม่สามารถเริ่มต้นได้สำเร็จ"
-
-#. Notification subtitle indicating the user is using an unsupported port for QUIC.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "in-app-notifications"
-msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
-msgstr "ไม่รองรับพอร์ต %(wireGuard)s ที่เลือก โปรด<a>เปลี่ยนแปลงภายใต้การตั้งค่า VPN</a>"
-
-#. Notification text when a new device has been created.
-#. Available placeholders:
-#. - %(deviceName)s: Name of created device.
-msgctxt "in-app-notifications"
-msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
-msgstr "ตอนนี้อุปกรณ์นี้ได้รับการตั้งชื่อว่า <em>%(deviceName)s</em> แล้ว ดูเพิ่มเติมได้ภายใต้หัวข้อ <a>จัดการอุปกรณ์</a> ในบัญชี"
 
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
@@ -1824,11 +1519,6 @@ msgctxt "launch-view"
 msgid "Failed to start the app, please try again or click “Details” for more info"
 msgstr "ไม่สามารถเริ่มแอปได้ โปรดลองอีกครั้งหรือคลิก \"รายละเอียด\" เพื่อดูข้อมูลเพิ่มเติม"
 
-#. Message in troubleshooting modal advising user to send a problem report if the steps do not work.
-msgctxt "launch-view"
-msgid "If these steps do not work please send a problem report."
-msgstr "หากขั้นตอนเหล่านี้ใช้ไม่ได้ผล โปรดส่งรายงานปัญหา"
-
 #. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
 msgid "Only the account that set Warren up, or an administrator, can use it here."
@@ -1874,11 +1564,6 @@ msgctxt "launch-view"
 msgid "Restarting your computer"
 msgstr "การรีสตาร์ทคอมพิวเตอร์ของคุณ"
 
-#. Button label for sending a problem report.
-msgctxt "launch-view"
-msgid "Send problem report"
-msgstr "ส่งรายงานปัญหา"
-
 #. Status text shown when app is starting.
 msgctxt "launch-view"
 msgid "Starting up...."
@@ -1893,11 +1578,6 @@ msgstr "กระบวนการเบื้องหลังของ Warre
 msgctxt "launch-view"
 msgid "Try again"
 msgstr "ลองอีกครั้ง"
-
-#. Message in launch view when the mullvad service cannot be contacted.
-msgctxt "launch-view"
-msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "ไม่สามารถติดต่อบริการระบบ Warren ได้ การเชื่อมต่อของคุณอาจไม่ปลอดภัย โปรดแก้ไขปัญหาหรือส่งรายงานปัญหา โดยคลิกปุ่มเรียนรู้เพิ่มเติม"
 
 #. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
 msgctxt "launch-view"
@@ -1954,109 +1634,16 @@ msgctxt "login-view"
 msgid "<b>%(lockdownModeSettingName)s</b> is enabled. Disable it to unblock your connection."
 msgstr "<b>%(lockdownModeSettingName)s</b> ได้เปิดใช้งานแล้ว ปิดใช้งานเพื่อปลดบล็อกการเชื่อมต่อของคุณ"
 
-msgctxt "login-view"
-msgid "Account created"
-msgstr "สร้างบัญชีแล้ว"
-
-msgctxt "login-view"
-msgid "Checking account number"
-msgstr "กำลังตรวจสอบหมายเลขบัญชี"
-
 #. Text in button that allows user to create a new account.
 msgctxt "login-view"
 msgid "Create a new account"
 msgstr "สร้างบัญชีใหม่"
-
-#. Button which confirms the action to create a new account.
-msgctxt "login-view"
-msgid "Create new account"
-msgstr "สร้างบัญชีใหม่"
-
-msgctxt "login-view"
-msgid "Creating account..."
-msgstr "กำลังสร้างบัญชี..."
-
-#. Text that asks the user if they really want to create a new account.
-msgctxt "login-view"
-msgid "Do you want to create a new account?"
-msgstr "คุณต้องการสร้างบัญชีใหม่หรือไม่"
-
-#. Text that asks the user if they really want to remove the saved account.
-msgctxt "login-view"
-msgid "Do you want to remove the saved account number?"
-msgstr "คุณต้องการลบหมายเลขบัญชีที่บันทึกไว้หรือไม่"
-
-msgctxt "login-view"
-msgid "Enter your account number"
-msgstr "ป้อนหมายเลขบัญชีของคุณ"
-
-msgctxt "login-view"
-msgid "Error"
-msgstr "ข้อผิดพลาด"
-
-msgctxt "login-view"
-msgid "Failed to create account"
-msgstr "ไม่สามารถสร้างบัญชีได้"
-
-msgctxt "login-view"
-msgid "Finishing upgrade."
-msgstr "กำลังอัปเกรดให้เสร็จสิ้น"
-
-#. Error message shown above login input when trying to login with a
-#. non-existent account number.
-msgctxt "login-view"
-msgid "Invalid account number"
-msgstr "หมายเลขบัญชีไม่ถูกต้อง"
-
-msgctxt "login-view"
-msgid "Logged in"
-msgstr "เข้าสู่ระบบแล้ว"
-
-msgctxt "login-view"
-msgid "Logging in..."
-msgstr "กำลังเข้าสู่ระบบ..."
-
-#. Label for the login button.
-msgctxt "login-view"
-msgid "Login"
-msgstr "เข้าสู่ระบบ"
-
-msgctxt "login-view"
-msgid "Login failed"
-msgstr "การเข้าสู่ระบบล้มเหลว"
-
-#. Text shown between two horizontal lines above the "create account" button.
-#. In this context it is used to separate the users alternative of logging in
-#. or creating a new account, "Login or Create a new account".
-msgctxt "login-view"
-msgid "Or"
-msgstr "หรือ"
 
 #. This is a warning message shown when the app is blocking the users
 #. internet connection while logged out.
 msgctxt "login-view"
 msgid "Our kill switch is currently blocking your connection."
 msgstr "คิลสวิตช์ของเราได้บล็อกการเชื่อมต่อของคุณอยู่ในขณะนี้"
-
-msgctxt "login-view"
-msgid "Please wait"
-msgstr "โปรดรอ"
-
-#. Text that informs the user about the consequences of clearing the saved
-#. account number.
-msgctxt "login-view"
-msgid "Removing the saved account number from this device cannot be undone."
-msgstr "การลบหมายเลขบัญชีที่บันทึกไว้จากอุปกรณ์นี้ไม่สามารถย้อนกลับได้"
-
-#. Error message shown above login input when trying to login to an account
-#. with too many registered devices.
-msgctxt "login-view"
-msgid "Too many devices"
-msgstr "มีอุปกรณ์มากเกินไป"
-
-msgctxt "login-view"
-msgid "Unknown error"
-msgstr "ข้อผิดพลาดที่ไม่รู้จัก"
 
 msgctxt "login-view"
 msgid "Upgrading..."
@@ -2066,42 +1653,6 @@ msgstr "กำลังอัปเกรด…"
 msgctxt "login-view"
 msgid "Warren could not restore your account right now. Check your internet connection and try again."
 msgstr "Warren ไม่สามารถกู้คืนบัญชีของคุณได้ในขณะนี้ โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองอีกครั้ง"
-
-msgctxt "login-view"
-msgid "Valid account number"
-msgstr "หมายเลขบัญชีที่ถูกต้อง"
-
-#. Text that informs the users about consequences of creating a new account.
-msgctxt "login-view"
-msgid "You already have a saved account number, by creating a new account the saved account number will be removed from this device. This cannot be undone."
-msgstr "คุณมีหมายเลขบัญชีที่บันทึกไว้แล้ว การสร้างบัญชีใหม่จะเป็นการลบหมายเลขบัญชีที่บันทึกไว้ออกจากอุปกรณ์นี้ การดำเนินการนี้ไม่สามารถย้อนกลับได้"
-
-#. The title for the LWO port selector.
-msgctxt "lwo-settings-view"
-msgid "Port"
-msgstr "พอร์ต"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "lwo-settings-view"
-msgid "Port: %(port)s"
-msgstr "พอร์ต: %(port)s"
-
-msgctxt "lwo-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "การตั้งค่าอัตโนมัติจะเป็นการสุ่มเลือกจากช่วงพอร์ตที่ใช้งานได้ต่างๆ ซึ่งแสดงอยู่ด้านล่าง"
-
-msgctxt "lwo-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "พอร์ตแบบกำหนดเองอาจมีค่าใดๆ ก็ได้ ภายในช่วงที่ใช้งานได้: %(portRanges)s"
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "lwo-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "ช่วงที่ใช้ได้: %(portRanges)s"
 
 #. Title label in navigation bar
 msgctxt "navigation-bar"
@@ -2277,32 +1828,8 @@ msgid "Unable to apply firewall rules. Try updating your kernel."
 msgstr "ไม่สามารถใช้งานกฎไฟร์วอลล์ได้ โปรดลองอัปเดตเคอร์เนลของคุณ"
 
 msgctxt "notifications"
-msgid "Unable to block all network traffic. Please troubleshoot or send a problem report."
-msgstr "ไม่สามารถบล็อกการรับส่งข้อมูลทางเครือข่ายทั้งหมดได้ โปรดแก้ไขปัญหาหรือส่งรายงานปัญหา"
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software or send a problem report."
-msgstr "ไม่สามารถบล็อกการรับส่งข้อมูลทางเครือข่ายทั้งหมดได้ โปรดลองปิดใช้งานซอฟต์แวร์ป้องกันไวรัส หรือซอฟต์แวร์รักษาความปลอดภัยของบุคคลที่สามชั่วคราว หรือส่งรายงานปัญหา"
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try updating your kernel or send a problem report."
-msgstr "ไม่สามารถบล็อกการรับส่งข้อมูลทางเครือข่ายทั้งหมดได้ โปรดลองอัปเดตเคอร์เนลของคุณ หรือส่งรายงานปัญหา"
-
-msgctxt "notifications"
-msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
-msgstr "ไม่สามารถสื่อสารกับไดรเวอร์เคอร์เนลของ Warren ได้ โปรดลองเชื่อมต่อใหม่ หรือส่งรายงานปัญหา"
-
-msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
 msgstr "ไม่พบโฮสต์ของช่องทางแบบกำหนดเอง กรุณาลองเปลี่ยนการตั้งค่าของคุณ"
-
-msgctxt "notifications"
-msgid "Unable to set system DNS server. Please send a problem report."
-msgstr "ไม่สามารถตั้งค่าเซิร์ฟเวอร์ DNS ของระบบได้ โปรดส่งรายงานปัญหา"
-
-msgctxt "notifications"
-msgid "Unable to start tunnel connection. Please send a problem report."
-msgstr "ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดส่งรายงานปัญหา"
 
 msgctxt "notifications"
 msgid "Unable to start tunnel connection. This could be because of conflicts with VMware, please troubleshoot."
@@ -2435,10 +1962,6 @@ msgstr "แลกบัตรกำนัล"
 msgctxt "redeem-voucher-view"
 msgid "An error occurred."
 msgstr "เกิดข้อผิดพลาดขึ้น"
-
-msgctxt "redeem-voucher-view"
-msgid "It looks like you’ve entered an account number instead of a voucher code. If you would like to change the active account, please log out first."
-msgstr "ดูเหมือนว่า คุณได้ป้อนหมายเลขบัญชีแทนรหัสบัตรกำนัล หากคุณต้องการเปลี่ยนบัญชีที่ใช้งานอยู่ โปรดออกจากระบบก่อน"
 
 #. Button label for voucher redemption.
 msgctxt "redeem-voucher-view"
@@ -2679,10 +2202,6 @@ msgid "Choose"
 msgstr "เลือก"
 
 msgctxt "split-tunneling-view"
-msgid "Choose the apps you want to exclude from the VPN tunnel."
-msgstr "เลือกแอปที่คุณต้องการแยกออกจากช่องทาง VPN"
-
-msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
 msgstr "เมืองใน %(country)s"
 
@@ -2783,10 +2302,6 @@ msgstr "แอป Snap ยังเลือกประเทศไม่ได
 msgctxt "split-tunneling-view"
 msgid "To use %(splitTunneling)s, please update to a Linux kernel version that supports cgroup v2."
 msgstr "หากต้องการใช้ %(splitTunneling)s โปรดอัปเดตเป็นเวอร์ชันเคอร์เนล Linux ที่รองรับ cgroup v2"
-
-msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
-msgstr "หากต้องการใช้การแยกอุโมงค์ โปรดเปิดใช้งาน \"การเข้าถึงดิสก์ทั้งหมด\" สำหรับ “Warren VPN” ในการตั้งค่าระบบ macOS"
 
 msgctxt "split-tunneling-view"
 msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
@@ -2957,107 +2472,15 @@ msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
 msgstr "ในกรณีที่แอปกำลังทำงานอยู่ ให้ปิด %(applicationName)s ก่อนที่จะเปิดแอปจากที่นี่ มิฉะนั้น แอปอาจไม่ใช้ VPN"
 
-#. Button label for continuing problem report submission with an outdated app version.
-msgctxt "support-view"
-msgid "Continue anyway"
-msgstr "ดำเนินการต่อไป"
-
-#. Button text to edit the message after a failed attempt to send the problem report.
-msgctxt "support-view"
-msgid "Edit message"
-msgstr "แก้ไขข้อความ"
-
-msgctxt "support-view"
-msgid "Failed to send"
-msgstr "ไม่สามารถส่งได้"
-
 #. Link to the webpage
 msgctxt "support-view"
 msgid "FAQs & Guides"
 msgstr "คำถามที่พบบ่อยและคำแนะนำ"
 
-#. The message displayed to the user after submitting the problem report, given that the user left his or her email for us to reach back.
-#. Available placeholders:
-#. %(email)s
-msgctxt "support-view"
-msgid "If needed we will contact you at %(email)s"
-msgstr "เราจะติดต่อคุณไปทาง %(email)s ในกรณีจำเป็น"
-
-msgctxt "support-view"
-msgid "If you exit the form and try again later, the information you already entered will still be here."
-msgstr "หากคุณออกจากแบบฟอร์มแล้วเข้ามาใหม่ในภายหลัง ข้อมูลที่คุณกรอกไว้จะยังคงอยู่ที่นี่ดังเดิม"
-
-#. Title label in navigation bar
-#. Navigation button to the 'Report a problem' help view
-msgctxt "support-view"
-msgid "Report a problem"
-msgstr "รายงานปัญหา"
-
-#. Button label for sending the problem report.
-msgctxt "support-view"
-msgid "Send"
-msgstr "ส่ง"
-
-#. Button label for sending the problem report without an email address.
-msgctxt "support-view"
-msgid "Send anyway"
-msgstr "ส่งต่อไป"
-
-msgctxt "support-view"
-msgid "Sending..."
-msgstr "กำลังส่ง..."
-
-msgctxt "support-view"
-msgid "Sent"
-msgstr "ส่ง"
-
 #. Title label in navigation bar
 msgctxt "support-view"
 msgid "Support"
 msgstr "การสนับสนุน"
-
-msgctxt "support-view"
-msgid "Thanks!"
-msgstr "ขอบคุณ!"
-
-msgctxt "support-view"
-msgid "To assist you better, please write in English or Swedish and include which country you are connecting from."
-msgstr "โปรดเขียนเป็นภาษาอังกฤษหรือสวีเดน พร้อมระบุประเทศต้นทางที่คุณเชื่อมต่อ เพื่อให้รับความช่วยเหลือได้ดียิ่งขึ้น"
-
-msgctxt "support-view"
-msgid "To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel."
-msgstr "ไฟล์บันทึกล็อกของแอปของคุณจะถูกแนบไปกับข้อความนี้ เพื่อที่เราจะช่วยเหลือคุณได้อย่างมีประสิทธิภาพมากขึ้น ข้อมูลของคุณจะยังคงมีความปลอดภัยและเป็นส่วนตัว เนื่องจากจะไม่มีการระบุตัวตนก่อนส่งข้อมูลผ่านช่องทางที่มีการเข้ารหัส"
-
-#. Button label for retrying problem report submission after a failure.
-msgctxt "support-view"
-msgid "Try again"
-msgstr "ลองอีกครั้ง"
-
-#. Button label for updating the app to the latest version.
-msgctxt "support-view"
-msgid "Update app"
-msgstr "อัปเดตแอป"
-
-#. Button label for opening app logs.
-msgctxt "support-view"
-msgid "View app logs"
-msgstr "ดูบันทึกของแอป"
-
-msgctxt "support-view"
-msgid "We will look into this."
-msgstr "เราจะตรวจสอบปัญหานี้"
-
-msgctxt "support-view"
-msgid "You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address."
-msgstr "คุณกำลังจะส่งรายงานปัญหา โดยไม่มีการระบุวิธีการติดต่อกลับให้กับเรา และคุณจำเป็นต้องป้อนที่อยู่อีเมลของคุณ หากคุณอยากให้เราตอบกลับการรายงานของคุณ"
-
-msgctxt "support-view"
-msgid "You are using an old version of the app. Please upgrade and see if the problem still exists before sending a report."
-msgstr "คุณกำลังใช้งานแอปเวอร์ชันเก่า โปรดอัปเกรดแอปและดูว่ายังคงมีปัญหาอยู่หรือไม่ ก่อนที่คุณจะส่งรายงาน"
-
-msgctxt "support-view"
-msgid "Your email (optional)"
-msgstr "อีเมลของคุณ (ไม่บังคับ)"
 
 #. Link to the refund policy webpage
 msgctxt "support-view"
@@ -3095,10 +2518,6 @@ msgstr "เปิดใช้งาน \"การเข้าถึงดิส
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
 msgstr "ล้มเหลวในการเปิดใช้การแยกอุโมงค์ ซึ่งเกิดจากแอปไม่มีสิทธิ์อนุญาตของระบบ สิ่งที่คุณทำได้มีดังนี้:"
-
-msgctxt "troubleshoot"
-msgid "If these steps do not work please send a problem report."
-msgstr "หากขั้นตอนเหล่านี้ใช้ไม่ได้ผล โปรดส่งรายงานปัญหา"
 
 msgctxt "troubleshoot"
 msgid "If you have installed another VPN then try to uninstall that."
@@ -3169,14 +2588,6 @@ msgstr "เฉพาะแอปที่เลือกเท่านั้น
 msgctxt "tunnel-control"
 msgid "Connection interrupted"
 msgstr "การเชื่อมต่อถูกขัดจังหวะ"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map"
-msgstr "ทำให้แผนที่มีภาพเคลื่อนไหว"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map movements."
-msgstr "ทำให้ภาพเคลื่อนไหวเกิดขึ้นบนแผนที่"
 
 msgctxt "user-interface-settings-view"
 msgid "Enable or disable system notifications. The critical notifications will always be displayed."
@@ -3598,44 +3009,13 @@ msgctxt "warren-pubkey-warning"
 msgid "The key changed again before it could be trusted. Review the new key and try again."
 msgstr "กุญแจเปลี่ยนอีกครั้งก่อนที่จะเชื่อถือได้ ตรวจสอบกุญแจใหม่แล้วลองอีกครั้ง"
 
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "UDP-over-TCP"
-msgstr "UDP-ผ่าน-TCP"
-
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s (%(daitaFull)s) hides patterns in your encrypted VPN traffic."
 msgstr "%(daita)s (%(daitaFull)s) ซ่อนรูปแบบในการรับส่งข้อมูล VPN ที่เข้ารหัสของคุณ"
 
 msgctxt "wireguard-settings-view"
-msgid "%(daita)s does this by carefully adding network noise and making all network packets the same size."
-msgstr "%(daita)s ได้ดำเนินการนี้ ด้วยการเพิ่มสัญญาณรบกวนเครือข่ายอย่างระมัดระวัง และทำให้แพ็กเก็ตเครือข่ายทั้งหมดมีขนาดเท่ากัน"
-
-msgctxt "wireguard-settings-view"
-msgid "%(wireguard)s port"
-msgstr "พอร์ต %(wireguard)s"
-
-#. Page title for QUIC port view
-msgctxt "wireguard-settings-view"
-msgid "%(wireGuard)s port"
-msgstr "พอร์ต %(wireGuard)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans."
-msgstr "โปรดทราบ: การดำเนินการนี้จะเพิ่มการรับส่งข้อมูลทางเครือข่าย และส่งผลเสียต่อความเร็ว ความหน่วงแฝง และการใช้งานแบตเตอรี่ โปรดใช้ด้วยความระมัดระวังในขณะที่ใช้แผนบริการแบบจำกัด"
-
-msgctxt "wireguard-settings-view"
 msgid "By enabling “%(directOnly)s” you will have to manually select a server that is %(daita)s-enabled. This can cause you to end up in a blocked state until you have selected a compatible server in the “Select location” view."
 msgstr "โดยการเปิดใช้งาน “%(directOnly)s” คุณจะต้องเลือกเซิร์ฟเวอร์ที่เปิดใช้งาน %(daita)s ด้วยตนเอง ซึ่งอาจทำให้คุณอยู่ในสถานะถูกบล็อก จนกว่าคุณจะเลือกเซิร์ฟเวอร์ที่เข้ากันได้ในมุมมอง \"เลือกตำแหน่งที่ตั้ง\""
-
-msgctxt "wireguard-settings-view"
-msgid "By using sophisticated AI it’s possible to analyze the traffic of data packets going in and out of your device (even if the traffic is encrypted)."
-msgstr "โดยการใช้ AI ที่ซับซ้อน จึงเป็นไปได้ที่จะวิเคราะห์ปริมาณการรับส่งข้อมูล ที่เข้าออกอุปกรณ์ของคุณได้ (แม้ว่าการรับส่งข้อมูลจะเข้ารหัสไว้ก็ตาม)"
 
 msgctxt "wireguard-settings-view"
 msgid "Cancel"
@@ -3645,10 +3025,6 @@ msgstr "ยกเลิก"
 msgctxt "wireguard-settings-view"
 msgid "Device IP version"
 msgstr "เวอร์ชัน IP ของอุปกรณ์"
-
-msgctxt "wireguard-settings-view"
-msgid "If an observer monitors these data packets, %(daita)s makes it significantly harder for them to identify which websites you are visiting or with whom you are communicating."
-msgstr "หากผู้สังเกตการณ์เฝ้าดูแพ็กเก็ตข้อมูลเหล่านี้ %(daita)s จะทำให้พวกเขาระบุเว็บไซต์ที่คุณกำลังเยี่ยมชม หรือผู้ที่คุณกำลังติดต่อสื่อสารด้วยได้ยากขึ้นอย่างมาก"
 
 msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
@@ -3662,37 +3038,13 @@ msgid "MTU"
 msgstr "MTU"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop"
-msgstr "มัลติฮอป"
-
-msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "กำลังใช้ Multihop เพื่อเปิดใช้งาน DAITA สำหรับตำแหน่งที่คุณเลือก"
-
-msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
-msgstr "Multihop ส่งทราฟฟิกของคุณเข้าทางเซิร์ฟเวอร์ QUIC หนึ่งและออกทางอีกเซิร์ฟเวอร์หนึ่ง จึงมีเซิร์ฟเวอร์เพิ่มขึ้นระหว่างคุณกับเว็บไซต์ที่คุณเข้าชม ซึ่งทำให้มีความหน่วงมากขึ้น"
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. In order to use the internet, you might have to select a new location after enabling."
 msgstr "ไม่ใช่ทุกเซิร์ฟเวอร์ของเราที่เปิดใช้งาน %(daita)s คุณอาจต้องเลือกตำแหน่งที่ตั้งใหม่หลังจากเปิดใช้งาน เพื่อใช้งานอินเทอร์เน็ต"
-
-msgctxt "wireguard-settings-view"
-msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
-msgstr "ไม่ใช่ทุกเซิร์ฟเวอร์ของเราที่เปิดใช้งาน %(daita)s ด้วยเหตุนี้เอง เราจึงใช้การมัลติฮอปอัตโนมัติ เพื่อเปิดใช้งาน %(daita)s กับทุกเซิร์ฟเวอร์"
-
-#. The title for the QUIC port selector.
-msgctxt "wireguard-settings-view"
-msgid "Port"
-msgstr "พอร์ต"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "wireguard-settings-view"
-msgid "Port: %(port)s"
-msgstr "พอร์ต: %(port)s"
 
 #. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
@@ -3715,14 +3067,6 @@ msgid "Shadowsocks"
 msgstr "Shadowsocks"
 
 msgctxt "wireguard-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "การตั้งค่าอัตโนมัติจะเป็นการสุ่มเลือกจากช่วงพอร์ตที่ใช้งานได้ต่างๆ ซึ่งแสดงอยู่ด้านล่าง"
-
-msgctxt "wireguard-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "พอร์ตแบบกำหนดเองอาจมีค่าใดๆ ก็ได้ ภายในช่วงที่ใช้งานได้: %(portRanges)s"
-
-msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "ฟีเจอร์นี้ปกป้องการรับส่งข้อมูลของคุณไปยังเซิร์ฟเวอร์ขาออกจากการโจมตีที่อาจเกิดขึ้นจากคอมพิวเตอร์ควอนตัม"
 
@@ -3730,911 +3074,8 @@ msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
 msgstr "UDP-ผ่าน-TCP"
 
-#. Text describing the valid port range for a port selector.
-msgctxt "wireguard-settings-view"
-msgid "Valid range: %(min)s - %(max)s"
-msgstr "ช่วงที่ใช้งานได้: %(min)s - %(max)s"
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "wireguard-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "ช่วงที่ใช้ได้: %(portRanges)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
-msgstr "พอร์ต TCP ใดที่โพรโทคอลการทำให้ข้อมูลยุ่งเหยิง UDP-ผ่าน-TCP ควรเชื่อมต่อบนเซิร์ฟเวอร์ VPN"
-
-msgid "%1$s more..."
-msgstr "อีก %1$s..."
-
-msgid "%1$s was added to \"%2$s\""
-msgstr "เพิ่ม %1$s ลงใน \"%2$s\" แล้ว"
-
-msgid "%1$s was removed from \"%2$s\""
-msgstr "%1$s ถูกลบออกจาก \"%2$s” แล้ว"
-
-msgid "%1$s, %2$s, %3$s"
-msgstr "%1$s, %2$s, %3$s"
-
-msgid "%s (Entry)"
-msgstr "%s (ขาเข้า)"
-
-msgid "%s (Exit)"
-msgstr "%s (ขาออก)"
-
-msgid "%s (added)"
-msgstr "%s (เพิ่มแล้ว)"
-
-msgid "%s (removed)"
-msgstr "%s (ลบแล้ว)"
-
-msgid "%s is already selected as entry relay"
-msgstr "%s ถูกเลือกเป็น Entry Relay อยู่แล้ว"
-
-msgid "%s is already selected as exit relay"
-msgstr "%s ถูกเลือกเป็น Exit Relay อยู่แล้ว"
-
-msgid "%s is unavailable"
-msgstr "%s ไม่พร้อมใช้งาน"
-
-msgid "%s settings."
-msgstr "การตั้งค่า %s."
-
-msgid "%s was added to your account."
-msgstr "%s ถูกเพิ่มลงในบัญชีของคุณแล้ว"
-
-msgid "(%d)"
-msgstr "(%d)"
-
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
-msgstr "1. หลังจากคลิกปุ่ม \"ไปที่การตั้งค่า VPN\" ที่ด้านล่าง ให้คลิกล้อเฟืองที่อยู่ถัดจากชื่อ \"Warren VPN\""
-
-msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
-msgstr "2. ในการเปิดใช้การเชื่อมต่ออัตโนมัติ ให้คลิกปุ่มเปิด/ปิดที่อยู่ถัดจาก \"VPN เปิดอยู่เสมอ\""
-
-msgid "3. To enable Lockdown mode, click on the toggle next to \"Block connections without VPN\".<br /><br /><b>Warning: This setting blocks split apps and the Local Network Sharing feature.</b>"
-msgstr "3. ในการเปิดโหมดล็อกดาวน์ ให้คลิกปุ่มเปิด/ปิดที่อยู่ถัดจาก \"ปิดกั้นการเชื่อมต่อที่ไม่ใช้ VPN\"<br /><br /><b>คำเตือน: การตั้งค่านี้จะบล็อกแอปที่มีการแยก และคุณลักษณะการแชร์เครือข่ายท้องถิ่น</b>"
-
-msgid "30 days was added to your account."
-msgstr "30 วัน ถูกเพิ่มลงในบัญชีของคุณแล้ว"
-
-msgid "90 days was added to your account."
-msgstr "เพิ่ม 90 วันในบัญชีของคุณแล้ว"
-
-msgid "<b>Account recovery will not be possible.</b>"
-msgstr "<b>ไม่สามารถกู้คืนบัญชีได้</b>"
-
-msgid "<b>Attention:</b> Only some servers support the full port range."
-msgstr "<b>ข้อควรระวัง:</b> มีเพียงบางเซิร์ฟเวอร์เท่านั้นที่รองรับช่วงพอร์ตได้ทั้งหมด"
-
-msgid "<b>Attention:</b> The app will close automatically and needs to be manually opened again after selecting a new icon and title. This will not impact your VPN connection."
-msgstr "<b>ข้อควรระวัง:</b> แอปจะปิดโดยอัตโนมัติและต้องเปิดใหม่ด้วยตนเองหลังจากเลือกไอคอนและชื่อใหม่ การดำเนินการนี้จะไม่ส่งผลต่อการเชื่อมต่อ VPN ของคุณ"
-
-msgid "<b>Please note that these methods do not improve performance, and may increase system utilization and battery consumption.</b>"
-msgstr "<b>โปรดทราบว่าวิธีการเหล่านี้ไม่ได้ช่วยปรับปรุงประสิทธิภาพ แต่อาจเพิ่มการใช้งานระบบและการใช้แบตเตอรี่</b>"
-
-msgid "<b>This action cannot be undone.</b>"
-msgstr "<b>การดำเนินการนี้ไม่สามารถย้อนกลับได้</b>"
-
-msgid "<b>Warning:</b>"
-msgstr "<b>คำเตือน:</b>"
-
-msgid "<b>You will lose access to this account on all devices.</b>"
-msgstr "<b>คุณจะสูญเสียการเข้าถึงบัญชีนี้บนทุกอุปกรณ์</b>"
-
-msgid "API reachable, adding method..."
-msgstr "เข้าถึง API ได้ กำลังเพิ่มวิธีการ..."
-
-msgid "API unreachable, save method anyway?"
-msgstr "เข้าถึง API ไม่ได้ บันทึกวิธีการหรือไม่"
-
-msgid "Account credit expires in a few minutes"
-msgstr "เครดิตของบัญชีจะหมดอายุในอีกไม่กี่นาที"
-
-msgid "Account deleted"
-msgstr "ลบบัญชีเสร็จแล้ว"
-
-msgid "Account number is too long, please enter a valid number"
-msgstr "หมายเลขบัญชียาวเกินไป โปรดใส่หมายเลขที่ถูกต้อง"
-
-msgid "Account number must match"
-msgstr "หมายเลขบัญชีต้องตรงกัน"
-
-msgid "Account recovery will not be possible."
-msgstr "จะไม่สามารถกู้คืนบัญชีได้"
-
-msgid "Account time reminders"
-msgstr "การแจ้งเตือนเวลาบัญชี"
-
-msgid "Add 30 days time (%s)"
-msgstr "เพิ่มเวลา 30 วัน (%s)"
-
-msgid "Add 90 days time (%s)"
-msgstr "เพิ่มเวลา 90 วัน (%s)"
-
-msgid "Add DNS server"
-msgstr "เพิ่มเซิร์ฟเวอร์ DNS"
-
-msgid "Add locations"
-msgstr "เพิ่มตำแหน่งที่ตั้ง"
-
-msgid "Add time"
-msgstr "เพิ่มเวลา"
-
-msgid "Add to list"
-msgstr "เพิ่มลงในรายการ"
-
-msgid "Adding method..."
-msgstr "กำลังเพิ่มวิธีการ..."
-
-msgid "After updating a VPN app on Android 16, devices might end up in a state where VPN apps are no longer able to reach the internet."
-msgstr "หลังจากอัปเดตแอป VPN บน Android 16 อุปกรณ์อาจอยู่ในสถานะที่แอป VPN ไม่สามารถเข้าถึงอินเทอร์เน็ตได้อีกต่อไป"
-
-msgid "Agree and continue"
-msgstr "ยอมรับและดำเนินการต่อ"
-
-msgid "All"
-msgstr "ทั้งหมด"
-
-msgid "All applications"
-msgstr "แอปพลิเคชันทั้งหมด"
-
-msgid "All overrides will be reset and servers IP addresses, in the Select location view, will go back to default."
-msgstr "โอเวอร์ไรด์ทั้งหมดจะถูกรีเซ็ต และที่อยู่ IP ของเซิร์ฟเวอร์ในมุมมองตำแหน่งที่ตั้งที่เลือก จะกลับไปเป็นค่าเริ่มต้น"
-
-msgid "Always-on VPN assigned to %s"
-msgstr "VPN เปิดอยู่เสมอ ได้รับการมอบหมายไปยัง %s แล้ว"
-
-msgid "Always-on VPN assigned to other VPN"
-msgstr "VPN เปิดอยู่เสมอ ได้รับการมอบหมายไปยัง VPN อื่นแล้ว"
-
-msgid "Android 16 has a known issue. Please restart your device and try again. To learn more,"
-msgstr "Android 16 มีปัญหาที่ทราบแล้ว โปรดรีสตาร์ทอุปกรณ์ของคุณแล้วลองอีกครั้ง หากต้องการเรียนรู้เพิ่มเติม"
-
-msgid "Any remaining time will be null and void."
-msgstr "เวลาการใช้งานที่เหลืออยู่ทั้งหมดจะถือเป็นโมฆะ"
-
-msgid "App icon"
-msgstr "ไอคอนแอป"
-
-msgid "Appearance"
-msgstr "รูปลักษณ์"
-
-msgid "Applying changes..."
-msgstr "กำลังปรับใช้การเปลี่ยนแปลง..."
-
-msgid "Are you sure you want to log <b>%s</b> out?"
-msgstr "คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ <b>%s</b>"
-
-msgid "At least one method needs to be enabled"
-msgstr "จำเป็นต้องเปิดใช้อย่างน้อยหนึ่งวิธีการ"
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, \"Local network sharing\" will not work."
-msgstr "โปรดทราบ: หากเปิดใช้งาน \"ปิดกั้นการเชื่อมต่อที่ไม่ใช้ VPN\" อยู่ \"การแชร์ในเครือข่ายท้องถิ่น\" จะไม่ทำงาน"
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, split apps will not have Internet. Always keep in mind that split tunneling is a privacy risk."
-msgstr "โปรดทราบ: แอปแยกจะไม่มีอินเทอร์เน็ต ในกรณีที่เปิดใช้งาน \"ปิดกั้นการเชื่อมต่อโดยไม่ใช้ VPN\" โปรดทราบว่า การการแยกอุโมงค์จะก่อให้เกิดความเสี่ยงต่อความเป็นส่วนตัว"
-
-msgid "Attention: this setting cannot be used in combination with \"Use custom DNS server\"."
-msgstr "โปรดทราบ: การตั้งค่านี้ไม่สามารถใช้ร่วมกับ \"ใช้เซิร์ฟเวอร์ DNS แบบกำหนดเองได้\""
-
-msgid "Auto-connect & Lockdown mode"
-msgstr "เชื่อมต่ออัตโนมัติและโหมดล็อกดาวน์"
-
-msgid "Auto-connect is called Always-on VPN in the Android system settings and it makes sure you are constantly connected to the VPN tunnel and auto connects after restart."
-msgstr "การเชื่อมต่ออัตโนมัติเรียกว่า Always-on VPN ในการตั้งค่าระบบ Android ซึ่งจะช่วยให้คุณมั่นใจได้ว่า คุณเชื่อมต่อกับช่องทาง VPN อย่างต่อเนื่อง และมีการเชื่อมต่ออัตโนมัติหลังจากรีสตาร์ต"
-
-msgid "Automatically connect on device start-up."
-msgstr "เชื่อมต่ออัตโนมัติเมื่อเริ่มต้นอุปกรณ์"
-
-msgid "Blocking internet (device offline)"
-msgstr "กำลังบล็อกอินเทอร์เน็ต (อุปกรณ์ออฟไลน์)"
-
-msgid "Blocking..."
-msgstr "กำลังบล็อก..."
-
-msgid "Browser"
-msgstr "เบราว์เซอร์"
-
-msgid "By attaching your account token it links this report to your account, which helps us resolve your issue quicker. All reports are automatically deleted after a period of time."
-msgstr "การแนบโทเค็นบัญชีของคุณจะเชื่อมโยงรายงานนี้เข้ากับบัญชีของคุณ ซึ่งจะช่วยให้เราแก้ไขปัญหาของคุณได้เร็วขึ้น รายงานทั้งหมดจะถูกลบโดยอัตโนมัติหลังจากผ่านไประยะเวลาหนึ่ง"
-
-msgid "By checking this box I agree to the risks involved with deleting my account"
-msgstr "การทำเครื่องหมายในช่องนี้ถือว่าฉันยอมรับความเสี่ยงที่เกี่ยวข้องกับการลบบัญชี"
-
-msgid "Can't connect?"
-msgstr "ไม่สามารถเชื่อมต่อได้ใช่ไหม"
-
-msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
-msgstr "เปลี่ยนชื่อและไอคอนของแอป Warren VPN บนอุปกรณ์ Android ของคุณ การดำเนินการนี้จะไม่เปลี่ยนไอคอนสำหรับการแจ้งเตือนที่เกี่ยวข้องกับ Warren VPN"
-
-msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
-msgstr "การเปลี่ยนแปลงการตั้งค่าที่เกี่ยวข้องกับ DNS อาจไม่มีผลทันที เนื่องจากผลลัพธ์ที่แคชไว้"
-
-msgid "Clear input"
-msgstr "ล้างข้อมูลอินพุต"
-
-msgid "Collapse"
-msgstr "ยุบ"
-
-msgid "Connect on device start-up"
-msgstr "เชื่อมต่อเมื่ออุปกรณ์เริ่มทำงาน"
-
-msgid "Connect to a different network"
-msgstr "เชื่อมต่อกับเครือข่ายอื่น"
-
-msgid "Connecting..."
-msgstr "กำลังเชื่อมต่อ..."
-
 msgid "Continue"
 msgstr "ดำเนินการต่อ"
-
-msgid "Copied Warren account number to clipboard"
-msgstr "คัดลอกหมายเลขบัญชี Warren ไปยังคลิปบอร์ดแล้ว"
-
-msgid "Copied logs to clipboard"
-msgstr "คัดลอกบันทึกล็อกไปยังคลิปบอร์ดแล้ว"
-
-msgid "Copy"
-msgstr "คัดลอก"
-
-msgid "Could not display remaining days."
-msgstr "ไม่สามารถแสดงจำนวนวันที่เหลือได้"
-
-msgid "Create new list"
-msgstr "สร้างรายการใหม่"
-
-msgid "Creating account failed"
-msgstr "การสร้างบัญชีล้มเหลว"
-
-msgid "Critical error (your attention is required)"
-msgstr "ข้อผิดพลาดร้ายแรง (คุณจำเป็นต้องตรวจสอบ)"
-
-msgid "Current: %s"
-msgstr "ปัจจุบัน: %s"
-
-msgid "Custom DNS server addresses %1$s are invalid"
-msgstr "ที่อยู่เซิร์ฟเวอร์ DNS ที่กำหนดเอง %1$s ไม่ถูกต้อง"
-
-msgid "DNS settings might not go into effect immediately"
-msgstr "การตั้งค่า DNS อาจไม่มีผลทันที"
-
-msgid "Delete \"%s\"?"
-msgstr "ลบ \"%s\" หรือไม่"
-
-msgid "Delete account"
-msgstr "ลบบัญชี"
-
-msgid "Delete method"
-msgstr "ลบวิธีการ"
-
-msgid "Delete method?"
-msgstr "ลบวิธีการหรือไม่"
-
-msgid "Deleting your account cannot be undone."
-msgstr "การลบบัญชีไม่สามารถย้อนกลับได้"
-
-msgid "Deleting your account:"
-msgstr "กำลังลบบัญชีของคุณ:"
-
-msgid "Direct"
-msgstr "โดยตรง"
-
-msgid "Disable all \"%s\" above to activate this setting."
-msgstr "ปิดใช้งาน \"%s\" ด้านบนทั้งหมด เพื่อเปิดใช้งานการตั้งค่านี้"
-
-msgid "Disable multihop"
-msgstr "ปิดใช้งานมัลติฮอป"
-
-msgid "Discard"
-msgstr "ละทิ้ง"
-
-msgid "Discard changes?"
-msgstr "ละทิ้งการเปลี่ยนแปลงหรือไม่"
-
-msgid "Disconnected (No VPN permission)"
-msgstr "ตัดการเชื่อมต่อแล้ว (ไม่มีสิทธิ์ VPN)"
-
-msgid "Disconnecting..."
-msgstr "กำลังตัดการเชื่อมต่อ..."
-
-msgid "Dismiss"
-msgstr "ละทิ้ง"
-
-msgid "Don’t have an account number?"
-msgstr "ยังไม่มีหมายเลขบัญชีใช่ไหม"
-
-msgid "Edit custom lists"
-msgstr "แก้ไขรายการแบบกำหนดเอง"
-
-msgid "Edit list"
-msgstr "แก้ไขรายการ"
-
-msgid "Edit lists"
-msgstr "แก้ไขรายการ"
-
-msgid "Edit locations"
-msgstr "แก้ไขตำแหน่งที่ตั้ง"
-
-msgid "Enable %1$s"
-msgstr "เปิดใช้งาน %1$s"
-
-msgid "Enable all & retry"
-msgstr "เปิดใช้งานทั้งหมดและลองใหม่อีกครั้ง"
-
-msgid "Enable all access methods in the app"
-msgstr "เปิดใช้งานวิธีการเข้าถึงทั้งหมดในแอป"
-
-msgid "Enable method"
-msgstr "เปิดใช้งานวิธีการ"
-
-msgid "Enable multihop"
-msgstr "เปิดใช้มัลติฮอป"
-
-msgid "Enter MTU"
-msgstr "ป้อน MTU"
-
-msgid "Enter account number digits"
-msgstr "ป้อนหมายเลขบัญชี"
-
-msgid "Entry relay is the same as exit relay"
-msgstr "Entry Relay เหมือนกับ Exit Relay"
-
-msgid "Excluded applications"
-msgstr "แอปพลิเคชันที่แยกออก"
-
-msgid "Expand"
-msgstr "ขยาย"
-
-msgid "External link"
-msgstr "ลิงก์ภายนอก"
-
-msgid "FAILED TO CONNECT"
-msgstr "ไม่สามารถเชื่อมต่อได้"
-
-msgid "Failed to apply patch"
-msgstr "ล้มเหลวในการปรับใช้แพตช์"
-
-msgid "Failed to delete account, please contact support"
-msgstr "ลบบัญชีไม่สำเร็จ โปรดติดต่อฝ่ายสนับสนุน"
-
-msgid "Failed to load products, please try again"
-msgstr "ไม่สามารถโหลดผลิตภัณฑ์ได้ โปรดลองอีกครั้ง"
-
-msgid "Failed to set to current - API not reachable"
-msgstr "ไม่สามารถตั้งค่าเป็นปัจจุบันได้ - ไม่สามารถเข้าถึง API ได้"
-
-msgid "Failed to set to current - Unknown reason"
-msgstr "ไม่สามารถตั้งค่าเป็นปัจจุบันได้ - ไม่ทราบสาเหตุ"
-
-msgid "File"
-msgstr "ไฟล์"
-
-msgid "For details, please see our %s."
-msgstr "สำหรับรายละเอียดเพิ่มเติม โปรดดูที่ %s ของเรา"
-
-msgid "For the VPN to connect automatically on device startup, the app must have VPN permissions. You can grant these by clicking “Connect” in the map view and selecting “OK” if prompted. Additionally, ensure the app is installed on the internal storage by checking the storage information in the app details in system settings."
-msgstr "เพื่อให้ VPN เชื่อมต่อโดยอัตโนมัติเมื่ออุปกรณ์เริ่มทำงาน แอปต้องมีสิทธิ์ VPN คุณสามารถให้สิทธิ์เหล่านี้ได้โดยคลิก \"เชื่อมต่อ\" ในมุมมองแผนที่ และเลือก \"ตกลง\" หากได้รับแจ้ง นอกจากนี้ โปรดตรวจสอบให้แน่ใจว่าแอปติดตั้งอยู่ในพื้นที่จัดเก็บข้อมูลภายใน โดยตรวจสอบข้อมูลพื้นที่จัดเก็บข้อมูลในรายละเอียดแอปในการตั้งค่าระบบ"
-
-msgid "Go to VPN settings"
-msgstr "ไปที่การตั้งค่า VPN"
-
-msgid "Going to login will unblock the internet on this device."
-msgstr "การไปที่ส่วนเข้าสู่ระบบจะปลดบล็อกอินเทอร์เน็ตบนอุปกรณ์เครื่องนี้"
-
-msgid "Google Play payment pending"
-msgstr "กำลังชำระเงิน Google Play"
-
-msgid "Google Play payment pending, this might take some time"
-msgstr "การชำระเงินผ่าน Google Play อยู่ระหว่างดำเนินการ อาจใช้เวลาสักครู่"
-
-msgid "Google Play unavailable"
-msgstr "Google Play ไม่พร้อมใช้งาน"
-
-msgid "IPv4 is not available, please try changing \"Device IP version\" setting."
-msgstr "IPv4 ไม่พร้อมใช้งาน โปรดลองเปลี่ยนการตั้งค่า \"เวอร์ชัน IP อุปกรณ์\""
-
-msgid "IPv6 is not available, please try changing \"Device IP version\" setting."
-msgstr "IPv6 ไม่พร้อมใช้งาน โปรดลองเปลี่ยนการตั้งค่า \"เวอร์ชัน IP อุปกรณ์\""
-
-msgid "Icon and title"
-msgstr "ไอคอนและชื่อ"
-
-msgid "If the icon and title is still not changed after the app has closed, please try restarting the device."
-msgstr "หากไอคอนและชื่อยังไม่เปลี่ยนหลังจากปิดแอปแล้ว โปรดลองรีสตาร์ทอุปกรณ์"
-
-msgid "If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device."
-msgstr "หากมีการใช้งานคุณลักษณะการแยกอุโมงค์ แอปจะขอให้ระบบของคุณระบุแอปพลิเคชันที่ติดตั้งไว้ทั้งหมด รายการนี้จะได้รับการเรียกใช้งานในมุมมองการแยกอุโมงค์เท่านั้น รายการแอปพลิเคชันที่ติดตั้งไว้ทั้งหมด จะไม่ถูกส่งออกจากอุปกรณ์"
-
-msgid "If these steps don’t work, please send an email to support using the button below. It will automatically attach the logs which have been anonymized."
-msgstr "หากขั้นตอนเหล่านี้ไม่ได้ผล โปรดส่งอีเมลถึงฝ่ายสนับสนุนโดยใช้ปุ่มด้านล่าง ระบบจะแนบบันทึกที่ถูกทำให้ไม่ระบุตัวตนโดยอัตโนมัติ"
-
-msgid "Import new overrides by"
-msgstr "นำเข้าโอเวอร์ไรด์ใหม่โดยใช้"
-
-msgid "Import successful, overrides active"
-msgstr "นำเข้าสำเร็จ เปิดใช้โอเวอร์ไรด์อยู่"
-
-msgid "Importing new overrides might replace some previously imported overrides."
-msgstr "การนำเข้าโอเวอร์ไรด์ใหม่ อาจแทนที่โอเวอร์ไรด์ที่นำเข้าก่อนหน้านี้"
-
-msgid "In-app products unavailable, please make sure you have the latest version of Google Play."
-msgstr "ผลิตภัณฑ์ในแอปไม่พร้อมใช้งาน โปรดตรวจสอบให้แน่ใจว่าคุณมี Google Play เวอร์ชันล่าสุด"
-
-msgid "Include my account token for faster help with payment or account related issues"
-msgstr "รวมโทเค็นบัญชีของฉันเพื่อรับความช่วยเหลือเกี่ยวกับการชำระเงิน หรือปัญหาที่เกี่ยวข้องกับบัญชีได้รวดเร็วยิ่งขึ้น"
-
-msgid "Invalid IPv6 config, please try to change the VPN settings."
-msgstr "การตั้งค่า IPv6 ไม่ถูกต้อง โปรดลองเปลี่ยนการตั้งค่า VPN"
-
-msgid "Invalid or missing value \"%1$s\""
-msgstr "ค่า \"%1$s” ไม่ถูกต้องหรือขาดหายไป"
-
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "ระบบจะดำเนินการสิ่งนี้ผ่านการแลกเปลี่ยนคีย์เพิ่มเติม โดยการใช้อัลกอริทึมแบบควอนตัมที่ปลอดภัย และผสมผลลัพธ์เข้ากับการเข้ารหัสตามปกติของ QUIC และขั้นตอนพิเศษนี้ใช้การรับส่งข้อมูลประมาณ 500 kiB ในทุกครั้งที่สร้างช่องทางใหม่"
-
-msgid "Less than a day left on this account"
-msgstr "บัญชีนี้เหลือเวลาไม่ถึงหนึ่งวัน"
-
-msgid "Lets you select apps that should access the Internet directly without going through the VPN tunnel."
-msgstr "ช่วยให้คุณเลือกแอปที่เข้าถึงอินเทอร์เน็ตได้โดยตรง โดยไม่ต้องผ่านอุโมงค์ VPN"
-
-msgid "List name"
-msgstr "ชื่อรายการ"
-
-msgid "Loading products"
-msgstr "กำลังโหลดผลิตภัณฑ์"
-
-msgid "Locations"
-msgstr "ตำแหน่งที่ตั้ง"
-
-msgid "Locations were changed for \"%s\""
-msgstr "ตำแหน่งที่ตั้งสำหรับ \"%s\" มีการเปลี่ยนแปลง"
-
-msgid "Log in"
-msgstr "เข้าสู่ระบบ"
-
-msgid "Makes sure the device is always on the VPN tunnel."
-msgstr "ตรวจสอบให้แน่ใจว่า อุปกรณ์อยู่ในช่องทาง VPN เสมอ"
-
-msgid "More actions"
-msgstr "การดำเนินการเพิ่มเติม"
-
-msgid "Warren services unavailable"
-msgstr "บริการ Mullavad ไม่พร้อมใช้งาน"
-
-msgid "Multihop is disabled"
-msgstr "ปิดใช้งาน Multihop แล้ว"
-
-msgid "Multihop is enabled"
-msgstr "เปิดใช้งาน Multihop แล้ว"
-
-msgid "Name is already taken."
-msgstr "ชื่อนี้ถูกใช้ไปแล้ว"
-
-msgid "Name was changed to %s"
-msgstr "ชื่อถูกเปลี่ยนเป็น %s"
-
-msgid "Navigate"
-msgstr "นำทาง"
-
-msgid "No Android app store installed, could not open link"
-msgstr "ไม่มีการติดตั้ง App Store ของ Android ไม่สามารถเปิดลิงก์ได้"
-
-msgid "No browser app installed, could not open link"
-msgstr "ไม่ได้ติดตั้งแอปเบราว์เซอร์ ไม่สามารถเปิดลิงก์ได้"
-
-msgid "No changelog was added for this version"
-msgstr "ไม่มีการเพิ่มบันทึกการเปลี่ยนแปลงสำหรับเวอร์ชันนี้"
-
-msgid "No custom lists available"
-msgstr "ไม่มีรายการแบบกำหนดเองที่พร้อมใช้งาน"
-
-msgid "No email app available on the device"
-msgstr "ไม่มีแอปอีเมลบนอุปกรณ์"
-
-msgid "No entry server match your settings, try changing server or other settings."
-msgstr "ไม่มีเซิร์ฟเวอร์รายการที่ตรงกับการตั้งค่าของคุณ ลองเปลี่ยนเซิร์ฟเวอร์หรือการตั้งค่าอื่น"
-
-msgid "No exit server match your settings, try changing server or other settings."
-msgstr "ไม่มีเซิร์ฟเวอร์ทางออกที่ตรงกับการตั้งค่าของคุณ ลองเปลี่ยนเซิร์ฟเวอร์หรือการตั้งค่าอื่นๆ"
-
-msgid "No internet connection"
-msgstr "ไม่มีการเชื่อมต่ออินเทอร์เน็ต"
-
-msgid "No matching servers found."
-msgstr "ไม่พบเซิร์ฟเวอร์ที่ตรงกัน"
-
-msgid "No result for \"%s\", please try a different search"
-msgstr "ไม่พบผลลัพธ์สำหรับ \"%s\" โปรดลองใช้คำค้นหาอื่น"
-
-msgid "Not found"
-msgstr "ไม่พบ"
-
-msgid "Notes"
-msgstr "หมายเหตุ"
-
-msgid "Notification settings"
-msgstr "การตั้งค่าการแจ้งเตือน"
-
-msgid "Open app details"
-msgstr "เปิดรายละเอียดแอป"
-
-msgid "Overrides active"
-msgstr "เปิดใช้โอเวอร์ไรด์อยู่"
-
-msgid "Overrides cleared"
-msgstr "ล้างโอเวอร์ไรด์แล้ว"
-
-msgid "Overrides inactive"
-msgstr "ปิดใช้โอเวอร์ไรด์อยู่"
-
-msgid "Password (optional)"
-msgstr "รหัสผ่าน (ไม่บังคับ)"
-
-msgid "Paste or write overrides to be imported"
-msgstr "วางหรือพิมพ์โอเวอร์ไรด์เพื่อนำเข้า"
-
-msgid "Patch not matching specification"
-msgstr "แพตช์ไม่ตรงกับข้อมูลจำเพาะ"
-
-msgid "Please enter a valid IPv4 or IPv6 address"
-msgstr "โปรดป้อนที่อยู่ IPv4 หรือ IPv6 ที่ถูกต้อง"
-
-msgid "Please enter a valid remote server port"
-msgstr "โปรดป้อนพอร์ตเซิร์ฟเวอร์ระยะไกลที่ถูกต้อง"
-
-msgid "Please press connect to request VPN permission"
-msgstr "กรุณากดเชื่อมต่อ เพื่อขออนุญาตสิทธิ์ VPN"
-
-msgid "Please restart your device and try connecting again. If this does not work, please write an email to %s in Swedish or English."
-msgstr "โปรดรีสตาร์ทอุปกรณ์ของคุณและลองเชื่อมต่ออีกครั้ง หากวิธีนี้ไม่ได้ผล โปรดเขียนอีเมลถึง %s เป็นภาษาสวีเดนหรืออังกฤษ"
-
-msgid "Please try changing your filters."
-msgstr "โปรดลองเปลี่ยนตัวกรองของคุณ"
-
-msgid "Privacy"
-msgstr "ความเป็นส่วนตัว"
-
-msgid "Privacy policy"
-msgstr "นโยบายความเป็นส่วนตัว"
-
-msgid "Recents disabled and history cleared"
-msgstr "ปิดใช้งานล่าสุดและล้างประวัติแล้ว"
-
-msgid "Recursion limit"
-msgstr "ขีดจำกัดการเรียกซ้ำ"
-
-msgid "Refunds will not be possible."
-msgstr "ไม่สามารถขอคืนเงินได้"
-
-msgid "Remove %s?"
-msgstr "ลบ %s หรือไม่"
-
-msgid "Remove custom port"
-msgstr "นำพอร์ตแบบกำหนดเองออก"
-
-msgid "Reset"
-msgstr "รีเซ็ต"
-
-msgid "Reset all overrides"
-msgstr "รีเซ็ตโอเวอร์ไรด์ทั้งหมด"
-
-msgid "Reset overrides"
-msgstr "รีเซ็ตโอเวอร์ไรด์"
-
-msgid "Reset to default"
-msgstr "รีเซ็ตเป็นค่าเริ่มต้น"
-
-msgid "Restart your device"
-msgstr "รีสตาร์ทอุปกรณ์ของคุณ"
-
-msgid "Search"
-msgstr "ค้นหา"
-
-msgid "Send email"
-msgstr "ส่งอีเมล"
-
-msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
-msgstr "ตั้งค่า QUIC MTU ช่วงที่ถูกต้อง: %1$d - %2$d"
-
-msgid "Set as multihop entry"
-msgstr "ตั้งเป็นทางเข้า Multihop"
-
-msgid "Set as multihop entry (incompatible)"
-msgstr "ตั้งเป็นทางเข้า Multihop (ไม่รองรับ)"
-
-msgid "Set as multihop exit"
-msgstr "ตั้งเป็นทางออก Multihop"
-
-msgid "Set as multihop exit (incompatible)"
-msgstr "ตั้งเป็นทางออก Multihop (ไม่รองรับ)"
-
-msgid "Set port"
-msgstr "ตั้งค่าพอร์ต"
-
-msgid "Share…"
-msgstr "แชร์…"
-
-msgid "Show location in notification"
-msgstr "แสดงตำแหน่งในการแจ้งเตือน"
-
-msgid "Show system apps"
-msgstr "แสดงแอประบบ"
-
-msgid "Shows current VPN tunnel status"
-msgstr "แสดงสถานะอุโมงค์ VPN ในปัจจุบัน"
-
-msgid "Shows reminders when the account time is about to expire"
-msgstr "แสดงการแจ้งเตือน ในขณะที่เวลาบัญชีใกล้หมดอายุ"
-
-msgid "Submit"
-msgstr "ส่ง"
-
-msgid "TCP"
-msgstr "TCP"
-
-msgid "Test method"
-msgstr "ทดสอบวิธีการ"
-
-msgid "Testing %s..."
-msgstr "กำลังทดสอบ %s..."
-
-msgid "Text"
-msgstr "ข้อความ"
-
-msgid "Thanks for being part of our community.\\nPrivacy is for the people!"
-msgstr "ขอบคุณที่เป็นส่วนหนึ่งของชุมชนเรา\\nความเป็นส่วนตัวคือสิทธิของทุกคน!"
-
-msgid "The Auto-connect and Lockdown mode settings can be found in the Android system settings, follow this guide to enable one or both."
-msgstr "การตั้งค่าการเชื่อมต่ออัตโนมัติและโหมดล็อกดาวน์ อยู่ในการตั้งค่าระบบ Android โปรดทำตามคำแนะนำนี้ เพื่อเปิดใช้งานโหมดใดโหมดหนึ่ง หรือทั้งสองโหมด"
-
-msgid "The IPv6 DNS server will not work unless you enable \"IPv6\" under VPN settings."
-msgstr "เซิร์ฟเวอร์ DNS IPv6 จะไม่ทำงาน เว้นแต่คุณจะเปิดใช้งาน \"IPv6\" ภายใต้การตั้งค่า VPN"
-
-msgid "The Lockdown mode is called \"Block connections without VPN\" in the Android system settings. It helps minimize leaks, however it has some known limitations which you can read more about"
-msgstr "โหมดล็อกดาวน์ถูกเรียกว่า \"ปิดกั้นการเชื่อมต่อที่ไม่ใช้ VPN\" ในการตั้งค่าระบบ Android ซึ่งจะช่วยลดการรั่วไหล แต่ก็มีข้อจำกัดบางประการ ซึ่งคุณสามารถอ่านข้อมูลเพิ่มเติมเกี่ยวกับเรื่องดังกล่าวได้"
-
-msgid "The \"Current\" method represent which method the app is using to reach the API."
-msgstr "วิธีการ \"ปัจจุบัน\" แสดงถึงวิธีที่แอปใช้ในการเข้าถึง API"
-
-msgid "The app is blocking internet, please disconnect first"
-msgstr "แอปกำลังปิดกั้นอินเทอร์เน็ต โปรดตัดการเชื่อมต่อก่อน"
-
-msgid "The app was unable to create an account due to not being able to reach the Warren API."
-msgstr "แอปไม่สามารถสร้างบัญชีได้ เนื่องจากไม่สามารถเข้าถึง Warren API ได้"
-
-msgid "The app was unable to login due to not being able to reach the Warren API."
-msgstr "แอปไม่สามารถเข้าสู่ระบบได้ เนื่องจากไม่สามารถเข้าถึง Warren API ได้"
-
-msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
-msgstr "เซิร์ฟเวอร์ DNS ท้องถิ่นจะไม่ทำงาน เว้นแต่คุณจะเปิดใช้งาน \"การแชร์ในเครือข่ายท้องถิ่น\" ซึ่งอยู่ในส่วนการตั้งค่า VPN"
-
-msgid "The selected %s port is not supported, please change it under"
-msgstr "ไม่รองรับพอร์ต %s ที่เลือก โปรดเปลี่ยนพอร์ตภายใต้ส่วน"
-
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "วิธีการเหล่านี้อาจมีประโยชน์ในสถานการณ์ที่คุณถูกบล็อกไม่ให้เข้าถึง Warren เมื่อเลือก \"อัตโนมัติ\" แอปจะพยายามใช้ทุกวิธีจนกว่าจะมีวิธีใดวิธีหนึ่งที่ใช้งานได้"
-
-msgid "This address has already been entered."
-msgstr "ที่อยู่นี้ได้รับการป้อนไปแล้ว"
-
-msgid "This field is required"
-msgstr "จำเป็นต้องกรอกช่องนี้"
-
-msgid "This impacts your anonymity"
-msgstr "สิ่งนี้ส่งผลต่อความไม่เปิดเผยตัวตนของคุณ"
-
-msgid "This is already set as current"
-msgstr "นี่ได้รับการตั้งค่าเป็นปัจจุบันแล้ว"
-
-msgid "This might be due to censorship or network issues. Please try to:"
-msgstr "นี่อาจเกิดจากการเซ็นเซอร์หรือปัญหาเครือข่าย โปรดลอง:"
-
-msgid "Time added"
-msgstr "เพิ่มเวลาแล้ว"
-
-msgid "To add locations to a list, press the pen or long press on a country, city, or server."
-msgstr "หากต้องการเพิ่มตำแหน่งลงในรายการ ให้กดปากกาหรือกดค้างที่ประเทศ เมือง หรือเซิร์ฟเวอร์"
-
-msgid "To create a custom list press the \"+\""
-msgstr "หากต้องการสร้างรายการที่กำหนดเอง ให้กด \"+\""
-
-msgid "To delete your Warren VPN account, please enter your account number below."
-msgstr "หากต้องการลบบัญชี Warren VPN โปรดกรอกหมายเลขบัญชีของคุณด้านล่าง"
-
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "แอปจะตรวจสอบเวอร์ชันโดยอัตโนมัติ เพื่อให้แน่ใจว่า คุณใช้งานเวอร์ชันที่ปลอดภัยที่สุด และเพื่อแจ้งปัญหาใดๆ ของเวอร์ชันปัจจุบันที่ใช้งานอยู่ให้คุณทราบ โดยระบบจะส่งเวอร์ชันแอปและเวอร์ชันระบบ Android ไปยังเซิร์ฟเวอร์ Mullavid ซึ่ง Warren จะติดตามจำนวนเวอร์ชันแอปที่ใช้และเวอร์ชัน Android ทั้งนี้ข้อมูลจะไม่ถูกจัดเก็บ หรือนำไปใช้ในลักษณะใดๆ ที่สามารถระบุตัวตนคุณได้"
-
-msgid "Toggle VPN"
-msgstr "เปิด/ปิด VPN"
-
-msgid "Too many attempts, please try again later"
-msgstr "พยายามหลายครั้งเกินไป โปรดลองอีกครั้งในภายหลัง"
-
-msgid "UDP"
-msgstr "UDP"
-
-msgid "Unable to apply firewall rules. Please troubleshoot or send a problem report."
-msgstr "ไม่สามารถใช้กฎไฟร์วอลล์ได้ โปรดแก้ไขปัญหา หรือส่งรายงานปัญหา"
-
-msgid "Unable to parse patch"
-msgstr "ไม่สามารถแยกวิเคราะห์แพตช์ได้"
-
-msgid "Unable to reach API"
-msgstr "ไม่สามารถเข้าถึง API ได้"
-
-msgid "Unable to reach API, %s"
-msgstr "ไม่สามารถเข้าถึง API %s"
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
-msgstr "ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดปิดใช้งาน VPN เปิดอยู่เสมอ ก่อนที่จะใช้งาน Warren VPN"
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
-msgstr "ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดปิดใช้งาน Always-on VPN เป็นเวลา <b>%s</b> ก่อนที่จะใช้งาน Warren VPN"
-
-msgid "Unable to verify account number, please contact support"
-msgstr "ไม่สามารถยืนยันหมายเลขบัญชีได้ โปรดติดต่อฝ่ายสนับสนุน"
-
-msgid "Unavailable"
-msgstr "ไม่พร้อมใช้งาน"
-
-msgid "Undo"
-msgstr "เลิกทำ"
-
-msgid "Unknown or prohibited key \"%1$s\""
-msgstr "คีย์ \"%1$s\" ไม่รู้จักหรือไม่ได้รับอนุญาต"
-
-msgid "Update DNS server"
-msgstr "อัปเดตเซิร์ฟเวอร์ DNS"
-
-msgid "Update list name"
-msgstr "อัปเดตชื่อรายการ"
-
-msgid "Update server list"
-msgstr "อัปเดตรายการเซิร์ฟเวอร์"
-
-msgid "Updating server list in the background..."
-msgstr "กำลังอัปเดตรายชื่อเซิร์ฟเวอร์ในพื้นหลัง..."
-
-msgid "Use method"
-msgstr "ใช้วิธีการ"
-
-msgid "VPN Settings not available on device"
-msgstr "การตั้งค่า VPN ไม่สามารถใช้งานได้บนอุปกรณ์"
-
-msgid "VPN permission error"
-msgstr "เกิดข้อผิดพลาดในการอนุญาต VPN"
-
-msgid "VPN permission was denied"
-msgstr "การอนุญาต VPN ถูกปฏิเสธ"
-
-msgid "VPN permission was denied or another app has \"Always-on VPN\" enabled"
-msgstr "สิทธิ์ VPN ถูกปฏิเสธ หรือไม่ก็แอปอื่นเปิดใช้งาน \"เปิด VPN เสมอ\""
-
-msgid "VPN tunnel status"
-msgstr "สถานะอุโมงค์ VPN"
-
-msgid "Valid range for all servers: %s"
-msgstr "ช่วงที่ใช้ได้สำหรับทุกเซิร์ฟเวอร์: %s"
-
-msgid "Value: %s"
-msgstr "ค่า: %s"
-
-msgid "Verifying API method..."
-msgstr "กำลังตรวจสอบยืนยันวิธีการ API..."
-
-msgid "Verifying purchase"
-msgstr "กำลังตรวจสอบยืนยันการซื้อ"
-
-msgid "Verifying purchase..."
-msgstr "กำลังตรวจสอบยืนยันการซื้อ..."
-
-msgid "Verifying voucher…"
-msgstr "กำลังตรวจสอบยืนยันบัตรกำนัล…"
-
-msgid "Warning"
-msgstr "คำเตือน"
-
-msgid "We are still verifying your purchase, this might take some time. Your time will be added if the verification is successful."
-msgstr "เรากำลังตรวจสอบการสั่งซื้อของคุณ ซึ่งอาจใช้เวลาสักครู่ หากการตรวจสอบเสร็จสมบูรณ์ เราจะเพิ่มเวลาของคุณ"
-
-msgid "We were unable to start the payment process, please make sure you have the latest version of Google Play."
-msgstr "เราไม่สามารถเริ่มกระบวนการชำระเงินได้ โปรดตรวจสอบให้แน่ใจว่า คุณมี Google Play เวอร์ชันล่าสุด "
-
-msgid "We were unable to start the payment process, please try again later."
-msgstr "เราไม่สามารถเริ่มกระบวนการชำระเงินได้ โปรดลองอีกครั้งในภายหลัง"
-
-msgid "Weather"
-msgstr "สภาพอากาศ"
-
-msgid "Welcome, this device is now called <b>%s</b>."
-msgstr "ยินดีต้อนรับ อุปกรณ์นี้มีชื่อว่า <b>%s</b> แล้ว"
-
-msgid "QUIC port"
-msgstr "พอร์ต QUIC"
-
-msgid "Yes, log out device"
-msgstr "ใช่ นำอุปกรณ์ออกจากระบบ"
-
-msgid "You are about to delete your Warren VPN account."
-msgstr "คุณกำลังจะทำการลบบัญชี Warren VPN ของคุณ"
-
-msgid "You can add more time via the account view or website to continue using the VPN."
-msgstr "คุณสามารถเพิ่มเวลาเพิ่มเติมได้โดยการดูบัญชีหรือเว็บไซต์เพื่อใช้งาน VPN ต่อไป"
-
-msgid "You can add more time via the account view to continue using the VPN."
-msgstr "คุณสามารถเพิ่มเวลาผ่านทางหน้าบัญชีเพื่อใช้งาน VPN ต่อได้"
-
-msgid "You will lose access to this account on all devices."
-msgstr "คุณจะสูญเสียการเข้าถึงบัญชีนี้บนทุกอุปกรณ์"
-
-msgid "You will lose your remaining"
-msgstr "คุณจะสูญเสียจำนวนวันที่เหลืออยู่"
-
-msgid "\"%s\" was created"
-msgstr "\"%s\" ถูกสร้างแล้ว"
-
-msgid "\"%s\" was deleted"
-msgstr "\"%s\" ถูกลบแล้ว"
-
-msgid "click here"
-msgstr "คลิกที่นี่"
-
-msgid "here"
-msgstr "ที่นี่"
-
-msgid "less than one day"
-msgstr "น้อยกว่าหนึ่งวัน"
-
-msgid "privacy policy"
-msgstr "นโยบายความเป็นส่วนตัว"
-
-msgid "read more here"
-msgstr "อ่านเพิ่มเติมที่นี่"
-
-msgid "%d day"
-msgid_plural "%d days"
-msgstr[0] "%d วัน"
-
-msgid "%d location"
-msgid_plural "%d locations"
-msgstr[0] "%d ตำแหน่งที่ตั้ง"
-
-msgid "%d month"
-msgid_plural "%d months"
-msgstr[0] "%d เดือน"
-
-msgid "1 day left on this account"
-msgid_plural "%d days left on this account"
-msgstr[0] "บัญชีนี้เหลือเวลา %d วัน"
-
-msgid "1 year left on this account"
-msgid_plural "%d years left on this account"
-msgstr[0] "บัญชีนี้เหลือเวลา %d ปี"
-
-msgid "Account credit expires in a day"
-msgid_plural "Account credit expires in %d days"
-msgstr[0] "เครดิตของบัญชีจะหมดอายุใน %d วัน"
-
-msgid "Account credit expires in an hour"
-msgid_plural "Account credit expires in %d hours"
-msgstr[0] "เครดิตของบัญชีจะหมดอายุใน %d ชั่วโมง"
-
-msgid "You will lose your remaining day."
-msgid_plural "You will lose your remaining %d days."
-msgstr[0] "คุณจะสูญเสียจำนวนวันที่เหลืออีก %d วัน"
-
-
-msgctxt "port-forwarding-view"
-msgid "auto"
-msgstr "อัตโนมัติ"
-
-msgctxt "port-forwarding-view"
-msgid "Mapping failed: %(error)s"
-msgstr "การแมปล้มเหลว: %(error)s"
 
 msgctxt "port-forwarding-view"
 msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
@@ -4645,40 +3086,8 @@ msgid "Port forwarding"
 msgstr "การส่งต่อพอร์ต"
 
 msgctxt "port-forwarding-view"
-msgid "Port must be between 49152 and 65535, or empty for auto."
-msgstr "พอร์ตต้องอยู่ระหว่าง 49152 ถึง 65535 หรือเว้นว่างไว้สำหรับอัตโนมัติ"
-
-msgctxt "port-forwarding-view"
-msgid "Preferred port"
-msgstr "พอร์ตที่ต้องการ"
-
-msgctxt "port-forwarding-view"
 msgid "Protocol"
 msgstr "โปรโตคอล"
-
-msgctxt "port-forwarding-view"
-msgid "Public port: %(port)s"
-msgstr "พอร์ตสาธารณะ: %(port)s"
-
-msgctxt "port-forwarding-view"
-msgid "Renewing in %(countdown)s"
-msgstr "ต่ออายุใน %(countdown)s"
-
-msgctxt "port-forwarding-view"
-msgid "Status: active"
-msgstr "สถานะ: ใช้งานอยู่"
-
-msgctxt "port-forwarding-view"
-msgid "Status: requesting port mapping..."
-msgstr "สถานะ: กำลังขอการแมปพอร์ต…"
-
-msgctxt "port-forwarding-view"
-msgid "Status: waiting for an active tunnel connection to set up the port mapping."
-msgstr "สถานะ: กำลังรอการเชื่อมต่ออุโมงค์ที่ใช้งานอยู่เพื่อตั้งค่าการแมปพอร์ต"
-
-msgctxt "port-forwarding-view"
-msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
-msgstr "เซิร์ฟเวอร์อาจกำหนดพอร์ตอื่นหากพอร์ตที่ต้องการถูกใช้งานอยู่แล้ว การเปลี่ยนแปลงจะมีผลทันทีโดยไม่ต้องเชื่อมต่อใหม่"
 
 msgctxt "keys-view"
 msgid "Backup keys"
@@ -4785,16 +3194,8 @@ msgid "Could not check subscription status. Please try again."
 msgstr "ไม่สามารถตรวจสอบสถานะการสมัครสมาชิกได้ กรุณาลองอีกครั้ง"
 
 msgctxt "warren-onboarding"
-msgid "Create my new wallet (recommended)"
-msgstr "สร้างกระเป๋าเงินใหม่ของฉัน (แนะนำ)"
-
-msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
 msgstr "บริการยังไม่มีวลีกู้คืน กรุณาเข้าสู่ระบบหรือรีสตาร์ตแอป"
-
-msgctxt "warren-onboarding"
-msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
-msgstr "บริการปฏิเสธวลีกู้คืน ตรวจสอบการสะกดและจำนวนคำ แล้วลองอีกครั้ง"
 
 msgctxt "warren-onboarding"
 msgid "Failed to retrieve mnemonic from daemon."
@@ -4813,16 +3214,8 @@ msgid "I have written it down in a safe place."
 msgstr "ฉันได้จดบันทึกไว้ในที่ปลอดภัยแล้ว"
 
 msgctxt "warren-onboarding"
-msgid "Import an existing mnemonic"
-msgstr "นำเข้าวลีกู้คืนที่มีอยู่"
-
-msgctxt "warren-onboarding"
 msgid "No active subscription found. Please purchase one first."
 msgstr "ไม่พบการสมัครสมาชิกที่ใช้งานอยู่ กรุณาซื้อก่อน"
-
-msgctxt "warren-onboarding"
-msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
-msgstr "วางวลีกู้คืน BIP39 ขนาด 12 คำของคุณ เพื่อกู้คืนตัวตน Warren ที่มีอยู่"
 
 msgctxt "warren-onboarding"
 msgid "Pick a country and connect"
@@ -4837,20 +3230,12 @@ msgid "Privacy preferences"
 msgstr "การตั้งค่าความเป็นส่วนตัว"
 
 msgctxt "warren-onboarding"
-msgid "Restore wallet"
-msgstr "กู้คืนกระเป๋าเงิน"
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "ข้ามตัวช่วยตั้งค่า (ขั้นสูง)"
 
 msgctxt "warren-onboarding"
 msgid "View plans (opens in your browser)"
 msgstr "ดูแพ็กเกจ (เปิดในเบราว์เซอร์ของคุณ)"
-
-msgctxt "warren-onboarding"
-msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
-msgstr "Warren ใช้กระเป๋าเงินแบบ non-custodial (Ed25519 + BIP39) คุณเป็นเจ้าของคีย์เอง เราไม่มีวันเห็นมัน"
 
 msgctxt "warren-onboarding"
 msgid "Welcome to Warren VPN"
@@ -4976,25 +3361,9 @@ msgctxt "device-management"
 msgid "Session is inactive"
 msgstr "เซสชันไม่ได้ใช้งาน"
 
-msgctxt "device-management"
-msgid "Your session has ended. To connect again, you will need to log back in."
-msgstr "เซสชันของคุณสิ้นสุดลงแล้ว หากต้องการเชื่อมต่ออีกครั้ง คุณจะต้องเข้าสู่ระบบใหม่"
-
 msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "ตรวจพบข้อมูลประจำตัวเซิร์ฟเวอร์ไม่ตรงกัน คีย์สาธารณะของโหนดทางออกมีการเปลี่ยนแปลง"
-
-msgctxt "vpn-settings-view"
-msgid "Automatic failover"
-msgstr "การสลับอัตโนมัติเมื่อเกิดข้อผิดพลาด"
-
-msgctxt "vpn-settings-view"
-msgid "Automatically switch to another exit server if the current one becomes unreachable."
-msgstr "สลับไปยังเซิร์ฟเวอร์ทางออกอื่นโดยอัตโนมัติหากเซิร์ฟเวอร์ปัจจุบันไม่สามารถเข้าถึงได้"
-
-msgctxt "vpn-settings-view"
-msgid "This setting takes effect immediately without a daemon restart."
-msgstr "การตั้งค่านี้มีผลทันทีโดยไม่ต้องรีสตาร์ทบริการ"
 
 msgctxt "vpn-settings-view"
 msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
@@ -5013,14 +3382,6 @@ msgctxt "accessibility"
 msgid "Copy the voucher code"
 msgstr "คัดลอกรหัสบัตรกำนัล"
 
-msgctxt "accessibility"
-msgid "Hide public key"
-msgstr "ซ่อนกุญแจสาธารณะ"
-
-msgctxt "accessibility"
-msgid "Show public key"
-msgstr "แสดงกุญแจสาธารณะ"
-
 msgctxt "account-view"
 msgid "Backup keys"
 msgstr "สำรองกุญแจ"
@@ -5037,10 +3398,6 @@ msgstr "เกิดข้อผิดพลาดระหว่างการ
 msgctxt "account-view"
 msgid "Try again"
 msgstr "ลองอีกครั้ง"
-
-msgctxt "account-view"
-msgid "Public key"
-msgstr "กุญแจสาธารณะ"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
@@ -5129,10 +3486,6 @@ msgstr "ล้มเหลว"
 msgctxt "port-forwarding-view"
 msgid "no port available"
 msgstr "ไม่มีพอร์ตว่าง"
-
-msgctxt "port-forwarding-view"
-msgid "not allowed"
-msgstr "ไม่อนุญาต"
 
 msgctxt "port-forwarding-view"
 msgid "open: %(port)d"
@@ -5247,10 +3600,6 @@ msgstr "มัลติฮอป Warren"
 msgctxt "warren-multi-hop-view"
 msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
 msgstr "เมื่อเปิดใช้งาน ทราฟฟิกจะถูกกำหนดเส้นทางผ่านรีเลย์ Warren สองตัว (ทางเข้าแล้วจึงทางออก) โดยใช้การเข้ารหัสแบบ end-to-end ด้วย HPKE ระหว่างไคลเอนต์และทางออก รีเลย์ทางเข้าเห็นเฉพาะข้อความที่เข้ารหัสไว้ ส่วนทางออกเห็นเฉพาะข้อมูลที่ถอดรหัสแล้ว ไม่เห็น IP ของผู้ใช้"
-
-msgctxt "warren-multi-hop-view"
-msgid "auto"
-msgstr "อัตโนมัติ"
 
 msgctxt "warren-pubkey-warning"
 msgid "Cryptographic mismatch details"
@@ -5376,14 +3725,6 @@ msgstr "กำลังลงนาม โปรดรอสักครู่"
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "ฟอรัมชุมชน"
-
-msgctxt "tunnel-control"
-msgid "Connecting..."
-msgstr "กำลังเชื่อมต่อ..."
-
-msgctxt "tunnel-control"
-msgid "Encrypting your connection"
-msgstr "กำลังเข้ารหัสการเชื่อมต่อของคุณ"
 
 msgctxt "tunnel-control"
 msgid "Random location"

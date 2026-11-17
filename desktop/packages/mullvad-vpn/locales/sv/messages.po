@@ -12,17 +12,8 @@ msgstr ""
 "Language: sv_SE\n"
 "PO-Revision-Date: 2026-04-27 09:12\n"
 
-msgid "%(amount)d more..."
-msgstr "%(amount)d till ..."
-
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "%(duration)s har lagts till. Kontot är betalt till och med %(expiry)s."
-
-#. The label for the QUIC port option.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgid "%(wireguard)s port"
-msgstr "%(wireguard)s-port"
 
 msgid "1 day"
 msgid_plural "%d days"
@@ -105,14 +96,8 @@ msgstr "Anslut"
 msgid "Connected"
 msgstr "Ansluten"
 
-msgid "CONNECTED"
-msgstr "ANSLUTEN"
-
 msgid "Connecting"
 msgstr "Ansluter"
-
-msgid "CONNECTING..."
-msgstr "ANSLUTER ..."
 
 msgid "Create"
 msgstr "Skapa"
@@ -156,14 +141,8 @@ msgstr "Koppla från och avsluta"
 msgid "Disconnected"
 msgstr "Frånkopplad"
 
-msgid "DISCONNECTED"
-msgstr "FRÅNKOPPLAD"
-
 msgid "Disconnecting"
 msgstr "Kopplar från"
-
-msgid "DISCONNECTING..."
-msgstr "KOPPLAR FRÅN ..."
 
 msgid "Edit"
 msgstr "Redigera"
@@ -178,16 +157,8 @@ msgstr "Aktivera ändå"
 msgid "Enable direct only"
 msgstr "Aktivera Endast direkt"
 
-#. Error message shown trying to login but the app fails
-#. to fetch the list of registered devices.
-msgid "Failed to fetch list of devices"
-msgstr "Det gick inte att hämta lista med enheter"
-
 msgid "FAILED TO SECURE CONNECTION"
 msgstr "DET GICK INTE ATT SÄKRA ANSLUTNINGEN"
-
-msgid "Filters"
-msgstr "Filter"
 
 #. Button label for system settings.
 msgid "Go to System Settings"
@@ -234,9 +205,6 @@ msgstr "Inga överensstämmande servrar hittades"
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "Inga resultat för <b>%(searchTerm)s</b>."
 
-msgid "None"
-msgstr "Inget"
-
 msgid "Off"
 msgstr "Av"
 
@@ -269,10 +237,6 @@ msgstr "Avsluta"
 
 msgid "Reconnect"
 msgstr "Återanslut"
-
-#. Button label in confirmation dialog that confirms a remove action.
-msgid "Remove"
-msgstr "Ta bort"
 
 msgid "Required"
 msgstr "Obligatoriskt"
@@ -323,23 +287,9 @@ msgstr "Använd"
 msgid "Username"
 msgstr "Användarnamn"
 
-#. Text for screen readers to describe the LWO settings navigation button.
-#. Available placeholders:
-#. %(lwo)s - will be replaced with LWO
-msgctxt "accessibility"
-msgid "%(lwo)s settings"
-msgstr "%(lwo)s-inställningar"
-
 msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s, visa laddad"
-
-#. Text for screen readers to describe the QUIC port settings navigation button.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgctxt "accessibility"
-msgid "%(wireguard)s port settings"
-msgstr "%(wireguard)s-portinställningar"
 
 #. This is an accessibility label for a button that adds a location to a custom list.
 #. Available placeholders:
@@ -369,12 +319,6 @@ msgctxt "accessibility"
 msgid "Connect to %(location)s"
 msgstr "Anslut till %(location)s"
 
-#. Provided to accessibility tools such as screenreaders to describe a button
-#. which copies the account number to the clipboard.
-msgctxt "accessibility"
-msgid "Copy account number"
-msgstr "Kopiera kontonummer"
-
 #. Accessibility label for a carousel that explains the DAITA feature to the user.
 msgctxt "accessibility"
 msgid "DAITA information carousel"
@@ -402,21 +346,6 @@ msgctxt "accessibility"
 msgid "Expand %(location)s"
 msgstr "Visa %(location)s"
 
-#. This is used by screenreaders to communicate the "x" button next to a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the account number to the left of the button
-msgctxt "accessibility"
-msgid "Forget account number %(accountNumber)s"
-msgstr "Glöm kontonumret %(accountNumber)s"
-
-#. Accessibility label for link to VPN settings where
-#. the user can change QUIC port.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "accessibility"
-msgid "Go to anti-censorship settings to change %(wireGuard)s port"
-msgstr "Gå till inställningar för anti-censur för att ändra %(wireGuard)s-port"
-
 #. Accessibility label for link to app upgrade view.
 msgctxt "accessibility"
 msgid "Go to app update page"
@@ -429,12 +358,6 @@ msgctxt "accessibility"
 msgid "Go to slide %(index)s"
 msgstr "Gå till bild %(index)s"
 
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which obscures the account number.
-msgctxt "accessibility"
-msgid "Hide account number"
-msgstr "Dölj kontonummer"
-
 #. Alt text for an illustration showing VPN traffic with DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic with DAITA enabled"
@@ -444,18 +367,6 @@ msgstr "Bild som visar VPN-trafik när DAITA är aktiverat"
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic without DAITA"
 msgstr "Bild som visar VPN-trafik utan DAITA"
-
-#. This is used by screenreaders to communicate the login button.
-msgctxt "accessibility"
-msgid "Login"
-msgstr "Logga in"
-
-#. This is used by screenreaders to communicate logging in with a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the saved account number
-msgctxt "accessibility"
-msgid "Login with account number %(accountNumber)s"
-msgstr "Logga in med kontonumret %(accountNumber)s"
 
 msgctxt "accessibility"
 msgid "More information"
@@ -515,14 +426,6 @@ msgctxt "accessibility"
 msgid "Remove %(location)s from %(customList)s"
 msgstr "Ta bort %(location)s från %(customList)s"
 
-#. Button action description provided to accessibility tools such as screen
-#. readers.
-#. Available placeholders:
-#. %(deviceName)s - The device name to remove.
-msgctxt "accessibility"
-msgid "Remove device named %(deviceName)s"
-msgstr "Ta bort enheten med namnet %(deviceName)s"
-
 msgctxt "accessibility"
 msgid "Remove item"
 msgstr "Ta bort föremål"
@@ -531,32 +434,10 @@ msgctxt "accessibility"
 msgid "Select location. Current location is %(location)s"
 msgstr "Välj plats. Nuvarande plats är %(location)s"
 
-msgctxt "accessibility"
-msgid "Shadowsocks settings"
-msgstr "Shadowsocks-inställningar"
-
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which unobscures the account number.
-msgctxt "accessibility"
-msgid "Show account number"
-msgstr "Visa kontonummer"
-
-msgctxt "accessibility"
-msgid "UDP-over-TCP settings"
-msgstr "UDP över TCP-inställningar"
-
-msgctxt "accessibility"
-msgid "Use the right arrow key to focus the settings button."
-msgstr "Använd höger pil för att fokusera inställningsknappen."
-
 #. Title label in navigation bar
 msgctxt "account-view"
 msgid "Account"
 msgstr "Konto"
-
-msgctxt "account-view"
-msgid "Account number"
-msgstr "Kontonummer"
 
 msgctxt "account-view"
 msgid "Currently unavailable"
@@ -566,11 +447,6 @@ msgstr "Inte tillgänglig för närvarande"
 msgctxt "account-view"
 msgid "Log out"
 msgstr "Logga ut"
-
-#. Link text in the account view to navigate to the manage devices view.
-msgctxt "account-view"
-msgid "Manage devices"
-msgstr "Hantera enheter"
 
 msgctxt "account-view"
 msgid "OUT OF TIME"
@@ -617,21 +493,6 @@ msgstr "Stäng av"
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
 msgstr "Anti-censur"
-
-#. The title for the obfuscation method selector.
-msgctxt "anti-censorship-view"
-msgid "Method"
-msgstr "Metod"
-
-#. Second paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "Please note that these methods do not improve performance, and may increase system utilization and battery consumption."
-msgstr "Observera att dessa metoder inte förbättrar prestandan och kan komma att öka systemanvändningen och batteriförbrukningen."
-
-#. First paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "Dessa metoder kan vara användbara i situationer där du blockeras från att nå Warren. När \"Automatiskt\" är valt försöker appen med alla metoder tills en fungerar."
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -863,12 +724,6 @@ msgctxt "app-upgrade-view"
 msgid "Connection blocked. Try changing server or other settings."
 msgstr "Anslutning blockerad. Prova att ändra servern eller övriga inställningar."
 
-#. Label displayed when an error occurred due to the installer failing to start
-#. and the suggested resolution is to download the update again.
-msgctxt "app-upgrade-view"
-msgid "Could not open installer, please try again or send a problem report."
-msgstr "Det gick inte att öppna installationsprogrammet. Försök igen eller skicka en problemrapport."
-
 #. Button text to download and install an update
 msgctxt "app-upgrade-view"
 msgid "Download & install"
@@ -883,11 +738,6 @@ msgstr "Nedladdningen har slutförts!"
 msgctxt "app-upgrade-view"
 msgid "Download failed"
 msgstr "Det gick inte att ladda ned"
-
-#. Label displayed when an error occurred due to the download failing
-msgctxt "app-upgrade-view"
-msgid "Download failed, please check your connection/firewall and try again, or send a problem report."
-msgstr "Det gick inte att ladda ned. Kontrollera din anslutning/brandvägg och försök igen eller skicka en problemrapport."
 
 #. Status text displayed below a progress bar when the download of an update has been paused
 #. Label displayed above a progress bar when the update is verified successfully
@@ -917,11 +767,6 @@ msgctxt "app-upgrade-view"
 msgid "Install update"
 msgstr "Installera uppdateringen"
 
-#. Label displayed when an error occurred within the installer
-msgctxt "app-upgrade-view"
-msgid "Installer quit unexpectedly, please try again or send a problem report."
-msgstr "Installationsprogrammet avslutades oväntat. Försök igen eller skicka en problemrapport."
-
 #. Info about which directory the app update will be downloaded to
 msgctxt "app-upgrade-view"
 msgid "Installer will be downloaded to <b>%(cacheDir)s</b>."
@@ -940,11 +785,6 @@ msgstr "Inga uppdateringar eller ändringar har gjorts i den här versionen för
 msgctxt "app-upgrade-view"
 msgid "Pause"
 msgstr "Pausa"
-
-#. Button text to report a problem
-msgctxt "app-upgrade-view"
-msgid "Report a problem"
-msgstr "Rapportera ett problem"
 
 #. Button text to resume updating
 msgctxt "app-upgrade-view"
@@ -971,21 +811,11 @@ msgctxt "app-upgrade-view"
 msgid "Starting installer..."
 msgstr "Startar installationsprogrammet ..."
 
-#. Label displayed when an unknown error occurred
-msgctxt "app-upgrade-view"
-msgid "Unknown error occurred. Please try again or send a problem report."
-msgstr "Ett okänt fel har inträffat. Försök igen eller skicka en problemrapport."
-
 #. Title in navigation bar
 #. Main title for the update available view
 msgctxt "app-upgrade-view"
 msgid "Update available"
 msgstr "Uppdatering tillgänglig"
-
-#. Label displayed when an error occurred due to the installer failed verification
-msgctxt "app-upgrade-view"
-msgid "Verification failed, please try again or send a problem report."
-msgstr "Det gick inte att verifiera. Försök igen eller skicka en problemrapport."
 
 #. Label displayed above a progress bar when the update is verified successfully
 msgctxt "app-upgrade-view"
@@ -1056,14 +886,6 @@ msgstr "Blockerar internet: kontots tidsgräns har uppnåtts"
 msgctxt "auth-failure"
 msgid "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly."
 msgstr "Det här kontot har för många samtidiga anslutningar. Koppla från en annan enhet eller försök att ansluta igen inom kort."
-
-msgctxt "auth-failure"
-msgid "Unable to authenticate account. Please send a problem report."
-msgstr "Det går inte att autentisera kontot. Skicka en problemrapport."
-
-msgctxt "auth-failure"
-msgid "You are logged in with an invalid account number. Please log out and try another one."
-msgstr "Du är inloggad med ett ogiltigt kontonummer. Logga ut och försök med ett annat."
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
@@ -1158,10 +980,6 @@ msgstr[0] "%(count)d app i ett annat land"
 msgstr[1] "%(count)d appar i andra länder"
 
 msgctxt "connect-view"
-msgid "Active features"
-msgstr "Aktiva funktioner"
-
-msgctxt "connect-view"
 msgid "Congrats!"
 msgstr "Grattis!"
 
@@ -1185,10 +1003,6 @@ msgstr "Ange kupongkod"
 msgctxt "connect-view"
 msgid "Go ahead and start using the app to begin reclaiming your online privacy."
 msgstr "Sätt igång och börja använda appen för att ta tillbaka din onlinesekretess."
-
-msgctxt "connect-view"
-msgid "Here’s your account number. Save it!"
-msgstr "Här är ditt kontonummer. Spara det!"
 
 #. Button label for opening privacy information link.
 msgctxt "connect-view"
@@ -1393,43 +1207,6 @@ msgctxt "custom-list-feature"
 msgid "Relay"
 msgstr "Relä"
 
-#. Button for continuing login process.
-msgctxt "device-management"
-msgid "Continue with login"
-msgstr "Fortsätt med inloggning"
-
-#. Label informing the user when a device was created.
-#. Available placeholders:
-#. %(createdDate)s - The creation date of the device.
-msgctxt "device-management"
-msgid "Created: %(createdDate)s"
-msgstr "Skapades: %(createdDate)s"
-
-#. Label indicating that this device is the current device.
-msgctxt "device-management"
-msgid "Current device"
-msgstr "Aktuell enhet"
-
-msgctxt "device-management"
-msgid "Device is inactive"
-msgstr "Enheten är inaktiv"
-
-msgctxt "device-management"
-msgid "Device name"
-msgstr "Enhetens namn"
-
-#. A label that will display the newly created device name to inform the user
-#. about it.
-#. Available placeholders:
-#. %(deviceName)s - The name of the current device
-msgctxt "device-management"
-msgid "Device name: %(deviceName)s"
-msgstr "Enhetsnamn: %(deviceName)s"
-
-msgctxt "device-management"
-msgid "Failed to remove device"
-msgstr "Det gick inte att ta bort enheten"
-
 #. Button label for navigating to login.
 msgctxt "device-management"
 msgid "Go to login"
@@ -1439,10 +1216,6 @@ msgctxt "device-management"
 msgid "Going to login will unblock the Internet on this device."
 msgstr "Om du loggar in avblockeras internet på den här enheten."
 
-msgctxt "device-management"
-msgid "If you log out, the device and the device name is removed. When you log back in again, the device will get a new name."
-msgstr "Om du loggar ut tas enheten och enhetsnamnet bort. När du loggar in igen får enheten ett nytt namn."
-
 #. Title label in navigation bar for the manage devices view.
 #. Title text in the manage devices view
 msgctxt "device-management"
@@ -1450,68 +1223,13 @@ msgid "Manage devices"
 msgstr "Hantera enheter"
 
 msgctxt "device-management"
-msgid "Please log out of at least one by removing it from the list below. You can find the corresponding device name under the device’s Account settings."
-msgstr "Logga ut på minst en enhet genom att ta bort den från listan nedan. Du hittar motsvarande enhetsnamn i enhetens kontoinställningar."
-
-#. Button label for confirming removing a device.
-msgctxt "device-management"
-msgid "Remove"
-msgstr "Ta bort"
-
-#. Text displayed above button which logs out another device.
-#. The text enclosed in "<b></b>" will appear bold.
-#. Available placeholders:
-#. %(deviceName)s - The name of the device to log out.
-msgctxt "device-management"
-msgid "Remove <em>%(deviceName)s?</em>"
-msgstr "Ta bort <em>%(deviceName)s?</em>"
-
-#. Page title informing user that enough devices has been removed to continue
-#. login process.
-msgctxt "device-management"
-msgid "Super!"
-msgstr "Super!"
-
-msgctxt "device-management"
-msgid "The device will be removed from the list and logged out."
-msgstr "Enheten tas bort från listan och loggas ut."
-
-msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "Det här är namnet som tilldelas enheten. Varje enhet som är inloggad på ett Warren-konto får ett unikt namn som hjälper dig att identifiera den när du hanterar dina enheter i appen eller på webbplatsen."
-
-msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
 msgstr "Tid kvar: %(timeLeft)s"
-
-#. Page title informing user that the login failed due to too many registered
-#. devices on account.
-msgctxt "device-management"
-msgid "Too many devices"
-msgstr "För många enheter"
 
 #. Button text to retry fetching devices.
 msgctxt "device-management"
 msgid "Try again"
 msgstr "Försök igen"
-
-#. Subtitle text in the manage devices view, explaining
-#. devices and what they can do in the manage devices view.
-msgctxt "device-management"
-msgid "View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily."
-msgstr "Visa och hantera alla dina inloggade enheter. Du kan ha upp till fem enheter åt gången på ett konto. Varje enhet får ett namn när den loggas in så att du enklare kan skilja dem åt."
-
-msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Warren account."
-msgstr "Upp till fem enheter kan vara inloggade på ett Warren-konto."
-
-msgctxt "device-management"
-msgid "You can now continue logging in on this device."
-msgstr "Du kan nu fortsätta med att logga in på den här enheten."
-
-msgctxt "device-management"
-msgid "You have removed this device. To connect again, you will need to log back in."
-msgstr "Du har tagit bort den här enheten. Du måste logga in igen för att återansluta."
 
 #. The message displayed to the user in case of critical error in the GUI
 #. Available placeholders:
@@ -1671,10 +1389,6 @@ msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
 msgstr "NÄTVERKSTRAFIKEN KANSKE LÄCKER"
 
 msgctxt "in-app-notifications"
-msgid "NEW DEVICE CREATED"
-msgstr "NY ENHET HAR SKAPATS"
-
-msgctxt "in-app-notifications"
 msgid "NEW VERSION INSTALLED"
 msgstr "NY VERSION INSTALLERAD"
 
@@ -1705,11 +1419,6 @@ msgctxt "in-app-notifications"
 msgid "Retry installation"
 msgstr "Prova att installera igen"
 
-#. Button label to send a problem report.
-msgctxt "in-app-notifications"
-msgid "Send problem report"
-msgstr "Skicka problemrapport"
-
 msgctxt "in-app-notifications"
 msgid "SERVER MAINTENANCE"
 msgstr "SERVERUNDERHÅLL"
@@ -1728,20 +1437,6 @@ msgstr "Installationsprogrammet kunde inte slutföras."
 msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "Det gick inte att starta installationsprogrammet."
-
-#. Notification subtitle indicating the user is using an unsupported port for QUIC.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "in-app-notifications"
-msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
-msgstr "Den valda %(wireGuard)s-porten stöds inte. <a>Ändra den i VPN-inställningarna.</a>"
-
-#. Notification text when a new device has been created.
-#. Available placeholders:
-#. - %(deviceName)s: Name of created device.
-msgctxt "in-app-notifications"
-msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
-msgstr "Den här enheten heter nu <em>%(deviceName)s</em>. Du hittar mer information i <a>Hantera enheter</a> under Konto."
 
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
@@ -1832,11 +1527,6 @@ msgctxt "launch-view"
 msgid "Failed to start the app, please try again or click “Details” for more info"
 msgstr "Det gick inte att starta appen. Försök igen eller klicka på \"Detaljer\" för mer information"
 
-#. Message in troubleshooting modal advising user to send a problem report if the steps do not work.
-msgctxt "launch-view"
-msgid "If these steps do not work please send a problem report."
-msgstr "Skicka en problemrapport om dessa steg inte fungerar."
-
 #. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
 msgid "Only the account that set Warren up, or an administrator, can use it here."
@@ -1882,11 +1572,6 @@ msgctxt "launch-view"
 msgid "Restarting your computer"
 msgstr "Starta om din dator"
 
-#. Button label for sending a problem report.
-msgctxt "launch-view"
-msgid "Send problem report"
-msgstr "Skicka problemrapport"
-
 #. Status text shown when app is starting.
 msgctxt "launch-view"
 msgid "Starting up...."
@@ -1901,11 +1586,6 @@ msgstr "Det gick inte att starta Warren-bakgrundsprocessen. Bakgrundsprocessen �
 msgctxt "launch-view"
 msgid "Try again"
 msgstr "Försök igen"
-
-#. Message in launch view when the mullvad service cannot be contacted.
-msgctxt "launch-view"
-msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "Det går inte att kontakta Warrens systemtjänst och din anslutning kanske inte är säker. Felsök eller skicka en problemrapport genom att klicka på knappen \"Läs mer\"."
 
 #. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
 msgctxt "launch-view"
@@ -1962,109 +1642,16 @@ msgctxt "login-view"
 msgid "<b>%(lockdownModeSettingName)s</b> is enabled. Disable it to unblock your connection."
 msgstr "<b>%(lockdownModeSettingName)s</b> är aktiverat. Inaktivera för att sluta blockera din anslutning."
 
-msgctxt "login-view"
-msgid "Account created"
-msgstr "Kontot har skapats"
-
-msgctxt "login-view"
-msgid "Checking account number"
-msgstr "Kontrollerar kontonummer"
-
 #. Text in button that allows user to create a new account.
 msgctxt "login-view"
 msgid "Create a new account"
 msgstr "Skapa ett nytt konto"
-
-#. Button which confirms the action to create a new account.
-msgctxt "login-view"
-msgid "Create new account"
-msgstr "Skapa nytt konto"
-
-msgctxt "login-view"
-msgid "Creating account..."
-msgstr "Skapar konto..."
-
-#. Text that asks the user if they really want to create a new account.
-msgctxt "login-view"
-msgid "Do you want to create a new account?"
-msgstr "Vill du skapa ett nytt konto?"
-
-#. Text that asks the user if they really want to remove the saved account.
-msgctxt "login-view"
-msgid "Do you want to remove the saved account number?"
-msgstr "Vill du ta bort det sparade kontonumret?"
-
-msgctxt "login-view"
-msgid "Enter your account number"
-msgstr "Ange ditt kontonummer"
-
-msgctxt "login-view"
-msgid "Error"
-msgstr "Fel"
-
-msgctxt "login-view"
-msgid "Failed to create account"
-msgstr "Det gick inte att skapa konto"
-
-msgctxt "login-view"
-msgid "Finishing upgrade."
-msgstr "Slutför uppgradering."
-
-#. Error message shown above login input when trying to login with a
-#. non-existent account number.
-msgctxt "login-view"
-msgid "Invalid account number"
-msgstr "Ogiltigt kontonummer"
-
-msgctxt "login-view"
-msgid "Logged in"
-msgstr "Inloggad"
-
-msgctxt "login-view"
-msgid "Logging in..."
-msgstr "Loggar in..."
-
-#. Label for the login button.
-msgctxt "login-view"
-msgid "Login"
-msgstr "Logga in"
-
-msgctxt "login-view"
-msgid "Login failed"
-msgstr "Inloggningen misslyckades"
-
-#. Text shown between two horizontal lines above the "create account" button.
-#. In this context it is used to separate the users alternative of logging in
-#. or creating a new account, "Login or Create a new account".
-msgctxt "login-view"
-msgid "Or"
-msgstr "eller"
 
 #. This is a warning message shown when the app is blocking the users
 #. internet connection while logged out.
 msgctxt "login-view"
 msgid "Our kill switch is currently blocking your connection."
 msgstr "Vår Kill Switch blockerar din anslutning just nu."
-
-msgctxt "login-view"
-msgid "Please wait"
-msgstr "Vänta"
-
-#. Text that informs the user about the consequences of clearing the saved
-#. account number.
-msgctxt "login-view"
-msgid "Removing the saved account number from this device cannot be undone."
-msgstr "Det går inte att ångra borttagningen av det sparade kontonumret från den här enheten."
-
-#. Error message shown above login input when trying to login to an account
-#. with too many registered devices.
-msgctxt "login-view"
-msgid "Too many devices"
-msgstr "För många enheter"
-
-msgctxt "login-view"
-msgid "Unknown error"
-msgstr "Okänt fel"
 
 msgctxt "login-view"
 msgid "Upgrading..."
@@ -2074,42 +1661,6 @@ msgstr "Uppgraderar ..."
 msgctxt "login-view"
 msgid "Warren could not restore your account right now. Check your internet connection and try again."
 msgstr "Warren kunde inte återställa ditt konto just nu. Kontrollera din internetanslutning och försök igen."
-
-msgctxt "login-view"
-msgid "Valid account number"
-msgstr "Giltigt kontonummer"
-
-#. Text that informs the users about consequences of creating a new account.
-msgctxt "login-view"
-msgid "You already have a saved account number, by creating a new account the saved account number will be removed from this device. This cannot be undone."
-msgstr "Du har redan ett sparat kontonummer. Om du skapar ett nytt konto tas det sparade kontonumret bort från enheten. Det går inte att ångra detta."
-
-#. The title for the LWO port selector.
-msgctxt "lwo-settings-view"
-msgid "Port"
-msgstr "Port"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "lwo-settings-view"
-msgid "Port: %(port)s"
-msgstr "Port: %(port)s"
-
-msgctxt "lwo-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "Den automatiska inställningen väljer slumpmässigt från giltiga portintervall som visas nedan."
-
-msgctxt "lwo-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "Den anpassade porten kan vara ett värde inom de giltiga intervallen: %(portRanges)s."
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "lwo-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "Giltiga intervall: %(portRanges)s"
 
 #. Title label in navigation bar
 msgctxt "navigation-bar"
@@ -2285,32 +1836,8 @@ msgid "Unable to apply firewall rules. Try updating your kernel."
 msgstr "Det går inte att använda brandväggsregler. Testa att uppdatera din operativsystemkärna."
 
 msgctxt "notifications"
-msgid "Unable to block all network traffic. Please troubleshoot or send a problem report."
-msgstr "Det går inte att blockera all nätverkstrafik. Felsök eller skicka en problemrapport."
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software or send a problem report."
-msgstr "Det går inte att blockera all nätverkstrafik. Försök att tillfälligt inaktivera antivirus- eller säkerhetsprogram från tredje part eller skicka en problemrapport."
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try updating your kernel or send a problem report."
-msgstr "Det går inte att blockera all nätverkstrafik. Testa att uppdatera din kernel eller skicka en problemrapport."
-
-msgctxt "notifications"
-msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
-msgstr "Det går inte att kommunicera med Warrens kerneldrivrutin. Testa att ansluta igen eller skicka en problemrapport."
-
-msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
 msgstr "Det går inte att lösa värd för anpassad tunnel. Försök att ändra inställningarna."
-
-msgctxt "notifications"
-msgid "Unable to set system DNS server. Please send a problem report."
-msgstr "Det går inte att konfigurera DNS-server. Skicka en problemrapport."
-
-msgctxt "notifications"
-msgid "Unable to start tunnel connection. Please send a problem report."
-msgstr "Det går inte att starta tunnelanslutning. Skicka en problemrapport."
 
 msgctxt "notifications"
 msgid "Unable to start tunnel connection. This could be because of conflicts with VMware, please troubleshoot."
@@ -2443,10 +1970,6 @@ msgstr "Lös in kupong"
 msgctxt "redeem-voucher-view"
 msgid "An error occurred."
 msgstr "Ett fel har inträffat."
-
-msgctxt "redeem-voucher-view"
-msgid "It looks like you’ve entered an account number instead of a voucher code. If you would like to change the active account, please log out first."
-msgstr "Det verkar som om du angett ett kontonummer istället för en kupongkod. Logga först ut om du vill ändra den aktiva koden."
 
 #. Button label for voucher redemption.
 msgctxt "redeem-voucher-view"
@@ -2688,10 +2211,6 @@ msgid "Choose"
 msgstr "Välj"
 
 msgctxt "split-tunneling-view"
-msgid "Choose the apps you want to exclude from the VPN tunnel."
-msgstr "Välj de appar du vill exkludera från VPN-tunneln."
-
-msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
 msgstr "%(country)s: städer"
 
@@ -2792,10 +2311,6 @@ msgstr "Snap-appar kan inte använda ett land än"
 msgctxt "split-tunneling-view"
 msgid "To use %(splitTunneling)s, please update to a Linux kernel version that supports cgroup v2."
 msgstr "Om du vill använda %(splitTunneling)s ska du uppdatera till en Linux kärnversion som har stöd för cgroup v2."
-
-msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
-msgstr "Om du vill använda split tunneling ska du ge \"Fullständig diskåtkomst\" till \"Warren VPN\" i macOS-systeminställningarna."
 
 msgctxt "split-tunneling-view"
 msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
@@ -2966,107 +2481,15 @@ msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
 msgstr "Om %(applicationName)s redan körs ska du stänga den innan du startar den härifrån. Annars kanske den inte använder VPN."
 
-#. Button label for continuing problem report submission with an outdated app version.
-msgctxt "support-view"
-msgid "Continue anyway"
-msgstr "Fortsätt ändå"
-
-#. Button text to edit the message after a failed attempt to send the problem report.
-msgctxt "support-view"
-msgid "Edit message"
-msgstr "Redigera meddelande"
-
-msgctxt "support-view"
-msgid "Failed to send"
-msgstr "Det gick inte att skicka"
-
 #. Link to the webpage
 msgctxt "support-view"
 msgid "FAQs & Guides"
 msgstr "Vanliga frågor och guider"
 
-#. The message displayed to the user after submitting the problem report, given that the user left his or her email for us to reach back.
-#. Available placeholders:
-#. %(email)s
-msgctxt "support-view"
-msgid "If needed we will contact you at %(email)s"
-msgstr "Om det behövs kontaktar vi dig på %(email)s"
-
-msgctxt "support-view"
-msgid "If you exit the form and try again later, the information you already entered will still be here."
-msgstr "Om du lämnar formuläret och försöker igen senare kommer informationen du anger att finnas kvar."
-
-#. Title label in navigation bar
-#. Navigation button to the 'Report a problem' help view
-msgctxt "support-view"
-msgid "Report a problem"
-msgstr "Rapportera ett problem"
-
-#. Button label for sending the problem report.
-msgctxt "support-view"
-msgid "Send"
-msgstr "Skicka"
-
-#. Button label for sending the problem report without an email address.
-msgctxt "support-view"
-msgid "Send anyway"
-msgstr "Skicka ändå"
-
-msgctxt "support-view"
-msgid "Sending..."
-msgstr "Skicka..."
-
-msgctxt "support-view"
-msgid "Sent"
-msgstr "Skickat"
-
 #. Title label in navigation bar
 msgctxt "support-view"
 msgid "Support"
 msgstr "Support"
-
-msgctxt "support-view"
-msgid "Thanks!"
-msgstr "Tack!"
-
-msgctxt "support-view"
-msgid "To assist you better, please write in English or Swedish and include which country you are connecting from."
-msgstr "Skriv på engelska eller svenska och ange från vilket land du är ansluten så att vi kan hjälpa dig bättre."
-
-msgctxt "support-view"
-msgid "To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel."
-msgstr "För att hjälpa dig mer effektivt kommer appens loggfil att bifogas i detta meddelande. Dina uppgifter förblir säkra och privata, eftersom de anonymiseras innan de skickas över en krypterad kanal."
-
-#. Button label for retrying problem report submission after a failure.
-msgctxt "support-view"
-msgid "Try again"
-msgstr "Försök igen"
-
-#. Button label for updating the app to the latest version.
-msgctxt "support-view"
-msgid "Update app"
-msgstr "Uppdatera appen"
-
-#. Button label for opening app logs.
-msgctxt "support-view"
-msgid "View app logs"
-msgstr "Visa appens loggar"
-
-msgctxt "support-view"
-msgid "We will look into this."
-msgstr "Vi kommer att undersöka detta."
-
-msgctxt "support-view"
-msgid "You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address."
-msgstr "Du är på väg att skicka problemrapporten utan att vi har möjlighet att besvara dig. Om du vill ha svar på din rapport måste du ange en e-postadress."
-
-msgctxt "support-view"
-msgid "You are using an old version of the app. Please upgrade and see if the problem still exists before sending a report."
-msgstr "Du använder en gammal version av appen. Uppgradera och se om problemet kvarstår innan du skickar en rapport."
-
-msgctxt "support-view"
-msgid "Your email (optional)"
-msgstr "Din e-postadress (valfritt)"
 
 #. Link to the refund policy webpage
 msgctxt "support-view"
@@ -3104,10 +2527,6 @@ msgstr "Aktivera \"Fullständig diskåtkomst\" för \"Warren VPN\" i macOS-syste
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
 msgstr "Det gick inte att aktivera split tunneling. Det kan bero på att appen saknar systembehörigheter. Det här kan du göra:"
-
-msgctxt "troubleshoot"
-msgid "If these steps do not work please send a problem report."
-msgstr "Om dessa steg inte fungerar kan du skicka en problemrapport."
 
 msgctxt "troubleshoot"
 msgid "If you have installed another VPN then try to uninstall that."
@@ -3178,14 +2597,6 @@ msgstr "Endast valda appar är skyddade"
 msgctxt "tunnel-control"
 msgid "Connection interrupted"
 msgstr "Anslutningen avbröts"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map"
-msgstr "Animera karta"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map movements."
-msgstr "Animera kartrörelser."
 
 msgctxt "user-interface-settings-view"
 msgid "Enable or disable system notifications. The critical notifications will always be displayed."
@@ -3607,44 +3018,13 @@ msgctxt "warren-pubkey-warning"
 msgid "The key changed again before it could be trusted. Review the new key and try again."
 msgstr "Nyckeln ändrades igen innan den hann godkännas. Granska den nya nyckeln och försök igen."
 
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "UDP-over-TCP"
-msgstr "UDP över TCP"
-
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s (%(daitaFull)s) hides patterns in your encrypted VPN traffic."
 msgstr "%(daita)s (%(daitaFull)s) döljer mönster i din krypterade VPN-trafik."
 
 msgctxt "wireguard-settings-view"
-msgid "%(daita)s does this by carefully adding network noise and making all network packets the same size."
-msgstr "%(daita)s gör det genom att noggrant lägga till nätverksbrus och se till så att alla nätverkspaket har samma storlek."
-
-msgctxt "wireguard-settings-view"
-msgid "%(wireguard)s port"
-msgstr "%(wireguard)s-port"
-
-#. Page title for QUIC port view
-msgctxt "wireguard-settings-view"
-msgid "%(wireGuard)s port"
-msgstr "%(wireGuard)s-port"
-
-msgctxt "wireguard-settings-view"
-msgid "Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans."
-msgstr "Obs! Detta ökar nätverkstrafiken men påverkar också hastighet, fördröjning och batterianvändning negativt. Var försiktig om du har ett abonnemang med begränsad datamängd."
-
-msgctxt "wireguard-settings-view"
 msgid "By enabling “%(directOnly)s” you will have to manually select a server that is %(daita)s-enabled. This can cause you to end up in a blocked state until you have selected a compatible server in the “Select location” view."
 msgstr "Om du aktiverar \"%(directOnly)s\" måste du manuellt välja en server som är %(daita)s-aktiverad. Det kan leda till ett blockerat tillstånd tills du väljer en kompatibel server i \"Välj plats\"-vyn."
-
-msgctxt "wireguard-settings-view"
-msgid "By using sophisticated AI it’s possible to analyze the traffic of data packets going in and out of your device (even if the traffic is encrypted)."
-msgstr "Med sofistikerad AI är det möjligt att analysera trafiken för datapaket som går in och ut från din enhet (även om trafiken är krypterad)."
 
 msgctxt "wireguard-settings-view"
 msgid "Cancel"
@@ -3654,10 +3034,6 @@ msgstr "Avbryt"
 msgctxt "wireguard-settings-view"
 msgid "Device IP version"
 msgstr "Enhetens IP-version"
-
-msgctxt "wireguard-settings-view"
-msgid "If an observer monitors these data packets, %(daita)s makes it significantly harder for them to identify which websites you are visiting or with whom you are communicating."
-msgstr "Om dessa datapaket övervakas av en observatör, gör %(daita)s det svårare för dem att identifiera vilka webbplatser du besöker eller vem du kommunicerar med."
 
 msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
@@ -3671,37 +3047,13 @@ msgid "MTU"
 msgstr "MTU"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop"
-msgstr "Multihopp"
-
-msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Multihopp används för att aktivera DAITA för din valda plats"
-
-msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
-msgstr "Multihop skickar in din trafik genom en QUIC-server och ut genom en annan, så att det finns ytterligare en server mellan dig och webbplatserna du besöker. Det ökar latensen."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. In order to use the internet, you might have to select a new location after enabling."
 msgstr "Det är inte alla våra servrar som är %(daita)s-aktiverade. Om du vill använda internet kanske du måste välja en ny plats efter aktivering."
-
-msgctxt "wireguard-settings-view"
-msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
-msgstr "Det är inte alla våra servrar som är %(daita)s-aktiverade. Därför använder vi multihopp automatiskt för att aktivera %(daita)s med alla servrar."
-
-#. The title for the QUIC port selector.
-msgctxt "wireguard-settings-view"
-msgid "Port"
-msgstr "Port"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "wireguard-settings-view"
-msgid "Port: %(port)s"
-msgstr "Port: %(port)s"
 
 #. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
@@ -3724,14 +3076,6 @@ msgid "Shadowsocks"
 msgstr "Shadowsocks"
 
 msgctxt "wireguard-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "Den automatiska inställningen väljer slumpmässigt från giltiga portintervall som visas nedan."
-
-msgctxt "wireguard-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "Den anpassade porten kan vara ett värde inom de giltiga intervallen: %(portRanges)s."
-
-msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "Den här funktionen skyddar din trafik till utgångsservern mot möjliga attacker från kvantdatorer."
 
@@ -3739,910 +3083,8 @@ msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
 msgstr "UDP över TCP"
 
-#. Text describing the valid port range for a port selector.
-msgctxt "wireguard-settings-view"
-msgid "Valid range: %(min)s - %(max)s"
-msgstr "Giltigt intervall: %(min)s-%(max)s"
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "wireguard-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "Giltiga intervall: %(portRanges)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
-msgstr "Vilken TCP-port som UDP-över-TCP-obfuskeringsprotokoll bör ansluta till på VPN-servern."
-
-msgid "%1$s more..."
-msgstr "%1$s till ..."
-
-msgid "%1$s was added to \"%2$s\""
-msgstr "%1$s har lagts till i \"%2$s\""
-
-msgid "%1$s was removed from \"%2$s\""
-msgstr "%1$s har tagits bort från \"%2$s\""
-
-msgid "%1$s, %2$s, %3$s"
-msgstr "%1$s, %2$s, %3$s"
-
-msgid "%s (Entry)"
-msgstr "%s (start)"
-
-msgid "%s (Exit)"
-msgstr "%s (slut)"
-
-msgid "%s (added)"
-msgstr "%s (har lagts till)"
-
-msgid "%s (removed)"
-msgstr "%s (har tagits bort)"
-
-msgid "%s is already selected as entry relay"
-msgstr "%s har redan valts som ingångsrelä"
-
-msgid "%s is already selected as exit relay"
-msgstr "%s har redan valts som utgångsrelä"
-
-msgid "%s is unavailable"
-msgstr "%s är inte tillgänglig"
-
-msgid "%s settings."
-msgstr "%s-inställningar."
-
-msgid "%s was added to your account."
-msgstr "%s har lagts till i ditt konto."
-
-msgid "(%d)"
-msgstr "(%d)"
-
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
-msgstr "1. Efter att du har klickat på \"Gå till VPN-inställningar\" nedan klickar du på kugghjulet bredvid namnet \"Warren VPN\"."
-
-msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
-msgstr "2. Om du vill aktivera Anslut automatiskt klickar du på växlingsknappen bredvid \"Alltid på-VPN\"."
-
-msgid "3. To enable Lockdown mode, click on the toggle next to \"Block connections without VPN\".<br /><br /><b>Warning: This setting blocks split apps and the Local Network Sharing feature.</b>"
-msgstr "3. Om du vill aktivera Låsningsläge klickar du på växlingsknappen bredvid \"Blockera anslutningar utan VPN\".<br /><br /><b>Varning! Den här inställningen blockerar delade appar och funktionen Lokal nätverksdelning.</b>"
-
-msgid "30 days was added to your account."
-msgstr "30 dagar har lagts till i ditt konto."
-
-msgid "90 days was added to your account."
-msgstr "90 dagar har lagts till i ditt konto."
-
-msgid "<b>Account recovery will not be possible.</b>"
-msgstr "<b>Det går inte att återställa kontot.</b>"
-
-msgid "<b>Attention:</b> Only some servers support the full port range."
-msgstr "<b>Obs!</b> Enbart några servrar har stöd för hela portintervallet."
-
-msgid "<b>Attention:</b> The app will close automatically and needs to be manually opened again after selecting a new icon and title. This will not impact your VPN connection."
-msgstr "<b>Obs!</b> Appen stängs automatiskt och måste öppnas igen manuellt efter att du väljer en ny ikon och titel. Detta påverkar inte din VPN-anslutning."
-
-msgid "<b>Please note that these methods do not improve performance, and may increase system utilization and battery consumption.</b>"
-msgstr "<b>Observera att dessa metoder inte förbättrar prestandan och kan komma att öka systemanvändningen och batteriförbrukningen.</b>"
-
-msgid "<b>This action cannot be undone.</b>"
-msgstr "<b>Det går inte att ångra åtgärden.</b>"
-
-msgid "<b>Warning:</b>"
-msgstr "<b>Varning:</b>"
-
-msgid "<b>You will lose access to this account on all devices.</b>"
-msgstr "<b>Du förlorar åtkomsten till kontot på alla enheter.</b>"
-
-msgid "API reachable, adding method..."
-msgstr "API kan nås, lägger till metod ..."
-
-msgid "API unreachable, save method anyway?"
-msgstr "API kan inte nås, spara metod ändå?"
-
-msgid "Account credit expires in a few minutes"
-msgstr "Kontokrediten slutar gälla om några minuter"
-
-msgid "Account deleted"
-msgstr "Kontot har tagits bort"
-
-msgid "Account number is too long, please enter a valid number"
-msgstr "Kontonumret är för långt, ange ett giltigt nummer"
-
-msgid "Account number must match"
-msgstr "Kontonumret måste stämma överens"
-
-msgid "Account recovery will not be possible."
-msgstr "Det går inte att återställa kontot."
-
-msgid "Account time reminders"
-msgstr "Påminnelser om kontotid"
-
-msgid "Add 30 days time (%s)"
-msgstr "Lägg till 30 dagar (%s)"
-
-msgid "Add 90 days time (%s)"
-msgstr "Lägg till 90 dagar (%s)"
-
-msgid "Add DNS server"
-msgstr "Lägg till DNS-server"
-
-msgid "Add locations"
-msgstr "Lägg till platser"
-
-msgid "Add time"
-msgstr "Lägg till tid"
-
-msgid "Add to list"
-msgstr "Lägg till i listan"
-
-msgid "Adding method..."
-msgstr "Lägger till metod ..."
-
-msgid "After updating a VPN app on Android 16, devices might end up in a state where VPN apps are no longer able to reach the internet."
-msgstr "När en VPN-app har uppdaterats på Android 16 kan enheterna hamna i ett tillstånd där VPN-apparna inte längre har åtkomst till internet."
-
-msgid "Agree and continue"
-msgstr "Godkänn och fortsätt"
-
-msgid "All"
-msgstr "Alla"
-
-msgid "All applications"
-msgstr "Alla applikationer"
-
-msgid "All overrides will be reset and servers IP addresses, in the Select location view, will go back to default."
-msgstr "Alla åsidosättningar återställs och servrarnas IP-adresser i vyn Välj plats återgår till standard."
-
-msgid "Always-on VPN assigned to %s"
-msgstr "Alltid på-VPN har tilldelats %s"
-
-msgid "Always-on VPN assigned to other VPN"
-msgstr "Alltid på-VPN har tilldelats en annan VPN"
-
-msgid "Android 16 has a known issue. Please restart your device and try again. To learn more,"
-msgstr "Android 16 har ett känt fel. Starta om din enhet och försök igen. Om du vill veta mer"
-
-msgid "Any remaining time will be null and void."
-msgstr "All återstående tid blir ogiltig."
-
-msgid "App icon"
-msgstr "Appikon"
-
-msgid "Appearance"
-msgstr "Utseende"
-
-msgid "Applying changes..."
-msgstr "Tillämpar ändringar …"
-
-msgid "Are you sure you want to log <b>%s</b> out?"
-msgstr "Vill du verkligen logga ut <b>%s</b>?"
-
-msgid "At least one method needs to be enabled"
-msgstr "Minst en metod måste vara aktiverad"
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, \"Local network sharing\" will not work."
-msgstr "Obs! Om \"Blockera anslutningar utan VPN\" är aktiverat fungerar inte \"Lokal nätverksdelning\"."
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, split apps will not have Internet. Always keep in mind that split tunneling is a privacy risk."
-msgstr "Obs! Om \"Blockera anslutningar utan VPN\" är aktiverat kommer inte delade appar att ha internet. Kom ihåg att det alltid finns en säkerhetsrisk med delade tunnlar."
-
-msgid "Attention: this setting cannot be used in combination with \"Use custom DNS server\"."
-msgstr "Obs! Den här inställningen kan inte användas tillsammans med \"Använd anpassad DNS-server\"."
-
-msgid "Auto-connect & Lockdown mode"
-msgstr "Anslut automatiskt och Låsningsläge"
-
-msgid "Auto-connect is called Always-on VPN in the Android system settings and it makes sure you are constantly connected to the VPN tunnel and auto connects after restart."
-msgstr "Anslut automatiskt kallas Alltid på-VPN i Androids systeminställningar och ser till att du är ansluten till VPN-tunneln oavbrutet och ansluter automatiskt efter omstart."
-
-msgid "Automatically connect on device start-up."
-msgstr "Anslut automatiskt när enheten startas."
-
-msgid "Blocking internet (device offline)"
-msgstr "Blockerar internet (enheten är offline)"
-
-msgid "Blocking..."
-msgstr "Blockerar ..."
-
-msgid "Browser"
-msgstr "Webbläsare"
-
-msgid "By attaching your account token it links this report to your account, which helps us resolve your issue quicker. All reports are automatically deleted after a period of time."
-msgstr "Om du bifogar din kontotoken länkas den här rapporten till ditt konto, vilket hjälper oss att lösa problemet snabbare. Alla rapporter tas bort automatiskt efter ett tag."
-
-msgid "By checking this box I agree to the risks involved with deleting my account"
-msgstr "Genom att markera rutan godkänner jag riskerna med att ta bort mitt konto"
-
-msgid "Can't connect?"
-msgstr "Kan du inte ansluta?"
-
-msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
-msgstr "Ändra titeln och ikonen för Warren VPN-appen på Android-enheten. Detta ändrar inte ikonen för Warren VPN-relaterade aviseringar."
-
-msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
-msgstr "Ändringar i DNS-relaterade inställningar kanske inte börjar gälla direkt på grund av cachade resultat."
-
-msgid "Clear input"
-msgstr "Rensa inmatning"
-
-msgid "Collapse"
-msgstr "Dölj"
-
-msgid "Connect on device start-up"
-msgstr "Anslut när enheten startas"
-
-msgid "Connect to a different network"
-msgstr "Anslut till ett annat nätverk"
-
-msgid "Connecting..."
-msgstr "Ansluter ..."
-
 msgid "Continue"
 msgstr "Fortsätt"
-
-msgid "Copied Warren account number to clipboard"
-msgstr "Kopierade Warren-kontonummer till urklipp"
-
-msgid "Copied logs to clipboard"
-msgstr "Loggarna har kopierats till urklipp"
-
-msgid "Copy"
-msgstr "Kopiera"
-
-msgid "Could not display remaining days."
-msgstr "Det gick inte att visa återstående dagar."
-
-msgid "Create new list"
-msgstr "Skapa ny lista"
-
-msgid "Creating account failed"
-msgstr "Det gick inte att skapa konto"
-
-msgid "Critical error (your attention is required)"
-msgstr "Kritiskt fel (kräver din uppmärksamhet)"
-
-msgid "Current: %s"
-msgstr "Aktuell: %s"
-
-msgid "Custom DNS server addresses %1$s are invalid"
-msgstr "De anpassade DNS-serveradresserna %1$s är ogiltiga"
-
-msgid "DNS settings might not go into effect immediately"
-msgstr "DNS-inställningarna kanske inte börjar gälla direkt"
-
-msgid "Delete \"%s\"?"
-msgstr "Ta bort \"%s\"?"
-
-msgid "Delete account"
-msgstr "Ta bort konto"
-
-msgid "Delete method"
-msgstr "Radera metod"
-
-msgid "Delete method?"
-msgstr "Radera metod?"
-
-msgid "Deleting your account cannot be undone."
-msgstr "Det går inte att ångra borttagningen av kontot."
-
-msgid "Deleting your account:"
-msgstr "Om du tar bort kontot inträffar följande:"
-
-msgid "Direct"
-msgstr "Direkt"
-
-msgid "Disable all \"%s\" above to activate this setting."
-msgstr "Inaktivera alla \"%s\" ovan för att aktivera inställningen."
-
-msgid "Disable multihop"
-msgstr "Inaktivera multihopp"
-
-msgid "Discard"
-msgstr "Ignorera"
-
-msgid "Discard changes?"
-msgstr "Ignorera ändringarna?"
-
-msgid "Disconnected (No VPN permission)"
-msgstr "Frånkopplad (VPN-behörighet saknas)"
-
-msgid "Disconnecting..."
-msgstr "Kopplar från ..."
-
-msgid "Dismiss"
-msgstr "Ignorera"
-
-msgid "Don’t have an account number?"
-msgstr "Har du inget kontonummer?"
-
-msgid "Edit custom lists"
-msgstr "Redigera anpassade listor"
-
-msgid "Edit list"
-msgstr "Redigera lista"
-
-msgid "Edit lists"
-msgstr "Redigera listor"
-
-msgid "Edit locations"
-msgstr "Redigera platser"
-
-msgid "Enable %1$s"
-msgstr "Aktivera %1$s"
-
-msgid "Enable all & retry"
-msgstr "Aktivera alla och försök igen"
-
-msgid "Enable all access methods in the app"
-msgstr "Aktivera alla åtkomstmetoder i appen"
-
-msgid "Enable method"
-msgstr "Aktivera metod"
-
-msgid "Enable multihop"
-msgstr "Aktivera multihopp"
-
-msgid "Enter MTU"
-msgstr "Ange MTU"
-
-msgid "Enter account number digits"
-msgstr "Ange siffrorna i kontonumret"
-
-msgid "Entry relay is the same as exit relay"
-msgstr "Ingångsrelä är samma som utgångsrelä"
-
-msgid "Excluded applications"
-msgstr "Exkluderade applikationer"
-
-msgid "Expand"
-msgstr "Visa"
-
-msgid "External link"
-msgstr "Extern länk"
-
-msgid "FAILED TO CONNECT"
-msgstr "DET GICK INTE ATT ANSLUTA"
-
-msgid "Failed to apply patch"
-msgstr "Konfigurationsfilen kunde inte tillämpas"
-
-msgid "Failed to delete account, please contact support"
-msgstr "Det går inte att ta bort kontot, kontakta supporten"
-
-msgid "Failed to load products, please try again"
-msgstr "Det gick inte att läsa in produkterna, försök igen"
-
-msgid "Failed to set to current - API not reachable"
-msgstr "Kan inte ställas in som aktuell, API kan inte nås"
-
-msgid "Failed to set to current - Unknown reason"
-msgstr "Kan inte ställas in som aktuell, Okänd anledning"
-
-msgid "File"
-msgstr "Fil"
-
-msgid "For details, please see our %s."
-msgstr "Du hittar mer information i vår %s."
-
-msgid "For the VPN to connect automatically on device startup, the app must have VPN permissions. You can grant these by clicking “Connect” in the map view and selecting “OK” if prompted. Additionally, ensure the app is installed on the internal storage by checking the storage information in the app details in system settings."
-msgstr "För att VPN ska anslutas automatiskt när enheten startas måste appen ha VPN-behörighet. Du kan bevilja dessa genom att klicka på \"Anslut\" i kartvisningen och välja \"OK\" om du uppmanas till det. Dessutom ska du säkerställa att appen har installerats på det interna lagringsutrymmet genom att kontrollera lagringsinformationen i appinformationen i systeminställningarna."
-
-msgid "Go to VPN settings"
-msgstr "Gå till VPN-inställningar"
-
-msgid "Going to login will unblock the internet on this device."
-msgstr "Om du loggar in tas blockering av internet bort på den här enheten."
-
-msgid "Google Play payment pending"
-msgstr "Google Play-betalning väntar"
-
-msgid "Google Play payment pending, this might take some time"
-msgstr "Det gick inte att behandla Google Play-betalningen, det kan ta en stund"
-
-msgid "Google Play unavailable"
-msgstr "Google Play är inte tillgängligt"
-
-msgid "IPv4 is not available, please try changing \"Device IP version\" setting."
-msgstr "IPv4 är inte tillgängligt, prova att ändra inställningen \"Enhetens IP-version\"."
-
-msgid "IPv6 is not available, please try changing \"Device IP version\" setting."
-msgstr "IPv6 är inte tillgängligt, prova att ändra inställningen \"Enhetens IP-version\"."
-
-msgid "Icon and title"
-msgstr "Ikon och titel"
-
-msgid "If the icon and title is still not changed after the app has closed, please try restarting the device."
-msgstr "Om ikonen och titeln fortfarande inte ändras efter att appen har stängts, kan du prova att starta om enheten."
-
-msgid "If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device."
-msgstr "Om delade tunnlar används, frågar appen ditt system om en lista med alla installerade applikationer. Listan hämtas bara i vyn för delade tunnlar. Listan med installerade applikationer skickas aldrig från enheten."
-
-msgid "If these steps don’t work, please send an email to support using the button below. It will automatically attach the logs which have been anonymized."
-msgstr "Om dessa steg inte fungerar kan du skicka ett e-postmeddelande till supporten via knappen nedan. Detta bifogar automatisk loggarna som har anonymiserats."
-
-msgid "Import new overrides by"
-msgstr "Importera nya åsidosättningar med"
-
-msgid "Import successful, overrides active"
-msgstr "Har importerats, åsidosättningar aktiva"
-
-msgid "Importing new overrides might replace some previously imported overrides."
-msgstr "Om du importerar nya åsidosättningar kan tidigare importerade åsidosättningar ersättas."
-
-msgid "In-app products unavailable, please make sure you have the latest version of Google Play."
-msgstr "Produkterna i appen är inte tillgängliga. Se till att du har den senaste versionen av Google Play."
-
-msgid "Include my account token for faster help with payment or account related issues"
-msgstr "Inkludera min kontotoken för snabbare hjälp med betalnings- eller kontoproblem"
-
-msgid "Invalid IPv6 config, please try to change the VPN settings."
-msgstr "Ogiltig IPv6-konfiguration. Prova att ändra VPN-inställningarna."
-
-msgid "Invalid or missing value \"%1$s\""
-msgstr "Värdet \"%1$s\" är ogiltigt eller saknas"
-
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "Den gör det genom att göra ett extra nyckelutbyte med en kvantsäker algoritm och kombinera resultatet med QUICs vanliga kryptering. Det här extra steget använder ungefär 500 KiB i trafik varje gång en ny tunnel upprättas."
-
-msgid "Less than a day left on this account"
-msgstr "Mindre än en dag kvar på kontot"
-
-msgid "Lets you select apps that should access the Internet directly without going through the VPN tunnel."
-msgstr "Låter dig välja appar som ska ge dig direktåtkomst till internet utan att gå igenom VPN-tunneln."
-
-msgid "List name"
-msgstr "Listnamn"
-
-msgid "Loading products"
-msgstr "Läser in produkter"
-
-msgid "Locations"
-msgstr "Platser"
-
-msgid "Locations were changed for \"%s\""
-msgstr "Platserna har ändrats för \"%s\""
-
-msgid "Log in"
-msgstr "Logga in"
-
-msgid "Makes sure the device is always on the VPN tunnel."
-msgstr "Ser till att enheten alltid är i VPN-tunneln."
-
-msgid "More actions"
-msgstr "Fler åtgärder"
-
-msgid "Warren services unavailable"
-msgstr "Warren-tjänster är inte tillgängliga"
-
-msgid "Multihop is disabled"
-msgstr "Multihopp är inaktiverat"
-
-msgid "Multihop is enabled"
-msgstr "Multihopp är aktiverat"
-
-msgid "Name is already taken."
-msgstr "Namnet används redan."
-
-msgid "Name was changed to %s"
-msgstr "Namnet har ändrats till %s"
-
-msgid "Navigate"
-msgstr "Navigera"
-
-msgid "No Android app store installed, could not open link"
-msgstr "Ingen Android-appbutik är installerad, det gick inte att öppna länken"
-
-msgid "No browser app installed, could not open link"
-msgstr "Ingen webbläsarapp är installerad, det gick inte att öppna länken"
-
-msgid "No changelog was added for this version"
-msgstr "Ingen ändringslogg har lagts till för versionen"
-
-msgid "No custom lists available"
-msgstr "Inga anpassade listor är tillgängliga"
-
-msgid "No email app available on the device"
-msgstr "Ingen e-postapp finns tillgänglig på enheten"
-
-msgid "No entry server match your settings, try changing server or other settings."
-msgstr "Ingen startserver matchar dina inställningar. Försök att byta server eller med andra inställningar."
-
-msgid "No exit server match your settings, try changing server or other settings."
-msgstr "Ingen slutserver matchar dina inställningar. Försök att byta server eller med andra inställningar."
-
-msgid "No internet connection"
-msgstr "Ingen internetanslutning"
-
-msgid "No matching servers found."
-msgstr "Inga överensstämmande servrar hittades."
-
-msgid "No result for \"%s\", please try a different search"
-msgstr "Inga resultat hittades för \"%s\", försök med en annan sökning"
-
-msgid "Not found"
-msgstr "Hittades inte"
-
-msgid "Notes"
-msgstr "Anteckningar"
-
-msgid "Notification settings"
-msgstr "Aviseringsinställningar"
-
-msgid "Open app details"
-msgstr "Öppna appinformation"
-
-msgid "Overrides active"
-msgstr "Åsidosättningar aktiva"
-
-msgid "Overrides cleared"
-msgstr "Åsidosättningar rensade"
-
-msgid "Overrides inactive"
-msgstr "Åsidosättningar inaktiva"
-
-msgid "Password (optional)"
-msgstr "Lösenord (valfritt)"
-
-msgid "Paste or write overrides to be imported"
-msgstr "Klistra in eller skriv åsidosättningar som ska importeras"
-
-msgid "Patch not matching specification"
-msgstr "Korrigering överensstämmer inte med specifikationen"
-
-msgid "Please enter a valid IPv4 or IPv6 address"
-msgstr "Ange en giltig IPv4- eller IPv6-adress"
-
-msgid "Please enter a valid remote server port"
-msgstr "Ange en giltig fjärrserverport"
-
-msgid "Please press connect to request VPN permission"
-msgstr "Tryck på anslut för att begära VPN-behörighet"
-
-msgid "Please restart your device and try connecting again. If this does not work, please write an email to %s in Swedish or English."
-msgstr "Starta om enheten och försök att ansluta igen. Om det inte fungerar kan du skicka ett e-postmeddelande till %s på svenska eller engelska."
-
-msgid "Please try changing your filters."
-msgstr "Prova att ändra dina filter."
-
-msgid "Privacy"
-msgstr "Sekretess"
-
-msgid "Privacy policy"
-msgstr "Sekretesspolicy"
-
-msgid "Recents disabled and history cleared"
-msgstr "Senaste har inaktiverats och historiken har rensats"
-
-msgid "Recursion limit"
-msgstr "Rekursionsgräns"
-
-msgid "Refunds will not be possible."
-msgstr "Det går inte att få återbetalningar."
-
-msgid "Remove %s?"
-msgstr "Ta bort %s?"
-
-msgid "Remove custom port"
-msgstr "Ta bort anpassad port"
-
-msgid "Reset"
-msgstr "Återställ"
-
-msgid "Reset all overrides"
-msgstr "Återställ alla åsidosättningar"
-
-msgid "Reset overrides"
-msgstr "Återställ åsidosättningar"
-
-msgid "Reset to default"
-msgstr "Återställ till standard"
-
-msgid "Restart your device"
-msgstr "Starta om enheten"
-
-msgid "Search"
-msgstr "Sök"
-
-msgid "Send email"
-msgstr "Skicka e-post"
-
-msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
-msgstr "Ange QUIC MTU-värde. Giltigt intervall: %1$d-%2$d."
-
-msgid "Set as multihop entry"
-msgstr "Ange som första multihopp"
-
-msgid "Set as multihop entry (incompatible)"
-msgstr "Ange som första multihopp (inte kompatibelt)"
-
-msgid "Set as multihop exit"
-msgstr "Ange som sista multihopp"
-
-msgid "Set as multihop exit (incompatible)"
-msgstr "Ange som sista multihopp (inte kompatibelt)"
-
-msgid "Set port"
-msgstr "Ställ in port"
-
-msgid "Share…"
-msgstr "Dela …"
-
-msgid "Show location in notification"
-msgstr "Visa platsen i aviseringarna"
-
-msgid "Show system apps"
-msgstr "Visa systemappar"
-
-msgid "Shows current VPN tunnel status"
-msgstr "Visar nuvarande status för VPN-tunnel"
-
-msgid "Shows reminders when the account time is about to expire"
-msgstr "Visar påminnelser när kontots tidsgräns uppnås"
-
-msgid "Submit"
-msgstr "Skicka"
-
-msgid "TCP"
-msgstr "TCP"
-
-msgid "Test method"
-msgstr "Testmetod"
-
-msgid "Testing %s..."
-msgstr "Testar %s ..."
-
-msgid "Text"
-msgstr "Text"
-
-msgid "Thanks for being part of our community.\\nPrivacy is for the people!"
-msgstr "Tack för att du är en del av vår community.\\nFör ett fritt internet!"
-
-msgid "The Auto-connect and Lockdown mode settings can be found in the Android system settings, follow this guide to enable one or both."
-msgstr "Inställningar för Anslut automatiskt och Låsningsläge finns i Androids systeminställningar. Följ guiden för att aktivera en av dem eller båda."
-
-msgid "The IPv6 DNS server will not work unless you enable \"IPv6\" under VPN settings."
-msgstr "IPv6 DNS-servern fungerar inte om du inte aktiverar \"IPv6\" under VPN-inställningar."
-
-msgid "The Lockdown mode is called \"Block connections without VPN\" in the Android system settings. It helps minimize leaks, however it has some known limitations which you can read more about"
-msgstr "Låsningsläget kallas \"Blockera anslutningar utan VPN\" i systeminställningarna på Android. Det minimerar läckor men det finns några kända begränsningar som du kan läsa mer om"
-
-msgid "The \"Current\" method represent which method the app is using to reach the API."
-msgstr "\"Aktuell\" metod representerar vilken metod appen använder för att nå API."
-
-msgid "The app is blocking internet, please disconnect first"
-msgstr "Appen blockerar internet, koppla först från anslutningen"
-
-msgid "The app was unable to create an account due to not being able to reach the Warren API."
-msgstr "Appen kunde inte skapa ett konto eftersom det inte gick att nå Warren API."
-
-msgid "The app was unable to login due to not being able to reach the Warren API."
-msgstr "Appen kunde inte logga in eftersom det inte gick att nå Warren API."
-
-msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
-msgstr "Den lokala DNS-servern fungerar inte om du inte aktiverar \"Lokal nätverksdelning\" under VPN-inställningar."
-
-msgid "The selected %s port is not supported, please change it under"
-msgstr "Den valda %s-porten stöds inte, ändra den i"
-
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "Dessa metoder kan vara användbara i situationer där du blockeras från att nå Warren. När \"Automatiskt\" är valt försöker appen med alla metoder tills en fungerar."
-
-msgid "This address has already been entered."
-msgstr "Adressen har redan angetts."
-
-msgid "This field is required"
-msgstr "Fältet är obligatoriskt"
-
-msgid "This impacts your anonymity"
-msgstr "Detta påverkar din anonymitet"
-
-msgid "This is already set as current"
-msgstr "Den har redan ställts in som aktuell"
-
-msgid "This might be due to censorship or network issues. Please try to:"
-msgstr "Det kan bero på censur- eller nätverksfel. Försök att:"
-
-msgid "Time added"
-msgstr "Tid har lagts till"
-
-msgid "To add locations to a list, press the pen or long press on a country, city, or server."
-msgstr "Om du vill lägga till platser i en lista kan du trycka på pennan eller trycka länge på ett land, en stad eller en server."
-
-msgid "To create a custom list press the \"+\""
-msgstr "Om du vill skapa en anpassad lista trycker du på \"+\""
-
-msgid "To delete your Warren VPN account, please enter your account number below."
-msgstr "Ange kontonumret nedan om du vill ta bort ditt Warren VPN-konto."
-
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "Appen genomför automatiska versionskontroller för att se till att du har den säkraste versionen och för att informera dig om problem med den nuvarande versionen. Appversionen och Android-systemversionen skickas till Warren-servrarna. Warren registrerar antalet använda appversioner och Android-versioner. Dessa data lagras aldrig och används inte på något sätt som kan identifiera dig."
-
-msgid "Toggle VPN"
-msgstr "Växla VPN"
-
-msgid "Too many attempts, please try again later"
-msgstr "För många försök, försök igen senare"
-
-msgid "UDP"
-msgstr "UDP"
-
-msgid "Unable to apply firewall rules. Please troubleshoot or send a problem report."
-msgstr "Det går inte att tillämpa brandväggsregler. Felsök eller skicka en problemrapport."
-
-msgid "Unable to parse patch"
-msgstr "Det går inte att parsa korrigering"
-
-msgid "Unable to reach API"
-msgstr "Det går inte att nå API"
-
-msgid "Unable to reach API, %s"
-msgstr "Det går inte att nå API, %s"
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
-msgstr "Det går inte att starta tunnelanslutning. Inaktivera Alltid på-VPN innan du använder Warren VPN."
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
-msgstr "Det går inte att starta tunnelanslutning. Inaktivera Alltid på-VPN för <b>%s</b> innan du använder Warren VPN."
-
-msgid "Unable to verify account number, please contact support"
-msgstr "Det går inte att verifiera kontonumret, kontakta supporten"
-
-msgid "Unavailable"
-msgstr "Inte tillgänglig"
-
-msgid "Undo"
-msgstr "Ångra"
-
-msgid "Unknown or prohibited key \"%1$s\""
-msgstr "Okänd eller förbjuden nyckel \"%1$s\""
-
-msgid "Update DNS server"
-msgstr "Uppdatera DNS-server"
-
-msgid "Update list name"
-msgstr "Uppdatera listnamn"
-
-msgid "Update server list"
-msgstr "Uppdatera serverlistan"
-
-msgid "Updating server list in the background..."
-msgstr "Uppdaterar serverlistan i bakgrunden ..."
-
-msgid "Use method"
-msgstr "Använd metod"
-
-msgid "VPN Settings not available on device"
-msgstr "VPN-inställningarna är inte tillgängliga på enheten"
-
-msgid "VPN permission error"
-msgstr "Behörighetsfel med VPN"
-
-msgid "VPN permission was denied"
-msgstr "VPN-behörighet har nekats"
-
-msgid "VPN permission was denied or another app has \"Always-on VPN\" enabled"
-msgstr "VPN-behörighet avvisades eller så har en annan app aktiverat \"Alltid på-VPN\""
-
-msgid "VPN tunnel status"
-msgstr "VPN-tunnelstatus"
-
-msgid "Valid range for all servers: %s"
-msgstr "Giltigt intervall för alla servrar: %s"
-
-msgid "Value: %s"
-msgstr "Värde: %s"
-
-msgid "Verifying API method..."
-msgstr "Verifierar API-metod ..."
-
-msgid "Verifying purchase"
-msgstr "Verifierar köp"
-
-msgid "Verifying purchase..."
-msgstr "Verifierar köp ..."
-
-msgid "Verifying voucher…"
-msgstr "Verifierar kupong …"
-
-msgid "Warning"
-msgstr "Varning"
-
-msgid "We are still verifying your purchase, this might take some time. Your time will be added if the verification is successful."
-msgstr "Vi verifierar fortfarande ditt köp och det kan ta en stund. Din tid läggs till om verifieringen slutförs."
-
-msgid "We were unable to start the payment process, please make sure you have the latest version of Google Play."
-msgstr "Vi kunde inte starta betalningsprocessen. Se till att du har den senaste versionen av Google Play."
-
-msgid "We were unable to start the payment process, please try again later."
-msgstr "Vi kunde inte starta betalningsprocessen, försök igen senare."
-
-msgid "Weather"
-msgstr "Väder"
-
-msgid "Welcome, this device is now called <b>%s</b>."
-msgstr "Välkommen. Den här enheten har fått namnet <b>%s</b>."
-
-msgid "QUIC port"
-msgstr "QUIC-port"
-
-msgid "Yes, log out device"
-msgstr "Ja, logga ut enheten"
-
-msgid "You are about to delete your Warren VPN account."
-msgstr "Du är på väg att ta bort Warren VPN-kontot."
-
-msgid "You can add more time via the account view or website to continue using the VPN."
-msgstr "Du kan lägga till mer tid via kontovyn eller webbplatsen för att fortsätta använda VPN."
-
-msgid "You can add more time via the account view to continue using the VPN."
-msgstr "Du kan lägga till mer tid via kontovyn för att fortsätta använda VPN."
-
-msgid "You will lose access to this account on all devices."
-msgstr "Du förlorar åtkomsten till kontot på alla enheter."
-
-msgid "You will lose your remaining"
-msgstr "Du förlorar dina återstående"
-
-msgid "\"%s\" was created"
-msgstr "\"%s\" har skapats"
-
-msgid "\"%s\" was deleted"
-msgstr "\"%s\" har tagits bort"
-
-msgid "click here"
-msgstr "klicka här"
-
-msgid "here"
-msgstr "här"
-
-msgid "less than one day"
-msgstr "mindre än en dag"
-
-msgid "privacy policy"
-msgstr "integritetspolicy"
-
-msgid "read more here"
-msgstr "läs mer här"
-
-msgid "%d day"
-msgid_plural "%d days"
-msgstr[0] "%d dag"
-msgstr[1] "%d dagar"
-
-msgid "%d location"
-msgid_plural "%d locations"
-msgstr[0] "%d plats"
-msgstr[1] "%d platser"
-
-msgid "%d month"
-msgid_plural "%d months"
-msgstr[0] "%d månad"
-msgstr[1] "%d månader"
-
-msgid "1 day left on this account"
-msgid_plural "%d days left on this account"
-msgstr[0] "1 dag kvar på kontot"
-msgstr[1] "%d dagar kvar på kontot"
-
-msgid "1 year left on this account"
-msgid_plural "%d years left on this account"
-msgstr[0] "1 år kvar på kontot"
-msgstr[1] "%d år kvar på kontot"
-
-msgid "Account credit expires in a day"
-msgid_plural "Account credit expires in %d days"
-msgstr[0] "Kontokrediten slutar gälla om en dag"
-msgstr[1] "Kontokrediten slutar gälla om %d dagar"
-
-msgid "Account credit expires in an hour"
-msgid_plural "Account credit expires in %d hours"
-msgstr[0] "Kontokrediten slutar gälla om en timme"
-msgstr[1] "Kontokrediten slutar gälla om %d timmar"
-
-msgid "You will lose your remaining day."
-msgid_plural "You will lose your remaining %d days."
-msgstr[0] "Du förlorar din återstående dag."
-msgstr[1] "Du förlorar dina återstående %d dagar."
 
 
 msgctxt "warren-multi-hop-view"
@@ -4658,20 +3100,12 @@ msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkabilit
 msgstr "Räkna med ungefär hälften av single-hop-bandbredden i utbyte mot att användarens IP och destinationens IP inte kan kopplas samman. Avstängt som standard; opt-in för integritet."
 
 msgctxt "warren-multi-hop-view"
-msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
-msgstr "Valfritt: fäst länderna för ingångs- och utgångsreläet (ISO 3166 alpha-2-koder som fr, de, se). Lämna tomt för automatiskt val."
-
-msgctxt "warren-multi-hop-view"
 msgid "Restart the Warren daemon after changing this setting."
 msgstr "Starta om Warren-daemonen efter att du har ändrat denna inställning."
 
 msgctxt "warren-multi-hop-view"
 msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
 msgstr "Dirigerar din trafik via två Warren-reläer med HPKE end-to-end-kryptering. Ingångsreläet ser bara chiffertext; utgångsreläet ser bara den dekrypterade nyttolasten, aldrig din IP. Mönster inspirerat av Apple Private Relay."
-
-msgctxt "warren-multi-hop-view"
-msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
-msgstr "Single-hop Warren aktivt. Full bandbredd, samma integritetsgarantier som standardläget single-hop."
 
 msgctxt "warren-multi-hop-view"
 msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
@@ -4684,10 +3118,6 @@ msgstr "Warren multi-hop"
 msgctxt "warren-multi-hop-view"
 msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
 msgstr "När det är aktiverat dirigeras trafiken via två Warren-reläer (ingång och sedan utgång) med HPKE end-to-end-kryptering mellan klient och utgång. Ingångsreläet ser bara chiffertext; utgångsreläet ser bara den dekrypterade nyttolasten, aldrig användarens IP."
-
-msgctxt "warren-multi-hop-view"
-msgid "auto"
-msgstr "auto"
 
 msgctxt "warren-mnemonic"
 msgid "Copied to clipboard"
@@ -4704,10 +3134,6 @@ msgstr "En VPN-upplevelse utan kompromisser kring integritet. Inga loggar. Inga 
 msgctxt "warren-onboarding"
 msgid "All set"
 msgstr "Allt klart"
-
-msgctxt "warren-onboarding"
-msgid "Create my new wallet (recommended)"
-msgstr "Skapa min nya plånbok (rekommenderas)"
 
 msgctxt "warren-onboarding"
 msgid "Check again"
@@ -4734,10 +3160,6 @@ msgid "Daemon has no mnemonic yet - log in or restart the app."
 msgstr "Daemonen har ännu ingen frasminne, logga in eller starta om appen."
 
 msgctxt "warren-onboarding"
-msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
-msgstr "Daemonen avvisade frasminnet. Kontrollera stavning och antal ord, försök sedan igen."
-
-msgctxt "warren-onboarding"
 msgid "Failed to retrieve mnemonic from daemon."
 msgstr "Det gick inte att hämta frasminnet från daemonen."
 
@@ -4754,16 +3176,8 @@ msgid "I have written it down in a safe place."
 msgstr "Jag har skrivit ner den på ett säkert ställe."
 
 msgctxt "warren-onboarding"
-msgid "Import an existing mnemonic"
-msgstr "Importera ett befintligt frasminne"
-
-msgctxt "warren-onboarding"
 msgid "No active subscription found. Please purchase one first."
 msgstr "Ingen aktiv prenumeration hittades. Köp en först."
-
-msgctxt "warren-onboarding"
-msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
-msgstr "Klistra in ditt BIP39-frasminne med 12 ord för att återställa din befintliga Warren-identitet."
 
 msgctxt "warren-onboarding"
 msgid "Pick a country and connect"
@@ -4778,20 +3192,12 @@ msgid "Privacy preferences"
 msgstr "Integritetsinställningar"
 
 msgctxt "warren-onboarding"
-msgid "Restore wallet"
-msgstr "Återställ plånbok"
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "Hoppa över guiden (avancerat)"
 
 msgctxt "warren-onboarding"
 msgid "View plans (opens in your browser)"
 msgstr "Visa planer (öppnas i webbläsaren)"
-
-msgctxt "warren-onboarding"
-msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
-msgstr "Warren använder en icke-förvaltad plånbok (Ed25519 + BIP39). Du äger nycklarna; vi ser dem aldrig."
 
 msgctxt "warren-onboarding"
 msgid "Welcome to Warren VPN"
@@ -4883,10 +3289,6 @@ msgid "Last"
 msgstr "Senast"
 
 msgctxt "warren-status-view"
-msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
-msgstr "Äldre obfuskeringsmetoder (Shadowsocks, UDP-över-TCP, QUIC, LWO) gäller inte när warren_mode är på."
-
-msgctxt "warren-status-view"
 msgid "Obfuscation"
 msgstr "Obfuskering"
 
@@ -4902,15 +3304,6 @@ msgctxt "warren-status-view"
 msgid "never"
 msgstr "aldrig"
 
-
-msgctxt "port-forwarding-view"
-msgid "auto"
-msgstr "automatisk"
-
-msgctxt "port-forwarding-view"
-msgid "Mapping failed: %(error)s"
-msgstr "Mappning misslyckades: %(error)s"
-
 msgctxt "port-forwarding-view"
 msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
 msgstr "Öppnar en offentlig port på den anslutna utgångsservern och vidarebefordrar den till din enhet. Användbart för peer-to-peer-program, fildelning eller egenhostade tjänster."
@@ -4920,40 +3313,8 @@ msgid "Port forwarding"
 msgstr "Portvidarebefordran"
 
 msgctxt "port-forwarding-view"
-msgid "Port must be between 49152 and 65535, or empty for auto."
-msgstr "Porten måste vara mellan 49152 och 65535, eller tom för automatisk."
-
-msgctxt "port-forwarding-view"
-msgid "Preferred port"
-msgstr "Föredragen port"
-
-msgctxt "port-forwarding-view"
 msgid "Protocol"
 msgstr "Protokoll"
-
-msgctxt "port-forwarding-view"
-msgid "Public port: %(port)s"
-msgstr "Offentlig port: %(port)s"
-
-msgctxt "port-forwarding-view"
-msgid "Renewing in %(countdown)s"
-msgstr "Förnyas om %(countdown)s"
-
-msgctxt "port-forwarding-view"
-msgid "Status: active"
-msgstr "Status: aktiv"
-
-msgctxt "port-forwarding-view"
-msgid "Status: requesting port mapping..."
-msgstr "Status: begär portmappning…"
-
-msgctxt "port-forwarding-view"
-msgid "Status: waiting for an active tunnel connection to set up the port mapping."
-msgstr "Status: väntar på en aktiv tunnelanslutning för att ställa in portmappningen."
-
-msgctxt "port-forwarding-view"
-msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
-msgstr "Servern kan tilldela en annan port om den föredragna redan är upptagen. Ändringar tillämpas omedelbart, utan ny anslutning."
 
 msgctxt "keys-view"
 msgid "Backup keys"
@@ -5115,25 +3476,9 @@ msgctxt "device-management"
 msgid "Session is inactive"
 msgstr "Sessionen är inaktiv"
 
-msgctxt "device-management"
-msgid "Your session has ended. To connect again, you will need to log back in."
-msgstr "Din session har avslutats. För att ansluta igen måste du logga in på nytt."
-
 msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "Avvikelse i serveridentitet upptäckt. Exitnodens publika nyckel har ändrats."
-
-msgctxt "vpn-settings-view"
-msgid "Automatic failover"
-msgstr "Automatisk växling"
-
-msgctxt "vpn-settings-view"
-msgid "Automatically switch to another exit server if the current one becomes unreachable."
-msgstr "Växla automatiskt till en annan exitserver om den nuvarande blir onåbar."
-
-msgctxt "vpn-settings-view"
-msgid "This setting takes effect immediately without a daemon restart."
-msgstr "Den här inställningen träder i kraft omedelbart, utan att starta om tjänsten."
 
 msgctxt "vpn-settings-view"
 msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
@@ -5152,14 +3497,6 @@ msgctxt "accessibility"
 msgid "Copy the voucher code"
 msgstr "Kopiera kupongkoden"
 
-msgctxt "accessibility"
-msgid "Hide public key"
-msgstr "Dölj publik nyckel"
-
-msgctxt "accessibility"
-msgid "Show public key"
-msgstr "Visa publik nyckel"
-
 msgctxt "account-view"
 msgid "Backup keys"
 msgstr "Säkerhetskopiera nycklar"
@@ -5176,10 +3513,6 @@ msgstr "Något gick fel vid utloggningen."
 msgctxt "account-view"
 msgid "Try again"
 msgstr "Försök igen"
-
-msgctxt "account-view"
-msgid "Public key"
-msgstr "Publik nyckel"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
@@ -5268,10 +3601,6 @@ msgstr "misslyckades"
 msgctxt "port-forwarding-view"
 msgid "no port available"
 msgstr "ingen port tillgänglig"
-
-msgctxt "port-forwarding-view"
-msgid "not allowed"
-msgstr "ej tillåtet"
 
 msgctxt "port-forwarding-view"
 msgid "open: %(port)d"
@@ -5406,14 +3735,6 @@ msgstr "Signerar, vänta."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Gemenskapsforum"
-
-msgctxt "tunnel-control"
-msgid "Connecting..."
-msgstr "Ansluter …"
-
-msgctxt "tunnel-control"
-msgid "Encrypting your connection"
-msgstr "Krypterar din anslutning"
 
 msgctxt "tunnel-control"
 msgid "Random location"

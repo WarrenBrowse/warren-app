@@ -12,17 +12,8 @@ msgstr ""
 "Language: zh_TW\n"
 "PO-Revision-Date: 2026-04-27 09:12\n"
 
-msgid "%(amount)d more..."
-msgstr "其他 %(amount)d 個…"
-
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "已新增 %(duration)s，帳戶到期時間為 %(expiry)s。"
-
-#. The label for the QUIC port option.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgid "%(wireguard)s port"
-msgstr "%(wireguard)s 連接埠"
 
 msgid "1 day"
 msgid_plural "%d days"
@@ -99,14 +90,8 @@ msgstr "連線"
 msgid "Connected"
 msgstr "已連線"
 
-msgid "CONNECTED"
-msgstr "已連線"
-
 msgid "Connecting"
 msgstr "正在連線"
-
-msgid "CONNECTING..."
-msgstr "連線中…"
 
 msgid "Create"
 msgstr "建立"
@@ -150,14 +135,8 @@ msgstr "中斷連線並結束"
 msgid "Disconnected"
 msgstr "已中斷連線"
 
-msgid "DISCONNECTED"
-msgstr "已中斷連線"
-
 msgid "Disconnecting"
 msgstr "正在中斷連線"
-
-msgid "DISCONNECTING..."
-msgstr "正在中斷連線…"
 
 msgid "Edit"
 msgstr "編輯"
@@ -172,16 +151,8 @@ msgstr "仍然啟用"
 msgid "Enable direct only"
 msgstr "啟用僅限直接連線"
 
-#. Error message shown trying to login but the app fails
-#. to fetch the list of registered devices.
-msgid "Failed to fetch list of devices"
-msgstr "無法取得裝置清單"
-
 msgid "FAILED TO SECURE CONNECTION"
 msgstr "保護連線失敗"
-
-msgid "Filters"
-msgstr "篩選器"
 
 #. Button label for system settings.
 msgid "Go to System Settings"
@@ -228,9 +199,6 @@ msgstr "找不到相符的伺服器"
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "<b>%(searchTerm)s</b> 沒有任何結果。"
 
-msgid "None"
-msgstr "無"
-
 msgid "Off"
 msgstr "關閉"
 
@@ -263,10 +231,6 @@ msgstr "結束"
 
 msgid "Reconnect"
 msgstr "重新連線"
-
-#. Button label in confirmation dialog that confirms a remove action.
-msgid "Remove"
-msgstr "移除"
 
 msgid "Required"
 msgstr "必填"
@@ -317,23 +281,9 @@ msgstr "使用"
 msgid "Username"
 msgstr "使用者名稱"
 
-#. Text for screen readers to describe the LWO settings navigation button.
-#. Available placeholders:
-#. %(lwo)s - will be replaced with LWO
-msgctxt "accessibility"
-msgid "%(lwo)s settings"
-msgstr "%(lwo)s 設定"
-
 msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s，已載入視圖"
-
-#. Text for screen readers to describe the QUIC port settings navigation button.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgctxt "accessibility"
-msgid "%(wireguard)s port settings"
-msgstr "%(wireguard)s 連接埠設定"
 
 #. This is an accessibility label for a button that adds a location to a custom list.
 #. Available placeholders:
@@ -363,12 +313,6 @@ msgctxt "accessibility"
 msgid "Connect to %(location)s"
 msgstr "連線到 %(location)s"
 
-#. Provided to accessibility tools such as screenreaders to describe a button
-#. which copies the account number to the clipboard.
-msgctxt "accessibility"
-msgid "Copy account number"
-msgstr "複製帳號"
-
 #. Accessibility label for a carousel that explains the DAITA feature to the user.
 msgctxt "accessibility"
 msgid "DAITA information carousel"
@@ -396,21 +340,6 @@ msgctxt "accessibility"
 msgid "Expand %(location)s"
 msgstr "展開 %(location)s"
 
-#. This is used by screenreaders to communicate the "x" button next to a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the account number to the left of the button
-msgctxt "accessibility"
-msgid "Forget account number %(accountNumber)s"
-msgstr "忘記帳號 %(accountNumber)s"
-
-#. Accessibility label for link to VPN settings where
-#. the user can change QUIC port.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "accessibility"
-msgid "Go to anti-censorship settings to change %(wireGuard)s port"
-msgstr "前往反審查設定變更 %(wireGuard)s 連接埠"
-
 #. Accessibility label for link to app upgrade view.
 msgctxt "accessibility"
 msgid "Go to app update page"
@@ -423,12 +352,6 @@ msgctxt "accessibility"
 msgid "Go to slide %(index)s"
 msgstr "前往投影片 %(index)s"
 
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which obscures the account number.
-msgctxt "accessibility"
-msgid "Hide account number"
-msgstr "隱藏帳號"
-
 #. Alt text for an illustration showing VPN traffic with DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic with DAITA enabled"
@@ -438,18 +361,6 @@ msgstr "顯示啟用 DAITA 時的 VPN 流量的插圖"
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic without DAITA"
 msgstr "顯示未啟用 DAITA 時的 VPN 流量插圖"
-
-#. This is used by screenreaders to communicate the login button.
-msgctxt "accessibility"
-msgid "Login"
-msgstr "登入"
-
-#. This is used by screenreaders to communicate logging in with a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the saved account number
-msgctxt "accessibility"
-msgid "Login with account number %(accountNumber)s"
-msgstr "使用帳號 %(accountNumber)s 登入"
 
 msgctxt "accessibility"
 msgid "More information"
@@ -509,14 +420,6 @@ msgctxt "accessibility"
 msgid "Remove %(location)s from %(customList)s"
 msgstr "將 %(location)s 從 %(customList)s 中移除"
 
-#. Button action description provided to accessibility tools such as screen
-#. readers.
-#. Available placeholders:
-#. %(deviceName)s - The device name to remove.
-msgctxt "accessibility"
-msgid "Remove device named %(deviceName)s"
-msgstr "移除名為「%(deviceName)s」的裝置"
-
 msgctxt "accessibility"
 msgid "Remove item"
 msgstr "移除項目"
@@ -525,32 +428,10 @@ msgctxt "accessibility"
 msgid "Select location. Current location is %(location)s"
 msgstr "選擇位置。目前位置為 %(location)s"
 
-msgctxt "accessibility"
-msgid "Shadowsocks settings"
-msgstr "Shadowsocks 設定"
-
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which unobscures the account number.
-msgctxt "accessibility"
-msgid "Show account number"
-msgstr "顯示帳號"
-
-msgctxt "accessibility"
-msgid "UDP-over-TCP settings"
-msgstr "UDP-over-TCP 設定"
-
-msgctxt "accessibility"
-msgid "Use the right arrow key to focus the settings button."
-msgstr "使用向右鍵來聚焦設定按鈕。"
-
 #. Title label in navigation bar
 msgctxt "account-view"
 msgid "Account"
 msgstr "帳戶"
-
-msgctxt "account-view"
-msgid "Account number"
-msgstr "帳戶編號"
 
 msgctxt "account-view"
 msgid "Currently unavailable"
@@ -560,11 +441,6 @@ msgstr "目前不可用"
 msgctxt "account-view"
 msgid "Log out"
 msgstr "登出"
-
-#. Link text in the account view to navigate to the manage devices view.
-msgctxt "account-view"
-msgid "Manage devices"
-msgstr "管理裝置"
 
 msgctxt "account-view"
 msgid "OUT OF TIME"
@@ -611,21 +487,6 @@ msgstr "關閉"
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
 msgstr "反審查"
-
-#. The title for the obfuscation method selector.
-msgctxt "anti-censorship-view"
-msgid "Method"
-msgstr "方式"
-
-#. Second paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "Please note that these methods do not improve performance, and may increase system utilization and battery consumption."
-msgstr "請注意，這些方式不會提升效能，還可能消耗更多系統資源與電力。"
-
-#. First paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "當您無法連上 Warren 時，這些方式可能會派上用場。選擇「自動」時，應用程式會依序嘗試所有方式，直到其中一種成功為止。"
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -857,12 +718,6 @@ msgctxt "app-upgrade-view"
 msgid "Connection blocked. Try changing server or other settings."
 msgstr "連線被封鎖。請嘗試變更伺服器或其他設定。"
 
-#. Label displayed when an error occurred due to the installer failing to start
-#. and the suggested resolution is to download the update again.
-msgctxt "app-upgrade-view"
-msgid "Could not open installer, please try again or send a problem report."
-msgstr "無法開啟安裝程式，請再試一次或傳送問題回報。"
-
 #. Button text to download and install an update
 msgctxt "app-upgrade-view"
 msgid "Download & install"
@@ -877,11 +732,6 @@ msgstr "下載完成！"
 msgctxt "app-upgrade-view"
 msgid "Download failed"
 msgstr "下載失敗"
-
-#. Label displayed when an error occurred due to the download failing
-msgctxt "app-upgrade-view"
-msgid "Download failed, please check your connection/firewall and try again, or send a problem report."
-msgstr "下載失敗，請檢查您的連線/防火牆並再試一次，或傳送問題回報。"
 
 #. Status text displayed below a progress bar when the download of an update has been paused
 #. Label displayed above a progress bar when the update is verified successfully
@@ -911,11 +761,6 @@ msgctxt "app-upgrade-view"
 msgid "Install update"
 msgstr "安裝更新"
 
-#. Label displayed when an error occurred within the installer
-msgctxt "app-upgrade-view"
-msgid "Installer quit unexpectedly, please try again or send a problem report."
-msgstr "安裝程式意外退出，請再試一次或傳送問題回報。"
-
 #. Info about which directory the app update will be downloaded to
 msgctxt "app-upgrade-view"
 msgid "Installer will be downloaded to <b>%(cacheDir)s</b>."
@@ -934,11 +779,6 @@ msgstr "此版本尚無為此平台提供的任何更新或變更。"
 msgctxt "app-upgrade-view"
 msgid "Pause"
 msgstr "暫停"
-
-#. Button text to report a problem
-msgctxt "app-upgrade-view"
-msgid "Report a problem"
-msgstr "回報問題"
 
 #. Button text to resume updating
 msgctxt "app-upgrade-view"
@@ -965,21 +805,11 @@ msgctxt "app-upgrade-view"
 msgid "Starting installer..."
 msgstr "正在啟動安裝程式…"
 
-#. Label displayed when an unknown error occurred
-msgctxt "app-upgrade-view"
-msgid "Unknown error occurred. Please try again or send a problem report."
-msgstr "發生未知錯誤。請再試一次或傳送問題回報。"
-
 #. Title in navigation bar
 #. Main title for the update available view
 msgctxt "app-upgrade-view"
 msgid "Update available"
 msgstr "已推出更新"
-
-#. Label displayed when an error occurred due to the installer failed verification
-msgctxt "app-upgrade-view"
-msgid "Verification failed, please try again or send a problem report."
-msgstr "驗證失敗，請再試一次或傳送問題回報。"
 
 #. Label displayed above a progress bar when the update is verified successfully
 msgctxt "app-upgrade-view"
@@ -1050,14 +880,6 @@ msgstr "正在封鎖網路：帳戶已逾時"
 msgctxt "auth-failure"
 msgid "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly."
 msgstr "此帳戶的同步連線數過多。請中斷另一台裝置的連線，或者稍後再次嘗試連線。"
-
-msgctxt "auth-failure"
-msgid "Unable to authenticate account. Please send a problem report."
-msgstr "無法驗證帳戶。請傳送問題回報。"
-
-msgctxt "auth-failure"
-msgid "You are logged in with an invalid account number. Please log out and try another one."
-msgstr "您登入時所使用的帳號無效。請登出並嘗試其他帳號。"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
@@ -1151,10 +973,6 @@ msgid_plural "%(count)d apps in other countries"
 msgstr[0] "%(count)d 個應用程式使用其他國家"
 
 msgctxt "connect-view"
-msgid "Active features"
-msgstr "有效功能"
-
-msgctxt "connect-view"
 msgid "Congrats!"
 msgstr "恭喜！"
 
@@ -1178,10 +996,6 @@ msgstr "輸入優惠券兌換碼"
 msgctxt "connect-view"
 msgid "Go ahead and start using the app to begin reclaiming your online privacy."
 msgstr "立即開始使用應用程式，重新取得您的線上隱私權。"
-
-msgctxt "connect-view"
-msgid "Here’s your account number. Save it!"
-msgstr "以下是您的帳號。請妥善保管！"
 
 #. Button label for opening privacy information link.
 msgctxt "connect-view"
@@ -1385,43 +1199,6 @@ msgctxt "custom-list-feature"
 msgid "Relay"
 msgstr "中繼"
 
-#. Button for continuing login process.
-msgctxt "device-management"
-msgid "Continue with login"
-msgstr "繼續登入"
-
-#. Label informing the user when a device was created.
-#. Available placeholders:
-#. %(createdDate)s - The creation date of the device.
-msgctxt "device-management"
-msgid "Created: %(createdDate)s"
-msgstr "建立日期：%(createdDate)s"
-
-#. Label indicating that this device is the current device.
-msgctxt "device-management"
-msgid "Current device"
-msgstr "目前裝置"
-
-msgctxt "device-management"
-msgid "Device is inactive"
-msgstr "裝置處於非活動狀態"
-
-msgctxt "device-management"
-msgid "Device name"
-msgstr "裝置名稱"
-
-#. A label that will display the newly created device name to inform the user
-#. about it.
-#. Available placeholders:
-#. %(deviceName)s - The name of the current device
-msgctxt "device-management"
-msgid "Device name: %(deviceName)s"
-msgstr "裝置名稱：%(deviceName)s"
-
-msgctxt "device-management"
-msgid "Failed to remove device"
-msgstr "無法移除裝置"
-
 #. Button label for navigating to login.
 msgctxt "device-management"
 msgid "Go to login"
@@ -1431,10 +1208,6 @@ msgctxt "device-management"
 msgid "Going to login will unblock the Internet on this device."
 msgstr "前往登入將在此裝置上解除對網際網路的封鎖。"
 
-msgctxt "device-management"
-msgid "If you log out, the device and the device name is removed. When you log back in again, the device will get a new name."
-msgstr "如果您登出，則系統會移除裝置和裝置名稱。當您再次登入時，裝置則會獲得新名稱。"
-
 #. Title label in navigation bar for the manage devices view.
 #. Title text in the manage devices view
 msgctxt "device-management"
@@ -1442,68 +1215,13 @@ msgid "Manage devices"
 msgstr "管理裝置"
 
 msgctxt "device-management"
-msgid "Please log out of at least one by removing it from the list below. You can find the corresponding device name under the device’s Account settings."
-msgstr "請從底下清單至少移除一個裝置來將其登出。您可以在裝置的「帳戶」設定下找到相應裝置名稱。"
-
-#. Button label for confirming removing a device.
-msgctxt "device-management"
-msgid "Remove"
-msgstr "移除"
-
-#. Text displayed above button which logs out another device.
-#. The text enclosed in "<b></b>" will appear bold.
-#. Available placeholders:
-#. %(deviceName)s - The name of the device to log out.
-msgctxt "device-management"
-msgid "Remove <em>%(deviceName)s?</em>"
-msgstr "是否要移除 <em>%(deviceName)s？</em>"
-
-#. Page title informing user that enough devices has been removed to continue
-#. login process.
-msgctxt "device-management"
-msgid "Super!"
-msgstr "太好了！"
-
-msgctxt "device-management"
-msgid "The device will be removed from the list and logged out."
-msgstr "裝置將從清單中移除並登出。"
-
-msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "這是系統指派給裝置的名稱。每台登入 Mulvad 帳戶的裝置都會獲得一個獨特名稱，有助於您在應用程式或網站上管理裝置時識別各台裝置。"
-
-msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
 msgstr "剩餘時間：%(timeLeft)s"
-
-#. Page title informing user that the login failed due to too many registered
-#. devices on account.
-msgctxt "device-management"
-msgid "Too many devices"
-msgstr "裝置過多"
 
 #. Button text to retry fetching devices.
 msgctxt "device-management"
 msgid "Try again"
 msgstr "再試一次"
-
-#. Subtitle text in the manage devices view, explaining
-#. devices and what they can do in the manage devices view.
-msgctxt "device-management"
-msgid "View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily."
-msgstr "檢視並管理所有已登入的裝置。一個帳戶最多能同時登入 5 台裝置。每台裝置登入時都會獲得一個名稱，以協助您輕鬆區分。"
-
-msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Warren account."
-msgstr "一個 Mulvad 帳戶最多可以登入 5 台裝置。"
-
-msgctxt "device-management"
-msgid "You can now continue logging in on this device."
-msgstr "現在，您可以繼續在此裝置上登入。"
-
-msgctxt "device-management"
-msgid "You have removed this device. To connect again, you will need to log back in."
-msgstr "您已移除此裝置。若要重新連線，您需要重新登入。"
 
 #. The message displayed to the user in case of critical error in the GUI
 #. Available placeholders:
@@ -1663,10 +1381,6 @@ msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
 msgstr "網路流量可能正在洩漏"
 
 msgctxt "in-app-notifications"
-msgid "NEW DEVICE CREATED"
-msgstr "已建立新裝置"
-
-msgctxt "in-app-notifications"
 msgid "NEW VERSION INSTALLED"
 msgstr "已安裝新版本"
 
@@ -1697,11 +1411,6 @@ msgctxt "in-app-notifications"
 msgid "Retry installation"
 msgstr "重新嘗試安裝"
 
-#. Button label to send a problem report.
-msgctxt "in-app-notifications"
-msgid "Send problem report"
-msgstr "傳送問題回報"
-
 msgctxt "in-app-notifications"
 msgid "SERVER MAINTENANCE"
 msgstr "伺服器維護"
@@ -1720,20 +1429,6 @@ msgstr "安裝程式未能順利完成。"
 msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "安裝程式未能順利啟動。"
-
-#. Notification subtitle indicating the user is using an unsupported port for QUIC.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "in-app-notifications"
-msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
-msgstr "不支援所選的 %(wireGuard)s 連接埠，請<a>在 VPN 設定中變更</a>。"
-
-#. Notification text when a new device has been created.
-#. Available placeholders:
-#. - %(deviceName)s: Name of created device.
-msgctxt "in-app-notifications"
-msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
-msgstr "現在此裝置的名稱是 <em>%(deviceName)s</em>。如需更多資訊，請參閱「帳戶」中的<a>管理裝置</a>。"
 
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
@@ -1824,11 +1519,6 @@ msgctxt "launch-view"
 msgid "Failed to start the app, please try again or click “Details” for more info"
 msgstr "無法啟動應用程式，請再試一次或按一下「詳細資訊」進一步瞭解"
 
-#. Message in troubleshooting modal advising user to send a problem report if the steps do not work.
-msgctxt "launch-view"
-msgid "If these steps do not work please send a problem report."
-msgstr "如果以上步驟仍無法解決問題，請傳送問題回報。"
-
 #. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
 msgid "Only the account that set Warren up, or an administrator, can use it here."
@@ -1874,11 +1564,6 @@ msgctxt "launch-view"
 msgid "Restarting your computer"
 msgstr "重新啟動您的電腦"
 
-#. Button label for sending a problem report.
-msgctxt "launch-view"
-msgid "Send problem report"
-msgstr "傳送問題回報"
-
 #. Status text shown when app is starting.
 msgctxt "launch-view"
 msgid "Starting up...."
@@ -1893,11 +1578,6 @@ msgstr "啟動 Warren 背景程序失敗。此背景程序負責安全、終止�
 msgctxt "launch-view"
 msgid "Try again"
 msgstr "再試一次"
-
-#. Message in launch view when the mullvad service cannot be contacted.
-msgctxt "launch-view"
-msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "無法連線至 Warren 系統服務，您的連線可能不安全。請按一下「瞭解更多」按鈕進行故障排除或傳送問題報告。"
 
 #. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
 msgctxt "launch-view"
@@ -1954,109 +1634,16 @@ msgctxt "login-view"
 msgid "<b>%(lockdownModeSettingName)s</b> is enabled. Disable it to unblock your connection."
 msgstr "<b>%(lockdownModeSettingName)s</b> 已啟用。需先將其停用，才能為您的連線解除封鎖。"
 
-msgctxt "login-view"
-msgid "Account created"
-msgstr "已建立帳戶"
-
-msgctxt "login-view"
-msgid "Checking account number"
-msgstr "檢查帳號中"
-
 #. Text in button that allows user to create a new account.
 msgctxt "login-view"
 msgid "Create a new account"
 msgstr "建立新帳戶"
-
-#. Button which confirms the action to create a new account.
-msgctxt "login-view"
-msgid "Create new account"
-msgstr "建立新帳戶"
-
-msgctxt "login-view"
-msgid "Creating account..."
-msgstr "正在建立帳戶…"
-
-#. Text that asks the user if they really want to create a new account.
-msgctxt "login-view"
-msgid "Do you want to create a new account?"
-msgstr "要建立新帳戶嗎？"
-
-#. Text that asks the user if they really want to remove the saved account.
-msgctxt "login-view"
-msgid "Do you want to remove the saved account number?"
-msgstr "要移除已儲存的帳號嗎？"
-
-msgctxt "login-view"
-msgid "Enter your account number"
-msgstr "輸入您的帳號"
-
-msgctxt "login-view"
-msgid "Error"
-msgstr "錯誤"
-
-msgctxt "login-view"
-msgid "Failed to create account"
-msgstr "無法建立帳戶"
-
-msgctxt "login-view"
-msgid "Finishing upgrade."
-msgstr "即將完成升級。"
-
-#. Error message shown above login input when trying to login with a
-#. non-existent account number.
-msgctxt "login-view"
-msgid "Invalid account number"
-msgstr "帳號無效"
-
-msgctxt "login-view"
-msgid "Logged in"
-msgstr "已登入"
-
-msgctxt "login-view"
-msgid "Logging in..."
-msgstr "登入中…"
-
-#. Label for the login button.
-msgctxt "login-view"
-msgid "Login"
-msgstr "登入"
-
-msgctxt "login-view"
-msgid "Login failed"
-msgstr "登入失敗"
-
-#. Text shown between two horizontal lines above the "create account" button.
-#. In this context it is used to separate the users alternative of logging in
-#. or creating a new account, "Login or Create a new account".
-msgctxt "login-view"
-msgid "Or"
-msgstr "還是"
 
 #. This is a warning message shown when the app is blocking the users
 #. internet connection while logged out.
 msgctxt "login-view"
 msgid "Our kill switch is currently blocking your connection."
 msgstr "我們的終止開關目前正在封鎖您的連線。"
-
-msgctxt "login-view"
-msgid "Please wait"
-msgstr "請稍候"
-
-#. Text that informs the user about the consequences of clearing the saved
-#. account number.
-msgctxt "login-view"
-msgid "Removing the saved account number from this device cannot be undone."
-msgstr "從此裝置移除已儲存的帳號後，將無法復原。"
-
-#. Error message shown above login input when trying to login to an account
-#. with too many registered devices.
-msgctxt "login-view"
-msgid "Too many devices"
-msgstr "裝置過多"
-
-msgctxt "login-view"
-msgid "Unknown error"
-msgstr "未知錯誤"
 
 msgctxt "login-view"
 msgid "Upgrading..."
@@ -2066,42 +1653,6 @@ msgstr "正在升級…"
 msgctxt "login-view"
 msgid "Warren could not restore your account right now. Check your internet connection and try again."
 msgstr "Warren 目前無法還原您的帳戶。請檢查您的網路連線，然後再試一次。"
-
-msgctxt "login-view"
-msgid "Valid account number"
-msgstr "有效帳號"
-
-#. Text that informs the users about consequences of creating a new account.
-msgctxt "login-view"
-msgid "You already have a saved account number, by creating a new account the saved account number will be removed from this device. This cannot be undone."
-msgstr "您已儲存一組帳號。若建立新帳戶，該已儲存的帳號將會從此裝置移除；此動作無法復原。"
-
-#. The title for the LWO port selector.
-msgctxt "lwo-settings-view"
-msgid "Port"
-msgstr "連接埠"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "lwo-settings-view"
-msgid "Port: %(port)s"
-msgstr "連接埠：%(port)s"
-
-msgctxt "lwo-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "自動設定將會隨機從下方顯示的有效連接埠範圍中進行選擇。"
-
-msgctxt "lwo-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "自訂連接埠可以是有效範圍內的任何值：%(portRanges)s。"
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "lwo-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "有效範圍：%(portRanges)s"
 
 #. Title label in navigation bar
 msgctxt "navigation-bar"
@@ -2277,32 +1828,8 @@ msgid "Unable to apply firewall rules. Try updating your kernel."
 msgstr "無法套用防火牆規則。請嘗試更新核心。"
 
 msgctxt "notifications"
-msgid "Unable to block all network traffic. Please troubleshoot or send a problem report."
-msgstr "無法封鎖所有網路流量。請排除故障或傳送問題回報。"
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software or send a problem report."
-msgstr "無法封鎖所有網路流量。請嘗試暫時停用任何第三方防毒軟體或安全軟體，或傳送問題回報。"
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try updating your kernel or send a problem report."
-msgstr "無法封鎖所有網路流量。請嘗試更新您的核心或傳送問題回報。"
-
-msgctxt "notifications"
-msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
-msgstr "無法與 Warren 核心驅動程式通訊。請嘗試重新連線或傳送問題回報。"
-
-msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
 msgstr "無法解析自訂通道的主機。請嘗試變更您的設定。"
-
-msgctxt "notifications"
-msgid "Unable to set system DNS server. Please send a problem report."
-msgstr "無法設定系統 DNS 伺服器。請傳送問題回報。"
-
-msgctxt "notifications"
-msgid "Unable to start tunnel connection. Please send a problem report."
-msgstr "無法啟動通道連線。請傳送問題回報。"
 
 msgctxt "notifications"
 msgid "Unable to start tunnel connection. This could be because of conflicts with VMware, please troubleshoot."
@@ -2435,10 +1962,6 @@ msgstr "兌換憑證"
 msgctxt "redeem-voucher-view"
 msgid "An error occurred."
 msgstr "發生錯誤了。"
-
-msgctxt "redeem-voucher-view"
-msgid "It looks like you’ve entered an account number instead of a voucher code. If you would like to change the active account, please log out first."
-msgstr "您輸入的似乎是帳戶號碼，而不是優惠券兌換碼。如果您想變更啟用中帳戶，請先登出。"
 
 #. Button label for voucher redemption.
 msgctxt "redeem-voucher-view"
@@ -2679,10 +2202,6 @@ msgid "Choose"
 msgstr "選擇"
 
 msgctxt "split-tunneling-view"
-msgid "Choose the apps you want to exclude from the VPN tunnel."
-msgstr "選擇要從 VPN 通道中排除的應用程式。"
-
-msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
 msgstr "%(country)s 的城市"
 
@@ -2783,10 +2302,6 @@ msgstr "Snap 應用程式暫不支援指定國家"
 msgctxt "split-tunneling-view"
 msgid "To use %(splitTunneling)s, please update to a Linux kernel version that supports cgroup v2."
 msgstr "若要使用 %(splitTunneling)s，請將 Linux 核心更新至支援 cgroup v2 的版本。"
-
-msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
-msgstr "為使用分割通道，請在 masOS 系統設定中為「Warren VPN」啟用「全硬碟存取」。"
 
 msgctxt "split-tunneling-view"
 msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
@@ -2957,107 +2472,15 @@ msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
 msgstr "若它已在執行，請先關閉 %(applicationName)s，再從此處啟動。否則，它可能不會使用 VPN。"
 
-#. Button label for continuing problem report submission with an outdated app version.
-msgctxt "support-view"
-msgid "Continue anyway"
-msgstr "仍然繼續"
-
-#. Button text to edit the message after a failed attempt to send the problem report.
-msgctxt "support-view"
-msgid "Edit message"
-msgstr "編輯訊息"
-
-msgctxt "support-view"
-msgid "Failed to send"
-msgstr "無法傳送"
-
 #. Link to the webpage
 msgctxt "support-view"
 msgid "FAQs & Guides"
 msgstr "常見問題集與指南"
 
-#. The message displayed to the user after submitting the problem report, given that the user left his or her email for us to reach back.
-#. Available placeholders:
-#. %(email)s
-msgctxt "support-view"
-msgid "If needed we will contact you at %(email)s"
-msgstr "如有需要，我們將透過 %(email)s 與您聯絡"
-
-msgctxt "support-view"
-msgid "If you exit the form and try again later, the information you already entered will still be here."
-msgstr "如果您關閉表格後再重新嘗試，所輸入的資訊仍會出現在這裡。"
-
-#. Title label in navigation bar
-#. Navigation button to the 'Report a problem' help view
-msgctxt "support-view"
-msgid "Report a problem"
-msgstr "回報問題"
-
-#. Button label for sending the problem report.
-msgctxt "support-view"
-msgid "Send"
-msgstr "傳送"
-
-#. Button label for sending the problem report without an email address.
-msgctxt "support-view"
-msgid "Send anyway"
-msgstr "仍要傳送"
-
-msgctxt "support-view"
-msgid "Sending..."
-msgstr "傳送中…"
-
-msgctxt "support-view"
-msgid "Sent"
-msgstr "已傳送"
-
 #. Title label in navigation bar
 msgctxt "support-view"
 msgid "Support"
 msgstr "支援"
-
-msgctxt "support-view"
-msgid "Thanks!"
-msgstr "謝謝！"
-
-msgctxt "support-view"
-msgid "To assist you better, please write in English or Swedish and include which country you are connecting from."
-msgstr "為了給您提供更完善的協助，請您使用英語或瑞典語書寫，並註明您是從哪個國家/地區進行連線。"
-
-msgctxt "support-view"
-msgid "To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel."
-msgstr "為了更有效協助您，會將應用程式的日誌檔將附加到此郵件。您的資料會保持安全和私密性，因為這些資料會先經過匿名處理，再透過加密通道傳送。"
-
-#. Button label for retrying problem report submission after a failure.
-msgctxt "support-view"
-msgid "Try again"
-msgstr "再試一次"
-
-#. Button label for updating the app to the latest version.
-msgctxt "support-view"
-msgid "Update app"
-msgstr "更新應用程式"
-
-#. Button label for opening app logs.
-msgctxt "support-view"
-msgid "View app logs"
-msgstr "檢視應用程式日誌"
-
-msgctxt "support-view"
-msgid "We will look into this."
-msgstr "我們會對此進行調查。"
-
-msgctxt "support-view"
-msgid "You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address."
-msgstr "您即將傳送的問題報告未包含回覆方式資訊。如果想收到您這份報告的回覆，請輸入您的電子郵件位址。"
-
-msgctxt "support-view"
-msgid "You are using an old version of the app. Please upgrade and see if the problem still exists before sending a report."
-msgstr "您正在使用舊版應用程式。在傳送回報之前，請先升級並檢查問題是否仍然存在。"
-
-msgctxt "support-view"
-msgid "Your email (optional)"
-msgstr "您的電子郵件 (選填)"
 
 #. Link to the refund policy webpage
 msgctxt "support-view"
@@ -3095,10 +2518,6 @@ msgstr "在 macOS 系統設定中，為「Warren VPN」啟用「全硬碟存取�
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
 msgstr "無法啟用分割通道。這是因為應用程式缺少了系統權限。您可以執行下列操作："
-
-msgctxt "troubleshoot"
-msgid "If these steps do not work please send a problem report."
-msgstr "如果以上步驟仍無法解決問題，請傳送問題回報。"
 
 msgctxt "troubleshoot"
 msgid "If you have installed another VPN then try to uninstall that."
@@ -3169,14 +2588,6 @@ msgstr "僅所選應用程式受到保護"
 msgctxt "tunnel-control"
 msgid "Connection interrupted"
 msgstr "連線已中斷"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map"
-msgstr "動畫式地圖"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map movements."
-msgstr "為地圖移動新增動畫效果。"
 
 msgctxt "user-interface-settings-view"
 msgid "Enable or disable system notifications. The critical notifications will always be displayed."
@@ -3598,44 +3009,13 @@ msgctxt "warren-pubkey-warning"
 msgid "The key changed again before it could be trusted. Review the new key and try again."
 msgstr "在信任該金鑰之前，金鑰又再次變更。請檢查新金鑰並再試一次。"
 
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "UDP-over-TCP"
-msgstr "UDP-over-TCP"
-
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s (%(daitaFull)s) hides patterns in your encrypted VPN traffic."
 msgstr "%(daita)s (%(daitaFull)s) 會在您的加密 VPN 流量中隱藏模式。"
 
 msgctxt "wireguard-settings-view"
-msgid "%(daita)s does this by carefully adding network noise and making all network packets the same size."
-msgstr "%(daita)s 會仔細加入網路噪音，讓所有網路資料封包大小皆相同，以達到此目的。"
-
-msgctxt "wireguard-settings-view"
-msgid "%(wireguard)s port"
-msgstr "%(wireguard)s 連接埠"
-
-#. Page title for QUIC port view
-msgctxt "wireguard-settings-view"
-msgid "%(wireGuard)s port"
-msgstr "%(wireGuard)s 連接埠"
-
-msgctxt "wireguard-settings-view"
-msgid "Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans."
-msgstr "請注意：這會增加網路流量，並對速度、延遲與電池耗電產生負面影響。若方案流量有限，請謹慎使用。"
-
-msgctxt "wireguard-settings-view"
 msgid "By enabling “%(directOnly)s” you will have to manually select a server that is %(daita)s-enabled. This can cause you to end up in a blocked state until you have selected a compatible server in the “Select location” view."
 msgstr "啟用「%(directOnly)s」後，您必須手動選取已啟用 %(daita)s 的伺服器。這有可能導致您後來處於封鎖狀態，直到您在「選取位置」檢視圖中選到相容的伺服器為止。"
-
-msgctxt "wireguard-settings-view"
-msgid "By using sophisticated AI it’s possible to analyze the traffic of data packets going in and out of your device (even if the traffic is encrypted)."
-msgstr "可透過精密的 AI 分析進出裝置的資料封包流量 (即使流量已加密)。"
 
 msgctxt "wireguard-settings-view"
 msgid "Cancel"
@@ -3645,10 +3025,6 @@ msgstr "取消"
 msgctxt "wireguard-settings-view"
 msgid "Device IP version"
 msgstr "裝置 IP 版本"
-
-msgctxt "wireguard-settings-view"
-msgid "If an observer monitors these data packets, %(daita)s makes it significantly harder for them to identify which websites you are visiting or with whom you are communicating."
-msgstr "如果有觀察者正在監控這些資料封包，%(daita)s 會大大增加他們的難度，讓他們很難辨識您正在瀏覽哪些網站或者在和誰通訊。"
 
 msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
@@ -3662,37 +3038,13 @@ msgid "MTU"
 msgstr "MTU"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop"
-msgstr "多點跳躍"
-
-msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "正在使用多點跳躍為您所選位置啟用 DAITA"
-
-msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
-msgstr "多重跳躍會讓你的流量從一台 QUIC 伺服器進入、從另一台伺服器離開，在你和造訪的網站之間多加一台伺服器。這會增加延遲。"
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. In order to use the internet, you might have to select a new location after enabling."
 msgstr "我們有些伺服器並未啟用 %(daita)s。若要使用網際網路，您可能必須在啟用後選取新的位置。"
-
-msgctxt "wireguard-settings-view"
-msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
-msgstr "我們有些伺服器並未啟用 %(daita)s。因此，我們使用多點跳躍自動來為任意伺服器啟用 %(daita)s 。"
-
-#. The title for the QUIC port selector.
-msgctxt "wireguard-settings-view"
-msgid "Port"
-msgstr "連接埠"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "wireguard-settings-view"
-msgid "Port: %(port)s"
-msgstr "連接埠：%(port)s"
 
 #. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
@@ -3715,14 +3067,6 @@ msgid "Shadowsocks"
 msgstr "Shadowsocks"
 
 msgctxt "wireguard-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "自動設定將會隨機從下方顯示的有效連接埠範圍中進行選擇。"
-
-msgctxt "wireguard-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "自訂連接埠可以是有效範圍內的任何值：%(portRanges)s。"
-
-msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "此功能可保護您傳往出口伺服器的流量，免受量子電腦的潛在攻擊。"
 
@@ -3730,911 +3074,8 @@ msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
 msgstr "UDP-over-TCP"
 
-#. Text describing the valid port range for a port selector.
-msgctxt "wireguard-settings-view"
-msgid "Valid range: %(min)s - %(max)s"
-msgstr "有效範圍：%(min)s - %(max)s"
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "wireguard-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "有效範圍：%(portRanges)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
-msgstr "UDP-over-TCP 混淆通訊協定應連線到 VPN 伺服器上的哪個 TCP 連接埠。"
-
-msgid "%1$s more..."
-msgstr "其他 %1$s 個…"
-
-msgid "%1$s was added to \"%2$s\""
-msgstr "已將 %1$s 新增至「%2$s」"
-
-msgid "%1$s was removed from \"%2$s\""
-msgstr "已將 %1$s 從「%2$s」中移除"
-
-msgid "%1$s, %2$s, %3$s"
-msgstr "%1$s，%2$s，%3$s"
-
-msgid "%s (Entry)"
-msgstr "%s (入口)"
-
-msgid "%s (Exit)"
-msgstr "%s (出口)"
-
-msgid "%s (added)"
-msgstr "%s (已新增)"
-
-msgid "%s (removed)"
-msgstr "%s (已移除)"
-
-msgid "%s is already selected as entry relay"
-msgstr "已選取 %s 為入口節點"
-
-msgid "%s is already selected as exit relay"
-msgstr "已選取 %s 為出口節點"
-
-msgid "%s is unavailable"
-msgstr "%s 無法使用"
-
-msgid "%s settings."
-msgstr "%s 設定."
-
-msgid "%s was added to your account."
-msgstr "%s 已新增至您的帳戶。"
-
-msgid "(%d)"
-msgstr "(%d)"
-
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
-msgstr "1. 按一下下方「前往 VPN 設定」按鈕後，再按一下「Warren VPN」名稱旁邊的齒輪。"
-
-msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
-msgstr "2. 若要啟用自動連線，請按一下「一律啟用 VPN」旁邊的開關。"
-
-msgid "3. To enable Lockdown mode, click on the toggle next to \"Block connections without VPN\".<br /><br /><b>Warning: This setting blocks split apps and the Local Network Sharing feature.</b>"
-msgstr "3. 若要啟用鎖定模式，請按一下「在沒有 VPN 的情況下封鎖連線」旁邊的開關。<br /><br /><b>警告：此設定會封鎖分割應用程式和「本機網路共享」功能。</b>"
-
-msgid "30 days was added to your account."
-msgstr "已為您的帳戶新增 30 天。"
-
-msgid "90 days was added to your account."
-msgstr "已為您的帳戶增加 90 天。"
-
-msgid "<b>Account recovery will not be possible.</b>"
-msgstr "<b>將無法恢復帳戶。</b>"
-
-msgid "<b>Attention:</b> Only some servers support the full port range."
-msgstr "<b>請注意：</b>並非所有伺服器都支援完整連接埠範圍。"
-
-msgid "<b>Attention:</b> The app will close automatically and needs to be manually opened again after selecting a new icon and title. This will not impact your VPN connection."
-msgstr "<b>請注意：</b>應用程式將自動關閉，在選擇新的圖示與標題後，需手動重新開啟。這不會影響您的 VPN 連線。"
-
-msgid "<b>Please note that these methods do not improve performance, and may increase system utilization and battery consumption.</b>"
-msgstr "<b>請注意，這些方式不會提升效能，還可能消耗更多系統資源與電力。</b>"
-
-msgid "<b>This action cannot be undone.</b>"
-msgstr "<b>此操作無法復原。</b>"
-
-msgid "<b>Warning:</b>"
-msgstr "<b>警告：</b>"
-
-msgid "<b>You will lose access to this account on all devices.</b>"
-msgstr "<b>您在所有裝置上都將無法存取此帳戶。</b>"
-
-msgid "API reachable, adding method..."
-msgstr "可透過 API 存取，正在新增方式…"
-
-msgid "API unreachable, save method anyway?"
-msgstr "無法透過 API 存取，仍要儲存方式嗎？"
-
-msgid "Account credit expires in a few minutes"
-msgstr "帳戶點數將在數分鐘後到期"
-
-msgid "Account deleted"
-msgstr "帳戶已刪除"
-
-msgid "Account number is too long, please enter a valid number"
-msgstr "帳號過長，請輸入有效的帳號"
-
-msgid "Account number must match"
-msgstr "帳號必須一致"
-
-msgid "Account recovery will not be possible."
-msgstr "將無法恢復帳戶。"
-
-msgid "Account time reminders"
-msgstr "帳戶時間提醒"
-
-msgid "Add 30 days time (%s)"
-msgstr "增加 30 天時間 (%s)"
-
-msgid "Add 90 days time (%s)"
-msgstr "增加 90 天 (%s)"
-
-msgid "Add DNS server"
-msgstr "新增 DNS 伺服器"
-
-msgid "Add locations"
-msgstr "新增位置"
-
-msgid "Add time"
-msgstr "增加時間"
-
-msgid "Add to list"
-msgstr "新增至清單"
-
-msgid "Adding method..."
-msgstr "正在新增方式…"
-
-msgid "After updating a VPN app on Android 16, devices might end up in a state where VPN apps are no longer able to reach the internet."
-msgstr "在 Android 16 更新 VPN 應用程式後，裝置可能會出現 VPN 應用程式無法連線至網際網路的情況。"
-
-msgid "Agree and continue"
-msgstr "同意並繼續"
-
-msgid "All"
-msgstr "全部"
-
-msgid "All applications"
-msgstr "所有應用程式"
-
-msgid "All overrides will be reset and servers IP addresses, in the Select location view, will go back to default."
-msgstr "所有覆寫內容都將重設，並且在「選擇位置」視圖中，伺服器 IP 位址也將回到預設設定。"
-
-msgid "Always-on VPN assigned to %s"
-msgstr "「一律啟用 VPN」已指派給 %s"
-
-msgid "Always-on VPN assigned to other VPN"
-msgstr "「一律啟用 VPN」已指派給其他 VPN"
-
-msgid "Android 16 has a known issue. Please restart your device and try again. To learn more,"
-msgstr "Android 16 存在已知問題。請重新啟動您的裝置並再試一次。如需更多資訊，"
-
-msgid "Any remaining time will be null and void."
-msgstr "任何剩餘時間都將作廢。"
-
-msgid "App icon"
-msgstr "應用程式圖示"
-
-msgid "Appearance"
-msgstr "外觀"
-
-msgid "Applying changes..."
-msgstr "正在套用變更…"
-
-msgid "Are you sure you want to log <b>%s</b> out?"
-msgstr "確定要將 <b>%s</b> 登出嗎？"
-
-msgid "At least one method needs to be enabled"
-msgstr "至少需要啟用一種方式"
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, \"Local network sharing\" will not work."
-msgstr "注意：如果啟用了「在沒有 VPN 的情況下封鎖連線」，將無法使用「本機網路共享」功能。"
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, split apps will not have Internet. Always keep in mind that split tunneling is a privacy risk."
-msgstr "注意：如果啟用了「在沒有 VPN 的情況下封鎖連線」，分割應用程式將無法進行網際網路連線。請謹記，分割通道存在隱私風險。"
-
-msgid "Attention: this setting cannot be used in combination with \"Use custom DNS server\"."
-msgstr "注意：此設定不能與「使用自訂 DNS 伺服器」共同使用。"
-
-msgid "Auto-connect & Lockdown mode"
-msgstr "自動連線和鎖定模式"
-
-msgid "Auto-connect is called Always-on VPN in the Android system settings and it makes sure you are constantly connected to the VPN tunnel and auto connects after restart."
-msgstr "自動連線在 Android 系統設定中稱為「始終啟用 VPN」，此功能可確保您始終與 VPN 通道連線，並且會在重新啟動後自動連線。"
-
-msgid "Automatically connect on device start-up."
-msgstr "裝置啟動時自動連線。"
-
-msgid "Blocking internet (device offline)"
-msgstr "封鎖網際網路 (裝置離線)"
-
-msgid "Blocking..."
-msgstr "正在封鎖…"
-
-msgid "Browser"
-msgstr "瀏覽器"
-
-msgid "By attaching your account token it links this report to your account, which helps us resolve your issue quicker. All reports are automatically deleted after a period of time."
-msgstr "附加您的帳戶權杖後，此回報就會和您的帳戶相連，這能讓我們更快為您解決問題。所有回報都會在一段時間後自動刪除。"
-
-msgid "By checking this box I agree to the risks involved with deleting my account"
-msgstr "勾選此方框即代表我同意承擔刪除我的帳戶會帶來的風險"
-
-msgid "Can't connect?"
-msgstr "無法連線嗎？"
-
-msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
-msgstr "變更您 Android 裝置上 Warren VPN 應用程式的圖示與標題。這不會變更 Warren VPN 相關通知所使用的圖示。"
-
-msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
-msgstr "由於快取的結果，對 DNS 相關設定所做的變更可能不會立即生效。"
-
-msgid "Clear input"
-msgstr "清除輸入"
-
-msgid "Collapse"
-msgstr "折疊"
-
-msgid "Connect on device start-up"
-msgstr "裝置啟動時連線"
-
-msgid "Connect to a different network"
-msgstr "連上其他網路"
-
-msgid "Connecting..."
-msgstr "正在連線…"
-
 msgid "Continue"
 msgstr "繼續"
-
-msgid "Copied Warren account number to clipboard"
-msgstr "已將 Warren 帳號複製到剪貼簿"
-
-msgid "Copied logs to clipboard"
-msgstr "已將記錄複製到剪貼簿"
-
-msgid "Copy"
-msgstr "複製"
-
-msgid "Could not display remaining days."
-msgstr "無法顯示剩餘天數。"
-
-msgid "Create new list"
-msgstr "建立新清單"
-
-msgid "Creating account failed"
-msgstr "建立帳戶失敗"
-
-msgid "Critical error (your attention is required)"
-msgstr "嚴重錯誤 (需注意)"
-
-msgid "Current: %s"
-msgstr "目前：%s"
-
-msgid "Custom DNS server addresses %1$s are invalid"
-msgstr "自訂 DNS 伺服器位址 %1$s 無效"
-
-msgid "DNS settings might not go into effect immediately"
-msgstr "DNS 設定可能不會立即生效"
-
-msgid "Delete \"%s\"?"
-msgstr "要刪除「%s」嗎？"
-
-msgid "Delete account"
-msgstr "刪除帳戶"
-
-msgid "Delete method"
-msgstr "刪除方式"
-
-msgid "Delete method?"
-msgstr "要刪除方式嗎？"
-
-msgid "Deleting your account cannot be undone."
-msgstr "刪除帳戶的操作無法復原。"
-
-msgid "Deleting your account:"
-msgstr "刪除您的帳戶："
-
-msgid "Direct"
-msgstr "直接"
-
-msgid "Disable all \"%s\" above to activate this setting."
-msgstr "停用上方所有「%s」以啟動此設定。"
-
-msgid "Disable multihop"
-msgstr "停用多點跳躍"
-
-msgid "Discard"
-msgstr "捨棄"
-
-msgid "Discard changes?"
-msgstr "要捨棄變更嗎？"
-
-msgid "Disconnected (No VPN permission)"
-msgstr "已中斷連線 (無 VPN 權限)"
-
-msgid "Disconnecting..."
-msgstr "正在中斷連線…"
-
-msgid "Dismiss"
-msgstr "取消"
-
-msgid "Don’t have an account number?"
-msgstr "沒有帳號嗎？"
-
-msgid "Edit custom lists"
-msgstr "編輯自訂清單"
-
-msgid "Edit list"
-msgstr "編輯清單"
-
-msgid "Edit lists"
-msgstr "編輯清單"
-
-msgid "Edit locations"
-msgstr "編輯位置"
-
-msgid "Enable %1$s"
-msgstr "啟用 %1$s"
-
-msgid "Enable all & retry"
-msgstr "全部啟用並重試"
-
-msgid "Enable all access methods in the app"
-msgstr "啟用應用程式中所有存取方式"
-
-msgid "Enable method"
-msgstr "啟用方式"
-
-msgid "Enable multihop"
-msgstr "啟用多點跳躍"
-
-msgid "Enter MTU"
-msgstr "輸入 MTU"
-
-msgid "Enter account number digits"
-msgstr "請輸入帳號數字"
-
-msgid "Entry relay is the same as exit relay"
-msgstr "入口節點與出口節點相同"
-
-msgid "Excluded applications"
-msgstr "已排除的應用程式"
-
-msgid "Expand"
-msgstr "展開"
-
-msgid "External link"
-msgstr "外部連結"
-
-msgid "FAILED TO CONNECT"
-msgstr "連線失敗"
-
-msgid "Failed to apply patch"
-msgstr "無法套用修補檔"
-
-msgid "Failed to delete account, please contact support"
-msgstr "無法刪除帳戶，請聯絡支援團隊"
-
-msgid "Failed to load products, please try again"
-msgstr "載入產品失敗，請再試一次"
-
-msgid "Failed to set to current - API not reachable"
-msgstr "無法設定為目前方式 - 無法透過 API 存取"
-
-msgid "Failed to set to current - Unknown reason"
-msgstr "無法設定為目前方式 - 不明原因"
-
-msgid "File"
-msgstr "檔案"
-
-msgid "For details, please see our %s."
-msgstr "如需詳細資訊，請參閱我們的 %s。"
-
-msgid "For the VPN to connect automatically on device startup, the app must have VPN permissions. You can grant these by clicking “Connect” in the map view and selecting “OK” if prompted. Additionally, ensure the app is installed on the internal storage by checking the storage information in the app details in system settings."
-msgstr "為讓 VPN 在裝置啟動時自動連線，應用程式需擁有 VPN 權限。您可以在地圖檢視中點擊「連線」，然後在顯示提示時選擇「確定」來授予權限。此外，請在系統設定中檢查應用程式詳細資訊中的儲存資訊，以確保應用程式已安裝於內部儲存空間。"
-
-msgid "Go to VPN settings"
-msgstr "前往「VPN 設定」"
-
-msgid "Going to login will unblock the internet on this device."
-msgstr "若前往登入，則會在此裝置上解除對網際網路的封鎖。"
-
-msgid "Google Play payment pending"
-msgstr "Google Play 付款尚待處理"
-
-msgid "Google Play payment pending, this might take some time"
-msgstr "Google Play 付款待處理，這可能需要花一些時間"
-
-msgid "Google Play unavailable"
-msgstr "Google Play 無法使用"
-
-msgid "IPv4 is not available, please try changing \"Device IP version\" setting."
-msgstr "無法使用 IPv4，請嘗試變更「裝置 IP 版本」設定。"
-
-msgid "IPv6 is not available, please try changing \"Device IP version\" setting."
-msgstr "無法使用 IPv6，請嘗試變更「裝置 IP 版本」設定。"
-
-msgid "Icon and title"
-msgstr "圖示與標題"
-
-msgid "If the icon and title is still not changed after the app has closed, please try restarting the device."
-msgstr "如果關閉應用程式後，圖示和標題仍未變更，請嘗試重新啟動裝置。"
-
-msgid "If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device."
-msgstr "如果使用了分割通道功能，該應用程式會查詢您的系統，以取得所有已安裝應用程式的清單。我們只會在分割通道視圖中擷取這份清單，絕不會傳送至他處。"
-
-msgid "If these steps don’t work, please send an email to support using the button below. It will automatically attach the logs which have been anonymized."
-msgstr "若以上步驟無效，請使用下方按鈕傳送電子郵件至支援團隊。電子郵件將自動附加已匿名處理的日誌記錄。"
-
-msgid "Import new overrides by"
-msgstr "匯入新覆寫設定的方式"
-
-msgid "Import successful, overrides active"
-msgstr "匯入成功，覆寫設定已啟用"
-
-msgid "Importing new overrides might replace some previously imported overrides."
-msgstr "匯入新的覆寫設定，可能會取代一部分先前已匯入的覆寫設定。"
-
-msgid "In-app products unavailable, please make sure you have the latest version of Google Play."
-msgstr "無法取得應用程式內產品，請確認您是否擁有最新版本的 Google Play。"
-
-msgid "Include my account token for faster help with payment or account related issues"
-msgstr "加入我的帳戶權杖，就能更快取得付款或帳戶相關問題的協助"
-
-msgid "Invalid IPv6 config, please try to change the VPN settings."
-msgstr "IPv6 組態無效，請嘗試變更 VPN 設定。"
-
-msgid "Invalid or missing value \"%1$s\""
-msgstr "值「%1$s」無效或遺失"
-
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "實現方法是使用量子安全演算法執行額外的金鑰交換，並將結果混合至 QUIC 的常規加密。每次建立新通道時，這一額外步驟都會使用約 500 kiB 流量。"
-
-msgid "Less than a day left on this account"
-msgstr "此帳戶剩餘不到一天"
-
-msgid "Lets you select apps that should access the Internet directly without going through the VPN tunnel."
-msgstr "允許您選擇不經過 VPN 通道而直接存取網際網路的應用程式。"
-
-msgid "List name"
-msgstr "清單名稱"
-
-msgid "Loading products"
-msgstr "正在載入產品"
-
-msgid "Locations"
-msgstr "位置"
-
-msgid "Locations were changed for \"%s\""
-msgstr "已變更「%s」的位置"
-
-msgid "Log in"
-msgstr "登入"
-
-msgid "Makes sure the device is always on the VPN tunnel."
-msgstr "請確認裝置始終位於 VPN 通道上。"
-
-msgid "More actions"
-msgstr "更多操作"
-
-msgid "Warren services unavailable"
-msgstr "Warren 服務無法使用"
-
-msgid "Multihop is disabled"
-msgstr "已停用多點跳躍"
-
-msgid "Multihop is enabled"
-msgstr "已啟用多點跳躍"
-
-msgid "Name is already taken."
-msgstr "名稱已在別處使用。"
-
-msgid "Name was changed to %s"
-msgstr "名稱已變更為「%s」"
-
-msgid "Navigate"
-msgstr "導覽"
-
-msgid "No Android app store installed, could not open link"
-msgstr "未安裝 Android 應用程式商店，無法開啟連結"
-
-msgid "No browser app installed, could not open link"
-msgstr "未安裝瀏覽器應用程式，無法開啟連結"
-
-msgid "No changelog was added for this version"
-msgstr "尚未為此版本新增變更日誌"
-
-msgid "No custom lists available"
-msgstr "有可用的自訂清單"
-
-msgid "No email app available on the device"
-msgstr "裝置上沒有可用的電子郵件應用程式"
-
-msgid "No entry server match your settings, try changing server or other settings."
-msgstr "沒有與您的設定相符的入口伺服器，請嘗試變更伺服器或其他設定。"
-
-msgid "No exit server match your settings, try changing server or other settings."
-msgstr "沒有與您的設定相符的出口伺服器，請嘗試變更伺服器或其他設定。"
-
-msgid "No internet connection"
-msgstr "沒有網際網路連線"
-
-msgid "No matching servers found."
-msgstr "找不到相符的伺服器。"
-
-msgid "No result for \"%s\", please try a different search"
-msgstr "找不到「%s」的結果，請使改用其他搜尋條件。"
-
-msgid "Not found"
-msgstr "找不到"
-
-msgid "Notes"
-msgstr "記事"
-
-msgid "Notification settings"
-msgstr "通知設定"
-
-msgid "Open app details"
-msgstr "開啟應用程式詳細資訊"
-
-msgid "Overrides active"
-msgstr "覆寫設定已啟用"
-
-msgid "Overrides cleared"
-msgstr "覆寫設定已清除"
-
-msgid "Overrides inactive"
-msgstr "覆寫設定未啟用"
-
-msgid "Password (optional)"
-msgstr "密碼 (可選)"
-
-msgid "Paste or write overrides to be imported"
-msgstr "貼上或撰寫要匯入的覆寫設定"
-
-msgid "Patch not matching specification"
-msgstr "修補檔與規範不相符"
-
-msgid "Please enter a valid IPv4 or IPv6 address"
-msgstr "請輸入有效的 IPv4 或 IPv6 位址。"
-
-msgid "Please enter a valid remote server port"
-msgstr "請輸入有效的遠端伺服器連接埠"
-
-msgid "Please press connect to request VPN permission"
-msgstr "請按「連線」請求 VPN 權限"
-
-msgid "Please restart your device and try connecting again. If this does not work, please write an email to %s in Swedish or English."
-msgstr "請重新啟動您的裝置並嘗試重新連線。若不成功，請以瑞典語或英語撰寫電子郵件並寄至 %s。"
-
-msgid "Please try changing your filters."
-msgstr "請變更您的篩選器試試。"
-
-msgid "Privacy"
-msgstr "隱私權"
-
-msgid "Privacy policy"
-msgstr "隱私權政策"
-
-msgid "Recents disabled and history cleared"
-msgstr "已停用最近使用，並已清除歷史"
-
-msgid "Recursion limit"
-msgstr "遞迴限制"
-
-msgid "Refunds will not be possible."
-msgstr "無法退款。"
-
-msgid "Remove %s?"
-msgstr "是否移除 %s？"
-
-msgid "Remove custom port"
-msgstr "移除自訂連接埠"
-
-msgid "Reset"
-msgstr "重設"
-
-msgid "Reset all overrides"
-msgstr "重設所有覆寫設定"
-
-msgid "Reset overrides"
-msgstr "重設覆寫設定"
-
-msgid "Reset to default"
-msgstr "重設為預設值"
-
-msgid "Restart your device"
-msgstr "重新啟動裝置"
-
-msgid "Search"
-msgstr "搜尋"
-
-msgid "Send email"
-msgstr "傳送電子郵件"
-
-msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
-msgstr "設定 QUIC MTU 值。有效範圍：%1$d - %2$d。"
-
-msgid "Set as multihop entry"
-msgstr "設為多點跳躍進站點"
-
-msgid "Set as multihop entry (incompatible)"
-msgstr "設為多點跳躍進站點 (不相容)"
-
-msgid "Set as multihop exit"
-msgstr "設為多點跳躍出站點"
-
-msgid "Set as multihop exit (incompatible)"
-msgstr "設為多點跳躍出站點 (不相容)"
-
-msgid "Set port"
-msgstr "設定連接埠"
-
-msgid "Share…"
-msgstr "共享…"
-
-msgid "Show location in notification"
-msgstr "在通知中顯示位置"
-
-msgid "Show system apps"
-msgstr "顯示系統應用程式"
-
-msgid "Shows current VPN tunnel status"
-msgstr "顯示目前的 VPN 通道狀態"
-
-msgid "Shows reminders when the account time is about to expire"
-msgstr "在帳戶時間即將到期時顯示提醒"
-
-msgid "Submit"
-msgstr "提交"
-
-msgid "TCP"
-msgstr "TCP"
-
-msgid "Test method"
-msgstr "測試方式"
-
-msgid "Testing %s..."
-msgstr "正在測試 %s…"
-
-msgid "Text"
-msgstr "文字"
-
-msgid "Thanks for being part of our community.\\nPrivacy is for the people!"
-msgstr "感謝您加入我們的社群。\\n大家都享有隱私權！"
-
-msgid "The Auto-connect and Lockdown mode settings can be found in the Android system settings, follow this guide to enable one or both."
-msgstr "自動連線和鎖定模式設定皆可在 Android 系統設定中找到，請按照本指南的指示，啟用其中一項或兩項設定。"
-
-msgid "The IPv6 DNS server will not work unless you enable \"IPv6\" under VPN settings."
-msgstr "若要執行 IPv6 DNS 伺服器，需先在 VPN 設定下啟用「IPv6」。"
-
-msgid "The Lockdown mode is called \"Block connections without VPN\" in the Android system settings. It helps minimize leaks, however it has some known limitations which you can read more about"
-msgstr "在 Android 系統設定中，鎖定模式稱為「在沒有 VPN 的情況下封鎖連線」。這有助於讓洩漏的情形降至最低。然而，也有一些已知的侷限性。如需進一步的相關資訊，請按一下"
-
-msgid "The \"Current\" method represent which method the app is using to reach the API."
-msgstr "「目前」方式表示應用程式正用來存取 API 的方式。"
-
-msgid "The app is blocking internet, please disconnect first"
-msgstr "此應用程式正在封鎖網際網路，請先中斷連線"
-
-msgid "The app was unable to create an account due to not being able to reach the Warren API."
-msgstr "由於無法連至 Warren API，本應用程式無法建立帳戶。"
-
-msgid "The app was unable to login due to not being able to reach the Warren API."
-msgstr "由於無法連至 Warren API，本應用程式無法登入。"
-
-msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
-msgstr "若要使本機 DNS 伺服器運作，需先在 VPN 設定下啟用「本機網路共享」。"
-
-msgid "The selected %s port is not supported, please change it under"
-msgstr "不支援所選的 %s 連接埠，請至下列位置變更："
-
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "當您無法連上 Warren 時，這些方式可能會派上用場。選擇「自動」時，應用程式會嘗試所有方式，直到其中一種成功為止。"
-
-msgid "This address has already been entered."
-msgstr "此地址已輸入過。"
-
-msgid "This field is required"
-msgstr "此欄位為必填項"
-
-msgid "This impacts your anonymity"
-msgstr "這會影響您的匿名性"
-
-msgid "This is already set as current"
-msgstr "已將其設定為目前方式"
-
-msgid "This might be due to censorship or network issues. Please try to:"
-msgstr "這可能是由於審查或網路問題所造成。請嘗試："
-
-msgid "Time added"
-msgstr "已增加時間"
-
-msgid "To add locations to a list, press the pen or long press on a country, city, or server."
-msgstr "若要在清單中新增位置，請按筆的圖示，或是長按國家/地區、城市或伺服器。"
-
-msgid "To create a custom list press the \"+\""
-msgstr "若要建立自訂清單，請按「+」"
-
-msgid "To delete your Warren VPN account, please enter your account number below."
-msgstr "若要刪除您的 Warren VPN 帳戶，請在下方輸入您的帳號。"
-
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "為確保您擁有最安全的版本，並告知您目前執行的版本有無任何問題，該應用程式會自動進行版本檢查。為此，應用程式會將其版本和 Android 系統版本傳送至 Warren 伺服器，以便讓 Warren 統計已使用的應用程式版本和 Android 版本的數量。這些資料永遠不會以任何方式儲存或用來辨識您的身分。"
-
-msgid "Toggle VPN"
-msgstr "切換 VPN"
-
-msgid "Too many attempts, please try again later"
-msgstr "嘗試次數過多，請稍後再試"
-
-msgid "UDP"
-msgstr "UDP"
-
-msgid "Unable to apply firewall rules. Please troubleshoot or send a problem report."
-msgstr "無法套用防火牆規則。請排除故障或傳送問題回報。"
-
-msgid "Unable to parse patch"
-msgstr "無法剖析修補檔"
-
-msgid "Unable to reach API"
-msgstr "無法存取 API"
-
-msgid "Unable to reach API, %s"
-msgstr "無法存取 API，%s"
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
-msgstr "無法啟動通道連線。在使用 Warren VPN 之前，請停用「一律啟用 VPN」。"
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
-msgstr "無法啟動通道連線。在使用 Warren VPN 之前，請先為 <b>%s</b> 停用「始終啟用 VPN」。"
-
-msgid "Unable to verify account number, please contact support"
-msgstr "無法驗證帳號，請聯絡支援團隊"
-
-msgid "Unavailable"
-msgstr "無法使用"
-
-msgid "Undo"
-msgstr "復原"
-
-msgid "Unknown or prohibited key \"%1$s\""
-msgstr "未知或遭到禁用的金鑰「%1$s」"
-
-msgid "Update DNS server"
-msgstr "更新 DNS 伺服器"
-
-msgid "Update list name"
-msgstr "更新清單名稱"
-
-msgid "Update server list"
-msgstr "更新伺服器清單"
-
-msgid "Updating server list in the background..."
-msgstr "正在背景更新伺服器清單……"
-
-msgid "Use method"
-msgstr "使用方式"
-
-msgid "VPN Settings not available on device"
-msgstr "裝置上的 VPN 設定無法使用"
-
-msgid "VPN permission error"
-msgstr "VPN 權限錯誤"
-
-msgid "VPN permission was denied"
-msgstr "VPN 權限遭拒"
-
-msgid "VPN permission was denied or another app has \"Always-on VPN\" enabled"
-msgstr "VPN 權限遭到拒絕，或者已有其他應用程式啟用「一律啟用 VPN」"
-
-msgid "VPN tunnel status"
-msgstr "VPN 通道狀態"
-
-msgid "Valid range for all servers: %s"
-msgstr "所有伺服器的有效範圍：%s"
-
-msgid "Value: %s"
-msgstr "值：%s"
-
-msgid "Verifying API method..."
-msgstr "正在驗證 API 方式…"
-
-msgid "Verifying purchase"
-msgstr "正在驗證購買"
-
-msgid "Verifying purchase..."
-msgstr "正在驗證購買…"
-
-msgid "Verifying voucher…"
-msgstr "正在驗證優惠券…"
-
-msgid "Warning"
-msgstr "警告"
-
-msgid "We are still verifying your purchase, this might take some time. Your time will be added if the verification is successful."
-msgstr "我們仍在驗證您的購買，這可能需要一些時間。如果驗證成功，您的時間就會增加。"
-
-msgid "We were unable to start the payment process, please make sure you have the latest version of Google Play."
-msgstr "我們無法啟動付款流程，請確認您是否擁有最新版本的 Google Play。"
-
-msgid "We were unable to start the payment process, please try again later."
-msgstr "我們無法啟動付款流程，請稍後再試一次。"
-
-msgid "Weather"
-msgstr "天氣"
-
-msgid "Welcome, this device is now called <b>%s</b>."
-msgstr "歡迎，此裝置現在名為 <b>%s</b>。"
-
-msgid "QUIC port"
-msgstr "QUIC 連接埠"
-
-msgid "Yes, log out device"
-msgstr "是，將裝置登出"
-
-msgid "You are about to delete your Warren VPN account."
-msgstr "您即將刪除您的 Warren VPN 帳戶。"
-
-msgid "You can add more time via the account view or website to continue using the VPN."
-msgstr "您可以在帳戶畫面或網站中增加時間，以繼續使用 VPN。"
-
-msgid "You can add more time via the account view to continue using the VPN."
-msgstr "您可以在帳戶畫面中增加時間，以繼續使用 VPN。"
-
-msgid "You will lose access to this account on all devices."
-msgstr "您在所有裝置上都將無法存取此帳戶。"
-
-msgid "You will lose your remaining"
-msgstr "您將失去剩餘的"
-
-msgid "\"%s\" was created"
-msgstr "已建立「%s」"
-
-msgid "\"%s\" was deleted"
-msgstr "「%s」已刪除"
-
-msgid "click here"
-msgstr "按一下此處"
-
-msgid "here"
-msgstr "此處"
-
-msgid "less than one day"
-msgstr "不足 1 天"
-
-msgid "privacy policy"
-msgstr "隱私權政策"
-
-msgid "read more here"
-msgstr "在此處了解詳情"
-
-msgid "%d day"
-msgid_plural "%d days"
-msgstr[0] "%d 天"
-
-msgid "%d location"
-msgid_plural "%d locations"
-msgstr[0] "%d 個位置"
-
-msgid "%d month"
-msgid_plural "%d months"
-msgstr[0] "%d 個月"
-
-msgid "1 day left on this account"
-msgid_plural "%d days left on this account"
-msgstr[0] "此帳戶剩餘 %d 天"
-
-msgid "1 year left on this account"
-msgid_plural "%d years left on this account"
-msgstr[0] "此帳戶剩餘 %d 年"
-
-msgid "Account credit expires in a day"
-msgid_plural "Account credit expires in %d days"
-msgstr[0] "帳戶點數將在 %d 天後到期"
-
-msgid "Account credit expires in an hour"
-msgid_plural "Account credit expires in %d hours"
-msgstr[0] "帳戶點數將在 %d 小時後到期"
-
-msgid "You will lose your remaining day."
-msgid_plural "You will lose your remaining %d days."
-msgstr[0] "您將失去剩餘 %d 天。"
-
-
-msgctxt "port-forwarding-view"
-msgid "auto"
-msgstr "自動"
-
-msgctxt "port-forwarding-view"
-msgid "Mapping failed: %(error)s"
-msgstr "對應失敗：%(error)s"
 
 msgctxt "port-forwarding-view"
 msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
@@ -4645,40 +3086,8 @@ msgid "Port forwarding"
 msgstr "連接埠轉發"
 
 msgctxt "port-forwarding-view"
-msgid "Port must be between 49152 and 65535, or empty for auto."
-msgstr "連接埠必須介於 49152 和 65535 之間，留空則為自動。"
-
-msgctxt "port-forwarding-view"
-msgid "Preferred port"
-msgstr "偏好連接埠"
-
-msgctxt "port-forwarding-view"
 msgid "Protocol"
 msgstr "通訊協定"
-
-msgctxt "port-forwarding-view"
-msgid "Public port: %(port)s"
-msgstr "公開連接埠：%(port)s"
-
-msgctxt "port-forwarding-view"
-msgid "Renewing in %(countdown)s"
-msgstr "%(countdown)s 後續約"
-
-msgctxt "port-forwarding-view"
-msgid "Status: active"
-msgstr "狀態：已啟用"
-
-msgctxt "port-forwarding-view"
-msgid "Status: requesting port mapping..."
-msgstr "狀態：正在請求連接埠對應…"
-
-msgctxt "port-forwarding-view"
-msgid "Status: waiting for an active tunnel connection to set up the port mapping."
-msgstr "狀態：正在等待作用中的通道連線以設定連接埠對應。"
-
-msgctxt "port-forwarding-view"
-msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
-msgstr "如果偏好的連接埠已被占用，伺服器可能會指派其他連接埠。變更會立即生效，無需重新連線。"
 
 msgctxt "keys-view"
 msgid "Backup keys"
@@ -4785,16 +3194,8 @@ msgid "Could not check subscription status. Please try again."
 msgstr "無法檢查訂閱狀態。請再試一次。"
 
 msgctxt "warren-onboarding"
-msgid "Create my new wallet (recommended)"
-msgstr "建立我的新錢包（建議）"
-
-msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
 msgstr "服務尚無助記詞。請登入或重新啟動應用程式。"
-
-msgctxt "warren-onboarding"
-msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
-msgstr "服務拒絕了此助記詞。請檢查拼字與字數後再試一次。"
 
 msgctxt "warren-onboarding"
 msgid "Failed to retrieve mnemonic from daemon."
@@ -4813,16 +3214,8 @@ msgid "I have written it down in a safe place."
 msgstr "我已將其抄寫在安全的地方。"
 
 msgctxt "warren-onboarding"
-msgid "Import an existing mnemonic"
-msgstr "匯入現有的助記詞"
-
-msgctxt "warren-onboarding"
 msgid "No active subscription found. Please purchase one first."
 msgstr "找不到有效的訂閱。請先購買訂閱。"
-
-msgctxt "warren-onboarding"
-msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
-msgstr "貼上您的 12 字 BIP39 助記詞，以還原您現有的 Warren 身分。"
 
 msgctxt "warren-onboarding"
 msgid "Pick a country and connect"
@@ -4837,20 +3230,12 @@ msgid "Privacy preferences"
 msgstr "隱私偏好設定"
 
 msgctxt "warren-onboarding"
-msgid "Restore wallet"
-msgstr "還原錢包"
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "略過精靈（進階）"
 
 msgctxt "warren-onboarding"
 msgid "View plans (opens in your browser)"
 msgstr "查看方案（將在您的瀏覽器中開啟）"
-
-msgctxt "warren-onboarding"
-msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
-msgstr "Warren 採用非託管錢包（Ed25519 + BIP39）。金鑰由您持有，我們絕不會看到。"
 
 msgctxt "warren-onboarding"
 msgid "Welcome to Warren VPN"
@@ -4976,25 +3361,9 @@ msgctxt "device-management"
 msgid "Session is inactive"
 msgstr "工作階段處於非作用中狀態"
 
-msgctxt "device-management"
-msgid "Your session has ended. To connect again, you will need to log back in."
-msgstr "您的工作階段已結束。若要重新連線，您需要重新登入。"
-
 msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "偵測到伺服器身分不符。出口節點的公開金鑰已變更。"
-
-msgctxt "vpn-settings-view"
-msgid "Automatic failover"
-msgstr "自動容錯移轉"
-
-msgctxt "vpn-settings-view"
-msgid "Automatically switch to another exit server if the current one becomes unreachable."
-msgstr "若目前的出口伺服器變得無法連線，則自動切換到另一台出口伺服器。"
-
-msgctxt "vpn-settings-view"
-msgid "This setting takes effect immediately without a daemon restart."
-msgstr "此設定會立即生效，無需重新啟動服務。"
 
 msgctxt "vpn-settings-view"
 msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
@@ -5013,14 +3382,6 @@ msgctxt "accessibility"
 msgid "Copy the voucher code"
 msgstr "複製優惠券兌換碼"
 
-msgctxt "accessibility"
-msgid "Hide public key"
-msgstr "隱藏公鑰"
-
-msgctxt "accessibility"
-msgid "Show public key"
-msgstr "顯示公鑰"
-
 msgctxt "account-view"
 msgid "Backup keys"
 msgstr "備份金鑰"
@@ -5037,10 +3398,6 @@ msgstr "登出時發生問題。"
 msgctxt "account-view"
 msgid "Try again"
 msgstr "再試一次"
-
-msgctxt "account-view"
-msgid "Public key"
-msgstr "公鑰"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
@@ -5129,10 +3486,6 @@ msgstr "失敗"
 msgctxt "port-forwarding-view"
 msgid "no port available"
 msgstr "無可用連接埠"
-
-msgctxt "port-forwarding-view"
-msgid "not allowed"
-msgstr "不允許"
 
 msgctxt "port-forwarding-view"
 msgid "open: %(port)d"
@@ -5247,10 +3600,6 @@ msgstr "Warren 多重跳躍"
 msgctxt "warren-multi-hop-view"
 msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
 msgstr "啟用後，流量會透過兩個 Warren 中繼（先入口再出口）路由，並在用戶端與出口之間使用 HPKE 端對端加密。入口中繼只看得到密文；出口只看得到解密後的內容，永遠看不到使用者 IP。"
-
-msgctxt "warren-multi-hop-view"
-msgid "auto"
-msgstr "自動"
 
 msgctxt "warren-pubkey-warning"
 msgid "Cryptographic mismatch details"
@@ -5376,14 +3725,6 @@ msgstr "正在簽署，請稍候。"
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "社群論壇"
-
-msgctxt "tunnel-control"
-msgid "Connecting..."
-msgstr "連線中…"
-
-msgctxt "tunnel-control"
-msgid "Encrypting your connection"
-msgstr "正在加密您的連線"
 
 msgctxt "tunnel-control"
 msgid "Random location"

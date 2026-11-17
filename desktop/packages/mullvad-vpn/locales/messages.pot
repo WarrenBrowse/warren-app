@@ -198,9 +198,6 @@ msgstr ""
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr ""
 
-msgid "None"
-msgstr ""
-
 msgid "Off"
 msgstr ""
 
@@ -284,13 +281,6 @@ msgid "Use"
 msgstr ""
 
 msgid "Username"
-msgstr ""
-
-#. Text for screen readers to describe the LWO settings navigation button.
-#. Available placeholders:
-#. %(lwo)s - will be replaced with LWO
-msgctxt "accessibility"
-msgid "%(lwo)s settings"
 msgstr ""
 
 msgctxt "accessibility"
@@ -477,18 +467,6 @@ msgstr ""
 
 msgctxt "accessibility"
 msgid "Select location. Current location is %(location)s"
-msgstr ""
-
-msgctxt "accessibility"
-msgid "Shadowsocks settings"
-msgstr ""
-
-msgctxt "accessibility"
-msgid "UDP-over-TCP settings"
-msgstr ""
-
-msgctxt "accessibility"
-msgid "Use the right arrow key to focus the settings button."
 msgstr ""
 
 msgctxt "account-view"
@@ -689,11 +667,6 @@ msgstr ""
 #. Page title for anti censorship settings view
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
-msgstr ""
-
-#. The title for the obfuscation method selector.
-msgctxt "anti-censorship-view"
-msgid "Method"
 msgstr ""
 
 msgctxt "api-access-methods-view"
@@ -2628,33 +2601,6 @@ msgstr ""
 
 msgctxt "login-view"
 msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
-msgstr ""
-
-#. The title for the LWO port selector.
-msgctxt "lwo-settings-view"
-msgid "Port"
-msgstr ""
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "lwo-settings-view"
-msgid "Port: %(port)s"
-msgstr ""
-
-msgctxt "lwo-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr ""
-
-msgctxt "lwo-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr ""
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "lwo-settings-view"
-msgid "Valid ranges: %(portRanges)s"
 msgstr ""
 
 #. Title label in navigation bar
@@ -5240,16 +5186,6 @@ msgctxt "warren-status-view"
 msgid "To evade censorship, Warren disguises the tunnel as ordinary web browsing: on the network it looks like standard browser traffic to a regular website (HTTP/3 on port 443). Obfuscation cannot be turned off, as traffic that stands out is traffic that can be blocked."
 msgstr ""
 
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "Shadowsocks"
-msgstr ""
-
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "UDP-over-TCP"
-msgstr ""
-
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s (%(daitaFull)s) hides patterns in your encrypted VPN traffic."
 msgstr ""
@@ -5291,15 +5227,7 @@ msgid "MTU"
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop"
-msgstr ""
-
-msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
-msgstr ""
-
-msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
 msgstr ""
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
@@ -5309,18 +5237,6 @@ msgstr ""
 
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
-msgstr ""
-
-#. The title for the WireGuard port selector.
-msgctxt "wireguard-settings-view"
-msgid "Port"
-msgstr ""
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "wireguard-settings-view"
-msgid "Port: %(port)s"
 msgstr ""
 
 #. The title for the WireGuard quantum resistance selector. This setting
@@ -5349,13 +5265,4 @@ msgstr ""
 
 msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
-msgstr ""
-
-#. Text describing the valid port range for a port selector.
-msgctxt "wireguard-settings-view"
-msgid "Valid range: %(min)s - %(max)s"
-msgstr ""
-
-msgctxt "wireguard-settings-view"
-msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
 msgstr ""

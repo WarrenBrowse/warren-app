@@ -12,17 +12,8 @@ msgstr ""
 "Language: ja_JP\n"
 "PO-Revision-Date: 2026-04-27 09:12\n"
 
-msgid "%(amount)d more..."
-msgstr "その他%(amount)d件..."
-
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "%(duration)sが追加され、アカウントは%(expiry)sまでに支払われます。"
-
-#. The label for the QUIC port option.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgid "%(wireguard)s port"
-msgstr "%(wireguard)sポート"
 
 msgid "1 day"
 msgid_plural "%d days"
@@ -99,14 +90,8 @@ msgstr "接続"
 msgid "Connected"
 msgstr "接続済み"
 
-msgid "CONNECTED"
-msgstr "接続中"
-
 msgid "Connecting"
 msgstr "接続中"
-
-msgid "CONNECTING..."
-msgstr "接続しています..."
 
 msgid "Create"
 msgstr "作成"
@@ -150,14 +135,8 @@ msgstr "切断して終了"
 msgid "Disconnected"
 msgstr "未接続"
 
-msgid "DISCONNECTED"
-msgstr "切断中"
-
 msgid "Disconnecting"
 msgstr "接続解除中"
-
-msgid "DISCONNECTING..."
-msgstr "切断しています..."
 
 msgid "Edit"
 msgstr "編集"
@@ -172,16 +151,8 @@ msgstr "それでも有効にする"
 msgid "Enable direct only"
 msgstr "ダイレクトのみ有効化"
 
-#. Error message shown trying to login but the app fails
-#. to fetch the list of registered devices.
-msgid "Failed to fetch list of devices"
-msgstr "デバイスのリストを取得できませんでした"
-
 msgid "FAILED TO SECURE CONNECTION"
 msgstr "セキュリティ保護接続を確立できませんでした"
-
-msgid "Filters"
-msgstr "絞り込み"
 
 #. Button label for system settings.
 msgid "Go to System Settings"
@@ -228,9 +199,6 @@ msgstr "一致するサーバーが見つかりません"
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "<b>%(searchTerm)s</b>に該当する検索結果はありません。"
 
-msgid "None"
-msgstr "なし"
-
 msgid "Off"
 msgstr "オフ"
 
@@ -263,10 +231,6 @@ msgstr "終了"
 
 msgid "Reconnect"
 msgstr "再接続"
-
-#. Button label in confirmation dialog that confirms a remove action.
-msgid "Remove"
-msgstr "削除"
 
 msgid "Required"
 msgstr "必須"
@@ -317,23 +281,9 @@ msgstr "使用"
 msgid "Username"
 msgstr "ユーザー名"
 
-#. Text for screen readers to describe the LWO settings navigation button.
-#. Available placeholders:
-#. %(lwo)s - will be replaced with LWO
-msgctxt "accessibility"
-msgid "%(lwo)s settings"
-msgstr "%(lwo)sの設定"
-
 msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s、ビューが読み込まれました"
-
-#. Text for screen readers to describe the QUIC port settings navigation button.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgctxt "accessibility"
-msgid "%(wireguard)s port settings"
-msgstr "%(wireguard)sポートの設定"
 
 #. This is an accessibility label for a button that adds a location to a custom list.
 #. Available placeholders:
@@ -363,12 +313,6 @@ msgctxt "accessibility"
 msgid "Connect to %(location)s"
 msgstr "%(location)sに接続する"
 
-#. Provided to accessibility tools such as screenreaders to describe a button
-#. which copies the account number to the clipboard.
-msgctxt "accessibility"
-msgid "Copy account number"
-msgstr "アカウント番号のコピー"
-
 #. Accessibility label for a carousel that explains the DAITA feature to the user.
 msgctxt "accessibility"
 msgid "DAITA information carousel"
@@ -396,21 +340,6 @@ msgctxt "accessibility"
 msgid "Expand %(location)s"
 msgstr "%(location)sを展開する"
 
-#. This is used by screenreaders to communicate the "x" button next to a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the account number to the left of the button
-msgctxt "accessibility"
-msgid "Forget account number %(accountNumber)s"
-msgstr "アカウント番号 %(accountNumber)s との連携を解除します"
-
-#. Accessibility label for link to VPN settings where
-#. the user can change QUIC port.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "accessibility"
-msgid "Go to anti-censorship settings to change %(wireGuard)s port"
-msgstr "%(wireGuard)sポートを変更するには、検閲回避設定に移動してください"
-
 #. Accessibility label for link to app upgrade view.
 msgctxt "accessibility"
 msgid "Go to app update page"
@@ -423,12 +352,6 @@ msgctxt "accessibility"
 msgid "Go to slide %(index)s"
 msgstr "スライド %(index)s へ移動"
 
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which obscures the account number.
-msgctxt "accessibility"
-msgid "Hide account number"
-msgstr "アカウント番号の非表示"
-
 #. Alt text for an illustration showing VPN traffic with DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic with DAITA enabled"
@@ -438,18 +361,6 @@ msgstr "DAITAを有効にした状態のVPNトラフィックのイメージ図"
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic without DAITA"
 msgstr "DAITAが無効な状態のVPNトラフィックの図"
-
-#. This is used by screenreaders to communicate the login button.
-msgctxt "accessibility"
-msgid "Login"
-msgstr "ログイン"
-
-#. This is used by screenreaders to communicate logging in with a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the saved account number
-msgctxt "accessibility"
-msgid "Login with account number %(accountNumber)s"
-msgstr "アカウント番号 %(accountNumber)s でログインしてください"
 
 msgctxt "accessibility"
 msgid "More information"
@@ -509,14 +420,6 @@ msgctxt "accessibility"
 msgid "Remove %(location)s from %(customList)s"
 msgstr "%(location)sを%(customList)sから削除する"
 
-#. Button action description provided to accessibility tools such as screen
-#. readers.
-#. Available placeholders:
-#. %(deviceName)s - The device name to remove.
-msgctxt "accessibility"
-msgid "Remove device named %(deviceName)s"
-msgstr "%(deviceName)sという名前のデバイスを削除"
-
 msgctxt "accessibility"
 msgid "Remove item"
 msgstr "アイテムを削除する"
@@ -525,32 +428,10 @@ msgctxt "accessibility"
 msgid "Select location. Current location is %(location)s"
 msgstr "場所を選択します。現在の場所は%(location)sです"
 
-msgctxt "accessibility"
-msgid "Shadowsocks settings"
-msgstr "Shadowsocksの設定"
-
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which unobscures the account number.
-msgctxt "accessibility"
-msgid "Show account number"
-msgstr "アカウント番号の表示"
-
-msgctxt "accessibility"
-msgid "UDP-over-TCP settings"
-msgstr "UDP-over-TCPの設定"
-
-msgctxt "accessibility"
-msgid "Use the right arrow key to focus the settings button."
-msgstr "右矢印キーを使用して設定ボタンにフォーカスを移動します。"
-
 #. Title label in navigation bar
 msgctxt "account-view"
 msgid "Account"
 msgstr "アカウント"
-
-msgctxt "account-view"
-msgid "Account number"
-msgstr "アカウント番号"
 
 msgctxt "account-view"
 msgid "Currently unavailable"
@@ -560,11 +441,6 @@ msgstr "現在使用不可"
 msgctxt "account-view"
 msgid "Log out"
 msgstr "ログアウト"
-
-#. Link text in the account view to navigate to the manage devices view.
-msgctxt "account-view"
-msgid "Manage devices"
-msgstr "デバイスを管理"
 
 msgctxt "account-view"
 msgid "OUT OF TIME"
@@ -611,21 +487,6 @@ msgstr "オフにする"
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
 msgstr "検閲回避"
-
-#. The title for the obfuscation method selector.
-msgctxt "anti-censorship-view"
-msgid "Method"
-msgstr "方式"
-
-#. Second paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "Please note that these methods do not improve performance, and may increase system utilization and battery consumption."
-msgstr "これらの方式はパフォーマンスを向上させるものではなく、システム使用率やバッテリー消費量を増加させる可能性がありますのでご注意ください。"
-
-#. First paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "これらの方式は、Warrenへの接続がブロックされている状況で役立つ可能性があります。「自動」を選択すると、アプリは有効な方法が見つかるまですべての方式を試します。"
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -857,12 +718,6 @@ msgctxt "app-upgrade-view"
 msgid "Connection blocked. Try changing server or other settings."
 msgstr "接続がブロックされました。サーバーやその他の設定を変更してみてください。"
 
-#. Label displayed when an error occurred due to the installer failing to start
-#. and the suggested resolution is to download the update again.
-msgctxt "app-upgrade-view"
-msgid "Could not open installer, please try again or send a problem report."
-msgstr "インストーラーを起動できませんでした。再試行するか、問題の報告を送信してください。"
-
 #. Button text to download and install an update
 msgctxt "app-upgrade-view"
 msgid "Download & install"
@@ -877,11 +732,6 @@ msgstr "ダウンロードが完了しました！"
 msgctxt "app-upgrade-view"
 msgid "Download failed"
 msgstr "ダウンロードに失敗しました"
-
-#. Label displayed when an error occurred due to the download failing
-msgctxt "app-upgrade-view"
-msgid "Download failed, please check your connection/firewall and try again, or send a problem report."
-msgstr "ダウンロードに失敗しました。接続やファイアウォールを確認して再試行するか、問題の報告を送信してください。"
 
 #. Status text displayed below a progress bar when the download of an update has been paused
 #. Label displayed above a progress bar when the update is verified successfully
@@ -911,11 +761,6 @@ msgctxt "app-upgrade-view"
 msgid "Install update"
 msgstr "更新をインストール"
 
-#. Label displayed when an error occurred within the installer
-msgctxt "app-upgrade-view"
-msgid "Installer quit unexpectedly, please try again or send a problem report."
-msgstr "インストーラーが予期せず終了しました。再試行するか、問題の報告を送信してください。"
-
 #. Info about which directory the app update will be downloaded to
 msgctxt "app-upgrade-view"
 msgid "Installer will be downloaded to <b>%(cacheDir)s</b>."
@@ -934,11 +779,6 @@ msgstr "今回のリリースでは、このプラットフォーム向けの更
 msgctxt "app-upgrade-view"
 msgid "Pause"
 msgstr "一時停止"
-
-#. Button text to report a problem
-msgctxt "app-upgrade-view"
-msgid "Report a problem"
-msgstr "問題を報告"
 
 #. Button text to resume updating
 msgctxt "app-upgrade-view"
@@ -965,21 +805,11 @@ msgctxt "app-upgrade-view"
 msgid "Starting installer..."
 msgstr "インストーラーを起動中..."
 
-#. Label displayed when an unknown error occurred
-msgctxt "app-upgrade-view"
-msgid "Unknown error occurred. Please try again or send a problem report."
-msgstr "不明なエラーが発生しました。再試行するか、問題の報告を送信してください。"
-
 #. Title in navigation bar
 #. Main title for the update available view
 msgctxt "app-upgrade-view"
 msgid "Update available"
 msgstr "更新があります"
-
-#. Label displayed when an error occurred due to the installer failed verification
-msgctxt "app-upgrade-view"
-msgid "Verification failed, please try again or send a problem report."
-msgstr "検証に失敗しました。再試行するか、問題の報告を送信してください。"
 
 #. Label displayed above a progress bar when the update is verified successfully
 msgctxt "app-upgrade-view"
@@ -1050,14 +880,6 @@ msgstr "インターネットのブロック：アカウントが時間切れで
 msgctxt "auth-failure"
 msgid "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly."
 msgstr "このアカウントの同時接続が多すぎます。他のデバイスを切断するか、少し待ってから再接続してみてください。"
-
-msgctxt "auth-failure"
-msgid "Unable to authenticate account. Please send a problem report."
-msgstr "アカウントを認証できません。問題の報告を送信してください。"
-
-msgctxt "auth-failure"
-msgid "You are logged in with an invalid account number. Please log out and try another one."
-msgstr "無効なアカウント番号でログインしています。いったんログアウトして、別のアカウント番号を試してください。"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
@@ -1151,10 +973,6 @@ msgid_plural "%(count)d apps in other countries"
 msgstr[0] "%(count)d 個のアプリが別の国を使用"
 
 msgctxt "connect-view"
-msgid "Active features"
-msgstr "有効な機能"
-
-msgctxt "connect-view"
 msgid "Congrats!"
 msgstr "おめでとうございます！"
 
@@ -1178,10 +996,6 @@ msgstr "バウチャーコードを入力"
 msgctxt "connect-view"
 msgid "Go ahead and start using the app to begin reclaiming your online privacy."
 msgstr "続行してこのアプリの使用を開始し、オンラインプライバシーを取り戻しましょう。"
-
-msgctxt "connect-view"
-msgid "Here’s your account number. Save it!"
-msgstr "これがあなたのアカウント番号です。保存してください！"
 
 #. Button label for opening privacy information link.
 msgctxt "connect-view"
@@ -1385,43 +1199,6 @@ msgctxt "custom-list-feature"
 msgid "Relay"
 msgstr "中継サーバー"
 
-#. Button for continuing login process.
-msgctxt "device-management"
-msgid "Continue with login"
-msgstr "ログインを続ける"
-
-#. Label informing the user when a device was created.
-#. Available placeholders:
-#. %(createdDate)s - The creation date of the device.
-msgctxt "device-management"
-msgid "Created: %(createdDate)s"
-msgstr "作成日: %(createdDate)s"
-
-#. Label indicating that this device is the current device.
-msgctxt "device-management"
-msgid "Current device"
-msgstr "現在のデバイス"
-
-msgctxt "device-management"
-msgid "Device is inactive"
-msgstr "デバイスが無効です"
-
-msgctxt "device-management"
-msgid "Device name"
-msgstr "デバイス名"
-
-#. A label that will display the newly created device name to inform the user
-#. about it.
-#. Available placeholders:
-#. %(deviceName)s - The name of the current device
-msgctxt "device-management"
-msgid "Device name: %(deviceName)s"
-msgstr "デバイス名: %(deviceName)s"
-
-msgctxt "device-management"
-msgid "Failed to remove device"
-msgstr "デバイスを削除できませんでした"
-
 #. Button label for navigating to login.
 msgctxt "device-management"
 msgid "Go to login"
@@ -1431,10 +1208,6 @@ msgctxt "device-management"
 msgid "Going to login will unblock the Internet on this device."
 msgstr "ログインに進むと、このデバイスのインターネットのブロックが解除されます。"
 
-msgctxt "device-management"
-msgid "If you log out, the device and the device name is removed. When you log back in again, the device will get a new name."
-msgstr "ログアウトすると、デバイスとデバイス名が削除されます。もう一度ログインすると、デバイスに新しい名前が付けられます。"
-
 #. Title label in navigation bar for the manage devices view.
 #. Title text in the manage devices view
 msgctxt "device-management"
@@ -1442,68 +1215,13 @@ msgid "Manage devices"
 msgstr "デバイスを管理"
 
 msgctxt "device-management"
-msgid "Please log out of at least one by removing it from the list below. You can find the corresponding device name under the device’s Account settings."
-msgstr "以下のリストから少なくとも1つを削除してログアウトしてください。対応するデバイス名はデバイスのアカウント設定で確認できます。"
-
-#. Button label for confirming removing a device.
-msgctxt "device-management"
-msgid "Remove"
-msgstr "削除"
-
-#. Text displayed above button which logs out another device.
-#. The text enclosed in "<b></b>" will appear bold.
-#. Available placeholders:
-#. %(deviceName)s - The name of the device to log out.
-msgctxt "device-management"
-msgid "Remove <em>%(deviceName)s?</em>"
-msgstr "<em>%(deviceName)s</em>を削除しますか？"
-
-#. Page title informing user that enough devices has been removed to continue
-#. login process.
-msgctxt "device-management"
-msgid "Super!"
-msgstr "素晴らしい！"
-
-msgctxt "device-management"
-msgid "The device will be removed from the list and logged out."
-msgstr "リストからデバイスが削除され、ログアウトされます。"
-
-msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "これはデバイスに割り当てられる名前です。Warrenアカウントにログインするデバイスごとに一意の名前が付けられるため、アプリまたはウェブサイトでデバイスを管理する際にデバイスを区別しやすくなります。"
-
-msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
 msgstr "残り時間: %(timeLeft)s"
-
-#. Page title informing user that the login failed due to too many registered
-#. devices on account.
-msgctxt "device-management"
-msgid "Too many devices"
-msgstr "デバイスが多すぎます"
 
 #. Button text to retry fetching devices.
 msgctxt "device-management"
 msgid "Try again"
 msgstr "再試行"
-
-#. Subtitle text in the manage devices view, explaining
-#. devices and what they can do in the manage devices view.
-msgctxt "device-management"
-msgid "View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily."
-msgstr "ログイン中のすべてのデバイスを表示・管理します。1つのアカウントで最大5台のデバイスを同時に利用できます。各デバイスは識別しやすくするため、ログイン時に名前が付けられます。"
-
-msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Warren account."
-msgstr "1つのWarrenアカウントで最大5台のデバイスにログインできます。"
-
-msgctxt "device-management"
-msgid "You can now continue logging in on this device."
-msgstr "このデバイスでログインを続けられるようになりました。"
-
-msgctxt "device-management"
-msgid "You have removed this device. To connect again, you will need to log back in."
-msgstr "このデバイスを削除しました。再度接続するには、ログインし直す必要があります。"
 
 #. The message displayed to the user in case of critical error in the GUI
 #. Available placeholders:
@@ -1663,10 +1381,6 @@ msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
 msgstr "ネットワークトラフィックが漏れている可能性があります"
 
 msgctxt "in-app-notifications"
-msgid "NEW DEVICE CREATED"
-msgstr "新しいデバイスが作成されました"
-
-msgctxt "in-app-notifications"
 msgid "NEW VERSION INSTALLED"
 msgstr "新バージョンがインストールされました"
 
@@ -1697,11 +1411,6 @@ msgctxt "in-app-notifications"
 msgid "Retry installation"
 msgstr "インストールを再試行"
 
-#. Button label to send a problem report.
-msgctxt "in-app-notifications"
-msgid "Send problem report"
-msgstr "問題の報告を送信"
-
 msgctxt "in-app-notifications"
 msgid "SERVER MAINTENANCE"
 msgstr "サーバーメンテナンス"
@@ -1720,20 +1429,6 @@ msgstr "インストーラーが正常に完了しませんでした。"
 msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "インストーラーが正常に起動しませんでした。"
-
-#. Notification subtitle indicating the user is using an unsupported port for QUIC.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "in-app-notifications"
-msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
-msgstr "選択した%(wireGuard)sポートには対応していません。<a>VPN設定で変更</a>してください。"
-
-#. Notification text when a new device has been created.
-#. Available placeholders:
-#. - %(deviceName)s: Name of created device.
-msgctxt "in-app-notifications"
-msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
-msgstr "このデバイス名は<em>「%(deviceName)s」</em>に変更されました。詳細はアカウントの <a>[デバイスを管理]</a> でご確認ください。"
 
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
@@ -1824,11 +1519,6 @@ msgctxt "launch-view"
 msgid "Failed to start the app, please try again or click “Details” for more info"
 msgstr "アプリを起動できませんでした。再試行するか、[詳細] をクリックして詳細情報を確認してください"
 
-#. Message in troubleshooting modal advising user to send a problem report if the steps do not work.
-msgctxt "launch-view"
-msgid "If these steps do not work please send a problem report."
-msgstr "これらの手順で解決できない場合は、問題の報告を送信してください。"
-
 #. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
 msgid "Only the account that set Warren up, or an administrator, can use it here."
@@ -1874,11 +1564,6 @@ msgctxt "launch-view"
 msgid "Restarting your computer"
 msgstr "コンピューターを再起動する"
 
-#. Button label for sending a problem report.
-msgctxt "launch-view"
-msgid "Send problem report"
-msgstr "問題の報告を送信"
-
 #. Status text shown when app is starting.
 msgctxt "launch-view"
 msgid "Starting up...."
@@ -1893,11 +1578,6 @@ msgstr "Warrenのバックグラウンドプロセスを起動できませんで
 msgctxt "launch-view"
 msgid "Try again"
 msgstr "再試行"
-
-#. Message in launch view when the mullvad service cannot be contacted.
-msgctxt "launch-view"
-msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "Warrenシステムサービスと通信できません。接続が安全でない可能性があります。トラブルシューティングするか、[詳細] ボタンをクリックして問題の報告を送信してください。"
 
 #. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
 msgctxt "launch-view"
@@ -1954,109 +1634,16 @@ msgctxt "login-view"
 msgid "<b>%(lockdownModeSettingName)s</b> is enabled. Disable it to unblock your connection."
 msgstr "<b>%(lockdownModeSettingName)s</b>が有効になっています。接続のブロックを解除するには無効にしてください。"
 
-msgctxt "login-view"
-msgid "Account created"
-msgstr "アカウントを作成しました"
-
-msgctxt "login-view"
-msgid "Checking account number"
-msgstr "アカウント番号を確認中"
-
 #. Text in button that allows user to create a new account.
 msgctxt "login-view"
 msgid "Create a new account"
 msgstr "新規アカウントを作成"
-
-#. Button which confirms the action to create a new account.
-msgctxt "login-view"
-msgid "Create new account"
-msgstr "新規アカウントを作成"
-
-msgctxt "login-view"
-msgid "Creating account..."
-msgstr "アカウントを作成中..."
-
-#. Text that asks the user if they really want to create a new account.
-msgctxt "login-view"
-msgid "Do you want to create a new account?"
-msgstr "新規アカウントを作成しますか？"
-
-#. Text that asks the user if they really want to remove the saved account.
-msgctxt "login-view"
-msgid "Do you want to remove the saved account number?"
-msgstr "保存済みのアカウント番号を削除しますか？"
-
-msgctxt "login-view"
-msgid "Enter your account number"
-msgstr "アカウント番号を入力してください"
-
-msgctxt "login-view"
-msgid "Error"
-msgstr "エラー"
-
-msgctxt "login-view"
-msgid "Failed to create account"
-msgstr "アカウントを作成できませんでした"
-
-msgctxt "login-view"
-msgid "Finishing upgrade."
-msgstr "アップグレードを終了しています。"
-
-#. Error message shown above login input when trying to login with a
-#. non-existent account number.
-msgctxt "login-view"
-msgid "Invalid account number"
-msgstr "アカウント番号が無効です"
-
-msgctxt "login-view"
-msgid "Logged in"
-msgstr "ログインしました"
-
-msgctxt "login-view"
-msgid "Logging in..."
-msgstr "ログイン中..."
-
-#. Label for the login button.
-msgctxt "login-view"
-msgid "Login"
-msgstr "ログイン"
-
-msgctxt "login-view"
-msgid "Login failed"
-msgstr "ログインに失敗しました"
-
-#. Text shown between two horizontal lines above the "create account" button.
-#. In this context it is used to separate the users alternative of logging in
-#. or creating a new account, "Login or Create a new account".
-msgctxt "login-view"
-msgid "Or"
-msgstr "または"
 
 #. This is a warning message shown when the app is blocking the users
 #. internet connection while logged out.
 msgctxt "login-view"
 msgid "Our kill switch is currently blocking your connection."
 msgstr "現在、キルスイッチが接続をブロックしています。"
-
-msgctxt "login-view"
-msgid "Please wait"
-msgstr "お待ちください"
-
-#. Text that informs the user about the consequences of clearing the saved
-#. account number.
-msgctxt "login-view"
-msgid "Removing the saved account number from this device cannot be undone."
-msgstr "このデバイスから保存済みのアカウント番号を削除すると、元には戻せません。"
-
-#. Error message shown above login input when trying to login to an account
-#. with too many registered devices.
-msgctxt "login-view"
-msgid "Too many devices"
-msgstr "デバイスが多すぎます"
-
-msgctxt "login-view"
-msgid "Unknown error"
-msgstr "不明なエラー"
 
 msgctxt "login-view"
 msgid "Upgrading..."
@@ -2066,42 +1653,6 @@ msgstr "アップグレード中..."
 msgctxt "login-view"
 msgid "Warren could not restore your account right now. Check your internet connection and try again."
 msgstr "Warren は現在アカウントを復元できませんでした。インターネット接続を確認して、もう一度お試しください。"
-
-msgctxt "login-view"
-msgid "Valid account number"
-msgstr "有効なアカウント番号"
-
-#. Text that informs the users about consequences of creating a new account.
-msgctxt "login-view"
-msgid "You already have a saved account number, by creating a new account the saved account number will be removed from this device. This cannot be undone."
-msgstr "すでに保存済みのアカウント番号があります。新規アカウントを作成すると、保存済みのアカウント番号がこのデバイスから削除されます。この操作は取り消せません。"
-
-#. The title for the LWO port selector.
-msgctxt "lwo-settings-view"
-msgid "Port"
-msgstr "ポート"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "lwo-settings-view"
-msgid "Port: %(port)s"
-msgstr "ポート: %(port)s"
-
-msgctxt "lwo-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "自動設定では、以下の有効なポート範囲からランダムに選択されます。"
-
-msgctxt "lwo-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "カスタムポートは次の有効範囲内の任意の値に設定できます: %(portRanges)s。"
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "lwo-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "有効な範囲: %(portRanges)s"
 
 #. Title label in navigation bar
 msgctxt "navigation-bar"
@@ -2277,32 +1828,8 @@ msgid "Unable to apply firewall rules. Try updating your kernel."
 msgstr "ファイアウォール規則を適用できません。カーネルを更新してみてください。"
 
 msgctxt "notifications"
-msgid "Unable to block all network traffic. Please troubleshoot or send a problem report."
-msgstr "すべてのネットワークトラフィックをブロックできません。問題に対処するか、問題の報告を送信してください。"
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software or send a problem report."
-msgstr "すべてのネットワークトラフィックをブロックできません。サードパーティのウイルス対策ソフトウェアまたはセキュリティソフトウェアを一時的に無効にするか、問題の報告を送信してください。"
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try updating your kernel or send a problem report."
-msgstr "すべてのネットワークトラフィックをブロックできません。カーネルを更新するか、問題の報告を送信してください。"
-
-msgctxt "notifications"
-msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
-msgstr "Warrenカーネルドライバーと通信できません。再接続を試すか、問題の報告を送信してください。"
-
-msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
 msgstr "カスタムトンネルのホストを解決できません。設定を変更してみてください。"
-
-msgctxt "notifications"
-msgid "Unable to set system DNS server. Please send a problem report."
-msgstr "システムのDNSサーバーを設定できません。問題の報告を送信してください。"
-
-msgctxt "notifications"
-msgid "Unable to start tunnel connection. Please send a problem report."
-msgstr "トンネル接続を開始できません。問題の報告を送信してください。"
 
 msgctxt "notifications"
 msgid "Unable to start tunnel connection. This could be because of conflicts with VMware, please troubleshoot."
@@ -2435,10 +1962,6 @@ msgstr "バウチャーを使用する"
 msgctxt "redeem-voucher-view"
 msgid "An error occurred."
 msgstr "エラー発生。"
-
-msgctxt "redeem-voucher-view"
-msgid "It looks like you’ve entered an account number instead of a voucher code. If you would like to change the active account, please log out first."
-msgstr "バウチャーコードではなくアカウント番号を入力したようです。有効なアカウントを変更する場合は、先にログアウトしてください。"
 
 #. Button label for voucher redemption.
 msgctxt "redeem-voucher-view"
@@ -2679,10 +2202,6 @@ msgid "Choose"
 msgstr "選択"
 
 msgctxt "split-tunneling-view"
-msgid "Choose the apps you want to exclude from the VPN tunnel."
-msgstr "VPNトンネルから除外するアプリを選択してください。"
-
-msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
 msgstr "%(country)sの都市"
 
@@ -2783,10 +2302,6 @@ msgstr "Snapアプリではまだ国を使用できません"
 msgctxt "split-tunneling-view"
 msgid "To use %(splitTunneling)s, please update to a Linux kernel version that supports cgroup v2."
 msgstr "%(splitTunneling)sを使用するには、cgroup v2をサポートしているLinuxカーネルバージョンに更新してください。"
-
-msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
-msgstr "スプリットトンネリングを使用するには、macOSのシステム設定で「Warren VPN」の「フルディスクアクセス」を有効にしてください。"
 
 msgctxt "split-tunneling-view"
 msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
@@ -2957,107 +2472,15 @@ msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
 msgstr "すでに実行中の場合は、ここから起動する前に %(applicationName)sを閉じてください。そうしないと、VPNを使用しない可能性があります。"
 
-#. Button label for continuing problem report submission with an outdated app version.
-msgctxt "support-view"
-msgid "Continue anyway"
-msgstr "それでも続ける"
-
-#. Button text to edit the message after a failed attempt to send the problem report.
-msgctxt "support-view"
-msgid "Edit message"
-msgstr "メッセージを編集する"
-
-msgctxt "support-view"
-msgid "Failed to send"
-msgstr "送信に失敗しました"
-
 #. Link to the webpage
 msgctxt "support-view"
 msgid "FAQs & Guides"
 msgstr "よくある質問とガイド"
 
-#. The message displayed to the user after submitting the problem report, given that the user left his or her email for us to reach back.
-#. Available placeholders:
-#. %(email)s
-msgctxt "support-view"
-msgid "If needed we will contact you at %(email)s"
-msgstr "必要に応じて %(email)s 宛にご連絡します　"
-
-msgctxt "support-view"
-msgid "If you exit the form and try again later, the information you already entered will still be here."
-msgstr "フォームを終了して後で再試行しても、入力済みの情報は引き続きここに表示されます。"
-
-#. Title label in navigation bar
-#. Navigation button to the 'Report a problem' help view
-msgctxt "support-view"
-msgid "Report a problem"
-msgstr "問題を報告する"
-
-#. Button label for sending the problem report.
-msgctxt "support-view"
-msgid "Send"
-msgstr "送信"
-
-#. Button label for sending the problem report without an email address.
-msgctxt "support-view"
-msgid "Send anyway"
-msgstr "とにかく送信する"
-
-msgctxt "support-view"
-msgid "Sending..."
-msgstr "送信中..."
-
-msgctxt "support-view"
-msgid "Sent"
-msgstr "送信済み"
-
 #. Title label in navigation bar
 msgctxt "support-view"
 msgid "Support"
 msgstr "サポート"
-
-msgctxt "support-view"
-msgid "Thanks!"
-msgstr "ありがとうございます！"
-
-msgctxt "support-view"
-msgid "To assist you better, please write in English or Swedish and include which country you are connecting from."
-msgstr "最適なサポートを提供するため、英語またはスウェーデン語でご入力ください。また、接続元の国をお知らせください。"
-
-msgctxt "support-view"
-msgid "To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel."
-msgstr "さらに効率よく問題解決できるよう、お使いのアプリのログファイルがこのメッセージに添付されます。個人データは匿名化された後に暗号化されたチャネルで送信されるため、その安全は確保され、公開されることはありません。"
-
-#. Button label for retrying problem report submission after a failure.
-msgctxt "support-view"
-msgid "Try again"
-msgstr "再試行"
-
-#. Button label for updating the app to the latest version.
-msgctxt "support-view"
-msgid "Update app"
-msgstr "アプリを更新"
-
-#. Button label for opening app logs.
-msgctxt "support-view"
-msgid "View app logs"
-msgstr "アプリのログを表示"
-
-msgctxt "support-view"
-msgid "We will look into this."
-msgstr "この問題を調査いたします。"
-
-msgctxt "support-view"
-msgid "You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address."
-msgstr "お客様への返信先を入力せずに問題の報告を送信しようとしています。ご報告に対する返信が必要な場合は、返信先のメールアドレスを入力する必要があります。"
-
-msgctxt "support-view"
-msgid "You are using an old version of the app. Please upgrade and see if the problem still exists before sending a report."
-msgstr "旧バージョンのアプリを使用中です。報告を送信する前にアプリを更新し、問題が引き続き発生するかどうかを確認してください。"
-
-msgctxt "support-view"
-msgid "Your email (optional)"
-msgstr "あなたのメールアドレス (任意)"
 
 #. Link to the refund policy webpage
 msgctxt "support-view"
@@ -3095,10 +2518,6 @@ msgstr "macOS のシステム設定で、\"Warren VPN\" の \"フルディスク
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
 msgstr "スプリットトンネリングを有効化できませんでした。アプリにシステム権限が付与されていません。以下の手順をお試しください。"
-
-msgctxt "troubleshoot"
-msgid "If these steps do not work please send a problem report."
-msgstr "これらの手順で解決できない場合は、問題の報告を送信してください。"
 
 msgctxt "troubleshoot"
 msgid "If you have installed another VPN then try to uninstall that."
@@ -3169,14 +2588,6 @@ msgstr "選択したアプリのみ保護されています"
 msgctxt "tunnel-control"
 msgid "Connection interrupted"
 msgstr "接続が中断されました"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map"
-msgstr "地図のアニメーション表示"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map movements."
-msgstr "地図の動きをアニメーション表示します。"
 
 msgctxt "user-interface-settings-view"
 msgid "Enable or disable system notifications. The critical notifications will always be displayed."
@@ -3598,44 +3009,13 @@ msgctxt "warren-pubkey-warning"
 msgid "The key changed again before it could be trusted. Review the new key and try again."
 msgstr "鍵を信頼する前に再び変更されました。新しい鍵を確認して、もう一度お試しください。"
 
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "UDP-over-TCP"
-msgstr "UDP-over-TCP"
-
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s (%(daitaFull)s) hides patterns in your encrypted VPN traffic."
 msgstr "%(daita)s (%(daitaFull)s) は暗号化されたVPNトラフィックのパターンを隠します。"
 
 msgctxt "wireguard-settings-view"
-msgid "%(daita)s does this by carefully adding network noise and making all network packets the same size."
-msgstr "%(daita)sはネットワークノイズを入念に追加し、すべてのネットワークパケットを同じサイズにすることによってこれを実現しています。"
-
-msgctxt "wireguard-settings-view"
-msgid "%(wireguard)s port"
-msgstr "%(wireguard)sポート"
-
-#. Page title for QUIC port view
-msgctxt "wireguard-settings-view"
-msgid "%(wireGuard)s port"
-msgstr "%(wireGuard)sポート"
-
-msgctxt "wireguard-settings-view"
-msgid "Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans."
-msgstr "注意: これによりネットワークトラフィックが増加し、速度、遅延、およびバッテリー使用率に悪影響を及ぼします。上限付きプランでは注意して使用してください。"
-
-msgctxt "wireguard-settings-view"
 msgid "By enabling “%(directOnly)s” you will have to manually select a server that is %(daita)s-enabled. This can cause you to end up in a blocked state until you have selected a compatible server in the “Select location” view."
 msgstr "“%(directOnly)s” を有効化した場合、%(daita)s対応のサーバーを手動で選択する必要があります。これにより、“場所を選択する” で互換性のあるサーバーを選択するまでブロック状態となる可能性があります。"
-
-msgctxt "wireguard-settings-view"
-msgid "By using sophisticated AI it’s possible to analyze the traffic of data packets going in and out of your device (even if the traffic is encrypted)."
-msgstr "高度なAIを使用することで、(トラフィックが暗号化されている場合でも) デバイスが送受信するデータパケットのトラフィックを分析することは可能です。"
 
 msgctxt "wireguard-settings-view"
 msgid "Cancel"
@@ -3645,10 +3025,6 @@ msgstr "キャンセル"
 msgctxt "wireguard-settings-view"
 msgid "Device IP version"
 msgstr "デバイスのIPバージョン"
-
-msgctxt "wireguard-settings-view"
-msgid "If an observer monitors these data packets, %(daita)s makes it significantly harder for them to identify which websites you are visiting or with whom you are communicating."
-msgstr "%(daita)sはこのようなデータパケットが監視されている場合でも、訪問先ウェブサイトや通信相手を特定するのを極めて困難にします。"
 
 msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
@@ -3662,37 +3038,13 @@ msgid "MTU"
 msgstr "MTU"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop"
-msgstr "マルチホップ"
-
-msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "選択した場所でDAITAを有効にするためにマルチホップが使用されています"
-
-msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
-msgstr "マルチホップは、通信をある QUIC サーバーから入れて別のサーバーから出すことで、あなたと訪問先サイトの間にサーバーを 1 台追加します。その分レイテンシが増えます。"
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. In order to use the internet, you might have to select a new location after enabling."
 msgstr "すべてのサーバーが%(daita)sに対応しているわけではありません。インターネットを使用するには、有効化した後に新しい場所を選択する必要がある場合もあります。"
-
-msgctxt "wireguard-settings-view"
-msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
-msgstr "すべてのサーバーが%(daita)sに対応しているわけではないため、どのサーバーでも%(daita)sが有効になるようにマルチホップを自動的に使用しています。"
-
-#. The title for the QUIC port selector.
-msgctxt "wireguard-settings-view"
-msgid "Port"
-msgstr "ポート"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "wireguard-settings-view"
-msgid "Port: %(port)s"
-msgstr "ポート: %(port)s"
 
 #. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
@@ -3715,14 +3067,6 @@ msgid "Shadowsocks"
 msgstr "Shadowsocks"
 
 msgctxt "wireguard-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "自動設定では、以下の有効なポート範囲からランダムに選択されます。"
-
-msgctxt "wireguard-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "カスタムポートは次の有効範囲内の任意の値に設定できます: %(portRanges)s。"
-
-msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "この機能は、出口サーバーへのトラフィックを量子コンピューターによる潜在的な攻撃から保護します。"
 
@@ -3730,911 +3074,8 @@ msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
 msgstr "UDP-over-TCP"
 
-#. Text describing the valid port range for a port selector.
-msgctxt "wireguard-settings-view"
-msgid "Valid range: %(min)s - %(max)s"
-msgstr "有効な範囲: %(min)s～%(max)s"
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "wireguard-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "有効な範囲: %(portRanges)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
-msgstr "UDP-over-TCP難読化プロトコルで接続する必要のあるVPNサーバーのTCPポートです。"
-
-msgid "%1$s more..."
-msgstr "その他%1$s件…"
-
-msgid "%1$s was added to \"%2$s\""
-msgstr "%1$sが「%2$s」に追加されました"
-
-msgid "%1$s was removed from \"%2$s\""
-msgstr "%1$sが「%2$s」から削除されました"
-
-msgid "%1$s, %2$s, %3$s"
-msgstr "%1$s、%2$s、%3$s"
-
-msgid "%s (Entry)"
-msgstr "%s (入口)"
-
-msgid "%s (Exit)"
-msgstr "%s (出口)"
-
-msgid "%s (added)"
-msgstr "%s (追加済み)"
-
-msgid "%s (removed)"
-msgstr "%s (削除済み)"
-
-msgid "%s is already selected as entry relay"
-msgstr "%sはすでに入口中継サーバーとして選択されています"
-
-msgid "%s is already selected as exit relay"
-msgstr "%sはすでに出口中継サーバーとして選択されています"
-
-msgid "%s is unavailable"
-msgstr "%sは使用できません"
-
-msgid "%s settings."
-msgstr "%sの設定。"
-
-msgid "%s was added to your account."
-msgstr "ご利用のアカウントに %s が追加されました。"
-
-msgid "(%d)"
-msgstr "(%d)"
-
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
-msgstr "1. 下の [VPN設定に移動] ボタンをクリックし、[Warren VPN] 名の横にある歯車をクリックします。"
-
-msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
-msgstr "2. 自動接続を有効にするには、[Always-on VPN] の横のトグルボタンをクリックします。"
-
-msgid "3. To enable Lockdown mode, click on the toggle next to \"Block connections without VPN\".<br /><br /><b>Warning: This setting blocks split apps and the Local Network Sharing feature.</b>"
-msgstr "3. ロックダウンモードを有効にするには、[VPN 以外の接続のブロック] の横にあるトグルボタンをクリックします。<br /><br /><b>警告: この設定では、分割アプリとローカルネットワーク共有の機能がブロックされます。</b>"
-
-msgid "30 days was added to your account."
-msgstr "アカウントに30日分が追加されました。"
-
-msgid "90 days was added to your account."
-msgstr "アカウントに90日分が追加されました。"
-
-msgid "<b>Account recovery will not be possible.</b>"
-msgstr "<b>アカウントの復旧はできません。</b>"
-
-msgid "<b>Attention:</b> Only some servers support the full port range."
-msgstr "<b>注意:</b> 全ポート範囲をサポートしているのは一部のサーバーのみです。"
-
-msgid "<b>Attention:</b> The app will close automatically and needs to be manually opened again after selecting a new icon and title. This will not impact your VPN connection."
-msgstr "<b>注意：</b>新しいアイコンとタイトルを選択すると、アプリは自動的に終了します。その後、手動で再起動する必要があります。なお、この操作によってVPN接続が切断されることはありません。"
-
-msgid "<b>Please note that these methods do not improve performance, and may increase system utilization and battery consumption.</b>"
-msgstr "<b>これらの方式はパフォーマンスを向上させるものではなく、システム使用率やバッテリー消費量を増加させる可能性がありますのでご注意ください。</b>"
-
-msgid "<b>This action cannot be undone.</b>"
-msgstr "<b>この操作は取り消すことができません。</b>"
-
-msgid "<b>Warning:</b>"
-msgstr "<b>警告：</b>"
-
-msgid "<b>You will lose access to this account on all devices.</b>"
-msgstr "<b>すべてのデバイスでこのアカウントへのアクセス権が失われます。</b>"
-
-msgid "API reachable, adding method..."
-msgstr "API に到達可能です。方法を追加しています..."
-
-msgid "API unreachable, save method anyway?"
-msgstr "API に到達できません。方法を保存しますか？"
-
-msgid "Account credit expires in a few minutes"
-msgstr "アカウントのクレジットが数分後に無効になります"
-
-msgid "Account deleted"
-msgstr "アカウントを削除しました"
-
-msgid "Account number is too long, please enter a valid number"
-msgstr "アカウント番号が長すぎます。有効な番号を入力してください"
-
-msgid "Account number must match"
-msgstr "アカウント番号が一致している必要があります"
-
-msgid "Account recovery will not be possible."
-msgstr "アカウントの復旧はできません。"
-
-msgid "Account time reminders"
-msgstr "アカウント時間のリマインダー"
-
-msgid "Add 30 days time (%s)"
-msgstr "30日分を追加する (%s)"
-
-msgid "Add 90 days time (%s)"
-msgstr "90日分を追加 (%s)"
-
-msgid "Add DNS server"
-msgstr "DNS サーバーを追加"
-
-msgid "Add locations"
-msgstr "場所の追加"
-
-msgid "Add time"
-msgstr "時間を追加"
-
-msgid "Add to list"
-msgstr "リストに追加"
-
-msgid "Adding method..."
-msgstr "方法を追加しています..."
-
-msgid "After updating a VPN app on Android 16, devices might end up in a state where VPN apps are no longer able to reach the internet."
-msgstr "Android 16でVPNアプリを更新すると、デバイス上のVPNアプリがインターネットにアクセス不可能な状態になる可能性があります。"
-
-msgid "Agree and continue"
-msgstr "同意して続行"
-
-msgid "All"
-msgstr "すべて"
-
-msgid "All applications"
-msgstr "すべてのアプリケーション"
-
-msgid "All overrides will be reset and servers IP addresses, in the Select location view, will go back to default."
-msgstr "すべてのオーバーライドはリセットされ、場所の選択ビューのサーバーの IP アドレスはデフォルトに戻ります。"
-
-msgid "Always-on VPN assigned to %s"
-msgstr "Always-on VPNは%sに割り当てられました"
-
-msgid "Always-on VPN assigned to other VPN"
-msgstr "Always-on VPNは他のVPNに割り当てられました"
-
-msgid "Android 16 has a known issue. Please restart your device and try again. To learn more,"
-msgstr "Android 16には既知の問題があります。デバイスを再起動して再試行してください。詳細は、"
-
-msgid "Any remaining time will be null and void."
-msgstr "残りの期間はすべて無効となります。"
-
-msgid "App icon"
-msgstr "アプリのアイコン"
-
-msgid "Appearance"
-msgstr "外観"
-
-msgid "Applying changes..."
-msgstr "変更内容を適用しています…"
-
-msgid "Are you sure you want to log <b>%s</b> out?"
-msgstr "本当に<b>%s</b>をログアウトしますか？"
-
-msgid "At least one method needs to be enabled"
-msgstr "方法は少なくとも 1 つは有効化する必要があります"
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, \"Local network sharing\" will not work."
-msgstr "注意: [VPN 以外の接続のブロック] が有効の場合、[ローカルネットワーク共有] は機能しません。"
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, split apps will not have Internet. Always keep in mind that split tunneling is a privacy risk."
-msgstr "注意: [VPNを使用していない接続をブロックする] が有効な場合、スプリット対象のアプリはインターネットを使用できません。スプリットトンネリングにはプライバシーのリスクがあることに常に注意してください。"
-
-msgid "Attention: this setting cannot be used in combination with \"Use custom DNS server\"."
-msgstr "注意: この設定を [カスタムDNSサーバーを使う] と一緒に使用することはできません。"
-
-msgid "Auto-connect & Lockdown mode"
-msgstr "自動接続とロックダウンモード"
-
-msgid "Auto-connect is called Always-on VPN in the Android system settings and it makes sure you are constantly connected to the VPN tunnel and auto connects after restart."
-msgstr "自動接続はAndroidシステム設定で「Always-on VPN」と呼ばれており、確実に一貫してVPNトンネルに接続し、再起動の後に自動接続を行う機能です。"
-
-msgid "Automatically connect on device start-up."
-msgstr "デバイスの起動時に自動接続します。"
-
-msgid "Blocking internet (device offline)"
-msgstr "インターネットをブロック中 (デバイスがオフライン)"
-
-msgid "Blocking..."
-msgstr "ブロック中…"
-
-msgid "Browser"
-msgstr "ブラウザ"
-
-msgid "By attaching your account token it links this report to your account, which helps us resolve your issue quicker. All reports are automatically deleted after a period of time."
-msgstr "アカウントトークンを添付するとこのレポートがアカウントに関連付けられ、より迅速に問題を解決することができます。すべてのレポートは一定期間が経過した後に自動で削除されます。"
-
-msgid "By checking this box I agree to the risks involved with deleting my account"
-msgstr "このボックスにチェックを入れることで、アカウント削除に伴うリスクに同意します"
-
-msgid "Can't connect?"
-msgstr "接続できませんか？"
-
-msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
-msgstr "Androidデバイス上で、Warren VPNアプリのタイトルとアイコンを変更します。この変更は、Warren VPNに関連する通知のアイコンには適用されません。"
-
-msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
-msgstr "結果がキャッシュされているため、DNS関連の設定の変更はすぐには適用されない可能性があります。"
-
-msgid "Clear input"
-msgstr "入力をクリア"
-
-msgid "Collapse"
-msgstr "折りたたむ"
-
-msgid "Connect on device start-up"
-msgstr "デバイス起動時に接続"
-
-msgid "Connect to a different network"
-msgstr "別のネットワークに接続する"
-
-msgid "Connecting..."
-msgstr "接続中..."
-
 msgid "Continue"
 msgstr "続行"
-
-msgid "Copied Warren account number to clipboard"
-msgstr "Warrenアカウント番号をクリップボードにコピーしました"
-
-msgid "Copied logs to clipboard"
-msgstr "ログをクリップボードにコピーしました"
-
-msgid "Copy"
-msgstr "コピー"
-
-msgid "Could not display remaining days."
-msgstr "残り日数を表示できませんでした。"
-
-msgid "Create new list"
-msgstr "リストの新規作成"
-
-msgid "Creating account failed"
-msgstr "アカウントを作成できませんでした"
-
-msgid "Critical error (your attention is required)"
-msgstr "重大なエラー (ご注意ください)"
-
-msgid "Current: %s"
-msgstr "現在の設定: %s"
-
-msgid "Custom DNS server addresses %1$s are invalid"
-msgstr "カスタムDNSサーバーアドレス %1$s は無効です"
-
-msgid "DNS settings might not go into effect immediately"
-msgstr "DNS設定はすぐに適用されない可能性があります"
-
-msgid "Delete \"%s\"?"
-msgstr "\"%s\" を削除しますか？"
-
-msgid "Delete account"
-msgstr "アカウントを削除する"
-
-msgid "Delete method"
-msgstr "方法を削除"
-
-msgid "Delete method?"
-msgstr "方法を削除しますか？"
-
-msgid "Deleting your account cannot be undone."
-msgstr "アカウントを削除すると元に戻すことはできません。"
-
-msgid "Deleting your account:"
-msgstr "アカウントの削除："
-
-msgid "Direct"
-msgstr "ダイレクト"
-
-msgid "Disable all \"%s\" above to activate this setting."
-msgstr "この設定を有効にするには、上の [%s] をすべて無効にしてください。"
-
-msgid "Disable multihop"
-msgstr "マルチホップを無効化する"
-
-msgid "Discard"
-msgstr "破棄"
-
-msgid "Discard changes?"
-msgstr "変更内容を破棄しますか？"
-
-msgid "Disconnected (No VPN permission)"
-msgstr "接続が解除されました (VPN のアクセス許可なし)"
-
-msgid "Disconnecting..."
-msgstr "接続解除中..."
-
-msgid "Dismiss"
-msgstr "閉じる"
-
-msgid "Don’t have an account number?"
-msgstr "アカウント番号を持っていませんか？"
-
-msgid "Edit custom lists"
-msgstr "カスタムリストを編集する"
-
-msgid "Edit list"
-msgstr "リストの編集"
-
-msgid "Edit lists"
-msgstr "リストを編集"
-
-msgid "Edit locations"
-msgstr "場所の編集"
-
-msgid "Enable %1$s"
-msgstr "%1$sを有効にする"
-
-msgid "Enable all & retry"
-msgstr "すべて有効化してもう一度試す"
-
-msgid "Enable all access methods in the app"
-msgstr "アプリですべてのアクセス方法を有効にする"
-
-msgid "Enable method"
-msgstr "方法を有効化する"
-
-msgid "Enable multihop"
-msgstr "マルチホップを有効化する"
-
-msgid "Enter MTU"
-msgstr "MTU を入力"
-
-msgid "Enter account number digits"
-msgstr "アカウント番号を入力してください"
-
-msgid "Entry relay is the same as exit relay"
-msgstr "入口中継サーバーと出口中継サーバーが同じです"
-
-msgid "Excluded applications"
-msgstr "除外対象アプリケーション"
-
-msgid "Expand"
-msgstr "展開"
-
-msgid "External link"
-msgstr "外部リンク"
-
-msgid "FAILED TO CONNECT"
-msgstr "接続に失敗しました"
-
-msgid "Failed to apply patch"
-msgstr "パッチを適用できませんでした"
-
-msgid "Failed to delete account, please contact support"
-msgstr "アカウントを削除できません。サポートまでお問い合わせください"
-
-msgid "Failed to load products, please try again"
-msgstr "製品を読み込めませんでした。再試行してください"
-
-msgid "Failed to set to current - API not reachable"
-msgstr "現在の設定に設定できませんでした。API に到達できません"
-
-msgid "Failed to set to current - Unknown reason"
-msgstr "現在の設定に設定できません。原因は不明です"
-
-msgid "File"
-msgstr "ファイル"
-
-msgid "For details, please see our %s."
-msgstr "詳細については、当社の%sをご覧ください。"
-
-msgid "For the VPN to connect automatically on device startup, the app must have VPN permissions. You can grant these by clicking “Connect” in the map view and selecting “OK” if prompted. Additionally, ensure the app is installed on the internal storage by checking the storage information in the app details in system settings."
-msgstr "デバイスの起動時にVPNを自動接続するには、アプリにVPNへのアクセス許可が必要です。このアクセス許可は、地図表示で [接続] をクリックし、プロンプトが表示されたら [OK] を選択すると付与できます。また、システム設定のアプリの詳細でストレージ情報を調べ、内部ストレージにアプリがインストールされていることも確認してください。"
-
-msgid "Go to VPN settings"
-msgstr "VPN設定に移動"
-
-msgid "Going to login will unblock the internet on this device."
-msgstr "ログインに進むと、このデバイスのインターネットのブロックが解除されます。"
-
-msgid "Google Play payment pending"
-msgstr "Google Playの決済は未完了です"
-
-msgid "Google Play payment pending, this might take some time"
-msgstr "Google Playの決済は未完了です。これには時間がかかる場合があります"
-
-msgid "Google Play unavailable"
-msgstr "Google Playを使用できません"
-
-msgid "IPv4 is not available, please try changing \"Device IP version\" setting."
-msgstr "IPv4は利用できません。「デバイスのIPバージョン」の設定を変更してみてください。"
-
-msgid "IPv6 is not available, please try changing \"Device IP version\" setting."
-msgstr "IPv6は利用できません。「デバイスのIPバージョン」の設定を変更してみてください。"
-
-msgid "Icon and title"
-msgstr "アイコンとタイトル"
-
-msgid "If the icon and title is still not changed after the app has closed, please try restarting the device."
-msgstr "アプリを終了してもアイコンとタイトルが変更されない場合は、デバイスを再起動してみてください。"
-
-msgid "If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device."
-msgstr "スプリットトンネリング機能が使用されている場合、アプリはシステムにインストール済みの全アプリケーションのリストを照会します。このリストはスプリットトンネリングビューでのみ取得されます。インストール済みアプリケーションのリストがデバイスから送信されることはありません。"
-
-msgid "If these steps don’t work, please send an email to support using the button below. It will automatically attach the logs which have been anonymized."
-msgstr "これらの手順で問題が解決しない場合には、以下のボタンを使ってサポートまでメールをお送りください。匿名化されたログが自動で添付されます。"
-
-msgid "Import new overrides by"
-msgstr "新しいオーバーライドのインポート"
-
-msgid "Import successful, overrides active"
-msgstr "インポートが正常に完了しました。オーバーライドは有効です"
-
-msgid "Importing new overrides might replace some previously imported overrides."
-msgstr "新しいオーバーライドをインポートすると、以前インポートしたオーバーライドが置き換えられる可能性があります。"
-
-msgid "In-app products unavailable, please make sure you have the latest version of Google Play."
-msgstr "アプリ内アイテムを利用できません。最新バージョンのGoogle Playを使用していることを確認してください。"
-
-msgid "Include my account token for faster help with payment or account related issues"
-msgstr "お支払いやアカウント関連の問題を迅速に解決するために、私のアカウントトークンを含めます"
-
-msgid "Invalid IPv6 config, please try to change the VPN settings."
-msgstr "IPv6の設定が無効です。VPNの設定を変更してください。"
-
-msgid "Invalid or missing value \"%1$s\""
-msgstr "値「%1$s」は無効であるか、欠測しています"
-
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "耐量子アルゴリズムで追加の鍵の交換を実行し、結果をQUICの通常の暗号化に混合させることで行われます。この追加ステップでは、新しいトンネルが確立されるたびに約500kiBのトラフィックが使用されます。"
-
-msgid "Less than a day left on this account"
-msgstr "このアカウントの残り時間は1日未満です"
-
-msgid "Lets you select apps that should access the Internet directly without going through the VPN tunnel."
-msgstr "VPN トンネルを経由せずに、直接インターネットにアクセスするアプリを選択できます。"
-
-msgid "List name"
-msgstr "リスト名"
-
-msgid "Loading products"
-msgstr "製品を読み込み中"
-
-msgid "Locations"
-msgstr "場所"
-
-msgid "Locations were changed for \"%s\""
-msgstr "\"%s\" の場所が変更されました"
-
-msgid "Log in"
-msgstr "ログイン"
-
-msgid "Makes sure the device is always on the VPN tunnel."
-msgstr "デバイスが必ずVPNトンネルを使用するようにします。"
-
-msgid "More actions"
-msgstr "その他の操作"
-
-msgid "Warren services unavailable"
-msgstr "Warrenサービスを使用できません"
-
-msgid "Multihop is disabled"
-msgstr "マルチホップは無効です"
-
-msgid "Multihop is enabled"
-msgstr "マルチホップは有効です"
-
-msgid "Name is already taken."
-msgstr "名前はすでに使用されています。"
-
-msgid "Name was changed to %s"
-msgstr "名前が %s に変更されました"
-
-msgid "Navigate"
-msgstr "移動"
-
-msgid "No Android app store installed, could not open link"
-msgstr "Androidアプリストアがインストールされていないため、リンクを開けませんでした"
-
-msgid "No browser app installed, could not open link"
-msgstr "ブラウザアプリがインストールされていないため、リンクを開けませんでした"
-
-msgid "No changelog was added for this version"
-msgstr "このバージョンに追加された変更履歴はありません。"
-
-msgid "No custom lists available"
-msgstr "利用可能なカスタムリストはありません"
-
-msgid "No email app available on the device"
-msgstr "デバイスに利用可能なメールアプリがありません"
-
-msgid "No entry server match your settings, try changing server or other settings."
-msgstr "設定に一致する入口サーバーが見つかりません。サーバーやその他の設定の変更をお試しください。"
-
-msgid "No exit server match your settings, try changing server or other settings."
-msgstr "設定に一致する出口サーバーが見つかりません。サーバーやその他の設定の変更をお試しください。"
-
-msgid "No internet connection"
-msgstr "インターネット接続がありません"
-
-msgid "No matching servers found."
-msgstr "一致するサーバーが見つかりません。"
-
-msgid "No result for \"%s\", please try a different search"
-msgstr "「%s」の結果はありません。別の検索をお試しください。"
-
-msgid "Not found"
-msgstr "見つかりませんでした"
-
-msgid "Notes"
-msgstr "メモ"
-
-msgid "Notification settings"
-msgstr "通知設定"
-
-msgid "Open app details"
-msgstr "アプリの詳細を開く"
-
-msgid "Overrides active"
-msgstr "オーバーライドは有効です"
-
-msgid "Overrides cleared"
-msgstr "オーバーライドがクリアされました"
-
-msgid "Overrides inactive"
-msgstr "オーバーライドは無効です"
-
-msgid "Password (optional)"
-msgstr "パスワード (オプション)"
-
-msgid "Paste or write overrides to be imported"
-msgstr "インポートするオーバーライドを貼り付けるか、または記入してください"
-
-msgid "Patch not matching specification"
-msgstr "パッチが仕様に一致していません"
-
-msgid "Please enter a valid IPv4 or IPv6 address"
-msgstr "有効な IPv4 または IPv6 アドレスを入力してください"
-
-msgid "Please enter a valid remote server port"
-msgstr "有効なリモートサーバーのポートを入力してください"
-
-msgid "Please press connect to request VPN permission"
-msgstr "[接続] を押してVPNへのアクセス許可をリクエストしてください"
-
-msgid "Please restart your device and try connecting again. If this does not work, please write an email to %s in Swedish or English."
-msgstr "デバイスを再起動して再接続してください。それでも問題が解決しない場合は、%sにスウェーデン語か英語のメールでお問い合わせください。"
-
-msgid "Please try changing your filters."
-msgstr "条件を変更してみてください。"
-
-msgid "Privacy"
-msgstr "プライバシー"
-
-msgid "Privacy policy"
-msgstr "プライバシーポリシー"
-
-msgid "Recents disabled and history cleared"
-msgstr "最近の項目を無効化し、履歴を消去しました"
-
-msgid "Recursion limit"
-msgstr "繰り返しの制限"
-
-msgid "Refunds will not be possible."
-msgstr "返金はできません。"
-
-msgid "Remove %s?"
-msgstr "%sを削除しますか？"
-
-msgid "Remove custom port"
-msgstr "カスタムポートを削除"
-
-msgid "Reset"
-msgstr "リセット"
-
-msgid "Reset all overrides"
-msgstr "すべてのオーバーライドをリセット"
-
-msgid "Reset overrides"
-msgstr "オーバーライドをリセット"
-
-msgid "Reset to default"
-msgstr "デフォルトにリセット"
-
-msgid "Restart your device"
-msgstr "デバイスを再起動する"
-
-msgid "Search"
-msgstr "検索"
-
-msgid "Send email"
-msgstr "メールを送信する"
-
-msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
-msgstr "QUICのMTU値を設定します。有効範囲: %1$d ～ %2$d"
-
-msgid "Set as multihop entry"
-msgstr "マルチホップの入口に設定"
-
-msgid "Set as multihop entry (incompatible)"
-msgstr "マルチホップの入口に設定（非対応）"
-
-msgid "Set as multihop exit"
-msgstr "マルチホップの出口に設定"
-
-msgid "Set as multihop exit (incompatible)"
-msgstr "マルチホップの出口に設定（非対応）"
-
-msgid "Set port"
-msgstr "ポートを設定"
-
-msgid "Share…"
-msgstr "共有…"
-
-msgid "Show location in notification"
-msgstr "通知に場所を表示する"
-
-msgid "Show system apps"
-msgstr "システムアプリの表示"
-
-msgid "Shows current VPN tunnel status"
-msgstr "現在のVPNトンネルのステータスを表示します"
-
-msgid "Shows reminders when the account time is about to expire"
-msgstr "アカウントの期限切れが迫っているときにリマインダーを表示します"
-
-msgid "Submit"
-msgstr "送信"
-
-msgid "TCP"
-msgstr "TCP"
-
-msgid "Test method"
-msgstr "方法をテストする"
-
-msgid "Testing %s..."
-msgstr "%s をテストしています..."
-
-msgid "Text"
-msgstr "テキスト"
-
-msgid "Thanks for being part of our community.\\nPrivacy is for the people!"
-msgstr "ご利用いただきありがとうございました。\\nプライバシーをすべての人に！"
-
-msgid "The Auto-connect and Lockdown mode settings can be found in the Android system settings, follow this guide to enable one or both."
-msgstr "自動接続とロックダウンモードの設定はAndroidシステム設定にあります。どちらか、または両方をこのガイドに従って有効にしてください。"
-
-msgid "The IPv6 DNS server will not work unless you enable \"IPv6\" under VPN settings."
-msgstr "VPN設定で [IPv6] を有効にしない限り、IPv6 DNSサーバーは機能しません。"
-
-msgid "The Lockdown mode is called \"Block connections without VPN\" in the Android system settings. It helps minimize leaks, however it has some known limitations which you can read more about"
-msgstr "このロックダウンモードは、Androidのシステム設定では [VPN以外の接続のブロック] と呼ばれています。情報漏洩の可能性を低減することが可能ですが、既知の制限がいくつかあります。制限については、"
-
-msgid "The \"Current\" method represent which method the app is using to reach the API."
-msgstr "\"現在の設定\" の方法は、アプリが API に到達するために使用する方法を指しています。"
-
-msgid "The app is blocking internet, please disconnect first"
-msgstr "アプリがインターネットをブロックしています。先に切断してください"
-
-msgid "The app was unable to create an account due to not being able to reach the Warren API."
-msgstr "アプリがWarren APIに接続できず、アカウントを作成できませんでした。"
-
-msgid "The app was unable to login due to not being able to reach the Warren API."
-msgstr "アプリがWarren APIに接続できず、ログインできませんでした。"
-
-msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
-msgstr "VPN設定で [ローカルネットワーク共有] を有効にしない限り、ローカルDNSサーバーは機能しません。"
-
-msgid "The selected %s port is not supported, please change it under"
-msgstr "選択した%sポートには対応していません。"
-
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "これらの方式は、Warrenへの接続がブロックされている状況で役立つ可能性があります。「自動」を選択すると、アプリは有効な方法が見つかるまですべての方式を試します。"
-
-msgid "This address has already been entered."
-msgstr "このアドレスは入力済みです。"
-
-msgid "This field is required"
-msgstr "このフィールドは必須です"
-
-msgid "This impacts your anonymity"
-msgstr "これはあなたの匿名性に影響を与えます"
-
-msgid "This is already set as current"
-msgstr "これはすでに現在の設定として設定されています"
-
-msgid "This might be due to censorship or network issues. Please try to:"
-msgstr "検閲やネットワークの問題が原因である可能性があります。次の操作をお試しください。"
-
-msgid "Time added"
-msgstr "時間が追加されました"
-
-msgid "To add locations to a list, press the pen or long press on a country, city, or server."
-msgstr "リストに場所を追加するには鉛筆アイコンをタップするか、国、都市、サーバーを長押ししてください。"
-
-msgid "To create a custom list press the \"+\""
-msgstr "カスタムリストを作成するには [+] を押してください"
-
-msgid "To delete your Warren VPN account, please enter your account number below."
-msgstr "Warren VPNアカウントを削除するには、以下にアカウント番号を入力してください。"
-
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "このアプリは最も安全なバージョンを使用していることを確認し、実行中の現在のバージョンに関する問題を通知できるよう、バージョンチェックを自動的に実行します。このチェックによってアプリのバージョンとAndroidシステムのバージョンがWarrenサーバーに送信されます。Warrenは使用されているアプリのバージョンとAndroidのバージョンの数字を記憶しています。このデータがユーザーを特定できる方法で保存されたり、使用されたりすることはありません。"
-
-msgid "Toggle VPN"
-msgstr "VPNの切り替え"
-
-msgid "Too many attempts, please try again later"
-msgstr "試行回数が多すぎます。後でもう一度お試しください"
-
-msgid "UDP"
-msgstr "UDP"
-
-msgid "Unable to apply firewall rules. Please troubleshoot or send a problem report."
-msgstr "ファイアウォールのルールを適用できません。問題に対処するか、問題の報告を送信してください。"
-
-msgid "Unable to parse patch"
-msgstr "パッチを解析できません"
-
-msgid "Unable to reach API"
-msgstr "APIに接続できません"
-
-msgid "Unable to reach API, %s"
-msgstr "APIに接続できません。%s"
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
-msgstr "トンネル接続を開始できません。Warren VPNを使用する前にAlways-on VPNを無効にしてください。"
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
-msgstr "トンネル接続を開始できません。Warren VPNを使用する前に<b>%s</b>のAlways-on VPNを無効にしてください。"
-
-msgid "Unable to verify account number, please contact support"
-msgstr "アカウント番号を確認できません。サポートまでお問い合わせください"
-
-msgid "Unavailable"
-msgstr "使用不可"
-
-msgid "Undo"
-msgstr "元に戻す"
-
-msgid "Unknown or prohibited key \"%1$s\""
-msgstr "キー「%1$s」は不明であるか、禁止されています"
-
-msgid "Update DNS server"
-msgstr "DNS サーバーを更新"
-
-msgid "Update list name"
-msgstr "リスト名の更新"
-
-msgid "Update server list"
-msgstr "サーバーリストを更新"
-
-msgid "Updating server list in the background..."
-msgstr "サーバーリストをバックグラウンドで更新中..."
-
-msgid "Use method"
-msgstr "この方法を使用する"
-
-msgid "VPN Settings not available on device"
-msgstr "デバイスのVPN設定を利用できません"
-
-msgid "VPN permission error"
-msgstr "VPN許可エラー"
-
-msgid "VPN permission was denied"
-msgstr "VPNへアクセスする許可がありません"
-
-msgid "VPN permission was denied or another app has \"Always-on VPN\" enabled"
-msgstr "VPNへのアクセス許可が拒否されたか、別のアプリで「Always-on VPN」が有効になっています"
-
-msgid "VPN tunnel status"
-msgstr "VPNトンネルのステータス"
-
-msgid "Valid range for all servers: %s"
-msgstr "全サーバーの有効範囲: %s"
-
-msgid "Value: %s"
-msgstr "値: %s"
-
-msgid "Verifying API method..."
-msgstr "API 接続方法を検証しています..."
-
-msgid "Verifying purchase"
-msgstr "購入を確認中"
-
-msgid "Verifying purchase..."
-msgstr "購入を確認中..."
-
-msgid "Verifying voucher…"
-msgstr "バウチャーを確認中…"
-
-msgid "Warning"
-msgstr "警告"
-
-msgid "We are still verifying your purchase, this might take some time. Your time will be added if the verification is successful."
-msgstr "現在購入の確認を行っており、これには時間がかかる場合があります。確認が完了すると、時間が追加されます。"
-
-msgid "We were unable to start the payment process, please make sure you have the latest version of Google Play."
-msgstr "決済処理を開始できませんでした。最新バージョンのGoogle Playを使用していることを確認してください。"
-
-msgid "We were unable to start the payment process, please try again later."
-msgstr "決済処理を開始できませんでした。後でもう一度お試しください。"
-
-msgid "Weather"
-msgstr "天気"
-
-msgid "Welcome, this device is now called <b>%s</b>."
-msgstr "ようこそ。このデバイス名は<b>%s</b>です。"
-
-msgid "QUIC port"
-msgstr "QUICポート"
-
-msgid "Yes, log out device"
-msgstr "はい。デバイスをログアウトします"
-
-msgid "You are about to delete your Warren VPN account."
-msgstr "Warren VPNアカウントを削除しようとしています。"
-
-msgid "You can add more time via the account view or website to continue using the VPN."
-msgstr "アカウント画面かウェブサイトから時間を追加することで、VPNを引き続き使用できます。"
-
-msgid "You can add more time via the account view to continue using the VPN."
-msgstr "アカウント画面から時間を追加することで、VPNを引き続き使用できます。"
-
-msgid "You will lose access to this account on all devices."
-msgstr "すべてのデバイスでこのアカウントへのアクセス権が失われます。"
-
-msgid "You will lose your remaining"
-msgstr "残り期間が失われます"
-
-msgid "\"%s\" was created"
-msgstr "\"%s\" が作成されました"
-
-msgid "\"%s\" was deleted"
-msgstr "\"%s\" は削除されました"
-
-msgid "click here"
-msgstr "ここをクリックしてください"
-
-msgid "here"
-msgstr "こちらをご覧ください。"
-
-msgid "less than one day"
-msgstr "1日未満"
-
-msgid "privacy policy"
-msgstr "プライバシーポリシー"
-
-msgid "read more here"
-msgstr "続きはこちら"
-
-msgid "%d day"
-msgid_plural "%d days"
-msgstr[0] "%d日"
-
-msgid "%d location"
-msgid_plural "%d locations"
-msgstr[0] "%d 件の場所"
-
-msgid "%d month"
-msgid_plural "%d months"
-msgstr[0] "%dヶ月"
-
-msgid "1 day left on this account"
-msgid_plural "%d days left on this account"
-msgstr[0] "このアカウントの残り時間は%d日です"
-
-msgid "1 year left on this account"
-msgid_plural "%d years left on this account"
-msgstr[0] "このアカウントの残り時間は%d年です"
-
-msgid "Account credit expires in a day"
-msgid_plural "Account credit expires in %d days"
-msgstr[0] "アカウントのクレジットが%d日後に無効になります"
-
-msgid "Account credit expires in an hour"
-msgid_plural "Account credit expires in %d hours"
-msgstr[0] "アカウントのクレジットが%d時間後に無効になります"
-
-msgid "You will lose your remaining day."
-msgid_plural "You will lose your remaining %d days."
-msgstr[0] "残りの%d日分が失われます。"
-
-
-msgctxt "port-forwarding-view"
-msgid "auto"
-msgstr "自動"
-
-msgctxt "port-forwarding-view"
-msgid "Mapping failed: %(error)s"
-msgstr "マッピングに失敗しました: %(error)s"
 
 msgctxt "port-forwarding-view"
 msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
@@ -4645,40 +3086,8 @@ msgid "Port forwarding"
 msgstr "ポート転送"
 
 msgctxt "port-forwarding-view"
-msgid "Port must be between 49152 and 65535, or empty for auto."
-msgstr "ポートは 49152～65535 の範囲で指定するか、自動の場合は空にしてください。"
-
-msgctxt "port-forwarding-view"
-msgid "Preferred port"
-msgstr "優先ポート"
-
-msgctxt "port-forwarding-view"
 msgid "Protocol"
 msgstr "プロトコル"
-
-msgctxt "port-forwarding-view"
-msgid "Public port: %(port)s"
-msgstr "公開ポート: %(port)s"
-
-msgctxt "port-forwarding-view"
-msgid "Renewing in %(countdown)s"
-msgstr "%(countdown)s 後に更新"
-
-msgctxt "port-forwarding-view"
-msgid "Status: active"
-msgstr "ステータス: 有効"
-
-msgctxt "port-forwarding-view"
-msgid "Status: requesting port mapping..."
-msgstr "ステータス: ポートマッピングを要求中…"
-
-msgctxt "port-forwarding-view"
-msgid "Status: waiting for an active tunnel connection to set up the port mapping."
-msgstr "ステータス: ポートマッピングを設定するためにアクティブなトンネル接続を待機中。"
-
-msgctxt "port-forwarding-view"
-msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
-msgstr "優先ポートがすでに使用されている場合、サーバーは別のポートを割り当てることがあります。変更は再接続なしで直ちに適用されます。"
 
 msgctxt "keys-view"
 msgid "Backup keys"
@@ -4785,16 +3194,8 @@ msgid "Could not check subscription status. Please try again."
 msgstr "サブスクリプションの状態を確認できませんでした。もう一度お試しください。"
 
 msgctxt "warren-onboarding"
-msgid "Create my new wallet (recommended)"
-msgstr "新しいウォレットを作成（推奨）"
-
-msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
 msgstr "デーモンにまだニーモニックがありません。ログインするか、アプリを再起動してください。"
-
-msgctxt "warren-onboarding"
-msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
-msgstr "デーモンがニーモニックを拒否しました。スペルと単語数を確認して、もう一度お試しください。"
 
 msgctxt "warren-onboarding"
 msgid "Failed to retrieve mnemonic from daemon."
@@ -4813,16 +3214,8 @@ msgid "I have written it down in a safe place."
 msgstr "安全な場所に書き留めました。"
 
 msgctxt "warren-onboarding"
-msgid "Import an existing mnemonic"
-msgstr "既存のニーモニックをインポート"
-
-msgctxt "warren-onboarding"
 msgid "No active subscription found. Please purchase one first."
 msgstr "有効なサブスクリプションが見つかりません。まずご購入ください。"
-
-msgctxt "warren-onboarding"
-msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
-msgstr "既存のWarren IDを復元するには、12単語のBIP39ニーモニックを貼り付けてください。"
 
 msgctxt "warren-onboarding"
 msgid "Pick a country and connect"
@@ -4837,20 +3230,12 @@ msgid "Privacy preferences"
 msgstr "プライバシー設定"
 
 msgctxt "warren-onboarding"
-msgid "Restore wallet"
-msgstr "ウォレットを復元"
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "ウィザードをスキップ（上級者向け）"
 
 msgctxt "warren-onboarding"
 msgid "View plans (opens in your browser)"
 msgstr "プランを見る（ブラウザで開きます）"
-
-msgctxt "warren-onboarding"
-msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
-msgstr "Warrenはノンカストディアル型ウォレット（Ed25519 + BIP39）を使用します。キーはお客様自身が保有し、当社が見ることは一切ありません。"
 
 msgctxt "warren-onboarding"
 msgid "Welcome to Warren VPN"
@@ -4976,25 +3361,9 @@ msgctxt "device-management"
 msgid "Session is inactive"
 msgstr "セッションが非アクティブです"
 
-msgctxt "device-management"
-msgid "Your session has ended. To connect again, you will need to log back in."
-msgstr "セッションが終了しました。再接続するには、もう一度ログインする必要があります。"
-
 msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "サーバー identity の不一致が検出されました。出口ノードの公開鍵が変更されました。"
-
-msgctxt "vpn-settings-view"
-msgid "Automatic failover"
-msgstr "自動フェイルオーバー"
-
-msgctxt "vpn-settings-view"
-msgid "Automatically switch to another exit server if the current one becomes unreachable."
-msgstr "現在の出口サーバーに到達できなくなった場合、自動的に別の出口サーバーに切り替えます。"
-
-msgctxt "vpn-settings-view"
-msgid "This setting takes effect immediately without a daemon restart."
-msgstr "この設定はサービスを再起動せずに、すぐに反映されます。"
 
 msgctxt "vpn-settings-view"
 msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
@@ -5013,14 +3382,6 @@ msgctxt "accessibility"
 msgid "Copy the voucher code"
 msgstr "バウチャーコードをコピー"
 
-msgctxt "accessibility"
-msgid "Hide public key"
-msgstr "公開鍵を非表示"
-
-msgctxt "accessibility"
-msgid "Show public key"
-msgstr "公開鍵を表示"
-
 msgctxt "account-view"
 msgid "Backup keys"
 msgstr "鍵をバックアップ"
@@ -5037,10 +3398,6 @@ msgstr "ログアウト中に問題が発生しました。"
 msgctxt "account-view"
 msgid "Try again"
 msgstr "再試行"
-
-msgctxt "account-view"
-msgid "Public key"
-msgstr "公開鍵"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
@@ -5129,10 +3486,6 @@ msgstr "失敗"
 msgctxt "port-forwarding-view"
 msgid "no port available"
 msgstr "利用可能なポートがありません"
-
-msgctxt "port-forwarding-view"
-msgid "not allowed"
-msgstr "許可されていません"
 
 msgctxt "port-forwarding-view"
 msgid "open: %(port)d"
@@ -5247,10 +3600,6 @@ msgstr "Warren マルチホップ"
 msgctxt "warren-multi-hop-view"
 msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
 msgstr "有効にすると、トラフィックは 2 つの Warren リレー（入口、次に出口）を経由してルーティングされ、クライアントと出口の間で HPKE のエンドツーエンド暗号化が行われます。入口リレーには暗号文しか見えず、出口には復号されたペイロードしか見えず、ユーザー IP が見えることはありません。"
-
-msgctxt "warren-multi-hop-view"
-msgid "auto"
-msgstr "自動"
 
 msgctxt "warren-pubkey-warning"
 msgid "Cryptographic mismatch details"
@@ -5376,14 +3725,6 @@ msgstr "署名しています。しばらくお待ちください。"
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "コミュニティフォーラム"
-
-msgctxt "tunnel-control"
-msgid "Connecting..."
-msgstr "接続しています..."
-
-msgctxt "tunnel-control"
-msgid "Encrypting your connection"
-msgstr "接続を暗号化しています"
 
 msgctxt "tunnel-control"
 msgid "Random location"

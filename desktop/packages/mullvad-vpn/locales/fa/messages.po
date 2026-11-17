@@ -12,17 +12,8 @@ msgstr ""
 "Language: fa_IR\n"
 "PO-Revision-Date: 2026-04-27 09:12\n"
 
-msgid "%(amount)d more..."
-msgstr "‏%(amount)d بیشتر..."
-
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "‏%(duration)s اضافه شد، حساب تا %(expiry)s پرداخت شد."
-
-#. The label for the QUIC port option.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgid "%(wireguard)s port"
-msgstr "پورت ‏%(wireguard)s"
 
 msgid "1 day"
 msgid_plural "%d days"
@@ -105,14 +96,8 @@ msgstr "اتصال"
 msgid "Connected"
 msgstr "متصل شد"
 
-msgid "CONNECTED"
-msgstr "متصل شد"
-
 msgid "Connecting"
 msgstr "در حال اتصال"
-
-msgid "CONNECTING..."
-msgstr "در حال اتصال..."
 
 msgid "Create"
 msgstr "ایجاد کردن"
@@ -156,14 +141,8 @@ msgstr "قطع اتصال و خروج"
 msgid "Disconnected"
 msgstr "اتصال قطع شد"
 
-msgid "DISCONNECTED"
-msgstr "اتصال قطع شد"
-
 msgid "Disconnecting"
 msgstr "در حال قطع اتصال"
-
-msgid "DISCONNECTING..."
-msgstr "در حال قطع اتصال..."
 
 msgid "Edit"
 msgstr "ویرایش"
@@ -178,16 +157,8 @@ msgstr "با این حال فعال شود"
 msgid "Enable direct only"
 msgstr "«فقط مستقیم» فعال شود"
 
-#. Error message shown trying to login but the app fails
-#. to fetch the list of registered devices.
-msgid "Failed to fetch list of devices"
-msgstr "بازیابی فهرست دستگاه‌ها انجام نشد"
-
 msgid "FAILED TO SECURE CONNECTION"
 msgstr "ایجاد اتصال امن ناموفق بود"
-
-msgid "Filters"
-msgstr "فیلترها"
 
 #. Button label for system settings.
 msgid "Go to System Settings"
@@ -234,9 +205,6 @@ msgstr "هیچ سرور مطابقت‌دهنده‌ای پیدا نشد"
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "هیچ نتیجه‌ای برای <b>%(searchTerm)s</b> یافت نشد."
 
-msgid "None"
-msgstr "هیچکدام"
-
 msgid "Off"
 msgstr "خاموش"
 
@@ -269,10 +237,6 @@ msgstr "خروج"
 
 msgid "Reconnect"
 msgstr "اتصال دوباره"
-
-#. Button label in confirmation dialog that confirms a remove action.
-msgid "Remove"
-msgstr "حذف"
 
 msgid "Required"
 msgstr "ضروری"
@@ -323,23 +287,9 @@ msgstr "استفاده"
 msgid "Username"
 msgstr "نام کاربری"
 
-#. Text for screen readers to describe the LWO settings navigation button.
-#. Available placeholders:
-#. %(lwo)s - will be replaced with LWO
-msgctxt "accessibility"
-msgid "%(lwo)s settings"
-msgstr "تنظیمات %(lwo)s"
-
 msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "‏%(title)s، نما بارگیری شد"
-
-#. Text for screen readers to describe the QUIC port settings navigation button.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgctxt "accessibility"
-msgid "%(wireguard)s port settings"
-msgstr "تنظیمات پورت ‏%(wireguard)s"
 
 #. This is an accessibility label for a button that adds a location to a custom list.
 #. Available placeholders:
@@ -369,12 +319,6 @@ msgctxt "accessibility"
 msgid "Connect to %(location)s"
 msgstr "اتصال به %(location)s"
 
-#. Provided to accessibility tools such as screenreaders to describe a button
-#. which copies the account number to the clipboard.
-msgctxt "accessibility"
-msgid "Copy account number"
-msgstr "کپی کردن شمارهٔ حساب"
-
 #. Accessibility label for a carousel that explains the DAITA feature to the user.
 msgctxt "accessibility"
 msgid "DAITA information carousel"
@@ -402,21 +346,6 @@ msgctxt "accessibility"
 msgid "Expand %(location)s"
 msgstr "باز کردن ‏%(location)s"
 
-#. This is used by screenreaders to communicate the "x" button next to a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the account number to the left of the button
-msgctxt "accessibility"
-msgid "Forget account number %(accountNumber)s"
-msgstr "فراموش کردن شمارهٔ حساب ‏%(accountNumber)s"
-
-#. Accessibility label for link to VPN settings where
-#. the user can change QUIC port.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "accessibility"
-msgid "Go to anti-censorship settings to change %(wireGuard)s port"
-msgstr "برای تغییر پورت ‏%(wireGuard)s به تنظیمات ضد سانسور بروید"
-
 #. Accessibility label for link to app upgrade view.
 msgctxt "accessibility"
 msgid "Go to app update page"
@@ -429,12 +358,6 @@ msgctxt "accessibility"
 msgid "Go to slide %(index)s"
 msgstr "برو به اسلاید %(index)s"
 
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which obscures the account number.
-msgctxt "accessibility"
-msgid "Hide account number"
-msgstr "پنهان کردن شمارهٔ حساب"
-
 #. Alt text for an illustration showing VPN traffic with DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic with DAITA enabled"
@@ -444,18 +367,6 @@ msgstr "تصویری که ترافیک VPN را با DAITA فعال نشان م�
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic without DAITA"
 msgstr "تصویری که ترافیک VPN را بدون DAITA نشان می‌دهد"
-
-#. This is used by screenreaders to communicate the login button.
-msgctxt "accessibility"
-msgid "Login"
-msgstr "ورود"
-
-#. This is used by screenreaders to communicate logging in with a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the saved account number
-msgctxt "accessibility"
-msgid "Login with account number %(accountNumber)s"
-msgstr "با شمارهٔ حساب ‏%(accountNumber)s وارد شوید"
 
 msgctxt "accessibility"
 msgid "More information"
@@ -515,14 +426,6 @@ msgctxt "accessibility"
 msgid "Remove %(location)s from %(customList)s"
 msgstr "%(location)s را از %(customList)s حذف کنید"
 
-#. Button action description provided to accessibility tools such as screen
-#. readers.
-#. Available placeholders:
-#. %(deviceName)s - The device name to remove.
-msgctxt "accessibility"
-msgid "Remove device named %(deviceName)s"
-msgstr "حذف دستگاه با نام ‏%(deviceName)s"
-
 msgctxt "accessibility"
 msgid "Remove item"
 msgstr "حذف مورد"
@@ -531,32 +434,10 @@ msgctxt "accessibility"
 msgid "Select location. Current location is %(location)s"
 msgstr "مکان را انتخاب کنید. مکان فعلی ‏%(location)s است"
 
-msgctxt "accessibility"
-msgid "Shadowsocks settings"
-msgstr "تنظیمات Shadowsocks"
-
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which unobscures the account number.
-msgctxt "accessibility"
-msgid "Show account number"
-msgstr "نمایش شمارهٔ حساب"
-
-msgctxt "accessibility"
-msgid "UDP-over-TCP settings"
-msgstr "تنظیمات ‏‏UDP روی TCP"
-
-msgctxt "accessibility"
-msgid "Use the right arrow key to focus the settings button."
-msgstr "برای فوکوس کردن روی دکمهٔ تنظیمات، کلید فلش راست را فشار دهید."
-
 #. Title label in navigation bar
 msgctxt "account-view"
 msgid "Account"
 msgstr "حساب"
-
-msgctxt "account-view"
-msgid "Account number"
-msgstr "شماره حساب"
 
 msgctxt "account-view"
 msgid "Currently unavailable"
@@ -566,11 +447,6 @@ msgstr "در حال حاضر در دسترس نیست"
 msgctxt "account-view"
 msgid "Log out"
 msgstr "خروج از حساب کاربری"
-
-#. Link text in the account view to navigate to the manage devices view.
-msgctxt "account-view"
-msgid "Manage devices"
-msgstr "مدیریت دستگاه‌ها"
 
 msgctxt "account-view"
 msgid "OUT OF TIME"
@@ -617,21 +493,6 @@ msgstr "خاموش کردن"
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
 msgstr "ضد سانسور"
-
-#. The title for the obfuscation method selector.
-msgctxt "anti-censorship-view"
-msgid "Method"
-msgstr "روش"
-
-#. Second paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "Please note that these methods do not improve performance, and may increase system utilization and battery consumption."
-msgstr "لطفاً توجه داشته باشید که این روش‌ها کارایی را بهبود نمی‌بخشند و ممکن است مصرف سیستم و باتری را افزایش دهند."
-
-#. First paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "این روش‌ها ممکن است زمانی مفید باشند که دسترسی شما به Warren مسدود شده باشد. وقتی «خودکار» انتخاب شود، اپلیکیشن همهٔ روش‌ها را امتحان می‌کند تا یکی از آن‌ها کار کند."
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -863,12 +724,6 @@ msgctxt "app-upgrade-view"
 msgid "Connection blocked. Try changing server or other settings."
 msgstr "اتصال مسدود شده است. سرور یا سایر تنظیمات را تغییر دهید و دوباره امتحان کنید."
 
-#. Label displayed when an error occurred due to the installer failing to start
-#. and the suggested resolution is to download the update again.
-msgctxt "app-upgrade-view"
-msgid "Could not open installer, please try again or send a problem report."
-msgstr "نصب‌کننده باز نشد. لطفاً دوباره تلاش کنید یا یک گزارش مشکل ارسال نمایید."
-
 #. Button text to download and install an update
 msgctxt "app-upgrade-view"
 msgid "Download & install"
@@ -883,11 +738,6 @@ msgstr "دانلود کامل شد!"
 msgctxt "app-upgrade-view"
 msgid "Download failed"
 msgstr "دانلود ناموفق بود"
-
-#. Label displayed when an error occurred due to the download failing
-msgctxt "app-upgrade-view"
-msgid "Download failed, please check your connection/firewall and try again, or send a problem report."
-msgstr "دانلود ناموفق بود. لطفاً اتصال/فایروال خود را بررسی کرده و دوباره تلاش کنید، یا یک گزارش مشکل ارسال نمایید."
 
 #. Status text displayed below a progress bar when the download of an update has been paused
 #. Label displayed above a progress bar when the update is verified successfully
@@ -917,11 +767,6 @@ msgctxt "app-upgrade-view"
 msgid "Install update"
 msgstr "نصب به‌روزرسانی"
 
-#. Label displayed when an error occurred within the installer
-msgctxt "app-upgrade-view"
-msgid "Installer quit unexpectedly, please try again or send a problem report."
-msgstr "نصب‌کننده به‌طور غیرمنتظره بسته شد. لطفاً دوباره تلاش کنید یا یک گزارش مشکل ارسال کنید."
-
 #. Info about which directory the app update will be downloaded to
 msgctxt "app-upgrade-view"
 msgid "Installer will be downloaded to <b>%(cacheDir)s</b>."
@@ -940,11 +785,6 @@ msgstr "در این انتشار، هیچ به‌روزرسانی یا تغیی�
 msgctxt "app-upgrade-view"
 msgid "Pause"
 msgstr "توقف"
-
-#. Button text to report a problem
-msgctxt "app-upgrade-view"
-msgid "Report a problem"
-msgstr "گزارش مشکل"
 
 #. Button text to resume updating
 msgctxt "app-upgrade-view"
@@ -971,21 +811,11 @@ msgctxt "app-upgrade-view"
 msgid "Starting installer..."
 msgstr "در حال آغاز نصب‌کننده..."
 
-#. Label displayed when an unknown error occurred
-msgctxt "app-upgrade-view"
-msgid "Unknown error occurred. Please try again or send a problem report."
-msgstr "خطای ناشناخته‌ای رخ داد. لطفاً دوباره تلاش کنید یا یک گزارش مشکل ارسال کنید."
-
 #. Title in navigation bar
 #. Main title for the update available view
 msgctxt "app-upgrade-view"
 msgid "Update available"
 msgstr "به‌روزرسانی موجود است"
-
-#. Label displayed when an error occurred due to the installer failed verification
-msgctxt "app-upgrade-view"
-msgid "Verification failed, please try again or send a problem report."
-msgstr "تأیید ناموفق بود. لطفاً دوباره تلاش کنید یا یک گزارش مشکل ارسال نمایید."
 
 #. Label displayed above a progress bar when the update is verified successfully
 msgctxt "app-upgrade-view"
@@ -1056,14 +886,6 @@ msgstr "مسدود کردن اینترنت: زمان حساب به پایان ر
 msgctxt "auth-failure"
 msgid "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly."
 msgstr "اتصالات هم‌زمان این حساب بیش از حد مجاز است. یکی از دستگاه‌ها را قطع نمایید یا کمی بعد دوباره تلاش کنید."
-
-msgctxt "auth-failure"
-msgid "Unable to authenticate account. Please send a problem report."
-msgstr "نمی‌توان حساب را احراز هویت کرد. لطفاً یک گزارش مشکل ارسال کنید."
-
-msgctxt "auth-failure"
-msgid "You are logged in with an invalid account number. Please log out and try another one."
-msgstr "شما با یک شماره‌حساب نامعتبر وارد شده‌اید. لطفاً خارج شوید و شمارهٔ دیگری را امتحان نمایید."
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
@@ -1158,10 +980,6 @@ msgstr[0] "%(count)d اپلیکیشن در کشورهای دیگر"
 msgstr[1] "%(count)d اپلیکیشن در کشورهای دیگر"
 
 msgctxt "connect-view"
-msgid "Active features"
-msgstr "ویژگی‌های فعال"
-
-msgctxt "connect-view"
 msgid "Congrats!"
 msgstr "تبریک!"
 
@@ -1185,10 +1003,6 @@ msgstr "کد ووچر را وارد کنید"
 msgctxt "connect-view"
 msgid "Go ahead and start using the app to begin reclaiming your online privacy."
 msgstr "شروع کنید و از اپلیکیشن استفاده نمایید تا بازپس‌گیری حریم خصوصی آنلاین خود را آغاز کنید."
-
-msgctxt "connect-view"
-msgid "Here’s your account number. Save it!"
-msgstr "این هم شمارهٔ حساب شما. آن را ذخیره کنید!"
 
 #. Button label for opening privacy information link.
 msgctxt "connect-view"
@@ -1393,43 +1207,6 @@ msgctxt "custom-list-feature"
 msgid "Relay"
 msgstr "رله"
 
-#. Button for continuing login process.
-msgctxt "device-management"
-msgid "Continue with login"
-msgstr "ادامه با ورود"
-
-#. Label informing the user when a device was created.
-#. Available placeholders:
-#. %(createdDate)s - The creation date of the device.
-msgctxt "device-management"
-msgid "Created: %(createdDate)s"
-msgstr "ایجاد شده: %(createdDate)s"
-
-#. Label indicating that this device is the current device.
-msgctxt "device-management"
-msgid "Current device"
-msgstr "دستگاه فعلی"
-
-msgctxt "device-management"
-msgid "Device is inactive"
-msgstr "دستگاه غیرفعال است"
-
-msgctxt "device-management"
-msgid "Device name"
-msgstr "نام دستگاه"
-
-#. A label that will display the newly created device name to inform the user
-#. about it.
-#. Available placeholders:
-#. %(deviceName)s - The name of the current device
-msgctxt "device-management"
-msgid "Device name: %(deviceName)s"
-msgstr "نام دستگاه: %(deviceName)s"
-
-msgctxt "device-management"
-msgid "Failed to remove device"
-msgstr "حذف دستگاه ناموفق بود"
-
 #. Button label for navigating to login.
 msgctxt "device-management"
 msgid "Go to login"
@@ -1439,10 +1216,6 @@ msgctxt "device-management"
 msgid "Going to login will unblock the Internet on this device."
 msgstr "با رفتن به صفحهٔ ورود، اینترنت روی این دستگاه باز خواهد شد."
 
-msgctxt "device-management"
-msgid "If you log out, the device and the device name is removed. When you log back in again, the device will get a new name."
-msgstr "اگر خارج شوید، دستگاه و نام آن حذف می‌شوند. وقتی دوباره وارد شوید، دستگاه نام جدیدی خواهد گرفت."
-
 #. Title label in navigation bar for the manage devices view.
 #. Title text in the manage devices view
 msgctxt "device-management"
@@ -1450,68 +1223,13 @@ msgid "Manage devices"
 msgstr "مدیریت دستگاه‌ها"
 
 msgctxt "device-management"
-msgid "Please log out of at least one by removing it from the list below. You can find the corresponding device name under the device’s Account settings."
-msgstr "لطفاً حداقل یکی از دستگاه‌ها را با حذف آن از فهرست زیر خارج کنید. نام دستگاه مربوطه را می‌توانید در تنظیمات حساب همان دستگاه پیدا کنید."
-
-#. Button label for confirming removing a device.
-msgctxt "device-management"
-msgid "Remove"
-msgstr "حذف"
-
-#. Text displayed above button which logs out another device.
-#. The text enclosed in "<b></b>" will appear bold.
-#. Available placeholders:
-#. %(deviceName)s - The name of the device to log out.
-msgctxt "device-management"
-msgid "Remove <em>%(deviceName)s?</em>"
-msgstr "حذف <em>%(deviceName)s؟</em>"
-
-#. Page title informing user that enough devices has been removed to continue
-#. login process.
-msgctxt "device-management"
-msgid "Super!"
-msgstr "عالی!"
-
-msgctxt "device-management"
-msgid "The device will be removed from the list and logged out."
-msgstr "دستگاه از فهرست حذف شده و خارج خواهد شد."
-
-msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "این نام به دستگاه اختصاص داده شده است. هر دستگاهی که وارد حساب Warren می‌شود، یک نام منحصر‌به‌فرد دریافت می‌کند تا هنگام مدیریت دستگاه‌ها در اپلیکیشن یا وب‌سایت، بتوانید آن را شناسایی کنید."
-
-msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
 msgstr "زمان باقی‌مانده: %(timeLeft)s"
-
-#. Page title informing user that the login failed due to too many registered
-#. devices on account.
-msgctxt "device-management"
-msgid "Too many devices"
-msgstr "تعداد دستگاه‌ها بیش از حد مجاز است"
 
 #. Button text to retry fetching devices.
 msgctxt "device-management"
 msgid "Try again"
 msgstr "دوباره تلاش کنید"
-
-#. Subtitle text in the manage devices view, explaining
-#. devices and what they can do in the manage devices view.
-msgctxt "device-management"
-msgid "View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily."
-msgstr "تمام دستگاه‌های وارد شده به حساب خود را مشاهده و مدیریت کنید. شما می‌توانید هم‌زمان حداکثر 5 دستگاه در یک حساب داشته باشید. هر دستگاه هنگام ورود یک نام دریافت می‌کند تا بتوانید به‌راحتی آن‌ها را از هم تشخیص دهید."
-
-msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Warren account."
-msgstr "شما می‌توانید حداکثر 5 دستگاه را هم‌زمان در یک حساب Warren وارد کنید."
-
-msgctxt "device-management"
-msgid "You can now continue logging in on this device."
-msgstr "اکنون می‌توانید ورود به این دستگاه را ادامه دهید."
-
-msgctxt "device-management"
-msgid "You have removed this device. To connect again, you will need to log back in."
-msgstr "شما این دستگاه را حذف کرده‌اید. برای اتصال دوباره، باید مجدداً وارد شوید."
 
 #. The message displayed to the user in case of critical error in the GUI
 #. Available placeholders:
@@ -1671,10 +1389,6 @@ msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
 msgstr "ممکن است ترافیک شبکه در حال نشت باشد"
 
 msgctxt "in-app-notifications"
-msgid "NEW DEVICE CREATED"
-msgstr "دستگاه جدید ایجاد شد"
-
-msgctxt "in-app-notifications"
 msgid "NEW VERSION INSTALLED"
 msgstr "نسخهٔ جدید نصب شد"
 
@@ -1705,11 +1419,6 @@ msgctxt "in-app-notifications"
 msgid "Retry installation"
 msgstr "نصب را دوباره امتحان کنید"
 
-#. Button label to send a problem report.
-msgctxt "in-app-notifications"
-msgid "Send problem report"
-msgstr "ارسال گزارش مشکل"
-
 msgctxt "in-app-notifications"
 msgid "SERVER MAINTENANCE"
 msgstr "تعمیر و نگهداری سرور"
@@ -1728,20 +1437,6 @@ msgstr "نصب‌کننده با موفقیت تکمیل نشد."
 msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "نصب‌کننده با موفقیت اجرا نشد."
-
-#. Notification subtitle indicating the user is using an unsupported port for QUIC.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "in-app-notifications"
-msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
-msgstr "پورت انتخاب‌شدهٔ %(wireGuard)s پشتیبانی نمی‌شود، لطفاً <a>آن را در تنظیمات VPN تغییر دهید.</a>"
-
-#. Notification text when a new device has been created.
-#. Available placeholders:
-#. - %(deviceName)s: Name of created device.
-msgctxt "in-app-notifications"
-msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
-msgstr "این دستگاه اکنون با نام <em>%(deviceName)s</em> شناخته می‌شود. جزئیات بیشتر را در <a>مدیریت دستگاه‌ها</a> در حساب خود مشاهده کنید."
 
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
@@ -1832,11 +1527,6 @@ msgctxt "launch-view"
 msgid "Failed to start the app, please try again or click “Details” for more info"
 msgstr "اجرای اپلیکیشن ناموفق بود. لطفاً دوباره تلاش کنید یا برای اطلاعات بیشتر روی «جزئیات» کلیک نمایید"
 
-#. Message in troubleshooting modal advising user to send a problem report if the steps do not work.
-msgctxt "launch-view"
-msgid "If these steps do not work please send a problem report."
-msgstr "اگر این مراحل کار نکرد، لطفاً یک گزارش مشکل ارسال کنید."
-
 #. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
 msgid "Only the account that set Warren up, or an administrator, can use it here."
@@ -1882,11 +1572,6 @@ msgctxt "launch-view"
 msgid "Restarting your computer"
 msgstr "راه‌اندازی مجدد کامپیوتر"
 
-#. Button label for sending a problem report.
-msgctxt "launch-view"
-msgid "Send problem report"
-msgstr "ارسال گزارش مشکل"
-
 #. Status text shown when app is starting.
 msgctxt "launch-view"
 msgid "Starting up...."
@@ -1901,11 +1586,6 @@ msgstr "فرآیند پس‌زمینهٔ Warren نتوانست راه‌اندا
 msgctxt "launch-view"
 msgid "Try again"
 msgstr "دوباره تلاش کنید"
-
-#. Message in launch view when the mullvad service cannot be contacted.
-msgctxt "launch-view"
-msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "نمی‌توان با سرویس سیستم Warren تماس گرفت، اتصال شما ممکن است ناامن باشد. لطفاً مشکل را برطرف کنید یا با کلیک روی دکمهٔ «بیشتر بدانید»، یک گزارش مشکل ارسال کنید."
 
 #. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
 msgctxt "launch-view"
@@ -1962,109 +1642,16 @@ msgctxt "login-view"
 msgid "<b>%(lockdownModeSettingName)s</b> is enabled. Disable it to unblock your connection."
 msgstr "<b>%(lockdownModeSettingName)s</b> فعال است. برای باز کردن اتصال، آن را غیرفعال کنید."
 
-msgctxt "login-view"
-msgid "Account created"
-msgstr "حساب ایجاد شد"
-
-msgctxt "login-view"
-msgid "Checking account number"
-msgstr "در حال بررسی شمارهٔ حساب"
-
 #. Text in button that allows user to create a new account.
 msgctxt "login-view"
 msgid "Create a new account"
 msgstr "ایجاد یک حساب جدید"
-
-#. Button which confirms the action to create a new account.
-msgctxt "login-view"
-msgid "Create new account"
-msgstr "ایجاد حساب جدید"
-
-msgctxt "login-view"
-msgid "Creating account..."
-msgstr "در حال ایجاد حساب..."
-
-#. Text that asks the user if they really want to create a new account.
-msgctxt "login-view"
-msgid "Do you want to create a new account?"
-msgstr "می‌خواهید یک حساب جدید ایجاد کنید؟"
-
-#. Text that asks the user if they really want to remove the saved account.
-msgctxt "login-view"
-msgid "Do you want to remove the saved account number?"
-msgstr "می‌خواهید شمارهٔ حساب ذخیره‌شده را حذف کنید؟"
-
-msgctxt "login-view"
-msgid "Enter your account number"
-msgstr "شمارهٔ حساب خود را وارد کنید"
-
-msgctxt "login-view"
-msgid "Error"
-msgstr "خطا"
-
-msgctxt "login-view"
-msgid "Failed to create account"
-msgstr "ایجاد حساب موفقیت‌آمیز نبود"
-
-msgctxt "login-view"
-msgid "Finishing upgrade."
-msgstr "در حال تکمیل ارتقا."
-
-#. Error message shown above login input when trying to login with a
-#. non-existent account number.
-msgctxt "login-view"
-msgid "Invalid account number"
-msgstr "شمارهٔ حساب نامعتبر است"
-
-msgctxt "login-view"
-msgid "Logged in"
-msgstr "وارد شده‌اید"
-
-msgctxt "login-view"
-msgid "Logging in..."
-msgstr "در حال ورود..."
-
-#. Label for the login button.
-msgctxt "login-view"
-msgid "Login"
-msgstr "ورود"
-
-msgctxt "login-view"
-msgid "Login failed"
-msgstr "ورود ناموفق بود"
-
-#. Text shown between two horizontal lines above the "create account" button.
-#. In this context it is used to separate the users alternative of logging in
-#. or creating a new account, "Login or Create a new account".
-msgctxt "login-view"
-msgid "Or"
-msgstr "یا"
 
 #. This is a warning message shown when the app is blocking the users
 #. internet connection while logged out.
 msgctxt "login-view"
 msgid "Our kill switch is currently blocking your connection."
 msgstr "کلید قطع‌کننده ما در حال حاضر اتصال شما را مسدود کرده است."
-
-msgctxt "login-view"
-msgid "Please wait"
-msgstr "لطفاً صبر کنید"
-
-#. Text that informs the user about the consequences of clearing the saved
-#. account number.
-msgctxt "login-view"
-msgid "Removing the saved account number from this device cannot be undone."
-msgstr "حذف شمارهٔ حساب ذخیره‌شده از این دستگاه غیرقابل بازگشت است."
-
-#. Error message shown above login input when trying to login to an account
-#. with too many registered devices.
-msgctxt "login-view"
-msgid "Too many devices"
-msgstr "تعداد دستگاه‌ها بیش از حد مجاز است"
-
-msgctxt "login-view"
-msgid "Unknown error"
-msgstr "خطای ناشناخته"
 
 msgctxt "login-view"
 msgid "Upgrading..."
@@ -2074,42 +1661,6 @@ msgstr "در حال ارتقا..."
 msgctxt "login-view"
 msgid "Warren could not restore your account right now. Check your internet connection and try again."
 msgstr "Warren در حال حاضر نتوانست حساب شما را بازیابی کند. اتصال اینترنت خود را بررسی کنید و دوباره تلاش کنید."
-
-msgctxt "login-view"
-msgid "Valid account number"
-msgstr "شمارهٔ حساب معتبر"
-
-#. Text that informs the users about consequences of creating a new account.
-msgctxt "login-view"
-msgid "You already have a saved account number, by creating a new account the saved account number will be removed from this device. This cannot be undone."
-msgstr "شما از قبل یک شمارهٔ حساب ذخیره‌شده دارید. با ایجاد حساب جدید، شمارهٔ حساب ذخیره‌شده از این دستگاه حذف خواهد شد. این عمل قابل بازگشت نیست."
-
-#. The title for the LWO port selector.
-msgctxt "lwo-settings-view"
-msgid "Port"
-msgstr "درگاه"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "lwo-settings-view"
-msgid "Port: %(port)s"
-msgstr "پورت: %(port)s"
-
-msgctxt "lwo-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "تنظیم خودکار به‌صورت تصادفی از بازه‌های پورت معتبرِ نشان‌داده‌شده در زیر انتخاب می‌کند."
-
-msgctxt "lwo-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "پورت سفارشی می‌تواند هر عددی در محدوده‌های معتبر زیر باشد: %(portRanges)s."
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "lwo-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "دامنه‌های معتبر: %(portRanges)s"
 
 #. Title label in navigation bar
 msgctxt "navigation-bar"
@@ -2285,32 +1836,8 @@ msgid "Unable to apply firewall rules. Try updating your kernel."
 msgstr "قادر به اعمال قوانین فایروال نیست. لطفاً کِرنل خود را به‌روزرسانی کنید."
 
 msgctxt "notifications"
-msgid "Unable to block all network traffic. Please troubleshoot or send a problem report."
-msgstr "قادر به مسدود کردن تمام ترافیک شبکه نیست. لطفاً عیب‌یابی کنید یا گزارش مشکل ارسال نمایید."
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software or send a problem report."
-msgstr "قادر به مسدود کردن تمام ترافیک شبکه نیست. لطفاً هر آنتی‌ویروس یا نرم‌افزار امنیتیِ شخصِ ثالث را به‌طور موقت غیرفعال کنید یا یک گزارش مشکل ارسال نمایید."
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try updating your kernel or send a problem report."
-msgstr "قادر به مسدود کردن تمام ترافیک شبکه نیست. لطفاً کرنل خود را به‌روزرسانی کنید یا یک گزارش مشکل ارسال نمایید."
-
-msgctxt "notifications"
-msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
-msgstr "قادر به برقراری ارتباط با درایور کرنل Warren نیست. لطفاً دوباره اتصال را برقرار کنید یا یک گزارش مشکل ارسال نمایید."
-
-msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
 msgstr "قادر به شناسایی میزبان تونل سفارشی نیست. لطفاً تنظیمات خود را تغییر دهید و دوباره تلاش کنید."
-
-msgctxt "notifications"
-msgid "Unable to set system DNS server. Please send a problem report."
-msgstr "قادر به تنظیم سرور DNS سیستم نیست. لطفاً یک گزارش مشکل ارسال کنید."
-
-msgctxt "notifications"
-msgid "Unable to start tunnel connection. Please send a problem report."
-msgstr "قادر به شروع اتصال تونل نیست. لطفاً یک گزارش مشکل ارسال کنید."
 
 msgctxt "notifications"
 msgid "Unable to start tunnel connection. This could be because of conflicts with VMware, please troubleshoot."
@@ -2443,10 +1970,6 @@ msgstr "فعال‌سازی ووچر"
 msgctxt "redeem-voucher-view"
 msgid "An error occurred."
 msgstr "خطایی رخ داد."
-
-msgctxt "redeem-voucher-view"
-msgid "It looks like you’ve entered an account number instead of a voucher code. If you would like to change the active account, please log out first."
-msgstr "به نظر می‌رسد که به جای کد ووچر، شمارهٔ حساب وارد کرده‌اید. اگر می‌خواهید حساب فعال را تغییر دهید، لطفاً ابتدا خارج شوید."
 
 #. Button label for voucher redemption.
 msgctxt "redeem-voucher-view"
@@ -2688,10 +2211,6 @@ msgid "Choose"
 msgstr "انتخاب"
 
 msgctxt "split-tunneling-view"
-msgid "Choose the apps you want to exclude from the VPN tunnel."
-msgstr "اپلیکیشن‌هایی را که می‌خواهید از تونل VPN خارج کنید انتخاب نمایید."
-
-msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
 msgstr "شهرهای %(country)s"
 
@@ -2792,10 +2311,6 @@ msgstr "اپلیکیشن‌های Snap هنوز نمی‌توانند کشور �
 msgctxt "split-tunneling-view"
 msgid "To use %(splitTunneling)s, please update to a Linux kernel version that supports cgroup v2."
 msgstr "برای استفاده از %(splitTunneling)s، لطفاً کرنل لینوکس خود را به نسخه‌ای که از cgroup v2 پشتیبانی می‌کند به‌روزرسانی کنید."
-
-msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
-msgstr "برای استفاده از تونل‌گذاری تفکیک‌شده، لطفاً «دسترسی کامل به دیسک» را برای «Warren VPN» در تنظیمات سیستم macOS فعال کنید."
 
 msgctxt "split-tunneling-view"
 msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
@@ -2966,107 +2481,15 @@ msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
 msgstr "اگر %(applicationName)s در حال اجرا است، ابتدا آن را ببندید و سپس از اینجا اجرا کنید؛ در غیر این صورت ممکن است از VPN استفاده نکند."
 
-#. Button label for continuing problem report submission with an outdated app version.
-msgctxt "support-view"
-msgid "Continue anyway"
-msgstr "با این حال ادامه بده"
-
-#. Button text to edit the message after a failed attempt to send the problem report.
-msgctxt "support-view"
-msgid "Edit message"
-msgstr "ویرایش پیام"
-
-msgctxt "support-view"
-msgid "Failed to send"
-msgstr "ارسال ناموفق بود"
-
 #. Link to the webpage
 msgctxt "support-view"
 msgid "FAQs & Guides"
 msgstr "پرسش‌های متداول و راهنماها"
 
-#. The message displayed to the user after submitting the problem report, given that the user left his or her email for us to reach back.
-#. Available placeholders:
-#. %(email)s
-msgctxt "support-view"
-msgid "If needed we will contact you at %(email)s"
-msgstr "در صورت نیاز با شما از طریق %(email)s تماس خواهیم گرفت"
-
-msgctxt "support-view"
-msgid "If you exit the form and try again later, the information you already entered will still be here."
-msgstr "اگر از فرم خارج شوید و بعداً دوباره تلاش کنید، اطلاعاتی که قبلاً وارد کرده‌اید همچنان اینجا خواهد بود."
-
-#. Title label in navigation bar
-#. Navigation button to the 'Report a problem' help view
-msgctxt "support-view"
-msgid "Report a problem"
-msgstr "گزارش مشکل"
-
-#. Button label for sending the problem report.
-msgctxt "support-view"
-msgid "Send"
-msgstr "ارسال"
-
-#. Button label for sending the problem report without an email address.
-msgctxt "support-view"
-msgid "Send anyway"
-msgstr "با این حال ارسال کنید"
-
-msgctxt "support-view"
-msgid "Sending..."
-msgstr "در حال ارسال..."
-
-msgctxt "support-view"
-msgid "Sent"
-msgstr "ارسال شد"
-
 #. Title label in navigation bar
 msgctxt "support-view"
 msgid "Support"
 msgstr "پشتیبانی"
-
-msgctxt "support-view"
-msgid "Thanks!"
-msgstr "تشکر!"
-
-msgctxt "support-view"
-msgid "To assist you better, please write in English or Swedish and include which country you are connecting from."
-msgstr "برای اینکه بتوانیم بهتر کمک کنیم، لطفاً به انگلیسی یا سوئدی بنویسید و کشوری را که از آن وصل می‌شوید ذکر کنید."
-
-msgctxt "support-view"
-msgid "To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel."
-msgstr "برای کمک مؤثرتر، فایل لاگ اپلیکیشن شما به این پیام پیوست خواهد شد. داده‌های شما امن و خصوصی می‌مانند، زیرا پیش از ارسال از طریق یک کانال رمزگذاری‌شده، ناشناس‌ می‌شوند."
-
-#. Button label for retrying problem report submission after a failure.
-msgctxt "support-view"
-msgid "Try again"
-msgstr "دوباره تلاش کنید"
-
-#. Button label for updating the app to the latest version.
-msgctxt "support-view"
-msgid "Update app"
-msgstr "به‌روزرسانی اپلیکیشن"
-
-#. Button label for opening app logs.
-msgctxt "support-view"
-msgid "View app logs"
-msgstr "نمایش لاگ‌های اپلیکیشن"
-
-msgctxt "support-view"
-msgid "We will look into this."
-msgstr "ما این موضوع را بررسی خواهیم کرد."
-
-msgctxt "support-view"
-msgid "You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address."
-msgstr "در حال ارسال گزارش مشکل هستید، اما راهی برای تماس با شما وجود ندارد. اگر مایل به دریافت پاسخ هستید، لطفاً یک آدرس ایمیل وارد کنید."
-
-msgctxt "support-view"
-msgid "You are using an old version of the app. Please upgrade and see if the problem still exists before sending a report."
-msgstr "شما از نسخهٔ قدیمی اپلیکیشن استفاده می‌کنید. لطفاً اپلیکیشن را به‌روزرسانی کنید و پیش از ارسال گزارش، بررسی کنید که آیا مشکل همچنان وجود دارد یا خیر."
-
-msgctxt "support-view"
-msgid "Your email (optional)"
-msgstr "ایمیل شما (اختیاری)"
 
 #. Link to the refund policy webpage
 msgctxt "support-view"
@@ -3104,10 +2527,6 @@ msgstr "«دسترسی کامل به دیسک» را برای «Warren VPN» د�
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
 msgstr "فعال‌سازی تونل‌گذاری تفکیک‌شده ناموفق بود. دلیل آن این است که اپلیکیشن، مجوزهای لازم سیستم را ندارد. کاری که می‌توانید انجام دهید:"
-
-msgctxt "troubleshoot"
-msgid "If these steps do not work please send a problem report."
-msgstr "اگر این مراحل کار نکرد، لطفاً یک گزارش مشکل ارسال کنید."
 
 msgctxt "troubleshoot"
 msgid "If you have installed another VPN then try to uninstall that."
@@ -3178,14 +2597,6 @@ msgstr "فقط اپلیکیشن‌های انتخاب‌شده محافظت می
 msgctxt "tunnel-control"
 msgid "Connection interrupted"
 msgstr "اتصال قطع شد"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map"
-msgstr "پویانمایی نقشه"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map movements."
-msgstr "پویانمایی حرکت‌های نقشه."
 
 msgctxt "user-interface-settings-view"
 msgid "Enable or disable system notifications. The critical notifications will always be displayed."
@@ -3607,44 +3018,13 @@ msgctxt "warren-pubkey-warning"
 msgid "The key changed again before it could be trusted. Review the new key and try again."
 msgstr "کلید پیش از آنکه مورد اعتماد قرار گیرد، دوباره تغییر کرد. کلید جدید را بررسی کنید و دوباره تلاش کنید."
 
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "UDP-over-TCP"
-msgstr "‏UDP روی TCP"
-
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s (%(daitaFull)s) hides patterns in your encrypted VPN traffic."
 msgstr "%(daita)s (%(daitaFull)s) الگوها را در ترافیک رمزگذاری‌شدهٔ VPN شما پنهان می‌کند."
 
 msgctxt "wireguard-settings-view"
-msgid "%(daita)s does this by carefully adding network noise and making all network packets the same size."
-msgstr "%(daita)s این کار را با افزودن دقیقِ نویز شبکه و یکسان‌سازی اندازهٔ تمام بسته‌های شبکه انجام می‌دهد."
-
-msgctxt "wireguard-settings-view"
-msgid "%(wireguard)s port"
-msgstr "پورت ‏%(wireguard)s"
-
-#. Page title for QUIC port view
-msgctxt "wireguard-settings-view"
-msgid "%(wireGuard)s port"
-msgstr "پورت ‏%(wireGuard)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans."
-msgstr "توجه: این کار باعث افزایش ترافیک شبکه می‌شود و همچنین سرعت، تأخیر و مصرف باتری را تحت تأثیر منفی قرار می‌دهد. در طرح‌های اینترنتی محدود با احتیاط استفاده کنید."
-
-msgctxt "wireguard-settings-view"
 msgid "By enabling “%(directOnly)s” you will have to manually select a server that is %(daita)s-enabled. This can cause you to end up in a blocked state until you have selected a compatible server in the “Select location” view."
 msgstr "با فعال کردن «%(directOnly)s»، باید به‌صورت دستی سروری را انتخاب کنید که از %(daita)s پشتیبانی کند. این کار ممکن است باعث شود تا زمانی که در بخش «انتخاب مکان» یک سرور سازگار انتخاب نکنید، اتصال‌تان مسدود بماند."
-
-msgctxt "wireguard-settings-view"
-msgid "By using sophisticated AI it’s possible to analyze the traffic of data packets going in and out of your device (even if the traffic is encrypted)."
-msgstr "با استفاده از هوش مصنوعی پیشرفته، می‌توان ترافیک بسته‌های داده‌ای را که وارد یا خارجِ دستگاه شما می‌شوند تحلیل کرد (حتی اگر این ترافیک رمزگذاری شده باشد)."
 
 msgctxt "wireguard-settings-view"
 msgid "Cancel"
@@ -3654,10 +3034,6 @@ msgstr "لغو"
 msgctxt "wireguard-settings-view"
 msgid "Device IP version"
 msgstr "نسخهٔ IP دستگاه"
-
-msgctxt "wireguard-settings-view"
-msgid "If an observer monitors these data packets, %(daita)s makes it significantly harder for them to identify which websites you are visiting or with whom you are communicating."
-msgstr "اگر ناظری این بسته‌های داده را زیر نظر بگیرد، %(daita)s تشخیص اینکه از کدام وب‌سایت‌ها بازدید می‌کنید یا با چه کسی در حال ارتباط هستید را به‌طور قابل‌توجهی دشوارتر می‌کند."
 
 msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
@@ -3671,37 +3047,13 @@ msgid "MTU"
 msgstr "MTU"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop"
-msgstr "مولتی‌هاپ"
-
-msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "برای فعال شدن DAITA در مکان انتخابی شما، از قابلیت مولتی‌هاپ استفاده شده است"
-
-msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
-msgstr "Multihop ترافیک شما را از یک سرور QUIC وارد و از سرور دیگری خارج می‌کند و یک سرور بین شما و سایت‌هایی که بازدید می‌کنید اضافه می‌کند. این کار تأخیر را افزایش می‌دهد."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. In order to use the internet, you might have to select a new location after enabling."
 msgstr "برای استفاده از اینترنت، ممکن است پس از فعال‌سازی، نیاز باشد یک مکان جدید انتخاب کنید، زیرا همهٔ سرورهای ما از %(daita)s پشتیبانی نمی‌کنند."
-
-msgctxt "wireguard-settings-view"
-msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
-msgstr "از آنجا که همهٔ سرورهای ما از %(daita)s پشتیبانی نمی‌کنند، برای فعال‌سازی %(daita)s با هر سروری، ما به‌صورت خودکار از مولتی‌هاپ استفاده می‌کنیم."
-
-#. The title for the QUIC port selector.
-msgctxt "wireguard-settings-view"
-msgid "Port"
-msgstr "پورت"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "wireguard-settings-view"
-msgid "Port: %(port)s"
-msgstr "پورت: %(port)s"
 
 #. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
@@ -3724,14 +3076,6 @@ msgid "Shadowsocks"
 msgstr "Shadowsocks"
 
 msgctxt "wireguard-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "تنظیم خودکار به‌صورت تصادفی از بازه‌های پورت معتبرِ نشان‌داده‌شده در زیر انتخاب می‌کند."
-
-msgctxt "wireguard-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "پورت سفارشی می‌تواند هر عددی در محدوده‌های معتبر زیر باشد: %(portRanges)s."
-
-msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "این قابلیت ترافیک شما به سمت سرور خروجی را در برابر حملات احتمالی رایانه‌های کوانتومی محافظت می‌کند."
 
@@ -3739,919 +3083,8 @@ msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
 msgstr "‏UDP روی TCP"
 
-#. Text describing the valid port range for a port selector.
-msgctxt "wireguard-settings-view"
-msgid "Valid range: %(min)s - %(max)s"
-msgstr "بازهٔ معتبر: %(min)s - %(max)s"
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "wireguard-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "دامنه‌های معتبر: %(portRanges)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
-msgstr "کدام پورت TCP باید برای اتصال پروتکل مبهم‌سازی UDP روی TCP به سرور VPN استفاده شود."
-
-msgid "%1$s more..."
-msgstr "‏%1$s بیشتر..."
-
-msgid "%1$s was added to \"%2$s\""
-msgstr "%1$s به «%2$s» اضافه شد"
-
-msgid "%1$s was removed from \"%2$s\""
-msgstr "%1$s از «%2$s» حذف شد"
-
-msgid "%1$s, %2$s, %3$s"
-msgstr "%1$s‏، %2$s‏، %3$s"
-
-msgid "%s (Entry)"
-msgstr "%s (ورود)"
-
-msgid "%s (Exit)"
-msgstr "%s (خروج)"
-
-msgid "%s (added)"
-msgstr "%s (اضافه شد)"
-
-msgid "%s (removed)"
-msgstr "%s (حذف شد)"
-
-msgid "%s is already selected as entry relay"
-msgstr "%s از قبل به‌عنوان رلهٔ ورود انتخاب شده است"
-
-msgid "%s is already selected as exit relay"
-msgstr "%s از قبل به‌عنوان رلهٔ خروج انتخاب شده است"
-
-msgid "%s is unavailable"
-msgstr "%s در دسترس نیست"
-
-msgid "%s settings."
-msgstr "تنظیمات %s."
-
-msgid "%s was added to your account."
-msgstr "%s به حساب شما اضافه شد."
-
-msgid "(%d)"
-msgstr "(%d)"
-
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
-msgstr "1. پس از کلیک روی دکمهٔ «رفتن به تنظیمات VPN» در پایین، روی آیکون چرخ‌دندهٔ کنار نام «Warren VPN» کلیک کنید."
-
-msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
-msgstr "2. برای فعال کردن «اتصال خودکار»، روی دکمهٔ تغییر وضعیت کنار «VPN همیشه‌فعال» کلیک کنید."
-
-msgid "3. To enable Lockdown mode, click on the toggle next to \"Block connections without VPN\".<br /><br /><b>Warning: This setting blocks split apps and the Local Network Sharing feature.</b>"
-msgstr "3. برای فعال کردن حالت قفل، روی کلید کنار «مسدود کردن اتصال‌ها بدون VPN» کلیک کنید.<br /><br /><b>هشدار: این تنظیم اپلیکیشن‌های تفکیک‌شده و قابلیت اشتراک‌گذاری شبکهٔ محلی را مسدود می‌کند.</b>"
-
-msgid "30 days was added to your account."
-msgstr "30 روز به حساب شما اضافه شد."
-
-msgid "90 days was added to your account."
-msgstr "90 روز به حساب شما اضافه شد."
-
-msgid "<b>Account recovery will not be possible.</b>"
-msgstr "<b>بازیابی حساب ممکن نخواهد بود.</b>"
-
-msgid "<b>Attention:</b> Only some servers support the full port range."
-msgstr "<b>توجه:</b> تنها بعضی سرورها از محدوده کامل پورت پشتیبانی می‌کنند."
-
-msgid "<b>Attention:</b> The app will close automatically and needs to be manually opened again after selecting a new icon and title. This will not impact your VPN connection."
-msgstr "<b>توجه:</b> اپلیکیشن به‌صورت خودکار بسته می‌شود و پس از انتخاب آیکون و عنوان جدید، باید دوباره به‌صورت دستی باز شود. این موضوع بر اتصال VPN شما تأثیری نخواهد داشت."
-
-msgid "<b>Please note that these methods do not improve performance, and may increase system utilization and battery consumption.</b>"
-msgstr "<b>لطفاً توجه داشته باشید که این روش‌ها کارایی را بهبود نمی‌بخشند و ممکن است مصرف سیستم و باتری را افزایش دهند.</b>"
-
-msgid "<b>This action cannot be undone.</b>"
-msgstr "<b>این اقدام قابل بازگرداندن نیست.</b>"
-
-msgid "<b>Warning:</b>"
-msgstr "<b>هشدار:</b>"
-
-msgid "<b>You will lose access to this account on all devices.</b>"
-msgstr "<b>دسترسی به این حساب را در همه دستگاه‌ها از دست خواهید داد.</b>"
-
-msgid "API reachable, adding method..."
-msgstr "API در دسترس است، روش در حال افزودن است..."
-
-msgid "API unreachable, save method anyway?"
-msgstr "API در دسترس نیست، بااین‌حال روش ذخیره شود؟"
-
-msgid "Account credit expires in a few minutes"
-msgstr "اعتبار حساب در چند دقیقهٔ آینده منقضی می‌شود"
-
-msgid "Account deleted"
-msgstr "حساب حذف شد"
-
-msgid "Account number is too long, please enter a valid number"
-msgstr "شمارهٔ حساب خیلی طولانی است، لطفاً یک شمارهٔ معتبر وارد کنید"
-
-msgid "Account number must match"
-msgstr "شماره حساب باید مطابقت داشته باشد"
-
-msgid "Account recovery will not be possible."
-msgstr "بازیابی حساب ممکن نخواهد بود."
-
-msgid "Account time reminders"
-msgstr "یادآورهای زمان حساب"
-
-msgid "Add 30 days time (%s)"
-msgstr "افزودن 30 روز زمان (%s)"
-
-msgid "Add 90 days time (%s)"
-msgstr "افزودن 90 روز زمان (%s)"
-
-msgid "Add DNS server"
-msgstr "افزودن سرور DNS"
-
-msgid "Add locations"
-msgstr "افزودن مکان‌ها"
-
-msgid "Add time"
-msgstr "افزودن زمان"
-
-msgid "Add to list"
-msgstr "افزودن به فهرست"
-
-msgid "Adding method..."
-msgstr "در حال افزودن روش..."
-
-msgid "After updating a VPN app on Android 16, devices might end up in a state where VPN apps are no longer able to reach the internet."
-msgstr "پس از به‌روزرسانی یک اپلیکیشن VPN در اندروید 16، ممکن است دستگاه‌ها به حالتی برسند که اپلیکیشن‌های VPN دیگر نتوانند به اینترنت دسترسی پیدا کنند."
-
-msgid "Agree and continue"
-msgstr "موافقت و ادامه"
-
-msgid "All"
-msgstr "همه"
-
-msgid "All applications"
-msgstr "تمام اپلیکیشن‌ها"
-
-msgid "All overrides will be reset and servers IP addresses, in the Select location view, will go back to default."
-msgstr "تمام تنظیمات جایگزین‌شده بازنشانی می‌شوند و آدرس‌های IP سرورها در بخش «انتخاب مکان» به حالت پیش‌فرض برمی‌گردند."
-
-msgid "Always-on VPN assigned to %s"
-msgstr "VPN همیشه‌فعال به %s اختصاص داده شد"
-
-msgid "Always-on VPN assigned to other VPN"
-msgstr "VPN همیشه‌فعال به یک VPN دیگر اختصاص داده شده است"
-
-msgid "Android 16 has a known issue. Please restart your device and try again. To learn more,"
-msgstr "‏اندروید 16 یک مشکل شناخته‌شده دارد. لطفاً دستگاه‌تان را مجدد راه‌اندازی کرده و دوباره امتحان کنید. برای کسب اطلاعات بیشتر،"
-
-msgid "Any remaining time will be null and void."
-msgstr "هر مقدار زمانی که باقی مانده باشد، باطل و بی‌اعتبار خواهد شد."
-
-msgid "App icon"
-msgstr "آیکون اپلیکیشن"
-
-msgid "Appearance"
-msgstr "ظاهر"
-
-msgid "Applying changes..."
-msgstr "اعمال تغییرات..."
-
-msgid "Are you sure you want to log <b>%s</b> out?"
-msgstr "آیا مطمئنید که می‌خواهید <b>%s</b> را خارج کنید؟"
-
-msgid "At least one method needs to be enabled"
-msgstr "حداقل یک روش باید فعال باشد"
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, \"Local network sharing\" will not work."
-msgstr "توجه: اگر «مسدود کردن اتصال‌ها بدون VPN» فعال باشد، «اشتراک‌گذاری شبکهٔ محلی» کار نخواهد کرد."
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, split apps will not have Internet. Always keep in mind that split tunneling is a privacy risk."
-msgstr "توجه: اگر «مسدود کردن اتصال‌ها بدون VPN» فعال باشد، اپلیکیشن‌های تفکیک‌شده به اینترنت دسترسی نخواهند داشت. همیشه در نظر داشته باشید که تونل‌گذاری تفکیک‌شده یک خطر برای حریم خصوصی است."
-
-msgid "Attention: this setting cannot be used in combination with \"Use custom DNS server\"."
-msgstr "توجه: این تنظیم نمی‌تواند همراه با «استفاده از سرور DNS سفارشی» به‌کار برود."
-
-msgid "Auto-connect & Lockdown mode"
-msgstr "اتصال خودکار و حالت قفل"
-
-msgid "Auto-connect is called Always-on VPN in the Android system settings and it makes sure you are constantly connected to the VPN tunnel and auto connects after restart."
-msgstr "در تنظیمات سیستم اندروید، «اتصال خودکار» با نام «VPN همیشه‌فعال» شناخته می‌شود و باعث می‌شود دستگاه شما همیشه به تونل VPN وصل بماند و پس از راه‌اندازی مجدد نیز به‌طور خودکار دوباره متصل شود."
-
-msgid "Automatically connect on device start-up."
-msgstr "اتصال خودکار هنگام روشن شدن دستگاه."
-
-msgid "Blocking internet (device offline)"
-msgstr "مسدود کردن اینترنت (دستگاه آفلاین است)"
-
-msgid "Blocking..."
-msgstr "در حال مسدود کردن..."
-
-msgid "Browser"
-msgstr "مرورگر"
-
-msgid "By attaching your account token it links this report to your account, which helps us resolve your issue quicker. All reports are automatically deleted after a period of time."
-msgstr "با پیوست کردن توکن حساب‌تان، این گزارش به حساب شما متصل می‌شود و به ما کمک می‌کند مشکل‌تان را سریع‌تر حل کنیم. همهٔ گزارش‌ها پس از مدتی به‌صورت خودکار حذف می‌شوند."
-
-msgid "By checking this box I agree to the risks involved with deleting my account"
-msgstr "با زدن این تیک، با خطرات مرتبط با حذف حسابم موافقت می‌کنم"
-
-msgid "Can't connect?"
-msgstr "اتصال برقرار نمی‌شود؟"
-
-msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
-msgstr "عنوان و آیکون اپلیکیشن Warren VPN را روی دستگاه اندرویدی خود تغییر دهید. این کار، آیکون هیچ‌یک از اعلان‌های مرتبط با Warren VPN را تغییر نخواهد داد."
-
-msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
-msgstr "تغییرات مربوط به تنظیمات DNS ممکن است به‌دلیل نتایج ذخیره‌شده (cache) بلافاصله اعمال نشوند."
-
-msgid "Clear input"
-msgstr "پاک کردن ورودی"
-
-msgid "Collapse"
-msgstr "پنهان کردن"
-
-msgid "Connect on device start-up"
-msgstr "اتصال هنگام روشن شدن دستگاه"
-
-msgid "Connect to a different network"
-msgstr "اتصال به یک شبکهٔ دیگر"
-
-msgid "Connecting..."
-msgstr "در حال اتصال..."
-
 msgid "Continue"
 msgstr "ادامه"
-
-msgid "Copied Warren account number to clipboard"
-msgstr "شمارهٔ حساب Warren در کلیپ‌بورد کپی شد"
-
-msgid "Copied logs to clipboard"
-msgstr "گزارش‌ها در کلیپ‌بورد کپی شدند"
-
-msgid "Copy"
-msgstr "کپی"
-
-msgid "Could not display remaining days."
-msgstr "نمایش روزهای باقی‌مانده امکان‌پذیر نیست."
-
-msgid "Create new list"
-msgstr "ایجاد فهرست جدید"
-
-msgid "Creating account failed"
-msgstr "ایجاد حساب کاربری ناموفق بود"
-
-msgid "Critical error (your attention is required)"
-msgstr "خطای جدی (نیاز به توجه شما دارد)"
-
-msgid "Current: %s"
-msgstr "فعلی: %s"
-
-msgid "Custom DNS server addresses %1$s are invalid"
-msgstr "آدرس‌های سرور DNS سفارشی %1$s نامعتبر هستند"
-
-msgid "DNS settings might not go into effect immediately"
-msgstr "تنظیمات DNS ممکن است بلافاصله اعمال نشوند"
-
-msgid "Delete \"%s\"?"
-msgstr "حذف «%s»؟"
-
-msgid "Delete account"
-msgstr "حذف حساب"
-
-msgid "Delete method"
-msgstr "حذف روش"
-
-msgid "Delete method?"
-msgstr "حذف این روش؟"
-
-msgid "Deleting your account cannot be undone."
-msgstr "حذف حسابتان قابل بازگرداندن نیست."
-
-msgid "Deleting your account:"
-msgstr "با حذف حسابتان:"
-
-msgid "Direct"
-msgstr "مستقیم"
-
-msgid "Disable all \"%s\" above to activate this setting."
-msgstr "برای فعال‌سازی این تنظیم، تمام «%s» بالا را غیرفعال کنید."
-
-msgid "Disable multihop"
-msgstr "غیرفعال کردن مولتی‌هاپ"
-
-msgid "Discard"
-msgstr "انصراف"
-
-msgid "Discard changes?"
-msgstr "لغو تغییرات؟"
-
-msgid "Disconnected (No VPN permission)"
-msgstr "قطع اتصال (بدون اجازه VPN)"
-
-msgid "Disconnecting..."
-msgstr "در حال قطع اتصال..."
-
-msgid "Dismiss"
-msgstr "رد کردن"
-
-msgid "Don’t have an account number?"
-msgstr "شماره حساب ندارید؟"
-
-msgid "Edit custom lists"
-msgstr "ویرایش فهرست‌های سفارشی"
-
-msgid "Edit list"
-msgstr "ویرایش فهرست"
-
-msgid "Edit lists"
-msgstr "ویرایش فهرست‌ها"
-
-msgid "Edit locations"
-msgstr "ویرایش مکان‌ها"
-
-msgid "Enable %1$s"
-msgstr "فعال کردن %1$s"
-
-msgid "Enable all & retry"
-msgstr "فعال‌سازی همه و تلاش مجدد"
-
-msgid "Enable all access methods in the app"
-msgstr "فعال کردن همهٔ روش‌های دسترسی در اپلیکیشن"
-
-msgid "Enable method"
-msgstr "فعال کردن روش"
-
-msgid "Enable multihop"
-msgstr "فعال کردن مولتی‌هاپ"
-
-msgid "Enter MTU"
-msgstr "وارد کردن MTU"
-
-msgid "Enter account number digits"
-msgstr "ارقام شماره حساب را وارد کنید"
-
-msgid "Entry relay is the same as exit relay"
-msgstr "رلهٔ ورودی با رلهٔ خروجی یکسان است"
-
-msgid "Excluded applications"
-msgstr "اپلیکیشن‌های مستثنی"
-
-msgid "Expand"
-msgstr "باز کردن"
-
-msgid "External link"
-msgstr "لینک خارجی"
-
-msgid "FAILED TO CONNECT"
-msgstr "اتصال برقرار نشد"
-
-msgid "Failed to apply patch"
-msgstr "اعمالِ متنِ تغییرات انجام نشد"
-
-msgid "Failed to delete account, please contact support"
-msgstr "حذف حساب ناموفق بود، لطفاً با پشتیبانی تماس بگیرید"
-
-msgid "Failed to load products, please try again"
-msgstr "بارگذاری محصولات ناموفق بود، لطفاً دوباره تلاش کنید"
-
-msgid "Failed to set to current - API not reachable"
-msgstr "تنظیم به وضعیت فعلی ناموفق بود، دسترسی به API ممکن نیست"
-
-msgid "Failed to set to current - Unknown reason"
-msgstr "تنظیم به وضعیت فعلی ناموفق بود، دلیل نامشخص"
-
-msgid "File"
-msgstr "فایل"
-
-msgid "For details, please see our %s."
-msgstr "برای بررسی جزئیات، لطفاً %s ما را ببینید."
-
-msgid "For the VPN to connect automatically on device startup, the app must have VPN permissions. You can grant these by clicking “Connect” in the map view and selecting “OK” if prompted. Additionally, ensure the app is installed on the internal storage by checking the storage information in the app details in system settings."
-msgstr "برای اینکه VPN به‌طور خودکار هنگام روشن شدن دستگاه متصل شود، اپلیکیشن باید دسترسی‌های VPN را داشته باشد. می‌توانید این دسترسی‌ها را با کلیک روی «اتصال» در نمای نقشه و انتخاب «تأیید» در صورت درخواست، اعطا کنید. علاوه بر این، مطمئن شوید که اپلیکیشن روی حافظه داخلی نصب شده است؛ برای این کار، اطلاعات حافظه را در جزئیات اپلیکیشن در تنظیمات سیستم بررسی کنید."
-
-msgid "Go to VPN settings"
-msgstr "رفتن به تنظیمات VPN"
-
-msgid "Going to login will unblock the internet on this device."
-msgstr "با رفتن به صفحهٔ ورود، اینترنت روی این دستگاه باز خواهد شد."
-
-msgid "Google Play payment pending"
-msgstr "پرداخت Google Play در حال انتظار است"
-
-msgid "Google Play payment pending, this might take some time"
-msgstr "پرداخت Google Play در انتظار است و ممکن است مدتی طول بکشد"
-
-msgid "Google Play unavailable"
-msgstr "Google Play در دسترس نیست"
-
-msgid "IPv4 is not available, please try changing \"Device IP version\" setting."
-msgstr "IPv4 در دسترس نیست، لطفاً تنظیم «نسخه IP دستگاه» را تغییر دهید و دوباره امتحان کنید."
-
-msgid "IPv6 is not available, please try changing \"Device IP version\" setting."
-msgstr "Pv6 در دسترس نیست، لطفاً تنظیم «نسخه IP دستگاه» را تغییر دهید و دوباره امتحان کنید."
-
-msgid "Icon and title"
-msgstr "آیکون و عنوان"
-
-msgid "If the icon and title is still not changed after the app has closed, please try restarting the device."
-msgstr "اگر پس از بستن برنامه، نماد و عنوان همچنان تغییر نکرده‌اند، لطفاً دستگاه خود را مجدد راه‌اندازی کنید."
-
-msgid "If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device."
-msgstr "اگر ویژگی تونل‌گذاری تفکیک‌شده فعال باشد، اپلیکیشن از سیستم شما برای دریافت فهرستی از همهٔ اپلیکیشن‌های نصب‌شده پرس‌وجو می‌کند. این فهرست تنها در نمای تونل‌گذاری تفکیک‌شده دریافت می‌شود و هرگز از دستگاه ارسال نمی‌گردد."
-
-msgid "If these steps don’t work, please send an email to support using the button below. It will automatically attach the logs which have been anonymized."
-msgstr "اگر این مراحل کار نکرد، لطفاً با استفاده از دکمهٔ زیر به پشتیبانی ایمیل بزنید. این کار به‌طور خودکار گزارش‌ها را که ناشناس‌ شده‌اند، پیوست خواهد کرد."
-
-msgid "Import new overrides by"
-msgstr "وارد کردن تنظیمات جایگزین جدید توسط"
-
-msgid "Import successful, overrides active"
-msgstr "وارد کردن موفقیت‌آمیز بود، تنظیمات جایگزین فعال شدند"
-
-msgid "Importing new overrides might replace some previously imported overrides."
-msgstr "وارد کردن جایگزین‌های جدید ممکن است جایگزین برخی از جایگزین‌های قبلاً وارد شده شود."
-
-msgid "In-app products unavailable, please make sure you have the latest version of Google Play."
-msgstr "محصولات درون‌اپلیکیشنی در دسترس نیستند، لطفاً مطمئن شوید آخرین نسخهٔ Google Play را نصب کرده‌اید."
-
-msgid "Include my account token for faster help with payment or account related issues"
-msgstr "توکن حساب خود را ضمیمه کنید تا برای مشکلات مربوط به پرداخت یا حساب، کمک سریع‌تری دریافت کنید"
-
-msgid "Invalid IPv6 config, please try to change the VPN settings."
-msgstr "پیکربندی IPv6 نامعتبر است، لطفاً سعی کنید تنظیمات VPN را تغییر دهید."
-
-msgid "Invalid or missing value \"%1$s\""
-msgstr "مقدار «%1$s» نامعتبر یا موجود نیست"
-
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "این کار را با انجام یک تبادل کلیدِ اضافه با استفاده از یک الگوریتم امنِ کوانتومی انجام می‌دهد و نتیجه را در رمزگذاری معمولی QUIC ترکیب می‌کند. این مرحلهٔ اضافی، هر بار که یک تونل جدید برقرار می‌شود، حدود 500 کیلوبایت ترافیک مصرف می‌کند."
-
-msgid "Less than a day left on this account"
-msgstr "کمتر از یک روز از اعتبار این حساب باقی مانده است"
-
-msgid "Lets you select apps that should access the Internet directly without going through the VPN tunnel."
-msgstr "این قابلیت به شما اجازه می‌دهد اپلیکیشن‌هایی را انتخاب کنید که اینترنت را مستقیم و بدون عبور از تونل VPN استفاده کنند."
-
-msgid "List name"
-msgstr "نام فهرست"
-
-msgid "Loading products"
-msgstr "در حال بارگذاری محصولات"
-
-msgid "Locations"
-msgstr "مکان‎‌ها"
-
-msgid "Locations were changed for \"%s\""
-msgstr "مکان‌ها برای «%s» تغییر یافتند"
-
-msgid "Log in"
-msgstr "ورود به سیستم"
-
-msgid "Makes sure the device is always on the VPN tunnel."
-msgstr "اطمینان می‌دهد که دستگاه همیشه به تونل VPN متصل باشد."
-
-msgid "More actions"
-msgstr "اقدامات بیشتر"
-
-msgid "Warren services unavailable"
-msgstr "خدمات Warren در دسترس نیستند"
-
-msgid "Multihop is disabled"
-msgstr "قابلیت مولتی‌هاپ غیرفعال است"
-
-msgid "Multihop is enabled"
-msgstr "قابلیت مولتی‌هاپ فعال است"
-
-msgid "Name is already taken."
-msgstr "این نام قبلاً استفاده شده است."
-
-msgid "Name was changed to %s"
-msgstr "نام به %s تغییر یافت"
-
-msgid "Navigate"
-msgstr "پیمایش"
-
-msgid "No Android app store installed, could not open link"
-msgstr "هیچ فروشگاه اپلیکیشن اندروید نصب نشده است، امکان باز کردن لینک وجود ندارد"
-
-msgid "No browser app installed, could not open link"
-msgstr "هیچ مرورگر وبی نصب نشده است، امکان باز کردن لینک وجود ندارد"
-
-msgid "No changelog was added for this version"
-msgstr "برای این نسخه هیچ فهرست تغییراتی اضافه نشده است"
-
-msgid "No custom lists available"
-msgstr "هیچ فهرست سفارشی موجود نیست"
-
-msgid "No email app available on the device"
-msgstr "هیچ اپلیکیشن ایمیلی روی دستگاه موجود نیست"
-
-msgid "No entry server match your settings, try changing server or other settings."
-msgstr "هیچ سرور ورودی با تنظیمات شما مطابقت ندارد، لطفاً سرور یا سایر تنظیمات را تغییر دهید."
-
-msgid "No exit server match your settings, try changing server or other settings."
-msgstr "هیچ سرور خروجی با تنظیمات شما مطابقت ندارد، لطفاً سرور یا سایر تنظیمات را تغییر دهید."
-
-msgid "No internet connection"
-msgstr "اتصال به اینترنت وجود ندارد"
-
-msgid "No matching servers found."
-msgstr "هیچ سرور مطابقت‌دهنده‌ای پیدا نشد."
-
-msgid "No result for \"%s\", please try a different search"
-msgstr "هیچ نتیجه‌ای برای «%s» یافت نشد، لطفاً جستجوی دیگری انجام دهید"
-
-msgid "Not found"
-msgstr "پیدا نشد"
-
-msgid "Notes"
-msgstr "یادداشت‌ها"
-
-msgid "Notification settings"
-msgstr "تنظیمات اعلان"
-
-msgid "Open app details"
-msgstr "باز کردن جزئیات اپلیکیشن"
-
-msgid "Overrides active"
-msgstr "جایگزینی‌ها فعال هستند"
-
-msgid "Overrides cleared"
-msgstr "جایگزینی‌ها پاک شدند"
-
-msgid "Overrides inactive"
-msgstr "جایگزینی‌ها غیرفعال هستند"
-
-msgid "Password (optional)"
-msgstr "گذرواژه (اختیاری)"
-
-msgid "Paste or write overrides to be imported"
-msgstr "جایگزینی‌هایی را که می‌خواهید وارد کنید، جایگذاری کنید یا بنویسید"
-
-msgid "Patch not matching specification"
-msgstr "متنِ تغییرات با مشخصات سازگار نیست"
-
-msgid "Please enter a valid IPv4 or IPv6 address"
-msgstr "لطفاً یک نشانی معتبر IPv4 یا IPv6 وارد کنید"
-
-msgid "Please enter a valid remote server port"
-msgstr "لطفاً یک پورت معتبرِ سرور راه‌دور وارد کنید"
-
-msgid "Please press connect to request VPN permission"
-msgstr "لطفاً برای درخواست اجازهٔ VPN دکمهٔ اتصال را فشار دهید"
-
-msgid "Please restart your device and try connecting again. If this does not work, please write an email to %s in Swedish or English."
-msgstr "لطفاً دستگاه‌تان را دوباره راه‌اندازی کنید و دوباره تلاش کنید وصل شوید. اگر مشکل برطرف نشد، لطفاً یک ایمیل به %s به زبان سوئدی یا انگلیسی بنویسید."
-
-msgid "Please try changing your filters."
-msgstr "لطفاً فیلترهای خود را تغییر دهید."
-
-msgid "Privacy"
-msgstr "حریم خصوصی"
-
-msgid "Privacy policy"
-msgstr "سیاست حفظ حریم خصوصی"
-
-msgid "Recents disabled and history cleared"
-msgstr "آیتم‌های اخیر غیرفعال شد و تاریخچه پاک شد"
-
-msgid "Recursion limit"
-msgstr "حد تکرار"
-
-msgid "Refunds will not be possible."
-msgstr "بازپرداخت ممکن نخواهد بود."
-
-msgid "Remove %s?"
-msgstr "%s حذف شود؟"
-
-msgid "Remove custom port"
-msgstr "حذف پورت سفارشی"
-
-msgid "Reset"
-msgstr "بازنشانی"
-
-msgid "Reset all overrides"
-msgstr "بازنشانیِ همهٔ جایگزینی‌ها"
-
-msgid "Reset overrides"
-msgstr "بازنشانیِ جایگزینی‌ها"
-
-msgid "Reset to default"
-msgstr "بازنشانی به حالت پیش‌فرض"
-
-msgid "Restart your device"
-msgstr "دستگاه‌تان را دوباره راه‌اندازی کنید"
-
-msgid "Search"
-msgstr "جستجو"
-
-msgid "Send email"
-msgstr "ارسال ایمیل"
-
-msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
-msgstr "مقدار MTU مربوط به QUIC را تنظیم کنید. دامنهٔ معتبر: %1$d تا %2$d."
-
-msgid "Set as multihop entry"
-msgstr "تنظیم به‌عنوان ورودی مولتی‌هاپ"
-
-msgid "Set as multihop entry (incompatible)"
-msgstr "تنظیم به عنوان ورودی مولتی‌هاپ (ناسازگار)"
-
-msgid "Set as multihop exit"
-msgstr "تنظیم به عنوان خروجی مولتی‌هاپ"
-
-msgid "Set as multihop exit (incompatible)"
-msgstr "تنظیم به عنوان خروجی مولتی‌هاپ (ناسازگار)"
-
-msgid "Set port"
-msgstr "تنظیم پورت"
-
-msgid "Share…"
-msgstr "اشتراک‌گذاری…"
-
-msgid "Show location in notification"
-msgstr "نمایش مکان در اعلان"
-
-msgid "Show system apps"
-msgstr "نمایش اپلیکیشن‌های سیستمی"
-
-msgid "Shows current VPN tunnel status"
-msgstr "وضعیت فعلی تونل VPN را نمایش می‌دهد"
-
-msgid "Shows reminders when the account time is about to expire"
-msgstr "هنگام نزدیک شدن زمان پایان اعتبار حساب، یادآورها را نشان می‌دهد"
-
-msgid "Submit"
-msgstr "ارسال کردن"
-
-msgid "TCP"
-msgstr "TCP"
-
-msgid "Test method"
-msgstr "آزمایش روش"
-
-msgid "Testing %s..."
-msgstr "در حال آزمایش %s..."
-
-msgid "Text"
-msgstr "متن"
-
-msgid "Thanks for being part of our community.\\nPrivacy is for the people!"
-msgstr "ممنونیم که بخشی از جامعه ما بودید.\\nحریم خصوصی برای مردم است!"
-
-msgid "The Auto-connect and Lockdown mode settings can be found in the Android system settings, follow this guide to enable one or both."
-msgstr "تنظیمات اتصال خودکار و حالت قفل در تنظیمات سیستمی اندروید قرار دارند. برای فعال‌کردن یکی یا هر دو، این راهنما را دنبال کنید."
-
-msgid "The IPv6 DNS server will not work unless you enable \"IPv6\" under VPN settings."
-msgstr "سرور DNS مربوط به IPv6 تنها زمانی کار می‌کند که «IPv6» را در تنظیمات VPN فعال کنید."
-
-msgid "The Lockdown mode is called \"Block connections without VPN\" in the Android system settings. It helps minimize leaks, however it has some known limitations which you can read more about"
-msgstr "حالت قفل در تنظیمات سیستمی اندروید با نام «مسدود کردن اتصال‌ها بدون VPN» نمایش داده می‌شود. این حالت به کاهش نشت ارتباطات کمک می‌کند، اما محدودیت‌های شناخته‌شده‌ای دارد که می‌توانید بیشتر دربارهٔ آن بخوانید"
-
-msgid "The \"Current\" method represent which method the app is using to reach the API."
-msgstr "روش «فعلی» نشان می‌دهد که اپلیکیشن برای دسترسی به API از کدام روش استفاده می‌کند."
-
-msgid "The app is blocking internet, please disconnect first"
-msgstr "اپلیکیشن دسترسی به اینترنت را مسدود کرده است؛ لطفاً ابتدا قطع اتصال کنید"
-
-msgid "The app was unable to create an account due to not being able to reach the Warren API."
-msgstr "اپلیکیشن به دلیل برقرار نشدن ارتباط با API مربوط به Warren نتوانست حساب ایجاد کند."
-
-msgid "The app was unable to login due to not being able to reach the Warren API."
-msgstr "اپلیکیشن به دلیل برقرار نشدن ارتباط با API مربوط به Warren نتوانست وارد حساب شود."
-
-msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
-msgstr "سرور DNS محلی تنها زمانی کار می‌کند که «اشتراک‌گذاری شبکهٔ محلی» را در تنظیمات VPN فعال کنید."
-
-msgid "The selected %s port is not supported, please change it under"
-msgstr "پورتِ %s انتخاب‌شده پشتیبانی نمی‌شود؛ لطفاً آن را در بخش مربوطه تغییر دهید"
-
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "این روش‌ها ممکن است زمانی مفید باشند که دسترسی شما به Warren مسدود شده باشد. وقتی «خودکار» انتخاب شود، اپلیکیشن همهٔ روش‌ها را امتحان می‌کند تا یکی از آن‌ها کار کند."
-
-msgid "This address has already been entered."
-msgstr "این نشانی قبلاً وارد شده است."
-
-msgid "This field is required"
-msgstr "پر کردن این فیلد الزامی است"
-
-msgid "This impacts your anonymity"
-msgstr "این مورد بر ناشناس‌ماندن شما تأثیر می‌گذارد"
-
-msgid "This is already set as current"
-msgstr "این مورد هم‌اکنون به‌عنوان گزینهٔ فعلی تنظیم شده است"
-
-msgid "This might be due to censorship or network issues. Please try to:"
-msgstr "این ممکن است به دلیل سانسور یا مشکلات شبکه باشد. لطفاً موارد زیر را امتحان کنید:"
-
-msgid "Time added"
-msgstr "زمان اضافه شد"
-
-msgid "To add locations to a list, press the pen or long press on a country, city, or server."
-msgstr "برای افزودن یک مکان به فهرست، روی آیکونِ قلم بزنید یا یک کشور، شهر یا سرور را طولانی لمس کنید."
-
-msgid "To create a custom list press the \"+\""
-msgstr "برای ساخت یک فهرست سفارشی، روی «+» بزنید"
-
-msgid "To delete your Warren VPN account, please enter your account number below."
-msgstr "برای حذف حساب Warren VPN خود، لطفاً شماره حسابتان را در پایین وارد کنید."
-
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "برای اطمینان از اینکه امن‌ترین نسخه را دارید و همچنین برای آگاه‌کردن شما از هرگونه مشکل در نسخهٔ فعلی، اپلیکیشن به‌صورت خودکار نسخه را بررسی می‌کند. در این فرایند، نسخهٔ اپلیکیشن و نسخهٔ سیستم اندروید به سرورهای Warren ارسال می‌شود. Warren فقط تعداد استفاده از نسخه‌های مختلف اپلیکیشن و نسخه‌های اندروید را شمارش می‌کند. این داده‌ها هرگز به شکلی ذخیره یا استفاده نمی‌شوند که بتوانند هویت شما را مشخص کنند."
-
-msgid "Toggle VPN"
-msgstr "تغییر وضعیت VPN"
-
-msgid "Too many attempts, please try again later"
-msgstr "تعداد تلاش‌ها زیاد بود؛ لطفاً بعداً دوباره امتحان کنید"
-
-msgid "UDP"
-msgstr "UDP"
-
-msgid "Unable to apply firewall rules. Please troubleshoot or send a problem report."
-msgstr "نمی‌توان قوانین فایروال را اعمال کرد. لطفاً مشکل را برطرف کنید یا یک گزارش خطا ارسال نمایید."
-
-msgid "Unable to parse patch"
-msgstr "نمی‌توان متنِ تغییرات را پردازش کرد"
-
-msgid "Unable to reach API"
-msgstr "امکان دسترسی به API وجود ندارد"
-
-msgid "Unable to reach API, %s"
-msgstr "امکان دسترسی به API وجود ندارد، %s"
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
-msgstr "نمی‌توان اتصال تونل را آغاز کرد. لطفاً قبل از استفاده از Warren VPN، گزینهٔ «VPN همیشه‌فعال» را غیرفعال کنید."
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
-msgstr "نمی‌توان اتصال تونل را آغاز کرد. لطفاً پیش از استفاده از Warren VPN، گزینهٔ «VPN همیشه‌فعال» را برای <b>%s</b> غیرفعال کنید."
-
-msgid "Unable to verify account number, please contact support"
-msgstr "تأیید شماره حساب ممکن نیست، لطفاً با پشتیبانی تماس بگیرید"
-
-msgid "Unavailable"
-msgstr "ناموجود"
-
-msgid "Undo"
-msgstr "لغو انجام"
-
-msgid "Unknown or prohibited key \"%1$s\""
-msgstr "کلید نامعتبر یا غیرمجاز «%1$s»"
-
-msgid "Update DNS server"
-msgstr "به‌روزرسانی سرور DNS"
-
-msgid "Update list name"
-msgstr "به‌روزرسانی نام فهرست"
-
-msgid "Update server list"
-msgstr "به‌روزرسانی فهرست سرورها"
-
-msgid "Updating server list in the background..."
-msgstr "در حال به‌روزرسانی فهرست سرورها در پس‌زمینه..."
-
-msgid "Use method"
-msgstr "استفاده از روش"
-
-msgid "VPN Settings not available on device"
-msgstr "تنظیمات VPN روی این دستگاه در دسترس نیست"
-
-msgid "VPN permission error"
-msgstr "خطای اجازهٔ VPN"
-
-msgid "VPN permission was denied"
-msgstr "اجازهٔ VPN رد شد"
-
-msgid "VPN permission was denied or another app has \"Always-on VPN\" enabled"
-msgstr "اجازهٔ VPN رد شده است یا یک اپلیکیشن دیگر گزینهٔ «VPN همیشه‌فعال» را فعال کرده است"
-
-msgid "VPN tunnel status"
-msgstr "وضعیت تونل VPN"
-
-msgid "Valid range for all servers: %s"
-msgstr "محدوده معتبر برای همه سرورها: %s"
-
-msgid "Value: %s"
-msgstr "مقدار: %s"
-
-msgid "Verifying API method..."
-msgstr "در حال بررسی روش API..."
-
-msgid "Verifying purchase"
-msgstr "در حال تأیید خرید"
-
-msgid "Verifying purchase..."
-msgstr "در حال تأیید خرید..."
-
-msgid "Verifying voucher…"
-msgstr "در حال تأیید ووچر…"
-
-msgid "Warning"
-msgstr "هشدار"
-
-msgid "We are still verifying your purchase, this might take some time. Your time will be added if the verification is successful."
-msgstr "ما همچنان در حال تأیید خرید شما هستیم؛ این فرایند ممکن است کمی زمان ببرد. اگر تأیید با موفقیت انجام شود، زمان به حساب شما اضافه خواهد شد."
-
-msgid "We were unable to start the payment process, please make sure you have the latest version of Google Play."
-msgstr "ما نتوانستیم فرایند پرداخت را شروع کنیم؛ لطفاً مطمئن شوید که آخرین نسخهٔ Google Play را دارید."
-
-msgid "We were unable to start the payment process, please try again later."
-msgstr "ما نتوانستیم فرآیند پرداخت را شروع کنیم؛ لطفاً بعداً دوباره تلاش کنید."
-
-msgid "Weather"
-msgstr "آب و هوا"
-
-msgid "Welcome, this device is now called <b>%s</b>."
-msgstr "خوش آمدید، این دستگاه اکنون <b>%s</b> نام دارد."
-
-msgid "QUIC port"
-msgstr "پورت ‏QUIC"
-
-msgid "Yes, log out device"
-msgstr "بله، خروج از دستگاه"
-
-msgid "You are about to delete your Warren VPN account."
-msgstr "شما در آستانه حذف حساب Warren VPN خود هستید."
-
-msgid "You can add more time via the account view or website to continue using the VPN."
-msgstr "می‌توانید از طریق نمای حساب یا وب‌سایت، زمان بیشتری را برای ادامه استفاده از VPN اضافه کنید."
-
-msgid "You can add more time via the account view to continue using the VPN."
-msgstr "می‌توانید از طریق نمای حساب زمان بیشتری را برای ادامه استفاده از VPN اضافه کنید."
-
-msgid "You will lose access to this account on all devices."
-msgstr "دسترسی به این حساب را در همه دستگاه‌ها از دست خواهید داد."
-
-msgid "You will lose your remaining"
-msgstr "روزهای باقی‌مانده خود را از دست خواهید داد"
-
-msgid "\"%s\" was created"
-msgstr "%s ایجاد شد"
-
-msgid "\"%s\" was deleted"
-msgstr "%s حذف شد"
-
-msgid "click here"
-msgstr "اینجا کلیک کنید"
-
-msgid "here"
-msgstr "اینجا"
-
-msgid "less than one day"
-msgstr "کمتر از یک روز"
-
-msgid "privacy policy"
-msgstr "سیاست حفظ حریم خصوصی"
-
-msgid "read more here"
-msgstr "بیشتر در اینجا بخوانید"
-
-msgid "%d day"
-msgid_plural "%d days"
-msgstr[0] "%d روز"
-msgstr[1] "%d روز"
-
-msgid "%d location"
-msgid_plural "%d locations"
-msgstr[0] "%d مکان"
-msgstr[1] "%d مکان"
-
-msgid "%d month"
-msgid_plural "%d months"
-msgstr[0] "%d ماه"
-msgstr[1] "%d ماه"
-
-msgid "1 day left on this account"
-msgid_plural "%d days left on this account"
-msgstr[0] "%d روز از اعتبار این حساب باقی مانده است"
-msgstr[1] "%d روز از اعتبار این حساب باقی مانده است"
-
-msgid "1 year left on this account"
-msgid_plural "%d years left on this account"
-msgstr[0] "%d سال از اعتبار این حساب باقی مانده است"
-msgstr[1] "%d سال از اعتبار این حساب باقی مانده است"
-
-msgid "Account credit expires in a day"
-msgid_plural "Account credit expires in %d days"
-msgstr[0] "اعتبار حساب تا %d روز دیگر منقضی می‌شود"
-msgstr[1] "اعتبار حساب تا %d روز دیگر منقضی می‌شود"
-
-msgid "Account credit expires in an hour"
-msgid_plural "Account credit expires in %d hours"
-msgstr[0] "اعتبار حساب تا %d ساعت دیگر منقضی می‌شود"
-msgstr[1] "اعتبار حساب تا %d ساعت دیگر منقضی می‌شود"
-
-msgid "You will lose your remaining day."
-msgid_plural "You will lose your remaining %d days."
-msgstr[0] "%d روز باقی‌مانده خود را از دست خواهید داد."
-msgstr[1] "%d روز باقی‌مانده خود را از دست خواهید داد."
-
-
-msgctxt "port-forwarding-view"
-msgid "auto"
-msgstr "خودکار"
-
-msgctxt "port-forwarding-view"
-msgid "Mapping failed: %(error)s"
-msgstr "نگاشت ناموفق بود: %(error)s"
 
 msgctxt "port-forwarding-view"
 msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
@@ -4662,40 +3095,8 @@ msgid "Port forwarding"
 msgstr "هدایت درگاه"
 
 msgctxt "port-forwarding-view"
-msgid "Port must be between 49152 and 65535, or empty for auto."
-msgstr "درگاه باید بین 49152 و 65535 باشد، یا برای حالت خودکار خالی بماند."
-
-msgctxt "port-forwarding-view"
-msgid "Preferred port"
-msgstr "درگاه ترجیحی"
-
-msgctxt "port-forwarding-view"
 msgid "Protocol"
 msgstr "پروتکل"
-
-msgctxt "port-forwarding-view"
-msgid "Public port: %(port)s"
-msgstr "درگاه عمومی: %(port)s"
-
-msgctxt "port-forwarding-view"
-msgid "Renewing in %(countdown)s"
-msgstr "تمدید در %(countdown)s"
-
-msgctxt "port-forwarding-view"
-msgid "Status: active"
-msgstr "وضعیت: فعال"
-
-msgctxt "port-forwarding-view"
-msgid "Status: requesting port mapping..."
-msgstr "وضعیت: در حال درخواست نگاشت درگاه…"
-
-msgctxt "port-forwarding-view"
-msgid "Status: waiting for an active tunnel connection to set up the port mapping."
-msgstr "وضعیت: در انتظار یک اتصال تونل فعال برای تنظیم نگاشت درگاه."
-
-msgctxt "port-forwarding-view"
-msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
-msgstr "اگر درگاه ترجیحی قبلاً اشغال شده باشد، سرور ممکن است درگاه دیگری اختصاص دهد. تغییرات بلافاصله و بدون نیاز به اتصال مجدد اعمال می‌شوند."
 
 msgctxt "keys-view"
 msgid "Backup keys"
@@ -4802,16 +3203,8 @@ msgid "Could not check subscription status. Please try again."
 msgstr "بررسی وضعیت اشتراک امکان‌پذیر نبود. لطفاً دوباره تلاش کنید."
 
 msgctxt "warren-onboarding"
-msgid "Create my new wallet (recommended)"
-msgstr "ایجاد کیف پول جدید (توصیه‌شده)"
-
-msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
 msgstr "سرویس هنوز عبارت بازیابی‌ای ندارد، وارد شوید یا برنامه را دوباره راه‌اندازی کنید."
-
-msgctxt "warren-onboarding"
-msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
-msgstr "سرویس عبارت بازیابی را رد کرد. املا و تعداد کلمات را بررسی کنید و سپس دوباره تلاش کنید."
 
 msgctxt "warren-onboarding"
 msgid "Failed to retrieve mnemonic from daemon."
@@ -4830,16 +3223,8 @@ msgid "I have written it down in a safe place."
 msgstr "آن را در جای امنی یادداشت کرده‌ام."
 
 msgctxt "warren-onboarding"
-msgid "Import an existing mnemonic"
-msgstr "وارد کردن یک عبارت بازیابی موجود"
-
-msgctxt "warren-onboarding"
 msgid "No active subscription found. Please purchase one first."
 msgstr "هیچ اشتراک فعالی یافت نشد. لطفاً ابتدا یک اشتراک تهیه کنید."
-
-msgctxt "warren-onboarding"
-msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
-msgstr "عبارت بازیابی BIP39 ۱۲ کلمه‌ای خود را برای بازیابی هویت موجود Warren جای‌گذاری کنید."
 
 msgctxt "warren-onboarding"
 msgid "Pick a country and connect"
@@ -4854,20 +3239,12 @@ msgid "Privacy preferences"
 msgstr "ترجیحات حریم خصوصی"
 
 msgctxt "warren-onboarding"
-msgid "Restore wallet"
-msgstr "بازیابی کیف پول"
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "رد کردن دستیار راه‌اندازی (پیشرفته)"
 
 msgctxt "warren-onboarding"
 msgid "View plans (opens in your browser)"
 msgstr "مشاهده اشتراک‌ها (در مرورگر شما باز می‌شود)"
-
-msgctxt "warren-onboarding"
-msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
-msgstr "Warren از کیف پول غیرامانی (Ed25519 + BIP39) استفاده می‌کند. کلیدها متعلق به شماست؛ ما هرگز آن‌ها را نمی‌بینیم."
 
 msgctxt "warren-onboarding"
 msgid "Welcome to Warren VPN"
@@ -4993,25 +3370,9 @@ msgctxt "device-management"
 msgid "Session is inactive"
 msgstr "نشست غیرفعال است"
 
-msgctxt "device-management"
-msgid "Your session has ended. To connect again, you will need to log back in."
-msgstr "نشست شما به پایان رسید. برای اتصال مجدد، باید دوباره وارد شوید."
-
 msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "عدم تطابق هویت سرور شناسایی شد. کلید عمومی گره خروجی تغییر کرده است."
-
-msgctxt "vpn-settings-view"
-msgid "Automatic failover"
-msgstr "جابجایی خودکار در زمان خرابی"
-
-msgctxt "vpn-settings-view"
-msgid "Automatically switch to another exit server if the current one becomes unreachable."
-msgstr "اگر سرور خروجی فعلی غیرقابل دسترس شد، به‌طور خودکار به سرور خروجی دیگری سوئیچ کن."
-
-msgctxt "vpn-settings-view"
-msgid "This setting takes effect immediately without a daemon restart."
-msgstr "این تنظیم بدون راه‌اندازی مجدد سرویس، بلافاصله اعمال می‌شود."
 
 msgctxt "vpn-settings-view"
 msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
@@ -5030,14 +3391,6 @@ msgctxt "accessibility"
 msgid "Copy the voucher code"
 msgstr "کپی کد ووچر"
 
-msgctxt "accessibility"
-msgid "Hide public key"
-msgstr "پنهان کردن کلید عمومی"
-
-msgctxt "accessibility"
-msgid "Show public key"
-msgstr "نمایش کلید عمومی"
-
 msgctxt "account-view"
 msgid "Backup keys"
 msgstr "پشتیبان‌گیری از کلیدها"
@@ -5054,10 +3407,6 @@ msgstr "هنگام خروج از حساب مشکلی پیش آمد."
 msgctxt "account-view"
 msgid "Try again"
 msgstr "دوباره تلاش کنید"
-
-msgctxt "account-view"
-msgid "Public key"
-msgstr "کلید عمومی"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
@@ -5146,10 +3495,6 @@ msgstr "ناموفق"
 msgctxt "port-forwarding-view"
 msgid "no port available"
 msgstr "هیچ پورتی در دسترس نیست"
-
-msgctxt "port-forwarding-view"
-msgid "not allowed"
-msgstr "مجاز نیست"
 
 msgctxt "port-forwarding-view"
 msgid "open: %(port)d"
@@ -5264,10 +3609,6 @@ msgstr "چندپرشی Warren"
 msgctxt "warren-multi-hop-view"
 msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
 msgstr "هنگامی که فعال باشد، ترافیک از طریق دو رله Warren (ابتدا ورودی سپس خروجی) با رمزنگاری سرتاسری HPKE میان کلاینت و گره خروجی مسیریابی می‌شود. رله ورودی فقط متن رمزشده را می‌بیند؛ گره خروجی فقط محتوای رمزگشایی‌شده را می‌بیند و هرگز IP کاربر را نمی‌بیند."
-
-msgctxt "warren-multi-hop-view"
-msgid "auto"
-msgstr "خودکار"
 
 msgctxt "warren-pubkey-warning"
 msgid "Cryptographic mismatch details"
@@ -5393,14 +3734,6 @@ msgstr "در حال امضا، لطفاً صبر کنید."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "انجمن جامعه"
-
-msgctxt "tunnel-control"
-msgid "Connecting..."
-msgstr "در حال اتصال..."
-
-msgctxt "tunnel-control"
-msgid "Encrypting your connection"
-msgstr "در حال رمزگذاری اتصال شما"
 
 msgctxt "tunnel-control"
 msgid "Random location"

@@ -12,18 +12,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100>0 && n%100<20)) ? 1 : 2);\n"
 
-
-msgid "%(amount)d more..."
-msgstr "%(amount)d mai mult..."
-
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "%(duration)s a fost adăugat, contul fiind achitat până la data de %(expiry)s."
-
-#. The label for the QUIC port option.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgid "%(wireguard)s port"
-msgstr "%(wireguard)s port"
 
 msgid "1 day"
 msgid_plural "%d days"
@@ -112,14 +102,8 @@ msgstr "Conectați-vă"
 msgid "Connected"
 msgstr "Conectat"
 
-msgid "CONNECTED"
-msgstr "CONECTAT"
-
 msgid "Connecting"
 msgstr "Conectare"
-
-msgid "CONNECTING..."
-msgstr "SE CONECTEAZĂ..."
 
 msgid "Create"
 msgstr "Creați"
@@ -163,14 +147,8 @@ msgstr "Deconectați-vă și ieșiți"
 msgid "Disconnected"
 msgstr "Deconectat"
 
-msgid "DISCONNECTED"
-msgstr "DEZCONECTAT"
-
 msgid "Disconnecting"
 msgstr "Deconectare"
-
-msgid "DISCONNECTING..."
-msgstr "SE DECONECTEAZĂ..."
 
 msgid "Edit"
 msgstr "Editare"
@@ -185,16 +163,8 @@ msgstr "Activați oricum"
 msgid "Enable direct only"
 msgstr "Activați doar opțiunea directă"
 
-#. Error message shown trying to login but the app fails
-#. to fetch the list of registered devices.
-msgid "Failed to fetch list of devices"
-msgstr "Nu s-a putut prelua lista dispozitivelor"
-
 msgid "FAILED TO SECURE CONNECTION"
 msgstr "NU S-A REUȘIT STABILIREA CONEXIUNII"
-
-msgid "Filters"
-msgstr "Filtre"
 
 #. Button label for system settings.
 msgid "Go to System Settings"
@@ -241,9 +211,6 @@ msgstr "Nu s-au găsit servere corespunzătoare"
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "Nu s-au găsit rezultate pentru <b>%(searchTerm)s</b>."
 
-msgid "None"
-msgstr "Niciuna"
-
 msgid "Off"
 msgstr "Oprit"
 
@@ -279,10 +246,6 @@ msgstr "Ieși"
 
 msgid "Reconnect"
 msgstr "Reconectați-vă"
-
-#. Button label in confirmation dialog that confirms a remove action.
-msgid "Remove"
-msgstr "Eliminare"
 
 msgid "Required"
 msgstr "Obligatoriu"
@@ -333,23 +296,9 @@ msgstr "Utilizare"
 msgid "Username"
 msgstr "Nume de utilizator"
 
-#. Text for screen readers to describe the LWO settings navigation button.
-#. Available placeholders:
-#. %(lwo)s - will be replaced with LWO
-msgctxt "accessibility"
-msgid "%(lwo)s settings"
-msgstr "%(lwo)s setări"
-
 msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s, Imagine încărcată"
-
-#. Text for screen readers to describe the QUIC port settings navigation button.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with QUIC
-msgctxt "accessibility"
-msgid "%(wireguard)s port settings"
-msgstr "%(wireguard)s setări port"
 
 #. This is an accessibility label for a button that adds a location to a custom list.
 #. Available placeholders:
@@ -418,21 +367,6 @@ msgctxt "accessibility"
 msgid "Expand %(location)s"
 msgstr "Accesați %(location)s"
 
-#. This is used by screenreaders to communicate the "x" button next to a saved public key.
-#. Available placeholders:
-#. %(pubkey)s - the public key to the left of the button
-msgctxt "accessibility"
-msgid "Forget public key %(pubkey)s"
-msgstr "Uitați de %(pubkey)s cu cheie publică"
-
-#. Accessibility label for link to VPN settings where
-#. the user can change QUIC port.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "accessibility"
-msgid "Go to anti-censorship settings to change %(wireGuard)s port"
-msgstr "Accesați setările anti-cenzură pentru a modifica portul %(wireGuard)s"
-
 #. Accessibility label for link to app upgrade view.
 msgctxt "accessibility"
 msgid "Go to app update page"
@@ -445,12 +379,6 @@ msgctxt "accessibility"
 msgid "Go to slide %(index)s"
 msgstr "Accesați diapozitivul %(index)s"
 
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which obscures the public key.
-msgctxt "accessibility"
-msgid "Hide public key"
-msgstr "Ascunde cheia publică"
-
 #. Alt text for an illustration showing VPN traffic with DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic with DAITA enabled"
@@ -460,18 +388,6 @@ msgstr "Ilustrație care prezintă traficul VPN cu funcția DAITA activată"
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic without DAITA"
 msgstr "Ilustrație care prezintă traficul VPN fără DAITA"
-
-#. This is used by screenreaders to communicate the login button.
-msgctxt "accessibility"
-msgid "Login"
-msgstr "Autentificare"
-
-#. This is used by screenreaders to communicate logging in with a saved public key.
-#. Available placeholders:
-#. %(pubkey)s - the saved public key
-msgctxt "accessibility"
-msgid "Login with public key %(pubkey)s"
-msgstr "Autentificare cu cheia publică %(pubkey)s"
 
 msgctxt "accessibility"
 msgid "More information"
@@ -531,14 +447,6 @@ msgctxt "accessibility"
 msgid "Remove %(location)s from %(customList)s"
 msgstr "Eliminați „%(location)s” de pe „%(customList)s”"
 
-#. Button action description provided to accessibility tools such as screen
-#. readers.
-#. Available placeholders:
-#. %(deviceName)s - The device name to remove.
-msgctxt "accessibility"
-msgid "Remove device named %(deviceName)s"
-msgstr "Eliminați dispozitivul numit „%(deviceName)s”"
-
 msgctxt "accessibility"
 msgid "Remove item"
 msgstr "Eliminați articolul"
@@ -546,24 +454,6 @@ msgstr "Eliminați articolul"
 msgctxt "accessibility"
 msgid "Select location. Current location is %(location)s"
 msgstr "Selectați locația. Locația curentă este %(location)s"
-
-msgctxt "accessibility"
-msgid "Shadowsocks settings"
-msgstr "Setări Shadowsocks"
-
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which unobscures the public key.
-msgctxt "accessibility"
-msgid "Show public key"
-msgstr "Afișați cheia publică"
-
-msgctxt "accessibility"
-msgid "UDP-over-TCP settings"
-msgstr "Setări UDP peste TCP"
-
-msgctxt "accessibility"
-msgid "Use the right arrow key to focus the settings button."
-msgstr "Folosiți tasta săgeată dreapta pentru a selecta butonul de setări."
 
 #. Title label in navigation bar
 msgctxt "account-view"
@@ -598,11 +488,6 @@ msgctxt "account-view"
 msgid "Log out"
 msgstr "Deconectare"
 
-#. Link text in the account view to navigate to the manage devices view.
-msgctxt "account-view"
-msgid "Manage devices"
-msgstr "Gestionarea dispozitivelor"
-
 msgctxt "account-view"
 msgid "OUT OF TIME"
 msgstr "A EXPIRAT TIMPUL"
@@ -614,10 +499,6 @@ msgstr "Plătit până la"
 msgctxt "account-view"
 msgid "Paused while access is revoked: nothing is charged."
 msgstr "În pauză cât timp accesul este revocat: nu se încasează nimic."
-
-msgctxt "account-view"
-msgid "Public key"
-msgstr "Cheie publică"
 
 #. Shown while the saved card details are unknown.
 msgctxt "account-view"
@@ -656,21 +537,6 @@ msgstr "Dezactivați"
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
 msgstr "Împotriva cenzurii"
-
-#. The title for the obfuscation method selector.
-msgctxt "anti-censorship-view"
-msgid "Method"
-msgstr "Metodă"
-
-#. Second paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "Please note that these methods do not improve performance, and may increase system utilization and battery consumption."
-msgstr "Vă rugăm să rețineți că aceste metode nu îmbunătățesc performanța și pot crește gradul de utilizare a sistemului și consumul bateriei."
-
-#. First paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "Aceste metode pot fi utile în situațiile în care nu puteți lua legătura cu Warren. Când este selectată opțiunea „Automat”, aplicația va încerca toate metodele până când una dintre ele va funcționa."
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -902,12 +768,6 @@ msgctxt "app-upgrade-view"
 msgid "Connection blocked. Try changing server or other settings."
 msgstr "Conexiunea a fost blocată. Încercați să schimbați serverul sau alte setări."
 
-#. Label displayed when an error occurred due to the installer failing to start
-#. and the suggested resolution is to download the update again.
-msgctxt "app-upgrade-view"
-msgid "Could not open installer, please try again or send a problem report."
-msgstr "Nu s-a putut deschide programul de instalare. Vă rugăm să încercați din nou sau să trimiteți un raport de eroare."
-
 #. Button text to download and install an update
 msgctxt "app-upgrade-view"
 msgid "Download & install"
@@ -922,11 +782,6 @@ msgstr "Descărcarea s-a încheiat!"
 msgctxt "app-upgrade-view"
 msgid "Download failed"
 msgstr "Descărcarea a eșuat"
-
-#. Label displayed when an error occurred due to the download failing
-msgctxt "app-upgrade-view"
-msgid "Download failed, please check your connection/firewall and try again, or send a problem report."
-msgstr "Descărcarea a eșuat. Vă rugăm să verificați conexiunea la internet sau setările firewall-ului și să încercați din nou sau să trimiteți un raport de eroare."
 
 #. Status text displayed below a progress bar when the download of an update has been paused
 #. Label displayed above a progress bar when the update is verified successfully
@@ -956,11 +811,6 @@ msgctxt "app-upgrade-view"
 msgid "Install update"
 msgstr "Instalați actualizarea"
 
-#. Label displayed when an error occurred within the installer
-msgctxt "app-upgrade-view"
-msgid "Installer quit unexpectedly, please try again or send a problem report."
-msgstr "Programul de instalare s-a închis neașteptat. Vă rugăm să încercați din nou sau să trimiteți un raport de eroare."
-
 #. Info about which directory the app update will be downloaded to
 msgctxt "app-upgrade-view"
 msgid "Installer will be downloaded to <b>%(cacheDir)s</b>."
@@ -979,11 +829,6 @@ msgstr "În această versiune nu s-au efectuat actualizări sau modificări pent
 msgctxt "app-upgrade-view"
 msgid "Pause"
 msgstr "Pauză"
-
-#. Button text to report a problem
-msgctxt "app-upgrade-view"
-msgid "Report a problem"
-msgstr "Raportați o problemă"
 
 #. Button text to resume updating
 msgctxt "app-upgrade-view"
@@ -1010,21 +855,11 @@ msgctxt "app-upgrade-view"
 msgid "Starting installer..."
 msgstr "Se pornește programul de instalare..."
 
-#. Label displayed when an unknown error occurred
-msgctxt "app-upgrade-view"
-msgid "Unknown error occurred. Please try again or send a problem report."
-msgstr "A apărut o eroare necunoscută. Vă rugăm să încercați din nou sau să trimiteți un raport de eroare."
-
 #. Title in navigation bar
 #. Main title for the update available view
 msgctxt "app-upgrade-view"
 msgid "Update available"
 msgstr "Este disponibilă o actualizare"
-
-#. Label displayed when an error occurred due to the installer failed verification
-msgctxt "app-upgrade-view"
-msgid "Verification failed, please try again or send a problem report."
-msgstr "Verificarea a eșuat. Vă rugăm să încercați din nou sau să trimiteți un raport de eroare."
 
 #. Label displayed above a progress bar when the update is verified successfully
 msgctxt "app-upgrade-view"
@@ -1095,10 +930,6 @@ msgstr "Blocarea accesului la internet: contul a expirat"
 msgctxt "auth-failure"
 msgid "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly."
 msgstr "Există prea multe conexiuni simultane pe acest cont. Deconectați un alt dispozitiv sau încercați să vă reconectați în scurt timp."
-
-msgctxt "auth-failure"
-msgid "Unable to authenticate account. Please send a problem report."
-msgstr "Nu se poate autentifica contul. Vă rugăm să trimiteți un raport de eroare."
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
@@ -1196,10 +1027,6 @@ msgid_plural "%(count)d apps in other countries"
 msgstr[0] "%(count)d aplicație în altă țară"
 msgstr[1] "%(count)d aplicații în alte țări"
 msgstr[2] "%(count)d de aplicații în alte țări"
-
-msgctxt "connect-view"
-msgid "Active features"
-msgstr "Funcții active"
 
 msgctxt "connect-view"
 msgid "Congrats!"
@@ -1434,43 +1261,6 @@ msgctxt "custom-list-feature"
 msgid "Relay"
 msgstr "Releu"
 
-#. Button for continuing login process.
-msgctxt "device-management"
-msgid "Continue with login"
-msgstr "Continuați cu autentificarea"
-
-#. Label informing the user when a device was created.
-#. Available placeholders:
-#. %(createdDate)s - The creation date of the device.
-msgctxt "device-management"
-msgid "Created: %(createdDate)s"
-msgstr "Creat: %(createdDate)s"
-
-#. Label indicating that this device is the current device.
-msgctxt "device-management"
-msgid "Current device"
-msgstr "Dispozitivul curent"
-
-msgctxt "device-management"
-msgid "Device is inactive"
-msgstr "Dispozitivul este inactiv"
-
-msgctxt "device-management"
-msgid "Device name"
-msgstr "Numele dispozitivului"
-
-#. A label that will display the newly created device name to inform the user
-#. about it.
-#. Available placeholders:
-#. %(deviceName)s - The name of the current device
-msgctxt "device-management"
-msgid "Device name: %(deviceName)s"
-msgstr "Numele dispozitivului: %(deviceName)s"
-
-msgctxt "device-management"
-msgid "Failed to remove device"
-msgstr "Nu s-a putut dezinstala dispozitivul"
-
 #. Button label for navigating to login.
 msgctxt "device-management"
 msgid "Go to login"
@@ -1480,10 +1270,6 @@ msgctxt "device-management"
 msgid "Going to login will unblock the Internet on this device."
 msgstr "Dacă vă autentificați, conexiunea la internet va fi restabilită pe acest dispozitiv."
 
-msgctxt "device-management"
-msgid "If you log out, the device and the device name is removed. When you log back in again, the device will get a new name."
-msgstr "Dacă vă deconectați, dispozitivul și numele acestuia vor fi șterse. Când vă veți reconecta, dispozitivul va primi un nume nou."
-
 #. Title label in navigation bar for the manage devices view.
 #. Title text in the manage devices view
 msgctxt "device-management"
@@ -1491,68 +1277,13 @@ msgid "Manage devices"
 msgstr "Gestionarea dispozitivelor"
 
 msgctxt "device-management"
-msgid "Please log out of at least one by removing it from the list below. You can find the corresponding device name under the device’s Account settings."
-msgstr "Vă rugăm să vă deconectați de la cel puțin unul dintre ele, eliminându-l din lista de mai jos. Puteți găsi numele dispozitivului corespunzător în secțiunea Setări cont a dispozitivului respectiv."
-
-#. Button label for confirming removing a device.
-msgctxt "device-management"
-msgid "Remove"
-msgstr "Eliminare"
-
-#. Text displayed above button which logs out another device.
-#. The text enclosed in "<b></b>" will appear bold.
-#. Available placeholders:
-#. %(deviceName)s - The name of the device to log out.
-msgctxt "device-management"
-msgid "Remove <em>%(deviceName)s?</em>"
-msgstr "Eliminare <em>%(deviceName)s?</em>"
-
-#. Page title informing user that enough devices has been removed to continue
-#. login process.
-msgctxt "device-management"
-msgid "Super!"
-msgstr "Super!"
-
-msgctxt "device-management"
-msgid "The device will be removed from the list and logged out."
-msgstr "Dispozitivul va fi eliminat din listă și deconectat."
-
-msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "Acesta este numele atribuit dispozitivului. Fiecare dispozitiv conectat la un cont Warren primește un nume unic care vă ajută să îl identificați atunci când vă gestionați dispozitivele în aplicație sau pe site-ul web."
-
-msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
 msgstr "Timp rămas: %(timeLeft)s"
-
-#. Page title informing user that the login failed due to too many registered
-#. devices on account.
-msgctxt "device-management"
-msgid "Too many devices"
-msgstr "Prea multe dispozitive"
 
 #. Button text to retry fetching devices.
 msgctxt "device-management"
 msgid "Try again"
 msgstr "Încercați din nou"
-
-#. Subtitle text in the manage devices view, explaining
-#. devices and what they can do in the manage devices view.
-msgctxt "device-management"
-msgid "View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily."
-msgstr "Vizualizați și gestionați toate dispozitivele conectate. Puteți avea până la 5 dispozitive conectate simultan la un singur cont. Fiecare dispozitiv primește un nume la conectare, pentru a vă ajuta să le deosebiți cu ușurință."
-
-msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Warren account."
-msgstr "Poți avea până la 5 dispozitive conectate la un singur cont Warren."
-
-msgctxt "device-management"
-msgid "You can now continue logging in on this device."
-msgstr "Acum vă puteți autentifica în continuare pe acest dispozitiv."
-
-msgctxt "device-management"
-msgid "You have removed this device. To connect again, you will need to log back in."
-msgstr "Ați deconectat acest dispozitiv. Pentru a vă reconecta, va trebui să vă autentificați din nou."
 
 #. The message displayed to the user in case of critical error in the GUI
 #. Available placeholders:
@@ -1716,10 +1447,6 @@ msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
 msgstr "E POSIBIL SĂ EXISTE O SCURGERI DE TRAFIC DE REȚEA"
 
 msgctxt "in-app-notifications"
-msgid "NEW DEVICE CREATED"
-msgstr "S-A CREAT UN NOU DISPOZITIV"
-
-msgctxt "in-app-notifications"
 msgid "NEW VERSION INSTALLED"
 msgstr "S-A INSTALAT O NOUĂ VERSIUNE"
 
@@ -1750,11 +1477,6 @@ msgctxt "in-app-notifications"
 msgid "Retry installation"
 msgstr "Reîncercați instalarea"
 
-#. Button label to send a problem report.
-msgctxt "in-app-notifications"
-msgid "Send problem report"
-msgstr "Trimiteți un raport de problemă"
-
 msgctxt "in-app-notifications"
 msgid "SERVER MAINTENANCE"
 msgstr "MENTENANȚĂ SERVER"
@@ -1773,20 +1495,6 @@ msgstr "Instalarea nu s-a finalizat cu succes."
 msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "Programul de instalare nu a pornit cu succes."
-
-#. Notification subtitle indicating the user is using an unsupported port for QUIC.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with QUIC
-msgctxt "in-app-notifications"
-msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
-msgstr "Portul %(wireGuard)s selectat nu este acceptat; vă rugăm să-l <a>modificați în setările VPN.</a>"
-
-#. Notification text when a new device has been created.
-#. Available placeholders:
-#. - %(deviceName)s: Name of created device.
-msgctxt "in-app-notifications"
-msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
-msgstr "Acest dispozitiv se numește acum <em>%(deviceName)s</em>. Vezi mai multe la <a>Gestionare dispozitive</a> din Cont."
 
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
@@ -1960,11 +1668,6 @@ msgctxt "launch-view"
 msgid "Failed to start the app, please try again or click “Details” for more info"
 msgstr "Nu s-a putut porni aplicația. Vă rugăm să încercați din nou sau să faceți clic pe „Detalii” pentru mai multe informații"
 
-#. Message in troubleshooting modal advising user to send a problem report if the steps do not work.
-msgctxt "launch-view"
-msgid "If these steps do not work please send a problem report."
-msgstr "Dacă acești pași nu dau rezultate, vă rugăm să trimiteți un raport de eroare."
-
 #. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
 msgid "Only the account that set Warren up, or an administrator, can use it here."
@@ -2010,11 +1713,6 @@ msgctxt "launch-view"
 msgid "Restarting your computer"
 msgstr "Repornirea computerului"
 
-#. Button label for sending a problem report.
-msgctxt "launch-view"
-msgid "Send problem report"
-msgstr "Trimiteți un raport de problemă"
-
 #. Status text shown when app is starting.
 msgctxt "launch-view"
 msgid "Starting up...."
@@ -2029,11 +1727,6 @@ msgstr "Procesul de fundal Warren nu a putut fi pornit. Acest proces de fundal e
 msgctxt "launch-view"
 msgid "Try again"
 msgstr "Încercați din nou"
-
-#. Message in launch view when the mullvad service cannot be contacted.
-msgctxt "launch-view"
-msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "Nu se poate stabili conexiunea cu serviciul sistemului Warren; este posibil ca conexiunea dumneavoastră să nu fie securizată. Vă rugăm să remediați problema sau să trimiteți un raport de eroare făcând clic pe butonul „Aflați mai multe”."
 
 #. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
 msgctxt "launch-view"
@@ -2090,109 +1783,16 @@ msgctxt "login-view"
 msgid "<b>%(lockdownModeSettingName)s</b> is enabled. Disable it to unblock your connection."
 msgstr "<b>%(lockdownModeSettingName)s</b> este activată. Dezactiveaz-o pentru a debloca conexiunea."
 
-msgctxt "login-view"
-msgid "Account created"
-msgstr "Cont creat"
-
-msgctxt "login-view"
-msgid "Checking public key"
-msgstr "Verificarea cheii publice"
-
 #. Text in button that allows user to create a new account.
 msgctxt "login-view"
 msgid "Create a new account"
 msgstr "Creați un cont nou"
-
-#. Button which confirms the action to create a new account.
-msgctxt "login-view"
-msgid "Create new account"
-msgstr "Creați un cont nou"
-
-msgctxt "login-view"
-msgid "Creating account..."
-msgstr "Se creează contul..."
-
-#. Text that asks the user if they really want to create a new account.
-msgctxt "login-view"
-msgid "Do you want to create a new account?"
-msgstr "Doriți să creați un cont nou?"
-
-#. Text that asks the user if they really want to remove the saved public key.
-msgctxt "login-view"
-msgid "Do you want to remove the saved public key?"
-msgstr "Doriți să ștergeți cheia publică salvată?"
-
-msgctxt "login-view"
-msgid "Enter your public key"
-msgstr "Introduceți cheia publică"
-
-msgctxt "login-view"
-msgid "Error"
-msgstr "Eroare"
-
-msgctxt "login-view"
-msgid "Failed to create account"
-msgstr "Nu s-a putut crea contul"
-
-msgctxt "login-view"
-msgid "Finishing upgrade."
-msgstr "Finalizarea actualizării."
-
-#. Error message shown above login input when trying to login with a
-#. non-existent public key.
-msgctxt "login-view"
-msgid "Invalid public key"
-msgstr "Cheie publică nevalidă"
-
-msgctxt "login-view"
-msgid "Logged in"
-msgstr "Conectat"
-
-msgctxt "login-view"
-msgid "Logging in..."
-msgstr "Se efectuează autentificarea..."
-
-#. Label for the login button.
-msgctxt "login-view"
-msgid "Login"
-msgstr "Autentificare"
-
-msgctxt "login-view"
-msgid "Login failed"
-msgstr "Autentificarea a eșuat"
-
-#. Text shown between two horizontal lines above the "create account" button.
-#. In this context it is used to separate the users alternative of logging in
-#. or creating a new account, "Login or Create a new account".
-msgctxt "login-view"
-msgid "Or"
-msgstr "Sau"
 
 #. This is a warning message shown when the app is blocking the users
 #. internet connection while logged out.
 msgctxt "login-view"
 msgid "Our kill switch is currently blocking your connection."
 msgstr "Kill Switch-ul nostru vă blochează în prezent conexiunea."
-
-msgctxt "login-view"
-msgid "Please wait"
-msgstr "Vă rugăm să așteptați"
-
-#. Text that informs the user about the consequences of clearing the saved
-#. public key.
-msgctxt "login-view"
-msgid "Removing the saved public key from this device cannot be undone."
-msgstr "Ștergerea cheii publice salvate de pe acest dispozitiv este ireversibilă."
-
-#. Error message shown above login input when trying to login to an account
-#. with too many registered devices.
-msgctxt "login-view"
-msgid "Too many devices"
-msgstr "Prea multe dispozitive"
-
-msgctxt "login-view"
-msgid "Unknown error"
-msgstr "Eroare necunoscută"
 
 msgctxt "login-view"
 msgid "Upgrading..."
@@ -2202,42 +1802,6 @@ msgstr "Se actualizează..."
 msgctxt "login-view"
 msgid "Warren could not restore your account right now. Check your internet connection and try again."
 msgstr "Warren nu a putut restaura contul în acest moment. Verificați conexiunea la internet și încercați din nou."
-
-msgctxt "login-view"
-msgid "Valid public key"
-msgstr "Cheie publică validă"
-
-#. Text that informs the users about consequences of creating a new account.
-msgctxt "login-view"
-msgid "You already have a saved public key, by creating a new account the saved public key will be removed from this device. This cannot be undone."
-msgstr "Ai deja o cheie publică salvată; prin crearea unui cont nou, cheia publică salvată va fi ștersă de pe acest dispozitiv. Această acțiune nu poate fi anulată."
-
-#. The title for the LWO port selector.
-msgctxt "lwo-settings-view"
-msgid "Port"
-msgstr "Port"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "lwo-settings-view"
-msgid "Port: %(port)s"
-msgstr "Link: %(port)s"
-
-msgctxt "lwo-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "Setarea automată va alege aleatoriu din intervalele de porturi valide prezentate mai jos."
-
-msgctxt "lwo-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "Portul personalizat poate avea orice valoare din intervalele valide: %(portRanges)s."
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "lwo-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "Intervale valabile: %(portRanges)s"
 
 #. Title label in navigation bar
 msgctxt "navigation-bar"
@@ -2413,32 +1977,8 @@ msgid "Unable to apply firewall rules. Try updating your kernel."
 msgstr "Nu se pot aplica regulile firewall-ului. Încercați să actualizați kernel-ul."
 
 msgctxt "notifications"
-msgid "Unable to block all network traffic. Please troubleshoot or send a problem report."
-msgstr "Nu se poate bloca întregul trafic de rețea. Vă rugăm să remediați problema sau să trimiteți un raport de eroare."
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software or send a problem report."
-msgstr "Nu se poate bloca întregul trafic de rețea. Încercați să dezactivați temporar orice program antivirus sau de securitate de la terți sau trimiteți un raport de eroare."
-
-msgctxt "notifications"
-msgid "Unable to block all network traffic. Try updating your kernel or send a problem report."
-msgstr "Nu se poate bloca întregul trafic de rețea. Încercați să actualizați kernelul sau trimiteți un raport de eroare."
-
-msgctxt "notifications"
-msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
-msgstr "Nu se poate stabili conexiunea cu driverul de kernel Warren. Încercați să vă reconectați sau trimiteți un raport de eroare."
-
-msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
 msgstr "Nu se poate identifica gazda tunelului personalizat. Încercați să modificați setările."
-
-msgctxt "notifications"
-msgid "Unable to set system DNS server. Please send a problem report."
-msgstr "Nu se poate configura serverul DNS al sistemului. Vă rugăm să trimiteți un raport de eroare."
-
-msgctxt "notifications"
-msgid "Unable to start tunnel connection. Please send a problem report."
-msgstr "Nu se poate iniția conexiunea prin tunel. Vă rugăm să trimiteți un raport de eroare."
 
 msgctxt "notifications"
 msgid "Unable to start tunnel connection. This could be because of conflicts with VMware, please troubleshoot."
@@ -2534,28 +2074,12 @@ msgid "How to set up your torrent client"
 msgstr "Cum configurezi clientul torrent"
 
 msgctxt "port-forwarding-view"
-msgid "Mapping failed: %(error)s"
-msgstr "Eroare la generarea hărții: %(error)s"
-
-msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
 msgstr "Anunță-mă când se schimbă un port public"
 
 msgctxt "port-forwarding-view"
 msgid "Port forwarding"
 msgstr "Port forwarding"
-
-msgctxt "port-forwarding-view"
-msgid "Public port: %(port)s"
-msgstr "Port public: %(port)s"
-
-msgctxt "port-forwarding-view"
-msgid "Renewing in %(countdown)s"
-msgstr "Reînnoirea în cadrul programului „%(countdown)s”"
-
-msgctxt "port-forwarding-view"
-msgid "Requesting port mapping..."
-msgstr "Se solicită redirecționarea porturilor..."
 
 msgctxt "port-forwarding-view"
 msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
@@ -2824,10 +2348,6 @@ msgctxt "settings-view"
 msgid "VPN settings"
 msgstr "Setări VPN"
 
-msgctxt "settings-view"
-msgid "Warren multi-hop"
-msgstr "Warren multi-hop"
-
 msgctxt "split-tunneling-view"
 msgid "%(applicationName)s is problematic and can’t be excluded from the VPN tunnel."
 msgstr "%(applicationName)s este problematic și nu poate fi exclus din tunelul VPN."
@@ -2851,10 +2371,6 @@ msgstr "Ocolește VPN-ul"
 msgctxt "split-tunneling-view"
 msgid "Choose"
 msgstr "Alegeți"
-
-msgctxt "split-tunneling-view"
-msgid "Choose the apps you want to exclude from the VPN tunnel."
-msgstr "Alegeți aplicațiile pe care doriți să le excludeți din tunelul VPN."
 
 msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
@@ -2957,10 +2473,6 @@ msgstr "Aplicațiile Snap nu pot folosi încă o țară"
 msgctxt "split-tunneling-view"
 msgid "To use %(splitTunneling)s, please update to a Linux kernel version that supports cgroup v2."
 msgstr "Pentru a utiliza „%(splitTunneling)s”, vă rugăm să actualizați la o versiune a nucleului Linux care acceptă cgroup v2."
-
-msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
-msgstr "Pentru a utiliza funcția de Split tunneling, vă rugăm să activați opțiunea „Acces complet la disc” pentru „Warren VPN” în setările de sistem ale macOS."
 
 msgctxt "split-tunneling-view"
 msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
@@ -3131,107 +2643,15 @@ msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
 msgstr "Dacă rulează deja, închideți %(applicationName)s înainte de a lansa aplicația de aici. În caz contrar, s-ar putea să nu folosească VPN-ul."
 
-#. Button label for continuing problem report submission with an outdated app version.
-msgctxt "support-view"
-msgid "Continue anyway"
-msgstr "Continuați oricum"
-
-#. Button text to edit the message after a failed attempt to send the problem report.
-msgctxt "support-view"
-msgid "Edit message"
-msgstr "Editați mesajul"
-
-msgctxt "support-view"
-msgid "Failed to send"
-msgstr "Nu s-a putut trimite"
-
 #. Link to the webpage
 msgctxt "support-view"
 msgid "FAQs & Guides"
 msgstr "Întrebări frecvente și ghiduri"
 
-#. The message displayed to the user after submitting the problem report, given that the user left his or her email for us to reach back.
-#. Available placeholders:
-#. %(email)s
-msgctxt "support-view"
-msgid "If needed we will contact you at %(email)s"
-msgstr "Dacă este necesar, vă vom contacta la adresa %(email)s"
-
-msgctxt "support-view"
-msgid "If you exit the form and try again later, the information you already entered will still be here."
-msgstr "Dacă ieșiți din formular și încercați din nou mai târziu, informațiile pe care le-ați introdus deja vor fi încă disponibile."
-
-#. Title label in navigation bar
-#. Navigation button to the 'Report a problem' help view
-msgctxt "support-view"
-msgid "Report a problem"
-msgstr "Raportați o problemă"
-
-#. Button label for sending the problem report.
-msgctxt "support-view"
-msgid "Send"
-msgstr "Trimite"
-
-#. Button label for sending the problem report without an email address.
-msgctxt "support-view"
-msgid "Send anyway"
-msgstr "Trimite oricum"
-
-msgctxt "support-view"
-msgid "Sending..."
-msgstr "Se trimite..."
-
-msgctxt "support-view"
-msgid "Sent"
-msgstr "Trimis"
-
 #. Title label in navigation bar
 msgctxt "support-view"
 msgid "Support"
 msgstr "Asistență"
-
-msgctxt "support-view"
-msgid "Thanks!"
-msgstr "Mulțumesc!"
-
-msgctxt "support-view"
-msgid "To assist you better, please write in English or Swedish and include which country you are connecting from."
-msgstr "Pentru a vă putea ajuta mai bine, vă rugăm să scrieți în engleză sau suedeză și să menționați din ce țară ne contactați."
-
-msgctxt "support-view"
-msgid "To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel."
-msgstr "Pentru a vă oferi un ajutor mai eficient, fișierul log al aplicației dvs. va fi atașat la acest mesaj. Datele dvs. vor rămâne în siguranță și confidențiale, deoarece sunt anonimizate înainte de a fi transmise printr-un canal criptat."
-
-#. Button label for retrying problem report submission after a failure.
-msgctxt "support-view"
-msgid "Try again"
-msgstr "Încercați din nou"
-
-#. Button label for updating the app to the latest version.
-msgctxt "support-view"
-msgid "Update app"
-msgstr "Actualizați aplicația"
-
-#. Button label for opening app logs.
-msgctxt "support-view"
-msgid "View app logs"
-msgstr "Vizualizați logurile aplicației"
-
-msgctxt "support-view"
-msgid "We will look into this."
-msgstr "Vom analiza această chestiune."
-
-msgctxt "support-view"
-msgid "You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address."
-msgstr "Sunteți pe punctul de a trimite raportul de problemă fără să ne oferiți o modalitate de a vă contacta. Dacă doriți să primiți un răspuns la raportul dumneavoastră, va trebui să introduceți o adresă de e-mail."
-
-msgctxt "support-view"
-msgid "You are using an old version of the app. Please upgrade and see if the problem still exists before sending a report."
-msgstr "Folosești o versiune veche a aplicației. Te rugăm să o actualizezi și să verifici dacă problema persistă înainte de a trimite un raport."
-
-msgctxt "support-view"
-msgid "Your email (optional)"
-msgstr "Adresa dvs. de e-mail (opțional)"
 
 #. Link to the refund policy webpage
 msgctxt "support-view"
@@ -3269,10 +2689,6 @@ msgstr "Activați opțiunea „Acces complet la disc” pentru „Warren VPN” 
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
 msgstr "Nu s-a reușit activarea Split tunneling-ului. Acest lucru se datorează faptului că aplicației îi lipsesc permisiunile de sistem. Ce puteți face:"
-
-msgctxt "troubleshoot"
-msgid "If these steps do not work please send a problem report."
-msgstr "Dacă acești pași nu dau rezultate, vă rugăm să trimiteți un raport de eroare."
 
 msgctxt "troubleshoot"
 msgid "If you have installed another VPN then try to uninstall that."
@@ -3343,14 +2759,6 @@ msgstr "Doar aplicațiile alese sunt protejate"
 msgctxt "tunnel-control"
 msgid "Connection interrupted"
 msgstr "Conexiune întreruptă"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map"
-msgstr "Harta animată"
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map movements."
-msgstr "Animați mișcările hărții."
 
 msgctxt "user-interface-settings-view"
 msgid "Enable or disable system notifications. The critical notifications will always be displayed."
@@ -3557,10 +2965,6 @@ msgid "Reset to default"
 msgstr "Reveniți la valorile implicite"
 
 msgctxt "vpn-settings-view"
-msgid "Restart the daemon for the change to take effect."
-msgstr "Reporniți serviciul pentru ca modificarea să intre în vigoare."
-
-msgctxt "vpn-settings-view"
 msgid "Server IP override"
 msgstr "Suprascrierea adresei IP a serverului"
 
@@ -3625,10 +3029,6 @@ msgid "Until the new pins are established the substitution-detection guard is br
 msgstr "Până la stabilirea noilor pini, mecanismul de detectare a substituirii este temporar dezactivat: un atacator care a înlocuit o ieșire între resetări nu ar fi semnalat la prima reconectare."
 
 msgctxt "vpn-settings-view"
-msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to default). Restart the daemon for the change to take effect."
-msgstr "Adresa URL a serverului warren-api. Format: http(s)://host:port. Câmp gol = neconfigurat (se utilizează valoarea implicită). Reporniți serviciul pentru ca modificarea să intre în vigoare."
-
-msgctxt "vpn-settings-view"
 msgid "Use custom DNS server"
 msgstr "Utilizați un server DNS personalizat"
 
@@ -3644,18 +3044,6 @@ msgstr "Atenție: Programul de blocare a programelor malware nu este un antiviru
 msgctxt "vpn-settings-view"
 msgid "Warren api URL"
 msgstr "URL-ul API-ului Warren"
-
-msgctxt "vpn-settings-view"
-msgid "Warren local account"
-msgstr "Contul local Warren"
-
-msgctxt "vpn-settings-view"
-msgid "Warren tunnel mode"
-msgstr "Modul tunel Warren"
-
-msgctxt "vpn-settings-view"
-msgid "When enabled, the daemon uses a self-hosted account derived from the local Warren mnemonic instead of contacting a remote account API."
-msgstr "Când această opțiune este activată, daemonul utilizează un cont auto-găzduit, generat pe baza frazei mnemonice Warren locale, în loc să contacteze API-ul unui cont la distanță."
 
 msgctxt "vpn-settings-view"
 msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
@@ -3786,10 +3174,6 @@ msgid "Public key"
 msgstr "Cheie publică"
 
 msgctxt "warren-multi-hop-view"
-msgid "auto"
-msgstr "auto"
-
-msgctxt "warren-multi-hop-view"
 msgid "Entry country"
 msgstr "Țara de intrare"
 
@@ -3802,20 +3186,12 @@ msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkabilit
 msgstr "Expectați că lățimea de bandă va fi aproximativ la jumătate, în schimbul imposibilității de a face legătura între adresa IP a utilizatorului și cea a destinației. Opțiunea este dezactivată în mod implicit; activați-o pentru a vă proteja confidențialitatea."
 
 msgctxt "warren-multi-hop-view"
-msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
-msgstr "Opțional: introduceți codurile țărilor de intrare și de ieșire (coduri ISO 3166 alfa-2, cum ar fi fr, de, se). Lăsați câmpul gol pentru selectare automată."
-
-msgctxt "warren-multi-hop-view"
 msgid "Restart the Warren daemon after changing this setting."
 msgstr "Reporniți serviciul Warren după ce modificați această setare."
 
 msgctxt "warren-multi-hop-view"
 msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
 msgstr "Direcționează traficul prin două relee Warren, utilizând criptarea end-to-end HPKE. Releul de intrare vede doar textul cifrat, iar cel de ieșire vede doar încărcătura utilă decriptată, fără a avea acces la adresa dvs. IP. Model inspirat de Apple Private Relay."
-
-msgctxt "warren-multi-hop-view"
-msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
-msgstr "Modul activ Warren cu un singur salt. Lățime de bandă completă, garanții de confidențialitate identice cu cele ale modului implicit cu un singur salt."
 
 msgctxt "warren-multi-hop-view"
 msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
@@ -3858,10 +3234,6 @@ msgid "All set"
 msgstr "Totul e gata"
 
 msgctxt "warren-onboarding"
-msgid "Create my new wallet (recommended)"
-msgstr "Creați-mi un portofel nou (recomandat)"
-
-msgctxt "warren-onboarding"
 msgid "Checking... (click to refresh now)"
 msgstr "Se verifică... (dă clic pentru a reîmprospăta pagina)"
 
@@ -3876,10 +3248,6 @@ msgstr "Continuați"
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
 msgstr "Serviciul nu are încă o frază mnemonică, autentificați-vă sau reporniți aplicația."
-
-msgctxt "warren-onboarding"
-msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
-msgstr "Serviciul a respins fraza mnemonică. Verificați ortografia și numărul de cuvinte, apoi încercați din nou."
 
 msgctxt "warren-onboarding"
 msgid "Failed to retrieve mnemonic from daemon."
@@ -3898,16 +3266,8 @@ msgid "I have written it down in a safe place."
 msgstr "Am pus-o la loc sigur."
 
 msgctxt "warren-onboarding"
-msgid "Import an existing mnemonic"
-msgstr "Importați o frază mnemonică existentă"
-
-msgctxt "warren-onboarding"
 msgid "No active subscription found. Please purchase one first."
 msgstr "Nu s-a găsit niciun abonament activ. Vă rugăm să achiziționați unul mai întâi."
-
-msgctxt "warren-onboarding"
-msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
-msgstr "Lipiți frază mnemonică BIP39 formată din 12 cuvinte pentru a vă restabili identitatea Warren existentă."
 
 msgctxt "warren-onboarding"
 msgid "Pick a country and connect"
@@ -3922,20 +3282,12 @@ msgid "Privacy preferences"
 msgstr "Preferințe de confidențialitate"
 
 msgctxt "warren-onboarding"
-msgid "Restore wallet"
-msgstr "Restaurați portofelul"
-
-msgctxt "warren-onboarding"
 msgid "Skip wizard (advanced)"
 msgstr "Omiteți asistentul (opțiuni avansate)"
 
 msgctxt "warren-onboarding"
 msgid "View plans (opens in your browser)"
 msgstr "Vizualizați planurile (se deschide în browserul dvs.)"
-
-msgctxt "warren-onboarding"
-msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
-msgstr "Warren utilizează un portofel non-custodial (Ed25519 + BIP39). Cheile vă aparțin; noi nu le vedem niciodată."
 
 msgctxt "warren-onboarding"
 msgid "Welcome to Warren VPN"
@@ -4085,10 +3437,6 @@ msgid "Last"
 msgstr "Ultimul"
 
 msgctxt "warren-status-view"
-msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
-msgstr "Metodele de ofuscare tradiționale (Shadowsocks, UDP-over-TCP, QUIC, LWO) nu se aplică atunci când opțiunea warren_mode este activată."
-
-msgctxt "warren-status-view"
 msgid "never"
 msgstr "niciodată"
 
@@ -4100,44 +3448,13 @@ msgctxt "warren-status-view"
 msgid "Reconnects"
 msgstr "Se reconectează"
 
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
-#. Title label in navigation bar
-msgctxt "wireguard-settings-nav"
-msgid "UDP-over-TCP"
-msgstr "UDP peste TCP"
-
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s (%(daitaFull)s) hides patterns in your encrypted VPN traffic."
 msgstr "%(daita)s (%(daitaFull)s) ascunde tiparele din traficul dvs. VPN criptat."
 
 msgctxt "wireguard-settings-view"
-msgid "%(daita)s does this by carefully adding network noise and making all network packets the same size."
-msgstr "%(daita)s realizează acest lucru prin adăugarea atentă a zgomotului de rețea și prin uniformizarea dimensiunii tuturor pachetelor de rețea."
-
-msgctxt "wireguard-settings-view"
-msgid "%(wireguard)s port"
-msgstr "%(wireguard)s port"
-
-#. Page title for QUIC port view
-msgctxt "wireguard-settings-view"
-msgid "%(wireGuard)s port"
-msgstr "%(wireGuard)s port"
-
-msgctxt "wireguard-settings-view"
-msgid "Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans."
-msgstr "Atenție: această funcție crește traficul de rețea și va afecta negativ viteza, latența și consumul bateriei. Se recomandă utilizarea cu precauție în cazul abonamentelor cu date limitate."
-
-msgctxt "wireguard-settings-view"
 msgid "By enabling “%(directOnly)s” you will have to manually select a server that is %(daita)s-enabled. This can cause you to end up in a blocked state until you have selected a compatible server in the “Select location” view."
 msgstr "Dacă activați opțiunea „%(directOnly)s”, va trebui să selectați manual un server care acceptă funcția „%(daita)s”. Acest lucru poate duce la blocarea aplicației până când selectați un server compatibil în fereastra „Selectați locația”."
-
-msgctxt "wireguard-settings-view"
-msgid "By using sophisticated AI it’s possible to analyze the traffic of data packets going in and out of your device (even if the traffic is encrypted)."
-msgstr "Prin utilizarea unor tehnologii sofisticate de inteligență artificială, este posibilă analizarea traficului de pachete de date care intră și ies din dispozitivul dumneavoastră (chiar dacă traficul este criptat)."
 
 msgctxt "wireguard-settings-view"
 msgid "Cancel"
@@ -4147,10 +3464,6 @@ msgstr "Anulați"
 msgctxt "wireguard-settings-view"
 msgid "Device IP version"
 msgstr "Versiunea IP a dispozitivului"
-
-msgctxt "wireguard-settings-view"
-msgid "If an observer monitors these data packets, %(daita)s makes it significantly harder for them to identify which websites you are visiting or with whom you are communicating."
-msgstr "Dacă un observator monitorizează aceste pachete de date, tehnologia „%(daita)s” îi îngreunează considerabil identificarea site-urilor web pe care le vizitați sau a persoanelor cu care comunicați."
 
 msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
@@ -4164,37 +3477,13 @@ msgid "MTU"
 msgstr "MTU"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop"
-msgstr "Multihop"
-
-msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Se utilizează tehnologia Multihop pentru a activa DAITA în locația selectată"
-
-msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
-msgstr "Multihop trimite traficul tău printr-un server QUIC și îl scoate prin altul, adăugând un server între tine și site-urile pe care le vizitezi. Latența crește."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. In order to use the internet, you might have to select a new location after enabling."
 msgstr "Nu toate serverele noastre au funcția „%(daita)s” activată. Pentru a putea utiliza internetul, s-ar putea să fie necesar să selectați o nouă locație după activarea funcției."
-
-msgctxt "wireguard-settings-view"
-msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
-msgstr "Nu toate serverele noastre acceptă funcția „%(daita)s”. Prin urmare, folosim automat funcția „multihop” pentru a activa funcția „%(daita)s” cu orice server."
-
-#. The title for the QUIC port selector.
-msgctxt "wireguard-settings-view"
-msgid "Port"
-msgstr "Port"
-
-#. Text showing currently selected port.
-#. Available placeholders:
-#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
-msgctxt "wireguard-settings-view"
-msgid "Port: %(port)s"
-msgstr "Link: %(port)s"
 
 #. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
@@ -4217,14 +3506,6 @@ msgid "Shadowsocks"
 msgstr "Shadowsocks"
 
 msgctxt "wireguard-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr "Setarea automată va alege aleatoriu din intervalele de porturi valide prezentate mai jos."
-
-msgctxt "wireguard-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr "Portul personalizat poate avea orice valoare din intervalele valide: %(portRanges)s."
-
-msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "Această funcție vă protejează traficul către serverul de ieșire împotriva potențialelor atacuri ale computerelor cuantice."
 
@@ -4232,53 +3513,9 @@ msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
 msgstr "UDP peste TCP"
 
-#. Text describing the valid port range for a port selector.
-msgctxt "wireguard-settings-view"
-msgid "Valid range: %(min)s - %(max)s"
-msgstr "Interval valid: %(min)s - %(max)s"
-
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "wireguard-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr "Intervale valide: %(portRanges)s"
-
-msgctxt "wireguard-settings-view"
-msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
-msgstr "La ce port TCP trebuie să se conecteze protocolul de ofuscare UDP-over-TCP pe serverul VPN."
-
-msgctxt "port-forwarding-view"
-msgid "auto"
-msgstr "automat"
-
-msgctxt "port-forwarding-view"
-msgid "Port must be between 49152 and 65535, or empty for auto."
-msgstr "Portul trebuie să fie între 49152 și 65535 sau gol pentru automat."
-
-msgctxt "port-forwarding-view"
-msgid "Preferred port"
-msgstr "Port preferat"
-
 msgctxt "port-forwarding-view"
 msgid "Protocol"
 msgstr "Protocol"
-
-msgctxt "port-forwarding-view"
-msgid "Status: active"
-msgstr "Stare: activ"
-
-msgctxt "port-forwarding-view"
-msgid "Status: requesting port mapping..."
-msgstr "Stare: se solicită maparea portului…"
-
-msgctxt "port-forwarding-view"
-msgid "Status: waiting for an active tunnel connection to set up the port mapping."
-msgstr "Stare: se așteaptă o conexiune de tunel activă pentru a configura maparea portului."
-
-msgctxt "port-forwarding-view"
-msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
-msgstr "Serverul poate atribui un alt port dacă cel preferat este deja ocupat. Modificările se aplică imediat, fără reconectare."
 
 msgctxt "account-view"
 msgid "Back up my phrase"
@@ -4372,25 +3609,9 @@ msgctxt "device-management"
 msgid "Session is inactive"
 msgstr "Sesiune inactivă"
 
-msgctxt "device-management"
-msgid "Your session has ended. To connect again, you will need to log back in."
-msgstr "Sesiunea ta s-a încheiat. Pentru a te conecta din nou, va trebui să te autentifici iar."
-
 msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "Nepotrivire de identitate a serverului detectată. Cheia publică a nodului de ieșire s-a schimbat."
-
-msgctxt "vpn-settings-view"
-msgid "Automatic failover"
-msgstr "Comutare automată"
-
-msgctxt "vpn-settings-view"
-msgid "Automatically switch to another exit server if the current one becomes unreachable."
-msgstr "Comută automat la alt server de ieșire dacă cel curent devine inaccesibil."
-
-msgctxt "vpn-settings-view"
-msgid "This setting takes effect immediately without a daemon restart."
-msgstr "Această setare intră în vigoare imediat, fără repornirea serviciului."
 
 msgctxt "vpn-settings-view"
 msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
@@ -4547,14 +3768,6 @@ msgstr "Se semnează, te rugăm să aștepți."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Forumul comunității"
-
-msgctxt "tunnel-control"
-msgid "Connecting..."
-msgstr "Se conectează..."
-
-msgctxt "tunnel-control"
-msgid "Encrypting your connection"
-msgstr "Se criptează conexiunea"
 
 msgctxt "tunnel-control"
 msgid "Random location"
