@@ -458,6 +458,7 @@ mod tests {
     }
 
     /// A fresh directory of its own under the system temp dir.
+    #[cfg(unix)]
     fn scratch_dir(tag: &str) -> std::path::PathBuf {
         let nanos = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -471,6 +472,8 @@ mod tests {
         dir
     }
 
+    // The paths are parsed as Unix app ids, which a Windows temp dir is not.
+    #[cfg(unix)]
     #[test]
     fn a_plain_directory_does_not_name_an_app() {
         let dir = scratch_dir("plain");
@@ -481,6 +484,8 @@ mod tests {
         assert_eq!(checked, Err(AppRoutingError::NotAnApp));
     }
 
+    // The paths are parsed as Unix app ids, which a Windows temp dir is not.
+    #[cfg(unix)]
     #[test]
     fn a_missing_path_does_not_name_an_app() {
         let dir = scratch_dir("missing");
@@ -491,6 +496,8 @@ mod tests {
         assert_eq!(checked, Err(AppRoutingError::NotAnApp));
     }
 
+    // The paths are parsed as Unix app ids, which a Windows temp dir is not.
+    #[cfg(unix)]
     #[test]
     fn a_bundle_or_an_executable_file_names_an_app() {
         let dir = scratch_dir("bundle");
