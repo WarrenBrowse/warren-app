@@ -6482,3 +6482,19 @@ msgstr "Kildekode til denne version"
 msgctxt "licenses-view"
 msgid "Source code of the tunnel engine"
 msgstr "Kildekode til tunnelmotoren"
+
+msgctxt "login-view"
+msgid "Check your recovery phrase"
+msgstr "Tjek din gendannelsessætning"
+
+msgctxt "login-view"
+msgid "To make sure you saved it, type these words from your recovery phrase."
+msgstr "Skriv disse ord fra din gendannelsessætning for at sikre, at du har gemt den."
+
+msgctxt "login-view"
+msgid "Word %(position)d"
+msgstr "Ord %(position)d"
+
+msgctxt "login-view"
+msgid "These words do not match your recovery phrase. Check what you wrote down."
+msgstr "Disse ord passer ikke til din gendannelsessætning. Tjek det, du har skrevet ned."

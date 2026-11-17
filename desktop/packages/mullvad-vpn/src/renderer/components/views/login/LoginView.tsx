@@ -17,12 +17,15 @@ import { useSelector } from '../../../redux/store';
 import { AppMainHeader } from '../../app-main-header';
 import { ModalAlert, ModalAlertType } from '../../Modal';
 import {
+  backupCheckPasses,
+  BackupCheckStep,
   CopyMnemonicButton,
   countMnemonicWords,
   MnemonicGrid,
   mnemonicImportError,
   MnemonicTextarea,
   normalizeMnemonic,
+  pickBackupCheckPositions,
 } from '../../warren-mnemonic';
 import { OnboardingForumHint } from '../onboarding/components';
 import {
@@ -76,6 +79,11 @@ export function LoginView() {
   const isBackup = step === 'backup';
   const [mnemonic, setMnemonic] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  // The backup step ends with the user typing back a few words of the phrase:
+  // `checkPositions` is set while that check is on screen.
+  const [checkPositions, setCheckPositions] = useState<number[] | null>(null);
+  const [checkAnswers, setCheckAnswers] = useState<string[]>([]);
+  const [checkMismatch, setCheckMismatch] = useState(false);
   const [restoreInput, setRestoreInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +126,7 @@ export function LoginView() {
     // create-failure before switching to the restore path.
     setMnemonic(null);
     setConfirmed(false);
+    setCheckPositions(null);
     setMode('restore');
   }, []);
 
@@ -130,14 +139,43 @@ export function LoginView() {
     setError(null);
     setMnemonic(null);
     setConfirmed(false);
+    setCheckPositions(null);
     void createNewAccount();
   }, [createNewAccount]);
 
+  const resetBackupCheck = useCallback(() => {
+    setCheckPositions(null);
+    setCheckAnswers([]);
+    setCheckMismatch(false);
+  }, []);
+
+  const startBackupCheck = useCallback(() => {
+    if (mnemonic === null) {
+      return;
+    }
+    const positions = pickBackupCheckPositions(countMnemonicWords(mnemonic));
+    setCheckPositions(positions);
+    setCheckAnswers(positions.map(() => ''));
+    setCheckMismatch(false);
+  }, [mnemonic]);
+
+  const changeCheckAnswer = useCallback((index: number, value: string) => {
+    setCheckMismatch(false);
+    setCheckAnswers((answers) => answers.map((answer, i) => (i === index ? value : answer)));
+  }, []);
+
   const onConfirmBackup = useCallback(() => {
+    if (mnemonic === null || checkPositions === null) {
+      return;
+    }
+    if (!backupCheckPasses(mnemonic, checkPositions, checkAnswers)) {
+      setCheckMismatch(true);
+      return;
+    }
     if (backupPubkey) {
       finishAccountBackup(backupPubkey);
     }
-  }, [finishAccountBackup, backupPubkey]);
+  }, [mnemonic, checkPositions, checkAnswers, finishAccountBackup, backupPubkey]);
 
   const openDiscardConfirm = useCallback(() => setDiscardConfirmOpen(true), []);
   const closeDiscardConfirm = useCallback(() => setDiscardConfirmOpen(false), []);
@@ -153,8 +191,9 @@ export function LoginView() {
     setDiscardConfirmOpen(false);
     setMnemonic(null);
     setConfirmed(false);
+    resetBackupCheck();
     await logout('gui-discard-new-account');
-  }, [logout]);
+  }, [logout, resetBackupCheck]);
 
   const restoreWordCount = countMnemonicWords(restoreInput);
   const restoreValid = restoreWordCount === 12 || restoreWordCount === 24;
@@ -173,7 +212,11 @@ export function LoginView() {
     }
   }, [restoreInput, setWarrenMnemonic]);
 
-  const title = formTitle(step, isPerformingPostUpgrade);
+  const checkingBackup = isBackup && checkPositions !== null;
+  const title = checkingBackup
+    ? // TRANSLATORS: Title of the step where the user types back words of the new recovery phrase.
+      messages.pgettext('login-view', 'Check your recovery phrase')
+    : formTitle(step, isPerformingPostUpgrade);
   const statusIcon = getStatusIcon(isPerformingPostUpgrade, createFailed !== null);
   // The create-failure error belongs to the welcome (pick) step only. In
   // restore/backup steps it would be stale, leftover text under the wrong
@@ -223,12 +266,21 @@ export function LoginView() {
                   <Flex justifyContent="center">
                     <Spinner size="big" />
                   </Flex>
+                ) : checkingBackup && checkPositions !== null ? (
+                  <BackupCheckStep
+                    positions={checkPositions}
+                    answers={checkAnswers}
+                    onAnswerChange={changeCheckAnswer}
+                    mismatch={checkMismatch}
+                    onContinue={onConfirmBackup}
+                    onBack={resetBackupCheck}
+                  />
                 ) : step === 'backup' ? (
                   <BackupStep
                     mnemonic={mnemonic}
                     confirmed={confirmed}
                     onConfirmedChange={setConfirmed}
-                    onContinue={onConfirmBackup}
+                    onContinue={startBackupCheck}
                     onBack={backAction === 'discard' ? openDiscardConfirm : undefined}
                   />
                 ) : step === 'restore' ? (

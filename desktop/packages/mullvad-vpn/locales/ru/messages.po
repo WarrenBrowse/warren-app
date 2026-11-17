@@ -6522,3 +6522,19 @@ msgstr "Исходный код этой версии"
 msgctxt "licenses-view"
 msgid "Source code of the tunnel engine"
 msgstr "Исходный код движка туннеля"
+
+msgctxt "login-view"
+msgid "Check your recovery phrase"
+msgstr "Проверьте фразу восстановления"
+
+msgctxt "login-view"
+msgid "To make sure you saved it, type these words from your recovery phrase."
+msgstr "Чтобы убедиться, что вы её сохранили, введите эти слова из фразы восстановления."
+
+msgctxt "login-view"
+msgid "Word %(position)d"
+msgstr "Слово %(position)d"
+
+msgctxt "login-view"
+msgid "These words do not match your recovery phrase. Check what you wrote down."
+msgstr "Эти слова не совпадают с вашей фразой восстановления. Проверьте то, что вы записали."

@@ -6482,3 +6482,19 @@ msgstr "Källkod för den här versionen"
 msgctxt "licenses-view"
 msgid "Source code of the tunnel engine"
 msgstr "Källkod för tunnelmotorn"
+
+msgctxt "login-view"
+msgid "Check your recovery phrase"
+msgstr "Kontrollera din återställningsfras"
+
+msgctxt "login-view"
+msgid "To make sure you saved it, type these words from your recovery phrase."
+msgstr "Skriv in de här orden från din återställningsfras för att bekräfta att du har sparat den."
+
+msgctxt "login-view"
+msgid "Word %(position)d"
+msgstr "Ord %(position)d"
+
+msgctxt "login-view"
+msgid "These words do not match your recovery phrase. Check what you wrote down."
+msgstr "Orden stämmer inte med din återställningsfras. Kontrollera det du skrev ner."

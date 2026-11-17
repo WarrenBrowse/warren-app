@@ -6549,3 +6549,19 @@ msgstr "الشيفرة المصدرية لهذا الإصدار"
 msgctxt "licenses-view"
 msgid "Source code of the tunnel engine"
 msgstr "الشيفرة المصدرية لمحرك النفق"
+
+msgctxt "login-view"
+msgid "Check your recovery phrase"
+msgstr "تحقّق من عبارة الاسترداد"
+
+msgctxt "login-view"
+msgid "To make sure you saved it, type these words from your recovery phrase."
+msgstr "للتأكد من أنك حفظتها، اكتب هذه الكلمات من عبارة الاسترداد."
+
+msgctxt "login-view"
+msgid "Word %(position)d"
+msgstr "الكلمة %(position)d"
+
+msgctxt "login-view"
+msgid "These words do not match your recovery phrase. Check what you wrote down."
+msgstr "هذه الكلمات لا تطابق عبارة الاسترداد. راجع ما دوّنته."

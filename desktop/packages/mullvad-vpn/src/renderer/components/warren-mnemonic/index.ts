@@ -5,3 +5,6 @@ export type { MnemonicGridProps } from './MnemonicGrid';
 export { MnemonicTextarea, countMnemonicWords, normalizeMnemonic } from './MnemonicTextarea';
 export type { MnemonicTextareaProps } from './MnemonicTextarea';
 export { mnemonicImportError } from './mnemonic-import-error';
+export { BackupCheckStep } from './BackupCheckStep';
+export type { BackupCheckStepProps } from './BackupCheckStep';
+export { backupCheckPasses, pickBackupCheckPositions } from './backup-check';

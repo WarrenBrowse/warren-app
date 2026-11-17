@@ -6449,3 +6449,19 @@ msgstr "此版本的原始碼"
 msgctxt "licenses-view"
 msgid "Source code of the tunnel engine"
 msgstr "通道引擎的原始碼"
+
+msgctxt "login-view"
+msgid "Check your recovery phrase"
+msgstr "核對您的復原短語"
+
+msgctxt "login-view"
+msgid "To make sure you saved it, type these words from your recovery phrase."
+msgstr "為確認您已保存，請輸入復原短語中的下列單字。"
+
+msgctxt "login-view"
+msgid "Word %(position)d"
+msgstr "第 %(position)d 個單字"
+
+msgctxt "login-view"
+msgid "These words do not match your recovery phrase. Check what you wrote down."
+msgstr "這些單字與您的復原短語不符。請核對您記下的內容。"

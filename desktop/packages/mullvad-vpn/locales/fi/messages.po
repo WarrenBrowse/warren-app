@@ -6482,3 +6482,19 @@ msgstr "Tämän version lähdekoodi"
 msgctxt "licenses-view"
 msgid "Source code of the tunnel engine"
 msgstr "Tunnelimoottorin lähdekoodi"
+
+msgctxt "login-view"
+msgid "Check your recovery phrase"
+msgstr "Tarkista palautuslauseesi"
+
+msgctxt "login-view"
+msgid "To make sure you saved it, type these words from your recovery phrase."
+msgstr "Varmista, että tallensit sen: kirjoita nämä sanat palautuslauseestasi."
+
+msgctxt "login-view"
+msgid "Word %(position)d"
+msgstr "Sana %(position)d"
+
+msgctxt "login-view"
+msgid "These words do not match your recovery phrase. Check what you wrote down."
+msgstr "Nämä sanat eivät vastaa palautuslausettasi. Tarkista, mitä kirjoitit muistiin."

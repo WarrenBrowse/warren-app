@@ -2521,6 +2521,10 @@ msgid "Back up your recovery phrase"
 msgstr ""
 
 msgctxt "login-view"
+msgid "Check your recovery phrase"
+msgstr ""
+
+msgctxt "login-view"
 msgid "Could not read the new recovery phrase. Try again."
 msgstr ""
 
@@ -2582,6 +2586,14 @@ msgid "The account that was just created will be abandoned and its recovery phra
 msgstr ""
 
 msgctxt "login-view"
+msgid "These words do not match your recovery phrase. Check what you wrote down."
+msgstr ""
+
+msgctxt "login-view"
+msgid "To make sure you saved it, type these words from your recovery phrase."
+msgstr ""
+
+msgctxt "login-view"
 msgid "Upgrading..."
 msgstr ""
 
@@ -2597,6 +2609,13 @@ msgstr ""
 #. Title of the logged-out welcome screen.
 msgctxt "login-view"
 msgid "Welcome to Warren"
+msgstr ""
+
+#. Label of a field asking for one word of the recovery phrase.
+#. Available placeholders:
+#. %(position)d - the place of the word in the phrase, from 1 to 12 or 24.
+msgctxt "login-view"
+msgid "Word %(position)d"
 msgstr ""
 
 msgctxt "login-view"

@@ -5618,3 +5618,19 @@ msgstr "Codul sursă al acestei versiuni"
 msgctxt "licenses-view"
 msgid "Source code of the tunnel engine"
 msgstr "Codul sursă al motorului tunelului"
+
+msgctxt "login-view"
+msgid "Check your recovery phrase"
+msgstr "Verifică-ți fraza de recuperare"
+
+msgctxt "login-view"
+msgid "To make sure you saved it, type these words from your recovery phrase."
+msgstr "Ca să fii sigur că ai salvat-o, scrie aceste cuvinte din fraza ta de recuperare."
+
+msgctxt "login-view"
+msgid "Word %(position)d"
+msgstr "Cuvântul %(position)d"
+
+msgctxt "login-view"
+msgid "These words do not match your recovery phrase. Check what you wrote down."
+msgstr "Aceste cuvinte nu se potrivesc cu fraza ta de recuperare. Verifică ce ai notat."

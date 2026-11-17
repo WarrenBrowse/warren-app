@@ -6482,3 +6482,19 @@ msgstr "Quellcode dieser Version"
 msgctxt "licenses-view"
 msgid "Source code of the tunnel engine"
 msgstr "Quellcode der Tunnel-Engine"
+
+msgctxt "login-view"
+msgid "Check your recovery phrase"
+msgstr "Prüfen Sie Ihre Wiederherstellungsphrase"
+
+msgctxt "login-view"
+msgid "To make sure you saved it, type these words from your recovery phrase."
+msgstr "Geben Sie diese Wörter aus Ihrer Wiederherstellungsphrase ein, um sicherzugehen, dass Sie sie gespeichert haben."
+
+msgctxt "login-view"
+msgid "Word %(position)d"
+msgstr "Wort %(position)d"
+
+msgctxt "login-view"
+msgid "These words do not match your recovery phrase. Check what you wrote down."
+msgstr "Diese Wörter stimmen nicht mit Ihrer Wiederherstellungsphrase überein. Prüfen Sie, was Sie aufgeschrieben haben."

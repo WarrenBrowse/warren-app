@@ -6452,3 +6452,19 @@ msgstr "ဤဗားရှင်း၏ ရင်းမြစ်ကုဒ်"
 msgctxt "licenses-view"
 msgid "Source code of the tunnel engine"
 msgstr "တန်နယ်အင်ဂျင်၏ ရင်းမြစ်ကုဒ်"
+
+msgctxt "login-view"
+msgid "Check your recovery phrase"
+msgstr "သင်၏ ပြန်လည်ရယူရေးစကားစုကို စစ်ဆေးပါ"
+
+msgctxt "login-view"
+msgid "To make sure you saved it, type these words from your recovery phrase."
+msgstr "သိမ်းထားကြောင်း သေချာစေရန် သင်၏ ပြန်လည်ရယူရေးစကားစုမှ ဤစကားလုံးများကို ရိုက်ထည့်ပါ။"
+
+msgctxt "login-view"
+msgid "Word %(position)d"
+msgstr "စကားလုံး %(position)d"
+
+msgctxt "login-view"
+msgid "These words do not match your recovery phrase. Check what you wrote down."
+msgstr "ဤစကားလုံးများသည် သင်၏ ပြန်လည်ရယူရေးစကားစုနှင့် မကိုက်ညီပါ။ သင်ရေးမှတ်ထားသည်ကို စစ်ဆေးပါ။"

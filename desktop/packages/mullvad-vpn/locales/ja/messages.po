@@ -6449,3 +6449,19 @@ msgstr "このバージョンのソースコード"
 msgctxt "licenses-view"
 msgid "Source code of the tunnel engine"
 msgstr "トンネルエンジンのソースコード"
+
+msgctxt "login-view"
+msgid "Check your recovery phrase"
+msgstr "リカバリーフレーズを確認"
+
+msgctxt "login-view"
+msgid "To make sure you saved it, type these words from your recovery phrase."
+msgstr "保存できたことを確かめるため、リカバリーフレーズの次の単語を入力してください。"
+
+msgctxt "login-view"
+msgid "Word %(position)d"
+msgstr "%(position)d 番目の単語"
+
+msgctxt "login-view"
+msgid "These words do not match your recovery phrase. Check what you wrote down."
+msgstr "これらの単語はリカバリーフレーズと一致しません。書き留めた内容を確認してください。"
