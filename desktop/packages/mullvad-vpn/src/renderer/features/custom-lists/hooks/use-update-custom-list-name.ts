@@ -17,7 +17,8 @@ export function useUpdateCustomListName() {
       }
       const updatedCustomList = { ...customList, name };
 
-      return updateCustomList(updatedCustomList);
+      const result = await updateCustomList(updatedCustomList);
+      return result;
     },
 
     [getCustomListById, updateCustomList],

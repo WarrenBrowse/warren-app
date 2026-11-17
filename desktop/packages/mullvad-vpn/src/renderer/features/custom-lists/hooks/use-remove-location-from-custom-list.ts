@@ -24,7 +24,8 @@ export function useRemoveLocationFromCustomList() {
         ),
       };
 
-      return updateCustomList(updatedCustomList);
+      const result = await updateCustomList(updatedCustomList);
+      return result;
     },
     [getCustomListById, updateCustomList],
   );
