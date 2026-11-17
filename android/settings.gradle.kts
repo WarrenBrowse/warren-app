@@ -71,7 +71,6 @@ include(
     ":lib:feature:splittunneling:api",
     // feature.vpnsettings module deleted (Mullvad daemon
     // MTU/DNS/QuantumResistant/etc. settings sync dead on Warren).
-    ":lib:map",
     ":lib:model",
     ":lib:navigation",
     // lib:payment deleted (Mullvad PaymentProvider abstraction

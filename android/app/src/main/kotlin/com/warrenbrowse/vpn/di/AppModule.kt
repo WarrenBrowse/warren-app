@@ -167,8 +167,7 @@ val appModule = module {
     // Process-wide truthful connectivity source: feeds the adapter's
     // connect/retry gating and the UI host-offline honesty surfaces.
     // The scope must not be the main one: resolving the status opens and
-    // connects UDP sockets to probe each IP family, which blocks the caller
-    // (talpid's own ConnectivityListener collects the same flow on IO).
+    // connects UDP sockets to probe each IP family, which blocks the caller.
     single {
         WarrenConnectivityMonitor(
             connectivityManager =

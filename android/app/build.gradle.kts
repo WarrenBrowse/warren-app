@@ -589,7 +589,6 @@ dependencies {
     implementation(projects.lib.feature.splittunneling.impl)
     // feature.vpnsettings module deleted (Mullvad daemon
     // settings sync dead - Warren-native settings live in feature.settings).
-    implementation(projects.lib.map)
     implementation(projects.lib.model)
     implementation(projects.lib.pushNotification)
     implementation(projects.lib.navigation)
