@@ -105,6 +105,15 @@ check "one Authorization header on the first request" 1 "$(printf '%s\n' "$first
 check "and it is this job's" "basic ${auth}" "$first_request"
 rm -rf "$work"
 
+echo "a runner whose ~/.gitconfig still holds the credential is refused"
+home="$(mktemp -d)"
+HOME="$home" git config --global "url.https://x-access-token:${TOKEN}@github.com/WarrenBrowse/.insteadOf" "https://github.com/WarrenBrowse/"
+run_script "$home" "$home/github_env" "https://github.com/WarrenBrowse/"
+check "the script fails" 1 "$?"
+grep -q '^::error::' "$home/stdout"
+check "and says so in the job log" 0 "$?"
+rm -rf "$home"
+
 echo "a missing token or env file is refused"
 home="$(mktemp -d)"
 HOME="$home" ENGINE_TOKEN="" bash "$SCRIPT" "$home/github_env" > /dev/null 2>&1

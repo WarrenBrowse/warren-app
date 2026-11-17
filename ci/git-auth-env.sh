@@ -45,7 +45,10 @@ params="'${key}=' '${key}=AUTHORIZATION: basic ${auth}' 'url.${base}.insteadOf=s
 	printf 'CARGO_NET_GIT_FETCH_WITH_CLI=true\n'
 } >> "$env_file"
 
+# A credential in ~/.gitconfig outlives the job and is read by the next one,
+# pull-request code included: refuse to run beside it.
 global="${HOME}/.gitconfig"
 if [ -f "$global" ] && { grep -qF "$ENGINE_TOKEN" "$global" || grep -qF "$auth" "$global"; }; then
-	echo "::warning::${global} on this runner still holds the job credential, written by an older version of this action. Remove those entries from the runner host."
+	echo "::error::${global} on this runner holds the job credential. Remove it from the runner host."
+	exit 1
 fi
