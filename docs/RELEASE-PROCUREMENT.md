@@ -233,7 +233,9 @@ Powers in-app updates and the forced-update screen. Full setup and rationale in
    `/srv/warren-updates/desktop` owned by `warren-deploy`, add a CI deploy SSH key, and
    `docker compose up -d caddy`. See `docs/AUTO-UPDATE.md`.
 3. Required secrets:
-    - `WARREN_UPDATE_SIGNING_KEY`: the ed25519 **secret** (hex)
+    - `WARREN_UPDATE_SIGNING_KEY`: the ed25519 **secret** (hex), as a secret
+      of the `update-signing` environment, whose required reviewer approves
+      each signature (only the `sign` job of `update-metadata.yml` uses it)
     - `WARREN_UPDATES_SSH_KEY`: CI deploy private key for `warren-deploy@<host>`
     - `WARREN_UPDATES_SSH_USER`: `warren-deploy`
     - `WARREN_UPDATES_SSH_HOST`: the host that runs the update receiver

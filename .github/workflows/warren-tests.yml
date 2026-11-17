@@ -517,6 +517,13 @@ jobs:
         shell: bash
         run: bash ci/test-publish-to-update-host.sh
 
+      # The channel decides the host, the artifact names and the forced-update
+      # floor the signed manifests carry, for a release and a refresh alike.
+      - name: Update-metadata channel arguments
+        working-directory: .
+        shell: bash
+        run: bash ci/test-generate-update-metadata.sh
+
       - name: Production signing identities guard
         working-directory: .
         shell: bash

@@ -1,0 +1,367 @@
+---
+# Warren: signs and publishes one channel's update manifests.
+#
+# Called by release.yml once a release is published, and by
+# refresh-update-metadata.yml, which re-signs the latest release of a channel
+# with a fresh expiry. One definition for both, so the host, the artifact names
+# and the forced-update floor of a channel cannot differ between the two paths.
+#
+# The update key signs what every installed client accepts as an update, so
+# the work is split by what each step needs to hold:
+#
+#   generate  no secret. Builds the signer, checks the published history with
+#             it, writes the unsigned manifests and the torrents.
+#   sign      the update key only, in one step, on a fresh GitHub-hosted VM,
+#             with no compilation and no third-party action: it runs the signer
+#             built by `generate` over the files `generate` wrote.
+#   publish   the update host's deploy key only, on the macOS pool (bulk upload
+#             from a container collapses to ~150 KB/s, see the measurements
+#             once kept in release.yml). Nothing is compiled there.
+#
+# The `update-signing` environment is where the key is meant to live, behind a
+# required reviewer; while it is still a repository secret it is passed in by
+# the caller, and an environment secret of the same name takes precedence.
+#
+# Every run of one channel is serialised, release and refresh alike: each reads
+# the manifest the host serves, then writes the next one, and two interleaved
+# runs would publish the same counter twice, the later one without the
+# other's release.
+
+name: Update metadata (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      channel:
+        description: "prod or beta"
+        type: string
+        required: true
+      tag:
+        description: "Release tag to sign; empty takes the channel's latest published release"
+        type: string
+        required: false
+        default: ''
+      drop-version:
+        description: "Versions to withdraw, comma-separated"
+        type: string
+        required: false
+        default: ''
+      refresh:
+        description: "A refresh: skip a channel that serves nothing, attach nothing to the release"
+        type: boolean
+        required: false
+        default: false
+    secrets:
+      WARREN_CORE_RO_TOKEN:
+        required: false
+      WARREN_UPDATE_SIGNING_KEY:
+        required: false
+      WARREN_UPDATES_SSH_KEY:
+        required: false
+      WARREN_UPDATES_SSH_HOST:
+        required: false
+      WARREN_UPDATES_SSH_USER:
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: update-host-${{ inputs.channel }}
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    name: Generate ${{ inputs.channel }} manifests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    outputs:
+      enabled: ${{ steps.resolve.outputs.enabled }}
+      tag: ${{ steps.resolve.outputs.tag }}
+      version: ${{ steps.resolve.outputs.version }}
+    env:
+      WARREN_CHANNEL: ${{ inputs.channel }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
+
+      # Refreshing is republishing: a refresh of a channel that serves no
+      # manifest would resurrect a retired channel (prod answers 410 since
+      # 2026-07-25) and hand its clients a channel nobody publishes to.
+      - name: Resolve the release to sign
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HAS_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY != '' }}
+          INPUT_TAG: ${{ inputs.tag }}
+          REFRESH: ${{ inputs.refresh }}
+        run: |
+          set -euo pipefail
+          eval "$(bash ci/update-channel-env.sh "$WARREN_CHANNEL")"
+          enabled=true
+          if [ "$HAS_SIGNING_KEY" != true ]; then
+            echo "::warning::WARREN_UPDATE_SIGNING_KEY not set; no update metadata is published."
+            enabled=false
+          elif [ "$REFRESH" = true ] && ! curl -fsS -o /dev/null --max-time 30 "$WARREN_METADATA_BASE/macos.json"; then
+            echo "::notice::$WARREN_METADATA_BASE/macos.json is not served; $WARREN_CHANNEL is retired or unpublished, skipping"
+            enabled=false
+          fi
+          tag="$INPUT_TAG"
+          if [ "$enabled" = true ] && [ -z "$tag" ]; then
+            # Highest published tag of this channel's series, version-sorted:
+            # the two series are independent, and GitHub's `latest` ignores
+            # the beta pre-releases entirely.
+            tag="$(gh release list --limit 100 --json tagName,isDraft \
+                     --jq '.[] | select(.isDraft | not) | .tagName' \
+                   | grep -E "$WARREN_TAG_SERIES" | sort -V | tail -1 || true)"
+            [ -n "$tag" ] || { echo "::error::no published $WARREN_CHANNEL release to sign"; exit 1; }
+          fi
+          version="${tag#beta-}"
+          version="${version#v}"
+          {
+            echo "enabled=$enabled"
+            echo "tag=$tag"
+            echo "version=$version"
+          } >> "$GITHUB_OUTPUT"
+          echo "$WARREN_CHANNEL: enabled=$enabled tag=$tag"
+
+      - name: Set up build env (Rust + siblings)
+        if: steps.resolve.outputs.enabled == 'true'
+        uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Build the metadata signer
+        if: steps.resolve.outputs.enabled == 'true'
+        run: cargo build --locked --release -p mullvad-update --bin mullvad-version-metadata --features sign,client
+
+      # The asset-name parser decides which platform, architecture and flavour
+      # every download is filed under on the website.
+      - name: Check the asset-name parser
+        if: steps.resolve.outputs.enabled == 'true'
+        run: python3 -m doctest ci/build-version-metadata.py
+
+      - name: Download the release's installers and checksum list
+        if: steps.resolve.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.resolve.outputs.tag }}
+        run: |
+          mkdir -p release-files
+          # Both channels' assets may sit in one legacy release; the generator
+          # picks its own by the version-anchored artifact prefix.
+          gh release download "$TAG_NAME" --dir release-files --pattern 'WarrenVPN-*' --pattern 'SHA256SUMS'
+          ls -lh release-files
+
+      - name: Generate the unsigned manifests and the torrents
+        if: steps.resolve.outputs.enabled == 'true'
+        env:
+          TAG_NAME: ${{ steps.resolve.outputs.tag }}
+          VERSION: ${{ steps.resolve.outputs.version }}
+          DROP_VERSION: ${{ inputs.drop-version }}
+          WARREN_METADATA_VERIFIER: target/release/mullvad-version-metadata
+          WARREN_UPDATE_MIN_VERSION: ${{ vars.WARREN_UPDATE_MIN_VERSION }}
+          WARREN_UPDATE_MIN_VERSION_BETA: ${{ vars.WARREN_UPDATE_MIN_VERSION_BETA }}
+          WARREN_UPDATE_MIN_VERSION_IOS: ${{ vars.WARREN_UPDATE_MIN_VERSION_IOS }}
+        run: |
+          set -euo pipefail
+          IFS=',' read -r -a withdrawn <<< "$DROP_VERSION"
+          bash ci/generate-update-metadata.sh "$WARREN_CHANNEL" "$TAG_NAME" "$VERSION" \
+            release-files unsigned ${withdrawn[@]+"${withdrawn[@]}"}
+          mkdir -p metadata/bin metadata/torrents
+          cp -R unsigned metadata/unsigned
+          cp release-files/SHA256SUMS metadata/SHA256SUMS
+          cp target/release/mullvad-version-metadata metadata/bin/
+          find release-files -maxdepth 1 -name '*.torrent' -exec cp {} metadata/torrents/ \;
+          ls -lR metadata
+
+      - name: Hand the manifests to the signing job
+        if: steps.resolve.outputs.enabled == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        with:
+          name: update-metadata-${{ inputs.channel }}-unsigned
+          path: metadata/
+          if-no-files-found: error
+          retention-days: 7
+
+  sign:
+    name: Sign ${{ inputs.channel }} manifests
+    needs: generate
+    if: needs.generate.outputs.enabled == 'true'
+    runs-on: ubuntu-24.04
+    environment: update-signing
+    timeout-minutes: 15
+    env:
+      WARREN_CHANNEL: ${{ inputs.channel }}
+    steps:
+      # The checksum-list signer and the trusted public keys it verifies the
+      # signature against. A first-party action, pinned like every other.
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Fetch the unsigned manifests
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: update-metadata-${{ inputs.channel }}-unsigned
+          path: metadata
+
+      - name: Sign the manifests and the checksum list
+        env:
+          WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
+          WARREN_SUMS_NAMESPACE: warren-desktop-sha256sums/1
+        run: |
+          set -euo pipefail
+          signer=metadata/bin/mullvad-version-metadata
+          chmod +x "$signer"
+          mkdir -p signed
+          platforms="macos windows linux android"
+          # iOS ships on the prod channel only.
+          if [ "$WARREN_CHANNEL" = prod ]; then
+            platforms="$platforms ios"
+          fi
+          for platform in $platforms; do
+            [ -f "metadata/unsigned/${platform}.json" ] || continue
+            # The signer reads the key from its environment, never from its
+            # command line.
+            "$signer" sign --file "metadata/unsigned/${platform}.json" > "signed/${platform}.json"
+          done
+          # Website manifest: not part of the signed app-update contract,
+          # shipped alongside.
+          cp metadata/unsigned/downloads.json signed/downloads.json
+          # The Linux install script refuses a checksum list the release key
+          # did not sign; the list has its own namespace, so its signature can
+          # never pass for the headless CLI's list, nor the reverse.
+          cp metadata/SHA256SUMS signed/SHA256SUMS
+          bash ci/sign-headless-sums.sh signed/SHA256SUMS
+          ls -l signed
+
+      - name: Hand the signatures to the publishing job
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        with:
+          name: update-metadata-${{ inputs.channel }}-signed
+          path: signed/
+          if-no-files-found: error
+          retention-days: 30
+
+  # The torrents and the checksum signature also go on the GitHub release, so a
+  # download from GitHub can be checked against the release key, and the swarm
+  # has a second permanent home. A release only: a refresh re-signs a release
+  # that already carries them.
+  attach-to-release:
+    name: Attach the torrents and the checksum signature to the release
+    needs: [generate, sign]
+    if: ${{ !inputs.refresh }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Fetch the torrents
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: update-metadata-${{ inputs.channel }}-unsigned
+          path: metadata
+
+      - name: Fetch the checksum signature
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: update-metadata-${{ inputs.channel }}-signed
+          path: signed
+
+      - name: Upload them to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ needs.generate.outputs.tag }}
+        run: |
+          shopt -s nullglob
+          files=(metadata/torrents/*.torrent signed/SHA256SUMS.sshsig)
+          gh release upload "$TAG_NAME" "${files[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+
+  publish:
+    name: Publish ${{ inputs.channel }} to the update host
+    needs: [generate, sign]
+    runs-on: [self-hosted, macOS, ARM64]
+    # ~800 MB at the 6 MB/s measured from this pool is a few minutes; the
+    # budget leaves room for a degraded link, and the file-granular resume of
+    # the upload makes a rerun after a timeout cheap.
+    timeout-minutes: 60
+    env:
+      WARREN_CHANNEL: ${{ inputs.channel }}
+      TAG_NAME: ${{ needs.generate.outputs.tag }}
+      VERSION: ${{ needs.generate.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
+
+      - name: Fetch the torrents
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: update-metadata-${{ inputs.channel }}-unsigned
+          path: metadata
+
+      - name: Fetch the signed manifests
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: update-metadata-${{ inputs.channel }}-signed
+          path: signed
+
+      # The manifests carry the hashes of the installers `generate` read, so
+      # the installers streamed to the host must be those same bytes.
+      - name: Download the installers and check them against the signed list
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          eval "$(bash ci/update-channel-env.sh "$WARREN_CHANNEL")"
+          mkdir -p release-files
+          gh release download "$TAG_NAME" --dir release-files --pattern "${WARREN_ARTIFACT_PREFIX}-${VERSION}-*" --clobber
+          rm -f release-files/*.torrent
+          cp metadata/torrents/*.torrent release-files/ 2> /dev/null || true
+          cp signed/SHA256SUMS signed/SHA256SUMS.sshsig release-files/
+          (cd release-files && shasum -a 256 --check --ignore-missing --strict SHA256SUMS)
+          sed -e "s|@UPDATES_URL@|${WARREN_METADATA_BASE%/}|" -e "s|@ARTIFACT_PREFIX@|${WARREN_ARTIFACT_PREFIX}|" \
+            dist-assets/linux/install.sh > release-files/install.sh
+          if grep -q '@UPDATES_URL@\|@ARTIFACT_PREFIX@' release-files/install.sh; then
+            echo "::error::the Linux install script still carries a placeholder"
+            exit 1
+          fi
+          echo "WARREN_ARTIFACT_PREFIX=$WARREN_ARTIFACT_PREFIX" >> "$GITHUB_ENV"
+
+      - name: Upload installers + metadata to the update host
+        env:
+          WARREN_UPDATES_SSH_KEY: ${{ secrets.WARREN_UPDATES_SSH_KEY }}
+          WARREN_UPDATES_SSH_HOST: ${{ secrets.WARREN_UPDATES_SSH_HOST }}
+          WARREN_UPDATES_SSH_USER: ${{ secrets.WARREN_UPDATES_SSH_USER }}
+        run: |
+          if [ -z "$WARREN_UPDATES_SSH_KEY" ]; then
+            echo "::warning::WARREN_UPDATES_SSH_* not set; the signed manifests are only kept as a run artifact."
+            exit 0
+          fi
+          bash ci/publish-to-update-host.sh release-files signed "$WARREN_ARTIFACT_PREFIX" "$VERSION"
+
+  # A magnet link into an empty swarm looks exactly like a healthy one on the
+  # download page, so the release asks the tracker. It cannot fail the run: the
+  # manifests are already live, and a red run would trigger the refresh, which
+  # re-signs a release that was published correctly. swarm-watch.yml asks
+  # again every day.
+  swarm:
+    name: The ${{ inputs.channel }} release is seeded
+    needs: [generate, publish]
+    if: ${{ !inputs.refresh }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    continue-on-error: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
+
+      - name: Fetch the torrents
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: update-metadata-${{ inputs.channel }}-unsigned
+          path: metadata
+
+      - name: Ask the tracker
+        run: python3 ci/check-swarm.py --torrent-dir metadata/torrents

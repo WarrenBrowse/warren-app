@@ -25,7 +25,10 @@ artifacts are checksummed in that signed metadata.
 
 Some Warren maintainers - Access to publish metadata information to be consumed by
 `mullvad-update` is segmented and has been granted to select individuals which are trusted to make
-app releases. The release signing key is held only in a dedicated, secured signing environment.
+app releases. The release signing key is kept offline by a maintainer and is also a CI secret,
+read only by the signing job of `.github/workflows/update-metadata.yml`: one step on a fresh
+GitHub-hosted VM in the `update-signing` environment, which compiles nothing and runs no
+third-party action. Build jobs, self-hosted runners and the update host never hold it.
 
 # Who is the attacker
 

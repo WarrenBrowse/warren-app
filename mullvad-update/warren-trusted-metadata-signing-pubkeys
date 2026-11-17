@@ -7,14 +7,15 @@
 # This key can ship an installer to every user, so it is the highest-
 # privilege key in the system. It signs the software we ship and nothing
 # else (these app update manifests, and the SHA256SUMS of every warren-cli
-# release through ci/sign-headless-sums.sh), and was generated/kept
-# OFFLINE. Do NOT reuse the relay/admin signing key (online, and its
-# lineage was burned once:
+# release through ci/sign-headless-sums.sh). Do NOT reuse the relay/admin
+# signing key (its lineage was burned once:
 # `admin/admin-signing.key.BURNED-committed-do-not-use`).
 #
-# The matching Ed25519 secret is stored OFFLINE by poka and as the CI
-# secret `WARREN_UPDATE_SIGNING_KEY` (used by `release.yml` to sign every
-# published `*.json` manifest). A `warren-vpn` daemon shipped with this
+# The matching Ed25519 secret is kept offline by poka and is also the CI
+# secret `WARREN_UPDATE_SIGNING_KEY`, so it is an online key: only the
+# signing job of `.github/workflows/update-metadata.yml` reads it, in one
+# step, on a fresh GitHub-hosted VM in the `update-signing` environment, with
+# no compilation and no third-party action. A `warren-vpn` daemon shipped with this
 # trust file accepts manifests signed by the key below and rejects all
 # others (fail-closed).
 #

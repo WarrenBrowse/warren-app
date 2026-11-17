@@ -175,8 +175,10 @@ signature can pass for the other). Do NOT reuse the relay/admin signing key
 - The **public** key (hex) goes in `mullvad-update/warren-trusted-metadata-signing-pubkeys`
   (committed). Manifests signed by any other key fail verification, fail-closed.
 - The **secret** key is the CI secret `WARREN_UPDATE_SIGNING_KEY`, so it is
-  online: the release job holds it while it runs. Moving the signature off the
-  shared runners is pending.
+  online. Only the `sign` job of `.github/workflows/update-metadata.yml` reads
+  it, in a single step, on a fresh GitHub-hosted VM attached to the
+  `update-signing` environment, with no compilation and no third-party action.
+  The self-hosted runners and the build jobs never hold it.
 - **Rotation:** add the new pubkey on its own line (both trusted during the
   overlap), ship a release so clients pick up the new trust file, then drop the
   retired line. The warren-cli installers pin the key as well
@@ -252,30 +254,43 @@ Rollback if anything is off: restore the `.bak.<ts>` files and
 
 ## CI: publishing signed manifests
 
-The `publish-update-metadata` job in `.github/workflows/release.yml` runs after
+The `publish-update-metadata` job of `.github/workflows/release.yml` runs after
 `publish-release` (which assembles the GitHub Release from the build jobs, then
-publishes it non-draft once they are all green). It:
+publishes it non-draft once they are all green), and calls
+`.github/workflows/update-metadata.yml`. `refresh-update-metadata.yml` calls the
+same workflow, once per live channel, to re-sign the latest release with a
+fresh expiry. Its jobs, each holding only what it needs:
 
-1. Downloads the installers from the release (`gh release download`).
-2. Builds the signer: `cargo build -p mullvad-update --bin mullvad-version-metadata --features sign,client`.
-3. Generates per-platform unsigned metadata with `ci/build-version-metadata.py`:
-   computes size + SHA-256 of each installer, fetches the previously published
-   manifest to bump `metadata_version` monotonically (anti-rollback) and to keep
-   older releases listed, and injects `minimum_supported_version` from the repo
-   variable. Mapping: macOS `.pkg` is universal (listed for both arches),
-   Windows `.exe` is per-arch, Linux lists one package per format and arch
-   (`package_format`: `deb`, `deb-sysvinit`, `rpm`, `pacman`).
-4. Signs each `{platform}.json` with `WARREN_UPDATE_SIGNING_KEY`, which the
-   signer reads from its environment and refuses on its command line.
-5. hands the installers and the signed JSON to the host's receiver
-   (`ci/publish-to-update-host.sh`): the deploy key can only `list`, `put`
-   a ustar stream into `desktop` or `desktop/beta`, and `prune` the
-   installers of other versions, and the host key is pinned in
-   `ci/update-host.known_hosts`. The JSON is always uploaded as a run
-   artifact too, for audit and manual fallback.
+1. `generate`, no secret: builds the signer
+   (`cargo build -p mullvad-update --bin mullvad-version-metadata --features sign,client`),
+   downloads the installers and `SHA256SUMS` from the release, and runs
+   `ci/generate-update-metadata.sh`, which picks the channel's host, artifact
+   prefix and forced-update floor (`ci/update-channel-env.sh`) and calls
+   `ci/build-version-metadata.py`. The generator computes size + SHA-256 of
+   each installer, fetches the previously published manifest, checks its
+   signature with the signer's `verify`, bumps `metadata_version`
+   monotonically (anti-rollback) and keeps older releases listed. Mapping:
+   macOS `.pkg` is universal (listed for both arches), Windows `.exe` is
+   per-arch, Linux lists one package per format and arch (`package_format`:
+   `deb`, `deb-sysvinit`, `rpm`, `pacman`).
+2. `sign`, the update key only: signs each `{platform}.json` and the
+   checksum list with the signer built by `generate`. The signer reads the
+   key from its environment and refuses it on its command line.
+3. `publish`, the deploy key only: downloads the installers again, refuses
+   any whose hash differs from the signed `SHA256SUMS`, and hands them and
+   the signed JSON to the host's receiver (`ci/publish-to-update-host.sh`):
+   the deploy key can only `list`, `put` a ustar stream into `desktop` or
+   `desktop/beta`, and `prune` the installers of other versions, and the host
+   key is pinned in `ci/update-host.known_hosts`.
+4. On a release, `attach-to-release` puts the torrents and
+   `SHA256SUMS.sshsig` on the GitHub release, and `swarm` asks the tracker
+   whether the release is seeded without being able to fail the run.
 
-The whole job is a graceful no-op when `WARREN_UPDATE_SIGNING_KEY` is unset
-(same opt-in philosophy as the build signing).
+Every run of one channel is serialised (`concurrency: update-host-<channel>`),
+since each reads the served manifest before it writes the next one. The
+signed JSON stays a run artifact for 30 days, for audit and manual fallback.
+The whole workflow is a graceful no-op when `WARREN_UPDATE_SIGNING_KEY` is
+unset.
 
 ### Required configuration
 
