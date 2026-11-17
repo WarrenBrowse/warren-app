@@ -40,12 +40,12 @@ export const useGetFeatureIndicator = () => {
   }, [history]);
 
   const gotoMultihopFeature = React.useCallback(() => {
-    history.push(RoutePath.multihopSettings, {
+    history.push(RoutePath.warrenMultiHopSettings, {
       transition: TransitionType.show,
       options: [
         {
           type: 'scroll-to-anchor',
-          id: 'multihop-setting',
+          id: 'warren-multi-hop-setting',
         },
       ],
     });

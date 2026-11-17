@@ -21,15 +21,12 @@ export enum RoutePath {
   keys = '/account/keys',
   restoreKeys = '/account/keys/restore',
   userInterfaceSettings = '/settings/interface',
-  multihopSettings = '/settings/multihop',
   warrenMultiHopSettings = '/settings/warren-multi-hop',
   // Warren NAT-PMP port-forwarding (differentiator vs Mullvad
   // / IVPN abandon 2023). View opens from the settings home view.
   portForwardingSettings = '/settings/port-forwarding',
   vpnSettings = '/settings/vpn',
   daitaSettings = '/settings/daita',
-  udpOverTcp = '/settings/advanced/wireguard/udp-over-tcp',
-  shadowsocks = '/settings/advanced/shadowsocks',
   splitTunneling = '/settings/split-tunneling',
   apiAccessMethods = '/settings/api-access-methods',
   settingsImport = '/settings/settings-import',
@@ -50,7 +47,6 @@ export enum RoutePath {
   changelog = '/settings/changelog',
   appUpgrade = '/settings/app-upgrade',
   antiCensorship = '/settings/advanced/anti-censorship',
-  lwo = '/settings/advanced/lwo',
   // Onboarding wizard (first-launch welcome + wallet
   // generate/import + subscription pointer + privacy preferences +
   // done). Re-triggerable from Settings ("Replay onboarding"). Uses

@@ -9,18 +9,14 @@ import { ExpiredRouteObjectModel } from './expired';
 import { FilterRouteObjectModel } from './filter';
 import { LaunchRouteObjectModel } from './launch';
 import { LoginRouteObjectModel } from './login';
-import { LwoSettingsRouteObjectModel } from './lwo-settings';
 import { MainRouteObjectModel } from './main';
-import { MultihopSettingsRouteObjectModel } from './multihop-settings';
 import { RedeemVoucherRouteObjectModel } from './redeem-voucher';
 import { SelectLanguageRouteObjectModel } from './select-language';
 import { SelectLocationRouteObjectModel } from './select-location';
 import { SettingsRouteObjectModel } from './settings/settings-route-object-model';
 import { SetupFinishedRouteObjectModel } from './setup-finished';
-import { ShadowsocksSettingsRouteObjectModel } from './shadowsocks-settings';
 import { SplitTunnelingSettingsRouteObjectModel } from './split-tunneling-settings';
 import { TimeAddedRouteObjectModel } from './time-added';
-import { UdpOverTcpSettingsRouteObjectModel } from './udp-over-tcp-settings';
 import { UserInterfaceSettingsRouteObjectModel } from './user-interface-settings';
 import { VoucherSuccessRouteObjectModel } from './voucher-success';
 import { VpnSettingsRouteObjectModel } from './vpn-settings';
@@ -42,13 +38,9 @@ export class RoutesObjectModel {
   readonly selectLocation: SelectLocationRouteObjectModel;
   readonly vpnSettings: VpnSettingsRouteObjectModel;
   readonly antiCensorship: AntiCensorshipRouteObjectModel;
-  readonly udpOverTcpSettings: UdpOverTcpSettingsRouteObjectModel;
-  readonly multihopSettings: MultihopSettingsRouteObjectModel;
   readonly daitaSettings: DaitaSettingsRouteObjectModel;
   readonly splitTunnelingSettings: SplitTunnelingSettingsRouteObjectModel;
-  readonly shadowsocksSettings: ShadowsocksSettingsRouteObjectModel;
   readonly account: AccountRouteObjectModel;
-  readonly lwoSettings: LwoSettingsRouteObjectModel;
 
   constructor(page: Page, utils: TestUtils) {
     this.selectLanguage = new SelectLanguageRouteObjectModel(page, utils);
@@ -67,12 +59,8 @@ export class RoutesObjectModel {
     this.selectLocation = new SelectLocationRouteObjectModel(page, utils);
     this.vpnSettings = new VpnSettingsRouteObjectModel(page, utils);
     this.antiCensorship = new AntiCensorshipRouteObjectModel(page, utils);
-    this.udpOverTcpSettings = new UdpOverTcpSettingsRouteObjectModel(page, utils);
-    this.multihopSettings = new MultihopSettingsRouteObjectModel(page, utils);
     this.daitaSettings = new DaitaSettingsRouteObjectModel(page, utils);
     this.splitTunnelingSettings = new SplitTunnelingSettingsRouteObjectModel(page, utils);
-    this.shadowsocksSettings = new ShadowsocksSettingsRouteObjectModel(page, utils);
     this.account = new AccountRouteObjectModel(page, utils);
-    this.lwoSettings = new LwoSettingsRouteObjectModel(page, utils);
   }
 }

@@ -31,10 +31,8 @@ import {
   LaunchView,
   LicensesView,
   LoginView,
-  LwoSettingsView,
   MainView,
   ManageDevicesView,
-  MultihopSettingsView,
   OnboardingBetaAccessView,
   OnboardingDoneView,
   OnboardingPreferencesView,
@@ -49,10 +47,8 @@ import {
   SettingsImportView,
   SettingsTextImportView,
   SettingsView,
-  ShadowsocksSettingsView,
   SplitTunnelingView,
   SupportView,
-  UdpOverTcpSettingsView,
   UserInterfaceSettingsView,
   VpnSettingsView,
   WarrenMultiHopSettingsView,
@@ -96,7 +92,6 @@ export default function AppRouter() {
             path={RoutePath.userInterfaceSettings}
             component={UserInterfaceSettingsView}
           />
-          <Route exact path={RoutePath.multihopSettings} component={MultihopSettingsView} />
           <Route
             exact
             path={RoutePath.warrenMultiHopSettings}
@@ -109,8 +104,6 @@ export default function AppRouter() {
           />
           <Route exact path={RoutePath.vpnSettings} component={VpnSettingsView} />
           <Route exact path={RoutePath.daitaSettings} component={DaitaSettingsView} />
-          <Route exact path={RoutePath.udpOverTcp} component={UdpOverTcpSettingsView} />
-          <Route exact path={RoutePath.shadowsocks} component={ShadowsocksSettingsView} />
           <Route exact path={RoutePath.splitTunneling} component={SplitTunnelingView} />
           <Route exact path={RoutePath.apiAccessMethods} component={ApiAccessView} />
           <Route exact path={RoutePath.settingsImport} component={SettingsImportView} />
@@ -127,7 +120,6 @@ export default function AppRouter() {
           <Route exact path={RoutePath.changelog} component={ChangelogView} />
           <Route exact path={RoutePath.appUpgrade} component={AppUpgradeView} />
           <Route exact path={RoutePath.antiCensorship} component={AntiCensorshipView} />
-          <Route exact path={RoutePath.lwo} component={LwoSettingsView} />
           <Route exact path={RoutePath.onboardingWelcome} component={OnboardingWelcomeView} />
           <Route exact path={RoutePath.onboardingWallet} component={OnboardingWalletView} />
           {/* Beta builds replace the subscription step with the

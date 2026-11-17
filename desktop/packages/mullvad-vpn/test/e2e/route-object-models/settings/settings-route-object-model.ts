@@ -25,11 +25,6 @@ export class SettingsRouteObjectModel {
     await this.utils.expectRoute(RoutePath.vpnSettings);
   }
 
-  async gotoMultihopSettings() {
-    await this.selectors.multihopSettingsButton().click();
-    await this.utils.expectRoute(RoutePath.multihopSettings);
-  }
-
   async gotoDaitaSettings() {
     await this.selectors.daitaSettingsButton().click();
     await this.utils.expectRoute(RoutePath.daitaSettings);

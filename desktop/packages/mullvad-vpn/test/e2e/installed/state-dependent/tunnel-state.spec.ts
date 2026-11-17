@@ -3,7 +3,6 @@ import { exec as execAsync } from 'child_process';
 import { Page } from 'playwright';
 import { promisify } from 'util';
 
-import { RoutePath } from '../../../../src/shared/routes';
 import { RoutesObjectModel } from '../../route-object-models';
 import { expectConnected, expectDisconnected, expectError } from '../../shared/tunnel-state';
 import { escapeRegExp, TestUtils } from '../../utils';
@@ -66,79 +65,6 @@ test.describe('Tunnel state and settings', () => {
     const ip = await ipResponse.text();
 
     await expect(outIp).toHaveText(ip.trim());
-  });
-
-  test.describe('Wireguard UDP-over-TCP', () => {
-    async function gotoWireguardSettings() {
-      await routes.main.gotoSettings();
-      await routes.settings.gotoVpnSettings();
-      await routes.vpnSettings.gotoAntiCensorship();
-    }
-
-    async function gotoUdpOverTcpSettings() {
-      await gotoWireguardSettings();
-      await routes.antiCensorship.gotoUdpOverTcpSettings();
-    }
-
-    test.beforeAll(async () => {
-      await exec('mullvad connect --wait');
-    });
-
-    test('App should show UDP', async () => {
-      await expectConnected(page);
-      await routes.main.expandConnectionPanel();
-      const inIp = routes.main.getInIp();
-      await expect(inIp).toHaveText(new RegExp('UDP$'));
-    });
-
-    test('App should enable UDP-over-TCP', async () => {
-      await gotoWireguardSettings();
-
-      const udpOverTcpOption = routes.antiCensorship.getUdpOverTcpOption();
-      await expect(udpOverTcpOption).toHaveAttribute('aria-selected', 'false');
-
-      await routes.antiCensorship.selectUdpOverTcp();
-      await expect(udpOverTcpOption).toHaveAttribute('aria-selected', 'true');
-
-      await routes.antiCensorship.goBackToRoute(RoutePath.main);
-
-      await expectConnected(page);
-
-      await routes.main.expandConnectionPanel();
-
-      const inIp = routes.main.getInIp();
-      await expect(inIp).toHaveText(new RegExp(`${escapeRegExp(IN_IP!)}:(80|443|5001) TCP`));
-    });
-
-    for (const port of [80, 443, 5001]) {
-      test(`App should show port ${port}`, async () => {
-        await gotoUdpOverTcpSettings();
-        await routes.udpOverTcpSettings.selectPort(port);
-
-        await routes.udpOverTcpSettings.goBackToRoute(RoutePath.main);
-
-        await routes.main.expandConnectionPanel();
-
-        const inIp = routes.main.getInIp();
-        await expect(inIp).toHaveText(`${IN_IP}:${port} TCP`);
-      });
-    }
-
-    test('App should set obfuscation to automatic', async () => {
-      await gotoWireguardSettings();
-      await routes.antiCensorship.selectAutomaticObfuscation();
-
-      const automaticOption = routes.antiCensorship.getAutomaticObfuscationOption();
-      await expect(automaticOption).toHaveAttribute('aria-selected', 'true');
-      await routes.udpOverTcpSettings.goBackToRoute(RoutePath.main);
-    });
-  });
-
-  test('App should connect with Shadowsocks', async () => {
-    await exec('mullvad anti-censorship set mode shadowsocks');
-    await expectConnected(page);
-    await exec('mullvad anti-censorship set mode off');
-    await expectConnected(page);
   });
 
   test('App should enter blocked state', async () => {
