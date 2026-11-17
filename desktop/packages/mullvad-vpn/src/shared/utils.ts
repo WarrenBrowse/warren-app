@@ -1,4 +1,4 @@
-import { checkAddress } from '@polkadot/util-crypto';
+import { blake2b } from '@noble/hashes/blake2';
 
 export type NonEmptyArray<T> = [T, ...T[]];
 
@@ -19,17 +19,61 @@ export function isNumber(number: unknown): number is number {
 // `wb` (e.g. `wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB`).
 export const WARREN_SS58_PREFIX = 13295;
 
-// Validates a Warren wallet pubkey: a valid SS58 address on the
-// `WARREN_SS58_PREFIX` network. `checkAddress` verifies the base58
-// encoding, the embedded checksum and the network prefix, throwing on
-// malformed input - hence the try/catch normalising to `false`.
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const SS58_CHECKSUM_CONTEXT = new TextEncoder().encode('SS58PRE');
+const SS58_PUBKEY_LENGTH = 32;
+const SS58_CHECKSUM_LENGTH = 2;
+
+function decodeBase58(value: string): Uint8Array | undefined {
+  const bytes: number[] = [];
+  for (const char of value) {
+    let carry = BASE58_ALPHABET.indexOf(char);
+    if (carry < 0) {
+      return undefined;
+    }
+    for (let i = 0; i < bytes.length; i++) {
+      carry += bytes[i] * 58;
+      bytes[i] = carry & 0xff;
+      carry >>= 8;
+    }
+    while (carry > 0) {
+      bytes.push(carry & 0xff);
+      carry >>= 8;
+    }
+  }
+  for (const char of value) {
+    if (char !== '1') {
+      break;
+    }
+    bytes.push(0);
+  }
+  return Uint8Array.from(bytes.reverse());
+}
+
+// The two-byte SS58 encoding of a network prefix between 64 and 16383.
+function ss58PrefixBytes(prefix: number): [number, number] {
+  return [((prefix & 0xfc) >> 2) | 0x40, (prefix >> 8) | ((prefix & 0x03) << 6)];
+}
+
+// Validates a Warren wallet pubkey: a 32-byte public key encoded as SS58 on the
+// `WARREN_SS58_PREFIX` network, with its checksum (the first two bytes of the
+// BLAKE2b-512 of "SS58PRE", the prefix and the key). Done here rather than
+// through @polkadot/util-crypto, whose WebAssembly the renderer's
+// Content-Security-Policy does not allow.
 export function isWarrenPubKey(value: string): boolean {
-  try {
-    const [ok] = checkAddress(value, WARREN_SS58_PREFIX);
-    return ok;
-  } catch {
+  const decoded = decodeBase58(value);
+  const prefix = ss58PrefixBytes(WARREN_SS58_PREFIX);
+  if (
+    decoded === undefined ||
+    decoded.length !== prefix.length + SS58_PUBKEY_LENGTH + SS58_CHECKSUM_LENGTH ||
+    decoded[0] !== prefix[0] ||
+    decoded[1] !== prefix[1]
+  ) {
     return false;
   }
+  const payload = decoded.subarray(0, decoded.length - SS58_CHECKSUM_LENGTH);
+  const checksum = blake2b(Uint8Array.from([...SS58_CHECKSUM_CONTEXT, ...payload]), { dkLen: 64 });
+  return checksum[0] === decoded[decoded.length - 2] && checksum[1] === decoded[decoded.length - 1];
 }
 
 // Warren voucher format emitted by the admin panel (Crockford-32):

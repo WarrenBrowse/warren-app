@@ -5,9 +5,8 @@ export { shortenWarrenPubKey, WARREN_SS58_PREFIX };
 
 /**
  * Returns `true` when `value` is a valid Warren SS58 address for the
- * {@link WARREN_SS58_PREFIX} network. Delegates to
- * `@polkadot/util-crypto`'s `checkAddress`, which validates the
- * base58 encoding, the embedded checksum and the network prefix.
+ * {@link WARREN_SS58_PREFIX} network: base58 encoding, network prefix,
+ * key length and embedded checksum (see `isWarrenPubKey`).
  */
 export function isWarrenAddress(value: string): boolean {
   return isWarrenPubKey(value);

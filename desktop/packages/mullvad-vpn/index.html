@@ -11,14 +11,12 @@
     <link rel="preload" href="/assets/fonts/OpenSans-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
     <link rel="stylesheet" href="/assets/css/style.css" />
     <!--
-      `'wasm-unsafe-eval'` lets @polkadot/wasm-crypto initialise its
-      WebAssembly module (SS58 wallet-identity crypto). It permits ONLY
-      WebAssembly compilation, NOT JavaScript `eval()` (unlike the much
-      broader `'unsafe-eval'`), so the strict no-eval posture is preserved.
-      Without it the renderer logs a FATAL and silently falls back to the
-      slower pure-JS asm.js crypto.
+      The page needs its own scripts, the inline styles styled-components
+      injects, local images (some as data URLs) and fonts. connect-src keeps
+      'self' for the development server's hot reload; the packaged page loads
+      from a file and the main process cancels any network request it makes.
     -->
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'wasm-unsafe-eval'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
     <meta charset="UTF-8">
   </head>
   <body>
