@@ -562,6 +562,8 @@ impl ManagementService for ManagementServiceImpl {
     type EventsListenStream = EventsListenerReceiver;
     type AppUpgradeEventsListenStream = AppUpgradeEventListenerReceiver;
     type LogListenStream = UnboundedReceiverStream<Result<types::LogMessage, Status>>;
+    type GetDaemonLogsStream =
+        tokio_stream::Iter<std::vec::IntoIter<Result<types::DaemonLogChunk, Status>>>;
     type WarrenStatusUpdatesStream = WarrenStatusUpdatesReceiver;
     type NatPmpStatusUpdatesStream = NatPmpStatusUpdatesReceiver;
 
@@ -2639,6 +2641,33 @@ impl ManagementService for ManagementServiceImpl {
             .map_err(crate::rpc_access::refusal_status)?;
         applied.map_err(|error| Status::invalid_argument(error.to_string()))?;
         Ok(Response::new(()))
+    }
+
+    async fn get_daemon_logs(&self, _: Request<()>) -> ServiceResult<Self::GetDaemonLogsStream> {
+        log::debug!("get_daemon_logs");
+        let dir = mullvad_paths::get_log_dir()
+            .map_err(|_| Status::internal("the log directory is unknown"))?;
+        let tails = tokio::task::spawn_blocking(move || {
+            crate::daemon_logs::read(&dir, crate::daemon_logs::MAX_LOG_BYTES)
+        })
+        .await
+        .map_err(|_| Status::internal("the log reader stopped"))?
+        .map_err(|_| Status::internal("the log directory could not be read"))?;
+        #[expect(
+            clippy::result_large_err,
+            reason = "tonic stream requires Result<T, Status>; every item here is Ok."
+        )]
+        let chunks = crate::daemon_logs::chunks(tails, crate::daemon_logs::CHUNK_BYTES)
+            .into_iter()
+            .map(|chunk| {
+                Ok(types::DaemonLogChunk {
+                    name: chunk.name,
+                    size: chunk.size,
+                    content: chunk.content,
+                })
+            })
+            .collect::<Vec<_>>();
+        Ok(Response::new(tokio_stream::iter(chunks)))
     }
 
     async fn log_listen(&self, request: Request<()>) -> ServiceResult<Self::LogListenStream> {

@@ -63,6 +63,7 @@ rpc_classes! {
         SetLogFilter => ControlMachine,
         // The daemon log narrates the owner's use of the VPN.
         LogListen => Identity,
+        GetDaemonLogs => Identity,
         GetFeatureIndicators => ReadPublic,
         GetMigrationEvent => ReadPublic,
         ClearMigrationMessage => ControlMachine,

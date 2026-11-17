@@ -4,14 +4,39 @@ use std::{env, path::PathBuf};
 /// Creates and returns the logging directory pointed to by `WARREN_LOG_DIR`,
 /// `MULLVAD_LOG_DIR` (back-compat upstream), or the default if neither is set.
 pub fn log_dir() -> Result<PathBuf> {
-    let permissions = Some(crate::UserPermissions {
-        read: true,
-        write: false,
-        // Unix: Make directory contents readable
-        execute: cfg!(unix),
-    });
+    crate::create_dir(get_log_dir()?, log_dir_permissions())
+}
 
-    crate::create_dir(get_log_dir()?, permissions)
+/// The daemon logs narrate the owner's use of the VPN, so on Unix only root reads them (an
+/// existing directory left open by an older build is replaced, its logs with it); the problem
+/// report collector, run by the user, gets them through the daemon. Windows keeps them readable
+/// by users.
+fn log_dir_permissions() -> Option<crate::UserPermissions> {
+    Some(crate::UserPermissions {
+        read: cfg!(windows),
+        write: false,
+        execute: false,
+    })
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use std::os::unix::fs::PermissionsExt;
+
+    #[test]
+    fn only_root_can_read_the_daemon_logs() {
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let dir = std::env::temp_dir().join(format!("warren-log-dir-{unique}"));
+
+        crate::create_dir(dir.clone(), super::log_dir_permissions()).unwrap();
+
+        let mode = std::fs::metadata(&dir).unwrap().permissions().mode() & 0o777;
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(mode, 0o700);
+    }
 }
 
 /// Get the logging directory, but don't try to create it.

@@ -891,6 +891,83 @@ impl MullvadProxyClient {
 
         Ok(listener.map(|item| Ok(item?.message)))
     }
+
+    /// The end of each daemon log file, for the problem report: the log
+    /// directory is readable by root only. The wallet owner's and
+    /// administrators' call.
+    pub async fn get_daemon_logs(&mut self) -> Result<Vec<DaemonLog>> {
+        let mut stream = self.0.get_daemon_logs(()).await?.into_inner();
+        let mut chunks = Vec::new();
+        while let Some(chunk) = stream.next().await {
+            chunks.push(chunk?);
+        }
+        Ok(join_daemon_log_chunks(chunks))
+    }
+}
+
+/// The served end of one daemon log file.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DaemonLog {
+    /// File name within the log directory.
+    pub name: String,
+    /// Size of the whole file.
+    pub size: u64,
+    /// At most its last 4 MiB, unredacted.
+    pub content: Vec<u8>,
+}
+
+/// The daemon sends each file as consecutive chunks of one name.
+fn join_daemon_log_chunks(chunks: Vec<types::DaemonLogChunk>) -> Vec<DaemonLog> {
+    let mut logs: Vec<DaemonLog> = Vec::new();
+    for chunk in chunks {
+        match logs.last_mut() {
+            Some(last) if last.name == chunk.name => last.content.extend(chunk.content),
+            _ => logs.push(DaemonLog {
+                name: chunk.name,
+                size: chunk.size,
+                content: chunk.content,
+            }),
+        }
+    }
+    logs
+}
+
+#[cfg(test)]
+mod daemon_log_tests {
+    use super::*;
+
+    fn chunk(name: &str, content: &[u8]) -> types::DaemonLogChunk {
+        types::DaemonLogChunk {
+            name: name.to_owned(),
+            size: 9,
+            content: content.to_vec(),
+        }
+    }
+
+    #[test]
+    fn the_chunks_of_a_file_are_joined_in_order() {
+        let logs = join_daemon_log_chunks(vec![
+            chunk("daemon.log", b"ab"),
+            chunk("daemon.log", b"cd"),
+            chunk("early-boot-fw.log", b""),
+        ]);
+
+        assert_eq!(
+            logs,
+            vec![
+                DaemonLog {
+                    name: "daemon.log".to_owned(),
+                    size: 9,
+                    content: b"abcd".to_vec()
+                },
+                DaemonLog {
+                    name: "early-boot-fw.log".to_owned(),
+                    size: 9,
+                    content: vec![]
+                },
+            ]
+        );
+    }
 }
 
 #[cfg(not(target_os = "android"))]

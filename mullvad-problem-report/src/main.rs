@@ -47,6 +47,7 @@ fn run() -> Result<(), Error> {
                 extra_logs,
                 redact_custom_strings: redact,
                 clock_offset: daemon_clock_offset(),
+                served_daemon_logs: served_daemon_logs(),
             };
             if output != "-" {
                 collector.write_to_path(&output)?;
@@ -68,6 +69,28 @@ fn run() -> Result<(), Error> {
 /// down or wedged is often why a report is filed, so it must not hold the
 /// report back.
 const DAEMON_TIMEOUT: Duration = Duration::from_secs(3);
+
+/// The daemon logs as the running daemon serves them. Its log directory is
+/// readable by root only, so a collector run by the wallet owner gets them
+/// here; `None` (a daemon that is down, older, or refuses this account) falls
+/// back to reading the directory, which works for root.
+fn served_daemon_logs() -> Option<Vec<mullvad_management_interface::client::DaemonLog>> {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .ok()?;
+    runtime.block_on(async {
+        tokio::time::timeout(DAEMON_TIMEOUT, async {
+            let mut client = mullvad_management_interface::MullvadProxyClient::new()
+                .await
+                .ok()?;
+            client.get_daemon_logs().await.ok()
+        })
+        .await
+        .ok()
+        .flatten()
+    })
+}
 
 /// This machine's clock against the Warren servers', as the running daemon
 /// measured it: the daemon holds the one clock every signed request is

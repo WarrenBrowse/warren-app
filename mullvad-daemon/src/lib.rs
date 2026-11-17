@@ -12,6 +12,7 @@ mod api_address_updater;
 #[cfg(not(target_os = "android"))]
 mod cleanup;
 mod custom_list;
+mod daemon_logs;
 pub mod device;
 mod dns;
 pub mod exception_logging;

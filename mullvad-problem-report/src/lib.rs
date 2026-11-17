@@ -107,6 +107,11 @@ pub struct ProblemReportCollector {
     /// on Android, whose probes write the same keys from their own reading.
     #[cfg(not(target_os = "android"))]
     pub clock_offset: ClockOffset,
+    /// The daemon logs as the running daemon served them, `None` when it did
+    /// not answer: the log directory is then read directly, which works for
+    /// root only.
+    #[cfg(not(target_os = "android"))]
+    pub served_daemon_logs: Option<Vec<mullvad_management_interface::client::DaemonLog>>,
 
     #[cfg(target_os = "android")]
     pub android_log_dir: PathBuf,
@@ -141,19 +146,32 @@ impl ProblemReportCollector {
             }
         };
 
-        let daemon_logs = daemon_logs_dir.and_then(list_logs);
-        match daemon_logs {
-            Ok(daemon_logs) => {
-                for log in daemon_logs {
-                    match log {
-                        Ok(path) => problem_report.add_log(&path),
-                        Err(error) => problem_report.add_error("Unable to get log path", &error),
-                    }
+        #[cfg(not(target_os = "android"))]
+        let served = self.served_daemon_logs.as_ref();
+        #[cfg(target_os = "android")]
+        let served: Option<&Vec<()>> = None;
+        match (served, daemon_logs_dir) {
+            #[cfg(not(target_os = "android"))]
+            (Some(served), Ok(dir)) => {
+                for log in served {
+                    problem_report.add_served_log(&dir, log);
                 }
             }
-            Err(error) => {
-                problem_report.add_error("Failed to list logs in daemon log directory", &error)
-            }
+            (_, dir) => match dir.and_then(list_logs) {
+                Ok(daemon_logs) => {
+                    for log in daemon_logs {
+                        match log {
+                            Ok(path) => problem_report.add_log(&path),
+                            Err(error) => {
+                                problem_report.add_error("Unable to get log path", &error)
+                            }
+                        }
+                    }
+                }
+                Err(error) => {
+                    problem_report.add_error("Failed to list logs in daemon log directory", &error)
+                }
+            },
         };
         // Every candidate that answers contributes its logs. A candidate that
         // does not exist is the normal case for all but one of them, so it is
@@ -566,6 +584,22 @@ impl ProblemReport {
         }
     }
 
+    /// Attach the end of a daemon log file the daemon served, labelled with its
+    /// place in `log_dir`, which the collector itself may not be able to read.
+    #[cfg(not(target_os = "android"))]
+    pub fn add_served_log(
+        &mut self,
+        log_dir: &Path,
+        log: &mullvad_management_interface::client::DaemonLog,
+    ) {
+        let path = log_dir.join(&log.name);
+        if self.log_paths.insert(path.clone()) {
+            let label = self.redact(&path.to_string_lossy());
+            let content = self.redact(&lossy_tail(&log.content, log.size));
+            self.logs.push((label, content));
+        }
+    }
+
     /// Attach an error to the report.
     /// Adds an informational block. Unlike [`Self::add_error`] this does not
     /// describe a failure: some states (a frontend that never wrote a log) are
@@ -817,17 +851,24 @@ fn read_file_lossy(path: &Path, max_bytes: usize) -> io::Result<String> {
     let capacity = min(file_size, max_bytes as u64) as usize;
     let mut buffer = Vec::with_capacity(capacity);
     file.take(max_bytes as u64).read_to_end(&mut buffer)?;
-    let content = String::from_utf8_lossy(&buffer).into_owned();
-    if !truncated {
-        return Ok(content);
+    Ok(lossy_tail(&buffer, file_size))
+}
+
+/// `tail`, the end of a file of `file_size` bytes, as text.
+fn lossy_tail(tail: &[u8], file_size: u64) -> String {
+    let content = String::from_utf8_lossy(tail).into_owned();
+    if file_size <= tail.len() as u64 {
+        return content;
     }
     // Say it out loud. Otherwise the only hint that a log was cut is its first
     // line arriving half-written, which reads as corruption rather than as a
     // deliberate tail, and hides that earlier events exist on the machine.
-    Ok(format!(
+    format!(
         "[report] this log was truncated: showing the last {} bytes of {}\n{}",
-        max_bytes, file_size, content
-    ))
+        tail.len(),
+        file_size,
+        content
+    )
 }
 
 #[cfg(test)]
@@ -1093,6 +1134,29 @@ mod tests {
             report.redact(line),
             "on_set_warren_mnemonic: identity changed, hot-swapping device state to \
              new pubkey=[REDACTED]"
+        );
+    }
+
+    #[test]
+    fn a_log_the_daemon_served_is_attached_redacted_and_says_it_was_cut() {
+        let mut report = ProblemReport::new(vec![]);
+
+        report.add_served_log(
+            Path::new("/var/log/warren-vpn"),
+            &mullvad_management_interface::client::DaemonLog {
+                name: "daemon.log".to_owned(),
+                size: 100,
+                content: b"connected via 10.0.16.1".to_vec(),
+            },
+        );
+
+        assert_eq!(report.logs.len(), 1);
+        let (label, content) = &report.logs[0];
+        assert_eq!(label, "/var/log/warren-vpn/daemon.log");
+        assert_eq!(
+            content,
+            "[report] this log was truncated: showing the last 23 bytes of 100\n\
+             connected via [REDACTED]"
         );
     }
 

@@ -15,6 +15,8 @@ fi
 LOG_DIR=/var/log/warren-vpn
 
 mkdir -p $LOG_DIR
+# Root only, as the daemon keeps it (it would replace a directory left open).
+chmod 700 $LOG_DIR
 exec > $LOG_DIR/postinstall.log 2>&1
 
 echo "Running postinstall at $(date)"

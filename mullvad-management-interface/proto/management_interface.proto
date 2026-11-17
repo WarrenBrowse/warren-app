@@ -374,6 +374,10 @@ service ManagementService {
 
   rpc SetLogFilter(LogFilter) returns (google.protobuf.Empty) {}
   rpc LogListen(google.protobuf.Empty) returns (stream LogMessage) {}
+  // The end of each log file in the daemon's log directory, which only root
+  // can read: the problem report collector, run as the user, asks for them
+  // here. For the wallet owner and administrators only.
+  rpc GetDaemonLogs(google.protobuf.Empty) returns (stream DaemonLogChunk) {}
 
   // The great multihop migration of 2026
 
@@ -1896,6 +1900,18 @@ message AllowedIpsList { repeated string values = 1; }
 message LogFilter { string log_filter = 1; }
 
 message LogMessage { string message = 1; }
+
+// One piece of a daemon log file. A file comes as consecutive chunks of at
+// most 1 MiB, so no message nears a client's 4 MiB decoding limit; together
+// they hold at most the last 4 MiB of the file, unredacted (the collector
+// redacts). A file with nothing in it still comes as one empty chunk.
+message DaemonLogChunk {
+  // File name within the log directory, e.g. `daemon.log`.
+  string name = 1;
+  // Size of the whole file, so a cut log can say it was cut.
+  uint64 size = 2;
+  bytes content = 3;
+}
 
 // The great multihop migration of 2026
 
