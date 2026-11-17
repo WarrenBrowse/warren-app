@@ -17,7 +17,7 @@ import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha20
 
 @Preview
 @Composable
-private fun PreviewMullvadProgressIndicator() {
+private fun PreviewWarrenProgressIndicator() {
     PreviewColumn {
         WarrenCircularProgressIndicatorLarge()
         WarrenCircularProgressIndicatorMedium()

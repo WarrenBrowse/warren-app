@@ -142,7 +142,7 @@ private val LocalAppDimens = staticCompositionLocalOf { defaultDimensions }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppTheme(surfaces: WarrenSurfaces = WarrenSurfaces.Dark, content: @Composable () -> Unit) {
-    val typography = MullvadMaterial3Typography
+    val typography = WarrenMaterial3Typography
     // Set dimensions and type scale based on configurations here
     val dimensions = defaultDimensions
 

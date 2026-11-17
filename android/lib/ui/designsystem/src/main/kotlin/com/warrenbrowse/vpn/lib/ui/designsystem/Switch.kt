@@ -36,7 +36,7 @@ fun WarrenSwitch(
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    colors: SwitchColors = mullvadSwitchColors(),
+    colors: SwitchColors = warrenSwitchColors(),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     content: @Composable (() -> Unit)? = {
         // This is needed to ensure the thumb always is big in off mode
@@ -55,7 +55,7 @@ fun WarrenSwitch(
 }
 
 @Composable
-fun mullvadSwitchColors(): SwitchColors =
+fun warrenSwitchColors(): SwitchColors =
     SwitchDefaults.colors(
         checkedThumbColor = MaterialTheme.colorScheme.positive,
         checkedTrackColor = Color.Transparent,

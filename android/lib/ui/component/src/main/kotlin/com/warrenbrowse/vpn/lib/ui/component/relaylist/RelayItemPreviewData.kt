@@ -61,7 +61,7 @@ private fun generateRelayItemRelay(
         id = GeoLocationId.Hostname(city = cityCode, code = hostName),
         active = active,
         provider = ProviderId("Provider"),
-        ownership = Ownership.MullvadOwned,
+        ownership = Ownership.WarrenOwned,
         daita = daita,
         quic = null,
         lwo = false,

@@ -43,7 +43,7 @@ internal object PaletteTokens {
     val DarkerBlue50 = DesignTokens.Colors.DarkerBlue50
 
     // White (true near-white, neutral, NOT cream).
-    val MullvadWhite = DesignTokens.Colors.White
+    val WarrenWhite = DesignTokens.Colors.White
     val White = Color(0xFFFFFFFF)
 
     // Black

@@ -45,7 +45,7 @@ object WarrenFonts {
         )
 }
 
-internal val MullvadMaterial3Typography =
+internal val WarrenMaterial3Typography =
     with(Typography()) {
         this.copy(
             displayLarge = displayLarge.merge(fontFamily = WarrenFonts.sans),

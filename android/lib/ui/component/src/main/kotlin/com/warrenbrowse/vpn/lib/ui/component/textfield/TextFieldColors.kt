@@ -23,7 +23,7 @@ import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha5
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
 
 @Composable
-fun mullvadWhiteTextFieldColors(): TextFieldColors =
+fun warrenWhiteTextFieldColors(): TextFieldColors =
     TextFieldDefaults.colors(
         focusedTextColor = Color.Black,
         unfocusedTextColor = Color.Gray,

@@ -24397,7 +24397,7 @@ PLcom/warrenbrowse/vpn/lib/ui/designsystem/Position;-><clinit>()V
 PLcom/warrenbrowse/vpn/lib/ui/designsystem/Position;-><init>(Ljava/lang/String;I)V
 PLcom/warrenbrowse/vpn/lib/ui/designsystem/Position;->values()[Lcom/warrenbrowse/vpn/lib/ui/designsystem/Position;
 PLcom/warrenbrowse/vpn/lib/ui/designsystem/SwitchKt;->WarrenSwitch(ZLkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZLandroidx/compose/material3/SwitchColors;Landroidx/compose/foundation/interaction/MutableInteractionSource;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
-PLcom/warrenbrowse/vpn/lib/ui/designsystem/SwitchKt;->mullvadSwitchColors(Landroidx/compose/runtime/Composer;I)Landroidx/compose/material3/SwitchColors;
+PLcom/warrenbrowse/vpn/lib/ui/designsystem/SwitchKt;->warrenSwitchColors(Landroidx/compose/runtime/Composer;I)Landroidx/compose/material3/SwitchColors;
 PLcom/warrenbrowse/vpn/lib/ui/designsystem/WarrenButtonKt;-><clinit>()V
 PLcom/warrenbrowse/vpn/lib/ui/designsystem/WarrenButtonKt;->BaseButton$lambda$0(Ljava/lang/String;ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/foundation/layout/RowScope;Landroidx/compose/runtime/Composer;I)Lkotlin/Unit;
 PLcom/warrenbrowse/vpn/lib/ui/designsystem/WarrenButtonKt;->BaseButton(Lkotlin/jvm/functions/Function0;Landroidx/compose/material3/ButtonColors;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
@@ -24437,7 +24437,7 @@ SPLcom/warrenbrowse/vpn/lib/ui/theme/ThemeKt$$ExternalSyntheticLambda4;-><init>(
 SPLcom/warrenbrowse/vpn/lib/ui/theme/ThemeKt$$ExternalSyntheticLambda4;->invoke(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
 Lcom/warrenbrowse/vpn/lib/ui/theme/TypeKt;
 SPLcom/warrenbrowse/vpn/lib/ui/theme/TypeKt;-><clinit>()V
-SPLcom/warrenbrowse/vpn/lib/ui/theme/TypeKt;->getMullvadMaterial3Typography()Landroidx/compose/material3/Typography;
+SPLcom/warrenbrowse/vpn/lib/ui/theme/TypeKt;->getWarrenMaterial3Typography()Landroidx/compose/material3/Typography;
 Lcom/warrenbrowse/vpn/lib/ui/theme/WarrenFonts;
 SPLcom/warrenbrowse/vpn/lib/ui/theme/WarrenFonts;-><clinit>()V
 SPLcom/warrenbrowse/vpn/lib/ui/theme/WarrenFonts;-><init>()V
@@ -24544,7 +24544,7 @@ SPLcom/warrenbrowse/vpn/lib/ui/theme/color/PaletteTokens;->getDarkerBlue50-0d7_K
 PLcom/warrenbrowse/vpn/lib/ui/theme/color/PaletteTokens;->getDisabledContainerDestructive-0d7_KjU()J
 PLcom/warrenbrowse/vpn/lib/ui/theme/color/PaletteTokens;->getDisabledContainerTertiary-0d7_KjU()J
 PLcom/warrenbrowse/vpn/lib/ui/theme/color/PaletteTokens;->getGreen-0d7_KjU()J
-SPLcom/warrenbrowse/vpn/lib/ui/theme/color/PaletteTokens;->getMullvadWhite-0d7_KjU()J
+SPLcom/warrenbrowse/vpn/lib/ui/theme/color/PaletteTokens;->getWarrenWhite-0d7_KjU()J
 SPLcom/warrenbrowse/vpn/lib/ui/theme/color/PaletteTokens;->getRed-0d7_KjU()J
 PLcom/warrenbrowse/vpn/lib/ui/theme/color/PaletteTokens;->getRedText-0d7_KjU()J
 Lcom/warrenbrowse/vpn/lib/ui/theme/dimensions/Dimensions;
