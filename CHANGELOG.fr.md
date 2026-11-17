@@ -14,6 +14,13 @@ par l'application, gardez-le tel quel.
 
 ## [Unreleased]
 ### Ajouté
+- [Windows, macOS, Linux] Un écran Licences dans Réglages, Infos sur l'application : le texte de
+  la GPL livré avec l'application, la licence du moteur du tunnel, la mention de Mullvad VPN AB,
+  et des liens vers le code source de la version installée. Chaque paquet desktop contient
+  désormais le texte de la GPL.
+- [Windows, macOS, Linux] Demander trois mots d'une nouvelle phrase de restauration avant
+  d'utiliser le nouveau compte, pour qu'une phrase non notée soit repérée tant qu'elle est encore
+  lisible.
 - [iOS] Un thème clair pour l'écran de connexion, et un réglage Thème : Système, Sombre ou Clair.
   Système suit l'apparence de l'appareil, et reste sombre quand l'appareil n'en indique aucune.
 - [iOS] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est fermé
@@ -27,7 +34,21 @@ par l'application, gardez-le tel quel.
 - [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
   automatiquement au lieu de s'arrêter au premier refus.
 
+### Modifié
+- Présenter l'abonnement dans l'accueil comme du temps prépayé, avec un renouvellement mensuel
+  facultatif que l'on peut désactiver sans frais. Le texte annonçait l'absence de facturation
+  récurrente.
+- [Windows, macOS, Linux] `warren unblock` indique quand il désactive le mode verrouillage, et
+  donne la commande qui le réactive.
+- [Windows, macOS, Linux] Retirer WireGuard et Mullvad de l'aide de la CLI, et masquer les
+  commandes héritées que le tunnel Warren ignore (anti-censure, relais personnalisé, IP
+  autorisées, WireGuard en espace utilisateur). Elles fonctionnent encore pour les scripts
+  existants.
+
 ### Corrigé
+- [Linux] Lancer les lanceurs de routage par application de l'édition installée : ouvrir une
+  application hors du VPN ou dans le VPN fonctionne aussi dans la bêta, et un lanceur qui ne
+  démarre pas est signalé au lieu d'annoncer un lancement.
 - [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
   plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
 - [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
@@ -804,6 +825,13 @@ par l'application, gardez-le tel quel.
   monochromes étaient vides.
 
 
+## [1.1.20] - 2026-08-25
+### Corrigé
+- [macOS] La résolution de noms n'est plus perdue à chaque déconnexion quand une application VPN
+  arrêtée (Tailscale) laisse son entrée DNS derrière elle. Le daemon restaurait cette entrée comme
+  DNS d'origine, et son résolveur mort passait devant celui du réseau. Une entrée DNS dont le
+  service ne publie aucune adresse est désormais supprimée, jamais restaurée.
+
 ## [1.1.17] - 2026-08-16
 ### Modifié
 - [macOS] Essayer un autre serveur d'entrée quand une connexion ne transporte rien et que
@@ -1020,6 +1048,10 @@ par l'application, gardez-le tel quel.
 - Se reconnecter tout seul après une mise à jour au lieu de rester bloqué jusqu'au clic.
 
 
+## [1.1.5] - 2026-08-08 [WITHDRAWN]
+Cette version a été publiée puis retirée le même jour : son interface ne s'ouvrait pas. Tout ce
+qu'elle contenait est livré dans la 1.1.6.
+
 ## [1.1.4] - 2026-08-08
 ### Corrigé
 - [macOS] L'installation est possible sur les Mac Intel. Le paquet macOS était compilé pour Apple
@@ -1056,3 +1088,37 @@ par l'application, gardez-le tel quel.
 - Les notes de version d'une mise à jour s'affichent avec leur mise en forme.
   Les titres, les listes et les emphases apparaissaient en Markdown brut, et
   une entrée répartie sur plusieurs lignes était découpée en plusieurs puces.
+
+## [1.0.0] - 2026-08-05
+Première bêta publique. Gratuite pendant la bêta ouverte.
+### Ajouté
+- Faire passer tout le trafic par un transport QUIC impossible à distinguer de HTTP/3, avec un
+  repli TLS sur TCP mis en concurrence avec UDP, pour que le tunnel monte même là où UDP est
+  bloqué.
+- S'identifier avec la phrase de restauration d'un portefeuille au lieu d'un compte : pas d'e-mail,
+  pas de mot de passe, rien à divulguer. La phrase ne quitte jamais l'appareil et chaque requête à
+  l'API est signée.
+- Bloquer le trafic avec un kill switch qui échoue fermé dès que le tunnel n'est pas actif, sur
+  toutes les plateformes.
+- Bloquer les publicités, les traqueurs, les contenus adultes, les jeux d'argent, les logiciels
+  malveillants et les réseaux sociaux par catégorie, résolus sur la sortie sans journal des
+  requêtes.
+- Passer par deux sauts avec un relais aveugle (établissement scellé par HPKE), scellé
+  post-quantique (X-Wing / ML-KEM-768) quand la sortie publie une clé.
+- Proposer la mise en forme du trafic DAITA et le port forwarding NAT-PMP.
+- Split tunneling : exclure du VPN les applications choisies sur desktop et Android.
+- Afficher le tunnel dans les indicateurs réseau de GNOME et KDE sous Linux, et livrer des paquets
+  sysvinit et NixOS à côté des paquets .deb, .rpm et .pacman.
+- S'adapter aux derniers kilomètres hostiles : file d'attente FQ-CoDel, tampons dimensionnés sur le
+  BDP, ajustement du MSS TCP au budget réel du chemin, et un indicateur MTU réduite quand le chemin
+  mesure moins que la taille de paquet par défaut.
+
+### Corrigé
+#### Windows
+- Charger le pilote de split tunneling de façon fiable au démarrage : attendre jusqu'à deux minutes
+  au lieu de huit secondes, et rétablir un pilote bloqué dans un démarrage en attente.
+
+### Sécurité
+#### Linux
+- Combler une faille dans les règles de pare-feu du DNS personnalisé : seuls les paquets de flux
+  établis sont acceptés en retour des résolveurs du réseau local.

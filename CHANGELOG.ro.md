@@ -13,6 +13,11 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 
 ## [Unreleased]
 ### Adăugat
+- [Windows, macOS, Linux] Un ecran Licențe în Setări, Informații despre aplicație: textul GPL
+  livrat cu aplicația, licența motorului tunelului, mențiunea Mullvad VPN AB și linkuri către
+  codul sursă al versiunii instalate. Fiecare pachet desktop conține acum textul GPL.
+- [Windows, macOS, Linux] Aplicația cere trei cuvinte dintr-o frază de recuperare nouă înainte
+  de a folosi contul nou, ca o frază nenotată să fie observată cât timp încă poate fi citită.
 - [iOS] O temă luminoasă pentru ecranul de conectare și o setare Temă: Sistem, Întunecată sau
   Luminoasă. Sistem urmează aspectul dispozitivului și rămâne întunecată când dispozitivul nu indică
   niciunul.
@@ -25,7 +30,20 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Află când serverul refuză un port redirecționat din lipsă de drept de port, iar aplicația
   cere din nou automat în loc să se oprească la primul refuz.
 
+### Modificat
+- Abonamentul este descris la prima pornire ca timp plătit în avans, cu o reînnoire lunară
+  opțională care poate fi oprită fără costuri. Textul spunea că nu există facturare recurentă.
+- [Windows, macOS, Linux] `warren unblock` spune când dezactivează modul de blocare și dă
+  comanda care îl reactivează.
+- [Windows, macOS, Linux] WireGuard și Mullvad dispar din ajutorul CLI, iar comenzile moștenite
+  pe care tunelul Warren le ignoră (anti-cenzură, releu personalizat, IP-uri permise, WireGuard
+  în spațiul utilizatorului) sunt ascunse. Ele funcționează în continuare pentru scripturile
+  existente.
+
 ### Reparat
+- [Linux] Pornește lansatoarele de rutare pe aplicații ale ediției instalate, astfel încât
+  deschiderea unei aplicații în afara VPN-ului sau în VPN funcționează și în beta, iar un
+  lansator care nu pornește este semnalat în loc să anunțe o lansare.
 - [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
   platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
 - [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași
@@ -781,6 +799,13 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   de culori. Copiile cu număr redus de culori din fișierele de pictograme monocrome erau goale.
 
 
+## [1.1.20] - 2026-08-25
+### Reparat
+- [macOS] Rezolvarea numelor nu se mai pierde la fiecare deconectare când o aplicație VPN oprită
+  (Tailscale) își lasă în urmă intrarea DNS. Daemonul restaura acea intrare ca DNS original, iar
+  resolverul ei mort trecea înaintea celui al rețelei. O intrare DNS al cărei serviciu nu publică
+  nicio adresă este acum ștearsă, niciodată restaurată.
+
 ## [1.1.17] - 2026-08-16
 ### Modificat
 - [macOS] Încearcă un alt server de intrare când o conexiune nu transportă nimic, iar computerul a
@@ -990,6 +1015,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - Reconectarea de la sine după o actualizare, în loc de a rămâne blocată până la un clic.
 
 
+## [1.1.5] - 2026-08-08 [WITHDRAWN]
+Această versiune a fost publicată și retrasă în aceeași zi: interfața ei nu se deschidea. Tot ce
+conținea este livrat în 1.1.6.
+
 ## [1.1.4] - 2026-08-08
 ### Reparat
 - [macOS] Instalarea este posibilă pe Mac-urile Intel. Pachetul macOS era compilat doar pentru
@@ -1025,3 +1054,36 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - Notele de versiune ale unei actualizări sunt afișate formatat. Titlurile,
   listele și accentuările apăreau ca Markdown brut, iar o intrare împărțită pe
   mai multe linii era ruptă în mai multe puncte.
+
+## [1.0.0] - 2026-08-05
+Prima versiune beta publică. Gratuită pe durata beta deschise.
+### Adăugat
+- Tot traficul trece printr-un transport QUIC care nu poate fi deosebit de HTTP/3, cu un transport
+  de rezervă TLS peste TCP pus în concurență cu UDP, ca tunelul să pornească și acolo unde UDP este
+  blocat.
+- Identificare cu fraza de recuperare a unui portofel în loc de un cont: fără e-mail, fără parolă,
+  nimic de divulgat. Fraza nu părăsește niciodată dispozitivul, iar fiecare cerere către API este
+  semnată.
+- Kill switch care blochează traficul ori de câte ori tunelul nu este activ, pe toate platformele.
+- Blocarea reclamelor, a trackerelor, a conținutului pentru adulți, a jocurilor de noroc, a
+  programelor malware și a rețelelor sociale pe categorii, rezolvate pe ieșire fără jurnal al
+  interogărilor.
+- Rutare prin două salturi cu un releu orb (stabilire sigilată HPKE), sigilată post-cuantic
+  (X-Wing / ML-KEM-768) când ieșirea publică o cheie.
+- Modelarea traficului DAITA și port forwarding NAT-PMP.
+- Split tunneling: aplicațiile alese sunt excluse din VPN pe desktop și Android.
+- Tunelul apare în indicatorii de rețea GNOME și KDE pe Linux, iar pachetele sysvinit și NixOS sunt
+  livrate alături de cele .deb, .rpm și .pacman.
+- Adaptare la ultimii kilometri ostili: coadă FQ-CoDel, buffere dimensionate după BDP, ajustarea
+  MSS TCP la bugetul real al căii și un indicator MTU redusă când calea măsoară mai puțin decât
+  dimensiunea implicită a pachetului.
+
+### Reparat
+#### Windows
+- Driverul de split tunneling se încarcă sigur la pornire: așteaptă până la două minute în loc de
+  opt secunde și repune un driver blocat într-o pornire în așteptare.
+
+### Securitate
+#### Linux
+- Închide o breșă în regulile de firewall pentru DNS personalizat: doar pachetele fluxurilor
+  stabilite sunt acceptate înapoi de la resolverele din rețeaua locală.

@@ -23,6 +23,11 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 ### Added
+- [Windows, macOS, Linux] Add a Licenses screen under Settings, App info: the GPL text the app
+  ships with, the license of the tunnel engine, the credit to Mullvad VPN AB, and links to the
+  source code of the installed version. Every desktop package now carries the GPL text.
+- [Windows, macOS, Linux] Ask for three words of a new recovery phrase before the new account is
+  used, so a phrase that was not written down is caught while it can still be read.
 - [iOS] Add a light theme for the connect screen, and a Theme setting: System, Dark or Light. System
   follows the appearance of the device, and stays dark when the device states none.
 - [iOS] Show the warnings recorded against your account when a forwarded port is closed after an
@@ -34,7 +39,19 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Say when the server refuses a forwarded port for want of an entitlement, and ask again
   automatically instead of stopping on the first refusal.
 
+### Changed
+- Describe the subscription in the onboarding as prepaid time with an optional monthly renewal
+  that can be turned off at no cost. It said there was no recurring billing.
+- [Windows, macOS, Linux] Say when `warren unblock` turns lockdown mode off, and give the command
+  that turns it back on.
+- [Windows, macOS, Linux] Remove WireGuard and Mullvad from the CLI help, and hide the inherited
+  commands the Warren tunnel ignores (anti-censorship, custom relay, allowed IPs, userspace
+  WireGuard). They still run for existing scripts.
+
 ### Fixed
+- [Linux] Start the app routing launchers of the installed edition, so opening an app outside or
+  inside the VPN works in the beta too, and report a launcher that cannot start instead of
+  announcing a launch.
 - [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
   the servers that require one grant the port instead of refusing it.
 - [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
