@@ -329,6 +329,12 @@ function newConfig() {
       },
     ],
     asar: true,
+    // Left unset, electron-builder assembles the Windows installer with its
+    // legacy NSIS 3.04 (2018), which lacks the fixes to the temporary
+    // directories an elevated installer runs warren-setup.exe from. 1.2.1 is
+    // its checksummed NSIS 3.12 bundle. ci/check-nsis-stub.sh refuses an
+    // installer built on the old stub.
+    toolsets: { nsis: '1.2.1' },
     electronFuses: ELECTRON_FUSES,
     compression: noCompression ? 'store' : 'normal',
     extraResources: [

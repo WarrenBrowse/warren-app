@@ -109,6 +109,11 @@ jobs:
       - name: Linux maintainer scripts (shell tests)
         run: bash ci/test-linux-maintainer-scripts.sh
 
+      # The Windows release refuses an installer built on an NSIS stub that
+      # predates the fixes to its elevated temporary directories.
+      - name: NSIS stub age check (shell tests)
+        run: bash ci/test-check-nsis-stub.sh
+
       # The installers extract the headless bundles as root, which restores
       # the owner each entry records.
       - name: Headless bundle archive (shell tests)

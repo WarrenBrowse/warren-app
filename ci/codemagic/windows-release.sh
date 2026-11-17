@@ -58,6 +58,7 @@ case "${1:?usage: windows-release.sh <prepare|sources|build|stage>}" in
         export TARGETS=x86_64-pc-windows-msvc
         [ "$WARREN_CHANNEL" = beta ] && export WARREN_PRODUCT_ENV=beta
         timed ./build.sh --optimize "${sign[@]}"
+        bash ci/check-nsis-stub.sh dist/*.exe
         ;;
     stage)
         stage_env=prod
