@@ -17,8 +17,8 @@ what extent.
 
 ## Desktop
 
-Some desktop OS versions go through e2e testing every day.
-These are defined in [the following workflow](../.github/workflows/desktop-e2e.yml).
+No desktop OS version goes through automated e2e testing: the inherited
+end-to-end framework and its workflow are gone.
 
 ### Windows
 

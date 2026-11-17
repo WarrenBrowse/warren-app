@@ -142,8 +142,8 @@ jobs:
 
       - name: cargo test Warren scope
         # Targets the Warren-specific crates. We avoid --workspace so we do not
-        # run Android / iOS / Windows specific tests on Linux (already covered by
-        # upstream daemon.yml). Run via nextest with the `warren-ci` profile,
+        # run Android / iOS / Windows specific tests on Linux (the macOS and
+        # Windows jobs below run theirs). Run via nextest with the `warren-ci` profile,
         # whose slow-timeout TERMINATES a test that blocks > 60s and names it.
         # cargo check warren-ios separately (cfg(target_os = "ios"), compile-only
         # on Linux). Native arm64: no Rosetta crash/deadlock retry needed; the
@@ -434,8 +434,7 @@ jobs:
           git -C "$dest" checkout --detach "$(tr -d '[:space:]' < .warren-contract-version)"
           test -f "$dest/tests/fixtures/phase-reduction.json"
 
-      # The desktop unit suite existed but nothing ran it: `frontend.yml` is
-      # dispatch-only in this fork, so the only gate on the renderer and main
+      # The desktop unit suite existed but nothing ran it, so the only gate on the renderer and main
       # process logic was type-check + lint, neither of which observes
       # behaviour. It is a few seconds on top of an install this job already
       # does.

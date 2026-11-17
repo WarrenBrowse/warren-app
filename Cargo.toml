@@ -45,7 +45,6 @@ members = [
   "warren-standing",
   "windows-installer",
 ]
-exclude = ["ci/ios/test-router/raas"]
 # Default members dictate what is built when running `cargo build` in the root directory.
 # This is set to a minimal set of packages to speed up the build process and avoid building
 # crates which might not compile without additional input, such as the `windows-installer` crate.
@@ -149,7 +148,6 @@ unicode_not_nfc = "warn"
 unused_async = "deny"
 wildcard_dependencies = "deny"
 
-# Keep all lints in sync with `test/Cargo.toml`
 [workspace.lints.rust]
 absolute_paths_not_starting_with_crate = "deny"
 # Easy to read style and opinionated best practices

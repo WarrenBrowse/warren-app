@@ -5,8 +5,8 @@ import { IpcSchema, ipcSchema } from '../../../src/shared/ipc-schema';
 import { Async } from '../../../src/shared/utility-types';
 import { startApp, TestUtils } from '../utils';
 
-// This option can be removed in the future when/if we're able to tun the tests with the sandbox
-// enabled in GitHub actions (frontend.yml).
+// This option can be removed in the future when/if we're able to run the tests with the sandbox
+// enabled in CI.
 const noSandbox = process.env.NO_SANDBOX === '1';
 const showWindow = process.env.TEST_SHOW_WINDOW === '1';
 

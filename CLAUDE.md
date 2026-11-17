@@ -101,9 +101,8 @@ Reproduce the CI conditions before pushing a new spec: hide
 `desktop/node_modules/electron/path.txt` and run with a `PATH` that has no
 cargo.
 
-The Playwright suites are a different story: `frontend.yml` and
-`desktop-e2e.yml` are dispatch-only in this fork, and `test/e2e/mocked` is red
-from `main.spec.ts` (it still asserts the Mullvad window title) with
+The Playwright suites are a different story: no workflow runs them, and
+`test/e2e/mocked` is red from `main.spec.ts` (it still asserts the Mullvad window title) with
 `maxFailures: 1` cutting the rest of the run. Run a single mocked spec with
 `npm run build:test && npx playwright test mocked/<name>`.
 

@@ -1,7 +1,0 @@
-/target
-/packages
-/os-images
-/testrunner-images
-/.ci-logs
-/config.json
-.container
