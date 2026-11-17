@@ -1,5 +1,4 @@
 use crate::BIN_NAME;
-use crate::cmds::warren::normalize_mnemonic_words;
 use anyhow::{Context, Result};
 use clap::Subcommand;
 use mullvad_management_interface::MullvadProxyClient;
@@ -18,14 +17,10 @@ pub enum Account {
     /// Create a brand-new Warren identity (generates a recovery phrase)
     Create,
 
-    /// Restore a Warren identity from its recovery phrase (12 or 24 words).
-    ///
-    /// Quote the whole phrase or pass the words as separate arguments; you are
-    /// prompted for it if omitted.
-    Login {
-        #[arg(value_name = "WORD")]
-        phrase: Vec<String>,
-    },
+    /// Restore a Warren identity from its recovery phrase (12 or 24 words),
+    /// read from the terminal without echo, or from standard input when it is
+    /// piped.
+    Login,
 
     /// Log out (keeps the recovery phrase on this device)
     Logout,
@@ -66,7 +61,7 @@ impl Account {
         let mut rpc = MullvadProxyClient::new().await?;
         match self {
             Account::Create => Self::create(&mut rpc).await,
-            Account::Login { phrase } => Self::login(&mut rpc, phrase).await,
+            Account::Login => Self::login(&mut rpc).await,
             Account::Logout => Self::logout(&mut rpc).await,
             Account::Get { verbose } => Self::get(&mut rpc, verbose).await,
             Account::Redeem { voucher } => Self::redeem_voucher(&mut rpc, voucher).await,
@@ -99,18 +94,30 @@ impl Account {
             .await
             .context("failed to create a new Warren identity")?;
         // The new phrase is the ONLY way to recover this account, so fetch and
-        // display it for the user to back up.
-        let phrase = rpc.get_warren_mnemonic().await.unwrap_or_default();
+        // display it for the user to back up, on a terminal only.
+        let on_terminal = io::stdout().is_terminal();
+        let phrase = if crate::cmds::warren::may_print_phrase(on_terminal, false) {
+            zeroize::Zeroizing::new(rpc.get_warren_mnemonic().await.unwrap_or_default())
+        } else {
+            zeroize::Zeroizing::new(String::new())
+        };
 
         println!("New Warren identity created.");
         println!("{:<14}{address}", "Address:");
+        if !on_terminal {
+            println!();
+            println!(
+                "Standard output is not a terminal, so the recovery phrase is not printed.\n\
+                 Back it up now from a terminal: {BIN_NAME} warren mnemonic export"
+            );
+        }
         if !phrase.is_empty() {
             println!();
             println!(
                 "RECOVERY PHRASE: write it down offline. Anyone with it controls this\n\
                  account, and it is the only way to restore it. Never share it.\n"
             );
-            println!("    {phrase}\n");
+            println!("    {}\n", phrase.as_str());
         }
         println!("No subscription yet. Buy credit on the Warren website, then run:");
         println!("    {BIN_NAME} account redeem");
@@ -118,16 +125,13 @@ impl Account {
         Ok(())
     }
 
-    async fn login(rpc: &mut MullvadProxyClient, phrase_words: Vec<String>) -> Result<()> {
-        let phrase = if phrase_words.is_empty() {
-            read_phrase_from_stdin().await
-        } else {
-            normalize_mnemonic_words(&phrase_words)
-        };
+    async fn login(rpc: &mut MullvadProxyClient) -> Result<()> {
+        let input = tokio::task::spawn_blocking(crate::cmds::warren::read_phrase).await??;
+        let phrase = crate::cmds::warren::phrase_from_input(&input);
         if phrase.is_empty() {
             anyhow::bail!("no recovery phrase provided");
         }
-        rpc.set_warren_mnemonic(phrase).await.context(
+        rpc.set_warren_mnemonic(phrase.to_string()).await.context(
             "could not restore identity: the recovery phrase must be 12 or 24 BIP39 words",
         )?;
         println!("Warren identity restored and active.");
@@ -261,25 +265,6 @@ fn read_voucher(
     Ok((voucher, source))
 }
 
-/// Prompts for and reads a recovery phrase as a single line (words stay
-/// space-separated, never concatenated). Normalised to the canonical lowercase
-/// single-spaced form the BIP39 validator expects.
-async fn read_phrase_from_stdin() -> String {
-    tokio::task::spawn_blocking(|| {
-        io::stdout()
-            .write_all(b"Enter your recovery phrase (12 or 24 words): ")
-            .expect("Failed to write to STDOUT");
-        let _ = io::stdout().flush();
-        let mut line = String::new();
-        io::stdin()
-            .read_line(&mut line)
-            .expect("Failed to read from STDIN");
-        normalize_mnemonic_words(&[line])
-    })
-    .await
-    .unwrap()
-}
-
 fn format_duration(seconds: u64) -> String {
     let dur = chrono::Duration::seconds(seconds as i64);
     if dur.num_days() > 0 {
@@ -315,6 +300,16 @@ mod tests {
             text.starts_with("No Warren identity on this device"),
             "{text}"
         );
+    }
+
+    /// A phrase on the command line is visible to every local account in the
+    /// process list and stays in the shell history: refused.
+    #[test]
+    fn login_never_takes_the_phrase_as_an_argument() {
+        assert!(
+            crate::Cli::try_parse_from([BIN_NAME, "account", "login", "abandon", "about"]).is_err()
+        );
+        assert!(crate::Cli::try_parse_from([BIN_NAME, "account", "login"]).is_ok());
     }
 
     #[test]

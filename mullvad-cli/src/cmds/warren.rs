@@ -83,7 +83,14 @@ pub enum WarrenMnemonic {
     /// Print the current Warren recovery phrase so it can be backed up.
     /// WARNING: anyone with this phrase controls your identity and its
     /// subscription. Write it down offline; never share it.
-    Export,
+    ///
+    /// The phrase is printed to a terminal only, unless --to-pipe allows a
+    /// pipe or a file.
+    Export {
+        /// Also print the phrase when standard output is a pipe or a file.
+        #[arg(long)]
+        to_pipe: bool,
+    },
 
     /// Restore a Warren identity from a BIP39 recovery phrase, read from
     /// the terminal without echo, or from standard input when it is piped.
@@ -110,7 +117,7 @@ pub(crate) fn normalize_mnemonic_words(words: &[String]) -> String {
 
 /// The phrase as entered, wiped when dropped. Typed at a terminal it is read
 /// without echo; piped, the whole input is read.
-fn read_phrase() -> Result<zeroize::Zeroizing<String>> {
+pub(crate) fn read_phrase() -> Result<zeroize::Zeroizing<String>> {
     use std::io::{IsTerminal, Read};
     if std::io::stdin().is_terminal() {
         let typed = rpassword::prompt_password("Recovery phrase (input hidden): ")?;
@@ -122,8 +129,15 @@ fn read_phrase() -> Result<zeroize::Zeroizing<String>> {
     }
 }
 
+/// Whether the recovery phrase may be written to standard output: always to a
+/// terminal, to a pipe or a file only when the user asked for it, since that
+/// output often ends up in a log or a shared file.
+pub(crate) fn may_print_phrase(stdout_is_terminal: bool, to_pipe: bool) -> bool {
+    stdout_is_terminal || to_pipe
+}
+
 /// [`normalize_mnemonic_words`] over one entered block of text.
-fn phrase_from_input(input: &str) -> zeroize::Zeroizing<String> {
+pub(crate) fn phrase_from_input(input: &str) -> zeroize::Zeroizing<String> {
     zeroize::Zeroizing::new(normalize_mnemonic_words(&[input.to_owned()]))
 }
 
@@ -133,7 +147,9 @@ impl Warren {
             Warren::ApiUrl(WarrenApiUrl::Get) => Self::api_url_get().await,
             Warren::ApiUrl(WarrenApiUrl::Set { url }) => Self::api_url_set(Some(url)).await,
             Warren::ApiUrl(WarrenApiUrl::Unset) => Self::api_url_set(None).await,
-            Warren::Mnemonic(WarrenMnemonic::Export) => Self::mnemonic_export().await,
+            Warren::Mnemonic(WarrenMnemonic::Export { to_pipe }) => {
+                Self::mnemonic_export(to_pipe).await
+            }
             Warren::Mnemonic(WarrenMnemonic::Import) => Self::mnemonic_import().await,
             Warren::NConnections(WarrenNConnections::Get) => Self::n_connections_get().await,
             Warren::NConnections(WarrenNConnections::Set { n }) => {
@@ -215,7 +231,14 @@ impl Warren {
         Ok(())
     }
 
-    async fn mnemonic_export() -> Result<()> {
+    async fn mnemonic_export(to_pipe: bool) -> Result<()> {
+        use std::io::IsTerminal;
+        if !may_print_phrase(std::io::stdout().is_terminal(), to_pipe) {
+            anyhow::bail!(
+                "Standard output is not a terminal: the recovery phrase is not printed. \
+                 Run the command in a terminal, or pass --to-pipe to write it to this pipe or file."
+            );
+        }
         let mut rpc = MullvadProxyClient::new().await?;
         let mnemonic = rpc.get_warren_mnemonic().await?;
         if mnemonic.is_empty() {
@@ -249,7 +272,7 @@ impl Warren {
 
 #[cfg(test)]
 mod tests {
-    use super::{Warren, normalize_mnemonic_words, phrase_from_input};
+    use super::{Warren, may_print_phrase, normalize_mnemonic_words, phrase_from_input};
     use clap::Parser;
 
     #[derive(Parser, Debug)]
@@ -266,6 +289,14 @@ mod tests {
             Probe::try_parse_from(["probe", "mnemonic", "import", "abandon", "about"]).is_err()
         );
         assert!(Probe::try_parse_from(["probe", "mnemonic", "import"]).is_ok());
+    }
+
+    #[test]
+    fn the_phrase_reaches_a_pipe_only_when_asked() {
+        assert!(may_print_phrase(true, false));
+        assert!(!may_print_phrase(false, false));
+        assert!(may_print_phrase(false, true));
+        assert!(Probe::try_parse_from(["probe", "mnemonic", "export", "--to-pipe"]).is_ok());
     }
 
     /// Piped input (a file, a password manager) reads like typed input.
