@@ -120,12 +120,29 @@ class WarrenTunInterfacePlanTest {
     }
 
     @Test
-    fun `blocking plan captures all traffic, resolves nothing, and is flagged blocking`() {
+    fun `blocking plan captures all traffic and is flagged blocking`() {
         val plan = planTunInterface(config(lockdown = true), blocking = true)
         assertTrue(plan.blocking)
         assertTrue(plan.hasRoute(WarrenTunDefaults.IPV4_DEFAULT_ROUTE))
         assertTrue(plan.hasRoute(WarrenTunDefaults.IPV6_DEFAULT_ROUTE))
-        assertTrue(plan.dnsServers.isEmpty())
+    }
+
+    @Test
+    fun `the blocking interface names a resolver only the blackhole reaches`() {
+        // With no DNS server on an active VPN, Android lets getaddrinfo fall
+        // back to the physical network's resolver.
+        val plan = planTunInterface(config(lockdown = true), blocking = true)
+
+        assertEquals(listOf(WarrenTunDefaults.BLACKHOLE_DNS_SERVER), plan.dnsServers)
+        assertTrue(plan.coversV4(WarrenTunDefaults.BLACKHOLE_DNS_SERVER))
+    }
+
+    @Test
+    fun `the lock guard names a resolver only the blackhole reaches`() {
+        val plan = planLockGuard(AppRouting.OnlyFor(setOf("com.bank")))
+
+        assertEquals(listOf(WarrenTunDefaults.BLACKHOLE_DNS_SERVER), plan.dnsServers)
+        assertTrue(plan.coversV4(WarrenTunDefaults.BLACKHOLE_DNS_SERVER))
     }
 
     @Test
@@ -374,5 +391,15 @@ class WarrenTunInterfacePlanTest {
         assertFalse(isValidIpLiteral("8.8.8.8:53"))
         assertFalse(isValidIpLiteral("999.1.1.1"))
         assertFalse(isValidIpLiteral("1.2.3"))
+    }
+
+    @Test
+    fun `ipv6 validation counts the hextets the platform would refuse`() {
+        assertTrue(isValidIpLiteral("1:2:3:4:5:6:7:8"))
+        assertTrue(isValidIpLiteral("1::8"))
+        assertFalse(isValidIpLiteral("1:2:3:4:5:6:7:8:9"))
+        assertFalse(isValidIpLiteral("1:2:3:4:5:6:7"))
+        assertFalse(isValidIpLiteral("1:2:3:4::5:6:7:8"))
+        assertFalse(isValidIpLiteral("1::2::3"))
     }
 }
