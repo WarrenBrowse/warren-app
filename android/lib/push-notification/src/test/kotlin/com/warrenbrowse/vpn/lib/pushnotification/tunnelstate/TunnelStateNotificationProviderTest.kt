@@ -11,7 +11,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import java.util.concurrent.Executors
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
@@ -89,7 +94,44 @@ class TunnelStateNotificationProviderTest {
                 preferences = userPreferencesRepository,
                 channelId = testChannelId,
                 scope = CoroutineScope(UnconfinedTestDispatcher()),
+                computeDispatcher = UnconfinedTestDispatcher(),
             )
+    }
+
+    @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun `the notification is computed off the thread that owns the scope`() {
+        // The scope is the main one in the app, and each emission makes Binder calls into the
+        // package manager (the VPN consent, the locked apps).
+        val threads = mutableListOf<String>()
+        every { mockContext.prepareVpnSafe() } answers
+            {
+                threads += Thread.currentThread().name.substringBefore(" @")
+                Prepared.right()
+            }
+        val compute = Executors.newSingleThreadExecutor { Thread(it, "notification-compute") }
+        try {
+            val offMain =
+                TunnelStateNotificationProvider(
+                    context = mockContext,
+                    connectionProxy = connectionProxy,
+                    deviceRepository = deviceRepository,
+                    preferences = userPreferencesRepository,
+                    channelId = testChannelId,
+                    scope = CoroutineScope(UnconfinedTestDispatcher()),
+                    computeDispatcher = compute.asCoroutineDispatcher(),
+                )
+            runBlocking {
+                withTimeout(5_000) {
+                    offMain.notifications.first { it is NotificationUpdate.Notify }
+                }
+            }
+        } finally {
+            compute.shutdown()
+        }
+
+        assertTrue(threads.isNotEmpty())
+        assertTrue(threads.all { it == "notification-compute" }, "$threads")
     }
 
     @Test

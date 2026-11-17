@@ -1,12 +1,15 @@
 package com.warrenbrowse.vpn.lib.pushnotification.tunnelstate
 
 import android.content.Context
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
@@ -36,6 +39,9 @@ class TunnelStateNotificationProvider(
     lockedApps: Flow<Int> = flowOf(0),
     /** Whether their blackhole holds them, which the notification says when it does not. */
     lockGuardActive: Flow<Boolean> = flowOf(true),
+    // Every emission asks the package manager (the VPN consent, the locked apps): Binder calls
+    // that stay off the thread owning [scope], the main one in the app.
+    computeDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : NotificationProvider<Notification.Tunnel> {
     val notificationId = NotificationId(2)
 
@@ -73,6 +79,7 @@ class TunnelStateNotificationProvider(
                     ),
                 )
             }
+            .flowOn(computeDispatcher)
             .stateIn(scope, SharingStarted.Eagerly, NotificationUpdate.Cancel(notificationId))
 
     private fun TunnelState.toNotificationTunnelState(
