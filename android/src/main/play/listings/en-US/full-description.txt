@@ -14,7 +14,7 @@ LOOKS LIKE ORDINARY WEB TRAFFIC
 Warren tunnels run over QUIC and look like ordinary HTTP/3 browsing on port 443. That keeps the connection fast and steady on mobile networks, and hard to tell apart from a regular website visit. This mode is always on, so every Warren user looks the same on the network.
 
 FEATURES
-• Kill switch and Always-on VPN support: traffic stays blocked if the tunnel drops.
+• Kill switch: traffic stays blocked while the tunnel reconnects. Lockdown mode also keeps it blocked when the connection keeps dropping or your account is refused. To block traffic in every case, turn on Always-on VPN and "Block connections without VPN" in the Android settings.
 • Split tunneling: choose apps that bypass the VPN.
 • Port forwarding included.
 • DAITA, which pads and shapes traffic against traffic analysis.
@@ -27,10 +27,10 @@ The app is open source (GPL-3.0) and its tunnel engine is open source (AGPL-3.0)
 HOW TO START
 1. Install the app and create your wallet.
 2. Write down your recovery phrase.
-3. Add time in the app or on warren.ro, or redeem a voucher.
+3. Buy time on the Warren website, which the app opens in your browser, or redeem a voucher.
 
 PRIVACY
-The app collects a very minimal amount of technical telemetry and never ties it to your wallet, your IP address or anything that identifies you. App logs leave your device only if you send them yourself to report a problem. The app checks for updates periodically. If you use split tunneling, the app reads the list of installed apps on the device only to show it to you; that list never leaves the device.
+To check that you run a supported version, the app downloads a signed version manifest from Warren and compares versions on the device: it sends no identifier, no app version and no system version. App logs leave your device only if you send them yourself to report a problem. If you use split tunneling, the app reads the list of installed apps on the device only to show it to you; that list never leaves the device.
 
 Privacy policy: https://warren.ro/en/privacy
 Support: support@warrenbrowse.com
