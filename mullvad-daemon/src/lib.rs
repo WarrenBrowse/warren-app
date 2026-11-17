@@ -1038,6 +1038,19 @@ pub(crate) enum InternalDaemonEvent {
 /// two orders of margin over a slow installer on a slow disk, and still bounds
 /// how long a host can be blocked by an update that gave up.
 #[cfg(not(target_os = "android"))]
+/// How long the shutdown waits for the tunnel to report itself disconnected
+/// before it closes the daemon's interfaces anyway. Below the stop timeout of
+/// the service managers, so the daemon still finishes its own shutdown.
+const SHUTDOWN_DISCONNECT_DEADLINE: std::time::Duration = std::time::Duration::from_secs(20);
+
+/// Runs `wait` for at most `limit`; `true` when it finished in time.
+async fn wait_for_disconnect_within(
+    limit: std::time::Duration,
+    wait: impl Future<Output = ()>,
+) -> bool {
+    tokio::time::timeout(limit, wait).await.is_ok()
+}
+
 const RESTART_LOCKDOWN_DEADMAN: std::time::Duration = std::time::Duration::from_secs(300);
 
 /// What the dead-man should do when its window expires: `Some(mode)` to put the
@@ -2727,19 +2740,28 @@ impl Daemon {
 
         self.disconnect_tunnel();
 
-        while let Some(event) = self.rx.next().await {
-            match event {
-                InternalDaemonEvent::TunnelStateTransition(transition) => {
-                    self.handle_tunnel_state_transition(transition).await;
+        let disconnected = wait_for_disconnect_within(SHUTDOWN_DISCONNECT_DEADLINE, async {
+            while let Some(event) = self.rx.next().await {
+                match event {
+                    InternalDaemonEvent::TunnelStateTransition(transition) => {
+                        self.handle_tunnel_state_transition(transition).await;
+                    }
+                    _ => {
+                        log::trace!("Ignoring event because the daemon is shutting down");
+                    }
                 }
-                _ => {
-                    log::trace!("Ignoring event because the daemon is shutting down");
-                }
-            }
 
-            if self.tunnel_state.is_disconnected() {
-                break;
+                if self.tunnel_state.is_disconnected() {
+                    break;
+                }
             }
+        })
+        .await;
+        if !disconnected {
+            log::error!(
+                "The tunnel did not disconnect within {SHUTDOWN_DISCONNECT_DEADLINE:?}; shutting \
+                 down anyway"
+            );
         }
     }
 
@@ -8027,5 +8049,33 @@ mod tunnel_split_apps_tests {
         after.included_apps.insert(app(APPS[0]));
 
         assert_eq!(tunnel_split_apps(&before), tunnel_split_apps(&after));
+    }
+}
+
+#[cfg(test)]
+mod shutdown_disconnect_tests {
+    use super::{SHUTDOWN_DISCONNECT_DEADLINE, wait_for_disconnect_within};
+
+    /// A tunnel state machine that never reports itself disconnected must
+    /// not hold the daemon's shutdown past the deadline: the service manager
+    /// would otherwise kill the daemon before it closed its interfaces.
+    #[tokio::test(start_paused = true)]
+    async fn a_disconnect_that_never_ends_releases_the_shutdown_at_the_deadline() {
+        let started = tokio::time::Instant::now();
+
+        let disconnected =
+            wait_for_disconnect_within(SHUTDOWN_DISCONNECT_DEADLINE, std::future::pending::<()>())
+                .await;
+
+        assert!(!disconnected);
+        assert_eq!(started.elapsed(), SHUTDOWN_DISCONNECT_DEADLINE);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_disconnect_that_ends_is_waited_for() {
+        let disconnected =
+            wait_for_disconnect_within(SHUTDOWN_DISCONNECT_DEADLINE, std::future::ready(())).await;
+
+        assert!(disconnected);
     }
 }
