@@ -54,43 +54,25 @@ The following is redacted:
 * IPs and MAC addresses.
 * V4 UUIDs. This includes account and device IDs, and network interface GUIDs on Windows.
 
-On desktop the report is not transmitted by the app: the user shares the
-redacted file themselves. On Android the user chooses between the in-app send
-and the share sheet; nothing leaves the device without that tap. The tap on
+On desktop and Android the report form sends the report once the user taps
+Send, and the user can also save or share the redacted file instead; nothing
+leaves the device without that tap. The tap on
 Send is also what runs the probes above: they reach the connect host and the
 API, from the device's own address on the protected leg, and are taken right
 before the wallet-signed POST to the same connect host.
 
 
-## Telemetry (version check)
+## Version check
 
-<!--
-This section of the docs is an *explanation*, and below it comes a *reference*. Please try
-to follow the documentation guidelines on this in https://github.com/mullvad/coding-guidelines/
--->
+The app learns of new versions, and of whether the running one is still
+supported, by downloading the signed update manifest of its platform from the
+update channel of its build. The request is a plain HTTPS GET of a static file:
+it carries no wallet address, account or device identifier, no app version and
+no system version (the client sets no such header and no user agent). The
+manifest is verified against the update signing key before it is used. See
+[`AUTO-UPDATE.md`](AUTO-UPDATE.md).
 
-The app reports a very minimal amount of telemetry to the Warren API. And it does not in any way
-tie it to identifiable information. See reference below for exact telemetry data.
+The device list of an account, which the user reads in the app, holds for each
+device its platform, app version, registration day and last active day: the
+server learns those when the device registers and calls the API.
 
-The app calls an API designed to tell the app if there are any upgrades available and
-if the currently running version is still supported. The main purpose
-is to inform the users about new app versions, and alert the user if there are known
-vulnerabilities or bugs in the version they are currently running. All of this is first and
-foremost to improve the user experience and keep the user safe.
-
-This API request does not contain the wallet address or any account or device identifier. It only
-contains which version of the app is currently running and which operating system version it's
-running on.
-The API server aggregates this information and only keeps counters on number of used app versions
-and operating systems. These statistics are recorded for the purpose of letting Warren
-understand the impact of discovered bugs and issues, and to prioritize features.
-
-### Reference
-
-The following is the telemetry included in the version check API call. These are sent as
-http headers and are only submitted once per 24 hours:
-
-* `M-App-Version`: Contains the version of the Warren VPN app. For example `2026.1`.
-* `M-Platform-Version`: Contains the operating system name and version. Only the most important
-  parts of the OS version number is included. It will never include patch versions or build numbers.
-  Examples: `Windows 11`, `Linux Ubuntu 24.04`, `macOS 26.0`, `Android 16`.

@@ -531,7 +531,7 @@ export class ErrorNotificationProvider
 
     // Every message above that asks the user to report the problem must
     // give them a way to do it: the community forum is the support front
-    // door (the in-app report form was removed). Only the causes whose
+    // door, where the report form of the Support view also posts. Only the causes whose
     // copy mentions reporting get the link; informational states (device
     // offline, account out of time, unstable network) stay action-less.
     if (
