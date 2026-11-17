@@ -28,7 +28,25 @@ on:
     paths: &android_paths
       - "android/**"
       - "warren-jni/**"
+      # Every in-repo crate warren-jni compiles, the lock and the sibling pins:
+      # a change to any of them changes the Android library.
       - "warren-standing/**"
+      - "warren-forum/**"
+      - "warren-incidents/**"
+      - "warren-product-env/**"
+      - "warren-app-routes/**"
+      - "talpid-app-routing/**"
+      - "talpid-types/**"
+      - "talpid-platform-metadata/**"
+      - "mullvad-update/**"
+      - "mullvad-version/**"
+      - "mullvad-problem-report/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".warrenguard-version"
+      - ".warren-sdk-version"
+      - ".warren-contract-version"
+      - ".github/actions/mullvad-build-env/**"
       # The client-rule fixtures are replayed by the JVM unit tests (the forum
       # link classes, the outcome envelopes, the per-flavor BuildConfig).
       - "fixtures/client-rules/**"

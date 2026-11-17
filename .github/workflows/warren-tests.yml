@@ -282,12 +282,11 @@ jobs:
     # with its macOS tests never having run in CI. This job runs exactly that
     # crate on a macOS runner, and the reusable scope puts it in the release
     # gate as well.
-    # Self-hosted runners keep their state between jobs, so code from a fork
-    # never runs on them: a pull request opened from another repository skips
-    # this job.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, macOS, ARM64]
-    timeout-minutes: 30
+    # GitHub-hosted, a fresh VM per run, free for this public repository: the
+    # code under test never runs on the persistent macOS pool, which also
+    # builds and publishes releases.
+    runs-on: macos-15
+    timeout-minutes: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
@@ -330,6 +329,13 @@ jobs:
         run: |
           cargo clippy --no-deps --locked -p talpid-macos --all-targets -- -D warnings
           cargo clippy --no-deps --locked -p talpid-core -- -D warnings
+
+      # The daemon and the CLI carry macOS-only code (the launch daemon, the
+      # installer guard, the keychain store) that the Linux job never compiles;
+      # before this step only a release tag's build-macos did.
+      - name: cargo check the daemon and the CLI (macOS)
+        timeout-minutes: 30
+        run: cargo check --locked -p mullvad-daemon -p mullvad-cli
 
       # warren-ios's FFI modules are `#![cfg(target_os = "ios")]`, so the Linux
       # job above compiles none of them: the whole forum login preflight (the

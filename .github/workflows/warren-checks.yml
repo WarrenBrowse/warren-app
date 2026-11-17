@@ -140,6 +140,18 @@ on:
       - ".warren-contract-version"
       - ".github/workflows/warren-checks.yml"
       - ".github/workflows/warren-tests.yml"
+      # The release path: what it runs is only exercised at a tag otherwise,
+      # and its scripts are tested in this scope. dist-assets/linux holds the
+      # one-command installer the download page serves (curl | sh).
+      - ".github/workflows/release.yml"
+      - ".github/workflows/release-daemon.yml"
+      - ".github/workflows/update-metadata.yml"
+      - ".github/workflows/refresh-update-metadata.yml"
+      - ".github/actions/fetch-warren-relays/**"
+      - ".github/actions/stamp-headless-version/**"
+      - "build.sh"
+      - "dist-assets/linux/**"
+      - "scripts/**"
       - ".config/nextest.toml"
       - ".github/actions/mullvad-build-env/**"
       - ".github/actions/windows-build/**"
