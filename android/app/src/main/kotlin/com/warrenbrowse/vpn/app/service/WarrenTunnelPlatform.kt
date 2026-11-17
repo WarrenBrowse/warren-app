@@ -173,6 +173,9 @@ class AndroidTunnelPlatform(
         if (acceptedDns == 0) {
             builder.addDnsServer(WarrenTunDefaults.BLACKHOLE_DNS_SERVER)
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            builder.setMetered(plan.metered)
+        }
         applyAppRouting(builder, plan.appRouting)
         // establish() validates the full config in the system process and
         // throws IllegalArgumentException ("Cannot set address") on a rejected

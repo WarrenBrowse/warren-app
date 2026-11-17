@@ -151,6 +151,13 @@ class WarrenTunInterfacePlanTest {
     }
 
     @Test
+    fun `the active interface does not report the network as metered`() {
+        // From API 29 a VPN is metered unless it says otherwise, which turns an
+        // unmetered Wi-Fi into a metered one for every app behind the tunnel.
+        assertFalse(planTunInterface(config()).metered)
+    }
+
+    @Test
     fun `split tunnelling excluded apps are carried into the active plan`() {
         val routing = AppRouting.Bypass(setOf("com.foo", "com.bar"))
         val plan = planTunInterface(config(), appRouting = routing)

@@ -36,6 +36,12 @@ data class WarrenTunInterfacePlan(
      * no tunnel runs ([planLockGuard]).
      */
     val lockGuard: Boolean = false,
+    /**
+     * Whether the interface reports its traffic as metered. The platform
+     * default from API 29 is metered, which would make apps defer their work
+     * on an unmetered network as soon as the tunnel is up.
+     */
+    val metered: Boolean = true,
 ) {
     data class TunCidr(val address: String, val prefixLength: Int)
 }
@@ -175,6 +181,7 @@ fun planTunInterface(
         mtu = config.mtu.coerceIn(if (config.enableIpv6) IPV6_MIN_MTU else MIN_MTU, MAX_MTU),
         blocking = false,
         appRouting = appRouting,
+        metered = false,
     )
 }
 
