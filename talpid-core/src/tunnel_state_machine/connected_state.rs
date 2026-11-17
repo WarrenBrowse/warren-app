@@ -691,6 +691,7 @@ mod connected_endpoint_tests {
             exit_endpoint: None,
             enable_daita,
             single_node: false,
+            quantum_resistant: false,
         })
     }
 
@@ -831,6 +832,7 @@ mod peer_endpoint_tests {
             exit_endpoint: None,
             enable_daita: false,
             single_node: false,
+            quantum_resistant: false,
         });
         let (_events_tx, events) = mpsc::unbounded();
         let (_close_tx, close_event) = oneshot::channel();
