@@ -34,6 +34,20 @@ impl SignedResponse {
         Self::deserialize_and_verify_at_time(keys, bytes, chrono::Utc::now(), min_metadata_version)
     }
 
+    /// Checks that `bytes` carry a valid signature by a trusted key, and nothing else: neither the
+    /// expiry nor the version counter. For the release tooling, which carries a published
+    /// manifest's history into the next one it signs and must accept a manifest that has lapsed.
+    pub fn verify_signature(bytes: &[u8]) -> Result<(), anyhow::Error> {
+        Self::verify_signature_with_keys(&crate::defaults::TRUSTED_METADATA_SIGNING_PUBKEYS, bytes)
+    }
+
+    pub(crate) fn verify_signature_with_keys(
+        keys: &Vec1<VerifyingKey>,
+        bytes: &[u8],
+    ) -> Result<(), anyhow::Error> {
+        deserialize_and_verify(keys, bytes).map(|_| ())
+    }
+
     /// This method is used mostly for testing, and skips all verification.
     /// Own method to prevent accidental misuse.
     pub fn deserialize_insecure(bytes: &[u8]) -> Result<Self, anyhow::Error> {
@@ -137,6 +151,39 @@ mod test {
     use vec1::vec1;
 
     use super::*;
+
+    fn test_key() -> Vec1<VerifyingKey> {
+        let pubkey = hex::decode(include_str!("../../test-pubkey")).unwrap();
+        vec1![VerifyingKey(
+            ed25519_dalek::VerifyingKey::from_bytes(&pubkey.try_into().unwrap()).unwrap()
+        )]
+    }
+
+    #[test]
+    fn a_lapsed_manifest_still_has_a_valid_signature() {
+        let lapsed = include_bytes!("../../test-version-response.json");
+
+        SignedResponse::verify_signature_with_keys(&test_key(), lapsed)
+            .expect("the signature holds whatever the expiry");
+    }
+
+    #[test]
+    fn a_manifest_edited_after_signing_is_refused() {
+        let signed =
+            std::str::from_utf8(include_bytes!("../../test-version-response.json")).unwrap();
+        let mut value: serde_json::Value = serde_json::from_str(signed).unwrap();
+        value["signed"]["metadata_version"] = serde_json::json!(999_999);
+        let tampered = serde_json::to_vec(&value).unwrap();
+
+        SignedResponse::verify_signature_with_keys(&test_key(), &tampered)
+            .expect_err("an edited manifest is refused");
+    }
+
+    #[test]
+    fn a_manifest_signed_by_an_untrusted_key_is_refused() {
+        SignedResponse::verify_signature(include_bytes!("../../test-version-response.json"))
+            .expect_err("only the trusted keys sign a manifest the release tooling accepts");
+    }
 
     /// Test that a valid signed version response is successfully deserialized and verified
     #[test]

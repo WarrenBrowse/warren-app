@@ -32,6 +32,16 @@ pub enum Opt {
         #[clap(short, long)]
         file: String,
     },
+
+    /// Check that signed metadata carries a valid signature by a key this build trusts. The
+    /// expiry and the version counter are not checked: the release tooling carries a published
+    /// manifest's history into the next one it signs, a lapsed one included. Exits non-zero
+    /// when the signature does not hold.
+    Verify {
+        /// File to check. Use "-" to read from stdin.
+        #[clap(short, long)]
+        file: String,
+    },
 }
 
 #[tokio::main]
@@ -47,7 +57,17 @@ async fn main() -> anyhow::Result<()> {
             let secret = signing_key(std::env::var_os(SIGNING_KEY_VAR))?;
             sign(file, secret).await
         }
+        Opt::Verify { file } => verify(file).await,
     }
+}
+
+async fn verify(file: String) -> anyhow::Result<()> {
+    let data = if file == "-" {
+        get_stdin().await?
+    } else {
+        fs::read(file).await?
+    };
+    SignedResponse::verify_signature(&data)
 }
 
 /// The signing key held in the environment variable's `value`. The errors never
@@ -123,6 +143,22 @@ mod tests {
         let parsed = Opt::try_parse_from(["mullvad-version-metadata", "sign", "--file", "-"]);
 
         assert!(matches!(parsed, Ok(Opt::Sign { file }) if file == "-"));
+    }
+
+    #[test]
+    fn verify_takes_the_file_alone() {
+        let parsed = Opt::try_parse_from(["mullvad-version-metadata", "verify", "--file", "-"]);
+
+        assert!(matches!(parsed, Ok(Opt::Verify { file }) if file == "-"));
+    }
+
+    #[tokio::test]
+    async fn verify_refuses_a_manifest_no_trusted_key_signed() {
+        let file = concat!(env!("CARGO_MANIFEST_DIR"), "/test-version-response.json");
+
+        verify(file.to_owned())
+            .await
+            .expect_err("a manifest signed by the test key is not trusted");
     }
 
     #[test]
