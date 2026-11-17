@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
 
       - name: Install cargo-shear
-        uses: taiki-e/install-action@cargo-shear
+        uses: taiki-e/install-action@416ae481d27de87a69d7a0a9e165c0d09d092949  # cargo-shear, 2026-11-17
 
       - name: Run cargo shear in all workspaces
         shell: bash

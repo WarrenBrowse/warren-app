@@ -51,7 +51,7 @@ jobs:
       CLI_TAG: ${{ inputs.tag }}
       RUN_ID: ${{ inputs.run-id }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
 
       - name: The tag names a published headless release
         run: |

@@ -20,14 +20,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
 
       - uses: ./.github/actions/mullvad-build-env
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Run cargo deny
-        uses: EmbarkStudios/cargo-deny-action@v2
+        uses: EmbarkStudios/cargo-deny-action@70f81531115945ba6eb6b941ec9d39d063438eb9  # v2.1.2
         with:
           log-level: warn
           rust-version: stable
@@ -35,7 +35,7 @@ jobs:
 
       # Run an additional license check for the iOS crate to catch GPL3 issues
       - name: Run cargo deny for iOS (GPL3 check)
-        uses: EmbarkStudios/cargo-deny-action@v2
+        uses: EmbarkStudios/cargo-deny-action@70f81531115945ba6eb6b941ec9d39d063438eb9  # v2.1.2
         with:
           manifest-path: warren-ios/Cargo.toml
           log-level: error

@@ -11,9 +11,9 @@ jobs:
   check-formatting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - name: Run clang-format for proto files
-        uses: jidicula/clang-format-action@v4.11.0
+        uses: jidicula/clang-format-action@f62da5e3d3a2d88ff364771d9d938773a618ab5e  # v4.11.0
         with:
           clang-format-version: 15
           include-regex: ^.*\.proto$

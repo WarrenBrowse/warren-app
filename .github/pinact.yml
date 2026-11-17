@@ -3,5 +3,7 @@
 # pinact run -u <path> # bump one file only
 version: 3
 files:
-  - pattern: .github/workflows/android-*.yml
+  - pattern: .github/workflows/*.yml
+  - pattern: .github/actions/*/action.yml
+  - pattern: .github/actions/*/*/action.yml
 separator: "  # "

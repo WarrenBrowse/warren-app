@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - name: Use custom container image if specified
         if: ${{ github.event.inputs.override_container_image != '' }}
         run: echo "inner_container_image=${{ github.event.inputs.override_container_image }}"
@@ -105,12 +105,12 @@ jobs:
       - name: Fix HOME path
         run: echo "HOME=/root" >> $GITHUB_ENV
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - name: Checkout submodules
         run: |
           git config --global --add safe.directory '*'
           git submodule update --init --depth=1
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
         id: cache-app-cargo-artifacts
         with:
           path: |
@@ -134,7 +134,7 @@ jobs:
       - name: Build test executable
         run: ./desktop/packages/mullvad-vpn/scripts/build-test-executable.sh
       - name: Upload app
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         if: '!cancelled()'
         with:
           name: linux-build
@@ -159,7 +159,7 @@ jobs:
       - name: Fix HOME path
         run: echo "HOME=/root" >> $GITHUB_ENV
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - name: Run mullvad-version
         id: cargo-run
         run: |
@@ -181,11 +181,11 @@ jobs:
     runs-on: [self-hosted, desktop-test, Linux]  # app-test-linux
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659  # v1.17.0
       - name: Build test-manager
         run: ./test/scripts/container-run.sh cargo build --package test-manager --release
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         if: '!cancelled()'
         with:
           name: linux-test-manager-build
@@ -208,7 +208,7 @@ jobs:
       needs.prepare-matrices.outputs.linux_matrix != ''
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - name: Build binaries
         run: |
           # Move test runner binaries to a known location. This is needed in the coming `upload-artifact` step.
@@ -217,7 +217,7 @@ jobs:
           mv -t ./bin/ \
             "$CARGO_TARGET_DIR/x86_64-unknown-linux-gnu/release/test-runner" \
             "$CARGO_TARGET_DIR/x86_64-unknown-linux-gnu/release/connection-checker"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         if: '!cancelled()'
         with:
           name: linux-test-runner-binaries
@@ -248,7 +248,7 @@ jobs:
         os: ${{ fromJSON(needs.prepare-matrices.outputs.linux_matrix) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - name: Create binaries directory & add to PATH
         # bash args:
         # -l: source ~/.profile. May be needed for e.g. '~/.cargo/env' or 'brew shellenv`
@@ -260,13 +260,13 @@ jobs:
           mkdir "${{ github.workspace }}/bin"
           echo "${{ github.workspace }}/bin/" >> "$GITHUB_PATH"
       - name: Download Test Manager
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
         if: ${{ needs.build-test-manager-linux.result == 'success' }}
         with:
           name: linux-test-manager-build
           path: ${{ github.workspace }}/bin
       - name: Download Test Runner binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
         if: ${{ needs.build-test-runner-binaries-linux.result == 'success' }}
         with:
           name: linux-test-runner-binaries
@@ -276,7 +276,7 @@ jobs:
           chmod +x ${{ github.workspace }}/bin/*
         shell: bash
       - name: Download App
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
         if: ${{ needs.build-linux-app.result == 'success' }}
         with:
           name: linux-build
@@ -297,7 +297,7 @@ jobs:
           ls -la "$TEST_DIST_DIR"
           ./test/scripts/run/ci.sh ${{ matrix.os }}
       - name: Upload test report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         if: '!cancelled()'
         with:
           name: ${{ matrix.os }}_report
@@ -317,7 +317,7 @@ jobs:
         run: |
           git config --system core.longpaths true
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - uses: ./.github/actions/mullvad-build-env
       - name: Build app
         if: ${{ github.event.inputs.gotatun == 'false' }}
@@ -348,7 +348,7 @@ jobs:
       - name: Build test executable
         shell: bash
         run: ./desktop/packages/mullvad-vpn/scripts/build-test-executable.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         if: '!cancelled()'
         with:
           name: windows-build
@@ -376,7 +376,7 @@ jobs:
         os: ${{ fromJSON(needs.prepare-matrices.outputs.windows_matrix) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - name: Create binaries directory & add to PATH
         # bash args:
         # -l: source ~/.profile. May be needed for e.g. '~/.cargo/env' or 'brew shellenv`
@@ -387,7 +387,7 @@ jobs:
           mkdir "${{ github.workspace }}/bin"
           echo "${{ github.workspace }}/bin/" >> "$GITHUB_PATH"
       - name: Download Test Manager
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
         if: ${{ needs.build-test-manager-linux.result == 'success' }}
         with:
           name: linux-test-manager-build
@@ -396,7 +396,7 @@ jobs:
         run: |
           chmod +x ${{ github.workspace }}/bin/*
       - name: Download App
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
         if: ${{ needs.build-windows.result == 'success' }}
         with:
           name: windows-build
@@ -416,7 +416,7 @@ jobs:
           export TEST_FILTERS="${{ github.event.inputs.tests }}"
           ./test/scripts/run/ci.sh ${{ matrix.os }}
       - name: Upload test report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         if: '!cancelled()'
         with:
           name: ${{ matrix.os }}_report
@@ -432,7 +432,7 @@ jobs:
     runs-on: [self-hosted, desktop-test, macOS]  # app-test-macos-arm
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - uses: ./.github/actions/mullvad-build-env
       - name: Build app
         if: ${{ github.event.inputs.gotatun == 'false' }}
@@ -442,7 +442,7 @@ jobs:
         run: ./build.sh --optimize --gotatun
       - name: Build test executable
         run: ./desktop/packages/mullvad-vpn/scripts/build-test-executable.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         if: '!cancelled()'
         with:
           name: macos-build
@@ -466,13 +466,13 @@ jobs:
         os: ${{ fromJSON(needs.prepare-matrices.outputs.macos_matrix) }}
     steps:
       - name: Download App
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
         if: ${{ needs.build-macos.result == 'success' }}
         with:
           name: macos-build
           path: ~/Library/Caches/mullvad-test/packages
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - name: Run end-to-end tests
         # bash args:
         # -l: source ~/.profile. May be needed for e.g. '~/.cargo/env' or 'brew shellenv`
@@ -485,7 +485,7 @@ jobs:
           export TEST_FILTERS="${{ github.event.inputs.tests }}"
           ./test/scripts/run/ci.sh ${{ matrix.os }}
       - name: Upload test report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         if: '!cancelled()'
         with:
           name: ${{ matrix.os }}_report
@@ -500,7 +500,7 @@ jobs:
       image: ${{ needs.prepare-linux.outputs.container_image }}
     steps:
       - name: Download test report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
         with:
           pattern: '*_report'
           merge-multiple: true
@@ -513,7 +513,7 @@ jobs:
         run: |
           mkdir "${{ github.workspace }}/bin"
       - name: Download report compiler
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
         with:
           name: linux-test-manager-build
           path: ${{ github.workspace }}/bin
@@ -531,7 +531,7 @@ jobs:
           ${{ github.workspace }}/bin/test-manager \
           format-test-reports ${{ github.workspace }}/*_report \
           | tee summary.html >> $GITHUB_STEP_SUMMARY
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: summary.html
           path: summary.html

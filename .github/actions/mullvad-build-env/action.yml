@@ -305,7 +305,7 @@ runs:
         fi
 
     - name: Setup Rust cache
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0  # v2.9.3
       with:
         add-job-id-key: "false"  # Preserve cache across jobs
         cache-directories: >-
@@ -320,7 +320,7 @@ runs:
       # Pinned at v3: upstream has not yet shipped a Node 24 build, so this is the
       # one action that still triggers the "Node.js 20 is deprecated" warning. The
       # runner forces it onto Node 24 anyway; bump when arduino ships a node24 tag.
-      uses: arduino/setup-protoc@v3
+      uses: arduino/setup-protoc@c65c819552d16ad3c9b72d9dfd5ba5237b9c906b  # v3.0.0
       with:
         repo-token: ${{ inputs.protoc-token }}
 
@@ -354,20 +354,20 @@ runs:
 
     - name: Cache Windows libraries
       if: runner.os == 'Windows'
-      uses: actions/cache@v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
       with:
         path: ./windows/*/bin/
         key: windows-modules-${{ inputs.product-env }}-${{ steps.windows-modules-hash.outputs.hash }}
 
     - name: Install msbuild
       if: runner.os == 'Windows'
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce  # v2.0.0
       with:
         vs-version: latest
 
     - name: Install latest zig
       if: runner.os == 'Windows'
-      uses: mlugg/setup-zig@v2
+      uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29  # v2.2.1
       with:
         version: 0.14.1
 
@@ -404,7 +404,7 @@ runs:
         fi
 
     - name: Install Go
-      uses: actions/setup-go@v6
+      uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16  # v6.5.0
       with:
         go-version: 1.21.3
         # No go.mod at the repo root (wireguard-go is built through build.sh with
@@ -413,7 +413,7 @@ runs:
         cache: false
 
     - name: Setup node
-      uses: actions/setup-node@v5
+      uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5.0.0
       with:
         node-version-file: desktop/package.json
         cache: "npm"

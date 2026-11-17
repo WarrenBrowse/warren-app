@@ -81,7 +81,7 @@ jobs:
       cli-tag: ${{ steps.resolve.outputs.cli-tag }}
       publish: ${{ steps.resolve.outputs.publish }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -169,7 +169,7 @@ jobs:
       WARREN_PRODUCT_ENV: ${{ needs.resolve.outputs.channel }}
       WARREN_VERSION: ${{ needs.resolve.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
       - name: Stamp the release version
         uses: ./.github/actions/stamp-headless-version
         with:
@@ -178,7 +178,7 @@ jobs:
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
       - name: Checkout warren-cli (install assets)
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
         with:
           repository: WarrenBrowse/warren-cli
           path: warren-cli
@@ -236,7 +236,7 @@ jobs:
         # this one, so the public install one-liner only needs warren-cli to be
         # public. The `finalise` job below flips the draft.
         if: needs.resolve.outputs.publish == 'true'
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3  # v3.0.4
         with:
           repository: WarrenBrowse/warren-cli
           token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
@@ -244,7 +244,7 @@ jobs:
           tag_name: ${{ needs.resolve.outputs.cli-tag }}
           draft: true
           files: release-assets/*
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         continue-on-error: true
         with:
           name: warren-headless-linux
@@ -280,7 +280,7 @@ jobs:
       WARREN_PRODUCT_ENV: ${{ needs.resolve.outputs.channel }}
       WARREN_VERSION: ${{ needs.resolve.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
       - name: Stamp the release version
         uses: ./.github/actions/stamp-headless-version
         with:
@@ -289,7 +289,7 @@ jobs:
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
       - name: Checkout warren-cli (install assets)
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
         with:
           repository: WarrenBrowse/warren-cli
           path: warren-cli
@@ -339,7 +339,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - name: Publish artifacts to the warren-cli release (draft)
         if: needs.resolve.outputs.publish == 'true'
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3  # v3.0.4
         with:
           repository: WarrenBrowse/warren-cli
           token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
@@ -347,7 +347,7 @@ jobs:
           tag_name: ${{ needs.resolve.outputs.cli-tag }}
           draft: true
           files: release-assets/*
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         continue-on-error: true
         with:
           name: warren-headless-linux-arm64
@@ -367,7 +367,7 @@ jobs:
       WARREN_PRODUCT_ENV: ${{ needs.resolve.outputs.channel }}
       WARREN_VERSION: ${{ needs.resolve.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
       - name: Stamp the release version
         uses: ./.github/actions/stamp-headless-version
         with:
@@ -376,7 +376,7 @@ jobs:
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
       - name: Checkout warren-cli (install assets)
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
         with:
           repository: WarrenBrowse/warren-cli
           path: warren-cli
@@ -410,7 +410,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - name: Publish artifacts to the warren-cli release (draft)
         if: needs.resolve.outputs.publish == 'true'
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3  # v3.0.4
         with:
           repository: WarrenBrowse/warren-cli
           token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
@@ -418,7 +418,7 @@ jobs:
           tag_name: ${{ needs.resolve.outputs.cli-tag }}
           draft: true
           files: release-assets/*
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         continue-on-error: true
         with:
           name: warren-headless-macos
@@ -452,7 +452,7 @@ jobs:
     steps:
       - name: Allow long paths
         run: git config --system core.longpaths true
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
       - uses: ./.github/actions/windows-build
         with:
           script: ci/codemagic/windows-headless.sh
@@ -473,7 +473,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - name: Publish artifacts to the warren-cli release (draft)
         if: needs.resolve.outputs.publish == 'true'
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3  # v3.0.4
         with:
           repository: WarrenBrowse/warren-cli
           token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
@@ -481,7 +481,7 @@ jobs:
           tag_name: ${{ needs.resolve.outputs.cli-tag }}
           draft: true
           files: release-assets/*
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         continue-on-error: true
         with:
           name: warren-headless-windows
@@ -515,7 +515,7 @@ jobs:
       WARREN_VERSION: ${{ needs.resolve.outputs.version }}
       WINDOWS_RESULT: ${{ needs.windows.result }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
       - name: Ensure gh CLI
         # The self-hosted Rosetta runner does not ship it.
         run: |

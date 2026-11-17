@@ -10,9 +10,9 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
 
-      - uses: tombi-toml/setup-tombi@v1
+      - uses: tombi-toml/setup-tombi@7417bd6e820cf0d4f89d77b48d13ba5d060435bf  # v1.11.3
 
       - name: Lint TOML files
         run: tombi lint
