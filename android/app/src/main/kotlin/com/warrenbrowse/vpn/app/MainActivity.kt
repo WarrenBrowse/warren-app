@@ -86,7 +86,6 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
     private val launchVpnPermission =
         registerForActivityResult(CreateVpnProfile()) { _ -> dispatchWarrenConnect() }
 
-    private val warrenAppViewModel by inject<WarrenAppViewModel>()
     private val userPreferencesRepository by inject<UserPreferencesRepository>()
     private val serviceConnectionManager by inject<ServiceConnectionManager>()
     private val splashCompleteRepository by inject<SplashCompleteRepository>()
@@ -122,7 +121,6 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
     override fun onCreate(savedInstanceState: Bundle?) {
         loadKoinModules(listOf(uiModule))
 
-        lifecycle.addObserver(warrenAppViewModel)
 
         // Coexistence: a higher-priority product environment installed on
         // this device stands this build down, once, on the transition. Off
@@ -264,7 +262,6 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
     }
 
     override fun onDestroy() {
-        lifecycle.removeObserver(warrenAppViewModel)
         jankStats?.isTrackingEnabled = false
         jankStats = null
         super.onDestroy()

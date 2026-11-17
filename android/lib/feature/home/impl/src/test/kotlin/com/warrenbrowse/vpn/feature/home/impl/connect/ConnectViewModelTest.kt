@@ -37,7 +37,6 @@ import com.warrenbrowse.vpn.lib.repository.WarrenNetworkStatsState
 import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
-import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -63,11 +62,9 @@ class ConnectViewModelTest {
     private val mockInAppNotificationController: InAppNotificationController = mockk()
 
     // Select location use case
-    private val mockSelectedLocationTitleUseCase: SelectedLocationTitleUseCase = mockk()
 
     // Flows
     private val tunnelState = MutableStateFlow<TunnelState>(TunnelState.Disconnected())
-    private val selectedRelayItemFlow = MutableStateFlow<String?>(null)
     private val lastKnownLocationFlow = MutableStateFlow<GeoIpLocation?>(null)
     private val exitPinFlow = MutableStateFlow<ExitPin>(ExitPin.Automatic)
 
@@ -118,14 +115,12 @@ class ConnectViewModelTest {
         every { mockLocation.country } returns "dummy country"
 
         // Flows
-        every { mockSelectedLocationTitleUseCase() } returns selectedRelayItemFlow
 
         viewModel =
             ConnectViewModel(
                 changelogRepository = mockChangelogRepository,
                 inAppNotificationController = mockInAppNotificationController,
                 userPreferencesRepository = mockk(),
-                selectedLocationTitleUseCase = mockSelectedLocationTitleUseCase,
                 connectionProxy = mockConnectionProxy,
                 lastKnownLocationUseCase = mockLastKnownLocationUseCase,
                 systemVpnSettingsUseCase = mockSystemVpnSettingsUseCase,
@@ -218,18 +213,6 @@ class ConnectViewModelTest {
             assertEquals(tunnelStateTestItem, result.tunnelState)
         }
     }
-
-    @Test
-    fun `given RelayListUseCase returns new selectedRelayItem uiState should emit new selectedRelayItem`() =
-        runTest {
-            val selectedRelayItemTitle = "Item"
-            viewModel.uiState.test {
-                assertEquals(ConnectUiState.INITIAL, awaitItem())
-
-                selectedRelayItemFlow.value = selectedRelayItemTitle
-                assertEquals(selectedRelayItemTitle, awaitItem().selectedRelayItemTitle)
-            }
-        }
 
     @Test
     fun `given new location in tunnel state uiState should emit new location`() = runTest {

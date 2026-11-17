@@ -77,9 +77,7 @@ import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.ForumActivityOpenRequests
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
-import com.warrenbrowse.vpn.screen.navigation.NoDaemonNavKey
 import com.warrenbrowse.vpn.screen.navigation.SplashNavKey
-import com.warrenbrowse.vpn.screen.navigation.noDaemonEntry
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
 import com.warrenbrowse.vpn.feature.home.api.DeviceRevokedNavKey
 import com.warrenbrowse.vpn.screen.devicerevoked.showsRevokedScreen
@@ -129,7 +127,6 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         )
     }
 
-    val warrenAppViewModel = koinViewModel<WarrenAppViewModel>()
 
     // Forced-update gate: when the signed update manifest reports the running
     // version is no longer supported, replace the whole UI with the blocking
@@ -183,15 +180,6 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         }
     }
 
-    val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(lifecycleOwner) {
-        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            navigationState.backStackFlow.collect { backstack ->
-                warrenAppViewModel.setCurrentBackStack(backstack)
-            }
-        }
-    }
-
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         CheckNotificationPermission(serviceConnectionManager)
     }
@@ -228,7 +216,6 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         warrenMultihopSettingsEntry(nav3)
         warrenPortForwardingSettingsEntry(nav3)
         warrenLocationPickerEntry(nav3)
-        noDaemonEntry(nav3)
         notificationEntry(nav3)
         onboardingEntry(nav3)
         onboardingSubscriptionEntry(nav3)
@@ -299,21 +286,6 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
                         }
                     }
                 }
-        }
-    }
-
-    // For the following LaunchedEffect we do not use CollectSideEffectWithLifecycle since we
-    // collect from StateFlow/SharedFlow with replay and don't want to trigger a navigation again.
-
-    // Globally handle daemon dropped connection with NoDaemonScreen
-    LaunchedEffect(Unit) {
-        warrenAppViewModel.uiSideEffect.collect {
-            Logger.i { "DaemonScreenEvent: $it" }
-            when (it) {
-                DaemonScreenEvent.Show -> nav3.navigate(NoDaemonNavKey)
-
-                DaemonScreenEvent.Remove -> nav3.goBackUntil(NoDaemonNavKey, inclusive = true)
-            }
         }
     }
 }

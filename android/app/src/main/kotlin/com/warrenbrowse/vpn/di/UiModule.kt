@@ -14,7 +14,6 @@ import com.warrenbrowse.vpn.app.MainActivity
 import com.warrenbrowse.vpn.app.connect.holdLockedApps
 import com.warrenbrowse.vpn.app.product.PROD_APPLICATION_ID
 import com.warrenbrowse.vpn.app.product.isApplicationInstalled
-import com.warrenbrowse.vpn.app.WarrenAppViewModel
 import com.warrenbrowse.vpn.feature.appinfo.impl.AppInfoViewModel
 import com.warrenbrowse.vpn.feature.appinfo.impl.changelog.ChangelogViewModel
 import com.warrenbrowse.vpn.feature.applisting.api.ResolveAppListingUseCase
@@ -40,7 +39,6 @@ import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
 import com.warrenbrowse.vpn.lib.repository.AutoStartAndConnectOnBootRepository
 import com.warrenbrowse.vpn.lib.repository.ChangelogDataProvider
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
-import com.warrenbrowse.vpn.lib.repository.RelayListRepository
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
@@ -48,7 +46,6 @@ import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
-import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.AccountExpiryNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.Android16UpdateWarningUseCase
@@ -102,7 +99,6 @@ val uiModule = module {
     single { androidContext().contentResolver }
 
     single { ChangelogRepository(get(), get(), get()) }
-    single { RelayListRepository() }
     single {
         val context = androidContext()
         val packageManager = context.packageManager
@@ -220,9 +216,7 @@ val uiModule = module {
     }
 
     single { SystemVpnSettingsAvailableUseCase(androidContext()) }
-    // SelectedLocationTitleUseCase + LastKnownLocationUseCase are referenced by
-    // ConnectViewModel.
-    single { SelectedLocationTitleUseCase(get()) }
+    // LastKnownLocationUseCase is referenced by ConnectViewModel.
     single { LastKnownLocationUseCase(get()) }
 
     single { InAppNotificationController(getAll(), MainScope()) }
@@ -245,7 +239,6 @@ val uiModule = module {
             changelogRepository = get(),
             inAppNotificationController = get(),
             userPreferencesRepository = get(),
-            selectedLocationTitleUseCase = get(),
             connectionProxy = get(),
             lastKnownLocationUseCase = get(),
             systemVpnSettingsUseCase = get(),
@@ -298,7 +291,6 @@ val uiModule = module {
     }
 
     // This view model must be single so we correctly attach lifecycle and share it with activity
-    single { WarrenAppViewModel() }
 }
 
 const val APP_PREFERENCES_NAME = "${BuildConfig.APPLICATION_ID}.app_preferences"

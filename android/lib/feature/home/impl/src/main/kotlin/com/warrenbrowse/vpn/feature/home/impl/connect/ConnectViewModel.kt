@@ -39,7 +39,6 @@ import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkStatsProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
-import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.EnvStandDownUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitSwitchedNotificationUseCase
@@ -49,7 +48,6 @@ class ConnectViewModel(
     private val changelogRepository: ChangelogRepository,
     inAppNotificationController: InAppNotificationController,
     private val userPreferencesRepository: UserPreferencesRepository,
-    selectedLocationTitleUseCase: SelectedLocationTitleUseCase,
     private val connectionProxy: ConnectionProxy,
     lastKnownLocationUseCase: LastKnownLocationUseCase,
     private val systemVpnSettingsUseCase: SystemVpnSettingsAvailableUseCase,
@@ -75,7 +73,6 @@ class ConnectViewModel(
     @OptIn(FlowPreview::class)
     val uiState: StateFlow<ConnectUiState> =
         combine(
-                selectedLocationTitleUseCase(),
                 inAppNotificationController.notifications,
                 connectionProxy.tunnelState.withPrev(),
                 lastKnownLocationUseCase.lastKnownDisconnectedLocation,
@@ -106,7 +103,6 @@ class ConnectViewModel(
                 // change.
                 relayProvider.catalogue,
             ) {
-                selectedRelayItemTitle,
                 notifications,
                 (tunnelState, prevTunnelState),
                 lastKnownDisconnectedLocation,
@@ -160,12 +156,9 @@ class ConnectViewModel(
 
                             is TunnelState.Error -> lastKnownDisconnectedLocation
                         } ?: pinnedLocation,
-                    selectedRelayItemTitle =
-                        if (tunnelState is TunnelState.Disconnected) {
-                            selectedRelayItemTitle
-                        } else {
-                            null
-                        },
+                    // The home screen names the selection itself, from the relay catalogue
+                    // it already holds.
+                    selectedRelayItemTitle = null,
                     tunnelState = tunnelState,
                     inAppNotification = notifications.firstOrNull(),
                     isPlayBuild = isPlayBuild,

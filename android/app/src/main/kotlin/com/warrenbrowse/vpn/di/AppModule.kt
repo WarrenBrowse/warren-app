@@ -43,7 +43,6 @@ import com.warrenbrowse.vpn.lib.pushnotification.NotificationProvider
 import com.warrenbrowse.vpn.lib.pushnotification.forum.ForumActivityNotificationProvider
 import com.warrenbrowse.vpn.lib.pushnotification.standing.AccountStrikeNotificationProvider
 import com.warrenbrowse.vpn.lib.pushnotification.tunnelstate.TunnelStateNotificationProvider
-import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.AccountStrikeAlerts
 import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreBlobSealer
 import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreWalletRepository
@@ -118,7 +117,6 @@ val appModule = module {
     single { androidContext().resources }
     single { androidContext().userPreferencesStore }
     single { BuildVersion(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE) }
-    single { AccountRepository() }
     single { DeviceRepository(bridge = get(), wallet = get()) }
     // Here rather than in uiModule: the VPN service watches for this device's
     // revocation, and Android starts it without the activity (after an update
