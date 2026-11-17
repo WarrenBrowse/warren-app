@@ -181,7 +181,8 @@ jobs:
       # The firewall tests that need the kernel's nftables, as root: the
       # kill switch kept across a daemon restart and the early-boot block (the
       # 2026-09-28 incident), the per-app lock, and the DNS rules of the
-      # connected policy. A fresh VM per run, so the policies they apply for a
+      # connected policy, and the move of included programs out of the cgroup
+      # every environment used to share. A fresh VM per run, so the policies they apply for a
       # moment touch nothing else.
       - name: Linux firewall against the kernel (root)
         # Same packages and features as the test step above, so nothing is
@@ -200,7 +201,7 @@ jobs:
             -p warren-forum -p warren-product-env -p warren-ios -p warren-standing \
             -p mullvad-update -p mullvad-release \
             --features mullvad-update/sign,mullvad-update/client \
-            -E 'test(/^firewall::linux::/) | test(/^early_boot_firewall::/)'
+            -E 'test(/^firewall::linux::/) | test(/^split_tunnel::linux::/) | test(/^early_boot_firewall::/)'
 
       - name: cargo clippy Warren scope
         # --no-deps: lint only these Warren crates, not their entire upstream
