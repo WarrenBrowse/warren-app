@@ -319,7 +319,7 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
                     JournalField.Kind(ForumLinkKind.LOGIN),
                     JournalField.CrossDevice(verdict.link.crossDevice),
                     JournalField.ColdStart(coldStart),
-                    JournalField.Referrer(referrer?.host),
+                    JournalField.Referrer(referrer?.scheme),
                 )
                 forumLoginController.request(verdict.link)
             }
@@ -345,7 +345,7 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
                     JournalField.Kind(ForumLinkKind.ATTACH),
                     JournalField.PreTopic(verdict.link.isPreTopic),
                     JournalField.ColdStart(coldStart),
-                    JournalField.Referrer(referrer?.host),
+                    JournalField.Referrer(referrer?.scheme),
                 )
                 forumAttachController.request(verdict.link)
             }

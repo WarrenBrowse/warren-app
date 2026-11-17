@@ -89,10 +89,20 @@ sealed interface JournalField {
         override val value = flag.toString()
     }
 
-    /** The host of the intent referrer: a package or a web host, never a session id. */
-    data class Referrer(val host: String?) : JournalField {
+    /**
+     * The kind of the intent referrer, from the scheme of its URI: an app, a web page, or none.
+     * Never the package or the host it names, which say what the user browses with and where.
+     */
+    data class Referrer(val scheme: String?) : JournalField {
         override val key = "referrer"
-        override val value = host?.let(::hostToken) ?: NONE
+        override val value =
+            when (scheme) {
+                null -> NONE
+                "android-app" -> "app"
+                "http",
+                "https" -> "web"
+                else -> "other"
+            }
     }
 
     data class CrossDevice(val flag: Boolean) : JournalField {
@@ -137,15 +147,9 @@ sealed interface JournalField {
          */
         const val MAX_TOKEN_CHARS = 24
         private val CLASS_TOKEN = Regex("[a-z][a-z0-9]*(?:[-:][a-z0-9]+)*")
-        private val HOST_TOKEN = Regex("[a-z0-9_-]+(?:\\.[a-z0-9_-]+)+")
-        private const val MAX_HOST_CHARS = 64
 
         fun classToken(token: String): String =
             if (token.length <= MAX_TOKEN_CHARS && CLASS_TOKEN.matches(token)) token else MALFORMED
-
-        /** A dotted host or package name; a bare token (a session id has no dot) is malformed. */
-        fun hostToken(host: String): String =
-            if (host.length <= MAX_HOST_CHARS && HOST_TOKEN.matches(host)) host else MALFORMED
     }
 }
 

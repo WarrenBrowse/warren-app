@@ -105,7 +105,9 @@ class RelayCatalog(
         return try {
             json.decodeFromString<List<RelayInfo>>(raw)
         } catch (e: Exception) {
-            Logger.e(throwable = e) { "Failed to parse listRelays() JSON: $raw" }
+            // The size and the error class only: the body is the whole exit list, and the
+            // decoder's message quotes the input it choked on.
+            Logger.e { "Failed to parse listRelays() JSON (${raw.length} chars): ${e::class.simpleName}" }
             emptyList()
         }
     }

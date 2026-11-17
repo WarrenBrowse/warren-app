@@ -126,22 +126,25 @@ class ForumEventsJournalTest {
         val journal = journal(dir)
 
         journal.record(ForumEvent.LOGIN_RESULT, JournalField.Class(sid))
-        journal.record(ForumEvent.LINK_RECEIVED, JournalField.Verdict(sid), JournalField.Referrer(sid))
+        journal.record(ForumEvent.LINK_RECEIVED, JournalField.Verdict(sid))
         journal.record(ForumEvent.REPORT_COLLECT, JournalField.Reason(TEST_ADDRESS))
 
         assertEquals("malformed", journal.lastClassOf(ForumEvent.LOGIN_RESULT))
         val text = File(dir, ForumEventsJournal.FILE_NAME).readText()
         assertFalse(text.contains(sid), text)
         assertFalse(text.contains(TEST_ADDRESS), text)
-        assertEquals(4, Regex("\"malformed\"").findAll(text).count())
+        assertEquals(3, Regex("\"malformed\"").findAll(text).count())
     }
 
     @Test
-    fun a_referrer_is_a_dotted_host_or_none() {
-        assertEquals("org.mozilla.firefox", JournalField.Referrer("org.mozilla.firefox").value)
-        assertEquals("forum.warrenbrowse.com", JournalField.Referrer("forum.warrenbrowse.com").value)
+    fun a_referrer_is_journaled_as_its_kind_never_as_the_app_or_site_it_names() {
+        // Which browser or site the user came from is theirs: the journal is copied into the
+        // app log a problem report carries.
+        assertEquals("app", JournalField.Referrer("android-app").value)
+        assertEquals("web", JournalField.Referrer("https").value)
+        assertEquals("web", JournalField.Referrer("http").value)
         assertEquals("none", JournalField.Referrer(null).value)
-        assertEquals("malformed", JournalField.Referrer("firefox").value)
+        assertEquals("other", JournalField.Referrer("org.mozilla.firefox").value)
     }
 
     @Test

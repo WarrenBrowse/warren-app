@@ -1,10 +1,14 @@
 package com.warrenbrowse.vpn.app.connect
 
+import co.touchlab.kermit.LogWriter
+import co.touchlab.kermit.Logger
+import co.touchlab.kermit.Severity
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -232,5 +236,32 @@ class RelayCatalogTest {
         val summary = sample.copy(name = "fi-hel-bveh1").toSummary()
 
         assertEquals("fi-hel-bveh1", summary.toRelayInfo().name)
+    }
+
+    @Test
+    fun `an undecodable catalogue is logged by its size, never by its content`() = runTest {
+        // The whole exit list would land in the log the problem report carries, and a decoder
+        // quotes the input it choked on in its own message.
+        val body = """[{"exit_id":"sentinel-exit","endpoint":"sentinel.example:443"""
+        val captured = CatalogueLogCapture()
+        val restore = Logger.config.logWriterList
+        Logger.setLogWriters(captured)
+        try {
+            RelayCatalog { body }.refresh()
+        } finally {
+            Logger.setLogWriters(restore)
+        }
+
+        assertTrue(captured.lines.any { it.contains("${body.length}") }, "${captured.lines}")
+        captured.lines.forEach { assertFalse(it.contains("sentinel"), "the body reached the log: $it") }
+    }
+}
+
+/** Kermit sink that keeps what was rendered, message and throwable together. */
+private class CatalogueLogCapture : LogWriter() {
+    val lines = mutableListOf<String>()
+
+    override fun log(severity: Severity, message: String, tag: String, throwable: Throwable?) {
+        lines += message + (throwable?.let { " ${it::class.simpleName}: ${it.message}" } ?: "")
     }
 }
