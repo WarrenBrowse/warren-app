@@ -2428,6 +2428,7 @@ impl WarrenTunnelMonitor {
             config.socket_bypass = socket_bypass;
             config.on_exit_draining = params.on_exit_draining.clone();
             config.credentials = params.credentials.clone();
+            config.setup_clock = params.setup_clock.clone();
             #[cfg(target_os = "macos")]
             {
                 config.relay_escape = Some(macos_relay_escape(

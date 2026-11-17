@@ -104,6 +104,10 @@ pub struct RouteSessionConfig {
     /// The daemon's credentials refreshes: a route that could not run for
     /// want of a token dials again as soon as one brings tokens.
     pub credentials: Option<watch::Receiver<Credentials>>,
+    /// The clock the main session dates its setups on (the API-corrected
+    /// one), so a route's exit judges the same time. `None` dates them on the
+    /// device clock.
+    pub setup_clock: Option<warrenguard_transport::supervisor::SetupClock>,
 }
 
 impl RouteSessionConfig {
@@ -122,6 +126,7 @@ impl RouteSessionConfig {
             on_exit_draining: None,
             retry_unavailable_after: RETRY_UNAVAILABLE_AFTER,
             credentials: None,
+            setup_clock: None,
         }
     }
 
@@ -273,7 +278,7 @@ pub(crate) fn route_supervisor_config(
         // One connection: a route carries the traffic of a few apps, and
         // every bonded leg is one more relay connection holding the token.
         n_connections: 1,
-        setup_clock: None,
+        setup_clock: config.setup_clock.clone(),
         pre_swap_check: None,
         on_overlap_swapped: None,
         on_dial_refused: None,
@@ -915,6 +920,18 @@ mod tests {
         assert!(built.wants_ipv6);
         assert!(built.enable_daita);
         assert_eq!(built.n_connections, 1);
+    }
+
+    #[test]
+    fn a_route_supervisor_dates_its_setup_on_the_tunnels_clock() {
+        let mut config = RouteSessionConfig::new(None);
+        config.setup_clock = Some(Arc::new(|| 1_800_000_000));
+
+        let built =
+            route_supervisor_config(&circuit(), &config, &tokens_only(), IpAssignChannel::new());
+
+        let clock = built.setup_clock.expect("the tunnel's setup clock");
+        assert_eq!(clock(), 1_800_000_000);
     }
 
     #[test]

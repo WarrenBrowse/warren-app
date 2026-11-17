@@ -308,6 +308,7 @@ impl AppRoutes {
         config.credentials = Some(setup.tokens.credentials.clone());
         config.wants_ipv6 = setup.wants_ipv6;
         config.enable_daita = setup.enable_daita;
+        config.setup_clock = Some(warren_standing::server_clock::setup_clock());
         let draining = events_tx.clone();
         config.on_exit_draining = Some(Arc::new(move |exit| {
             let _ = draining.send(PlannerEvent::Draining(exit));
