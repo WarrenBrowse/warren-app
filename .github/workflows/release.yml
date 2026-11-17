@@ -80,7 +80,7 @@
 #     SSH private key + target for streaming the signed `*.json` manifests to
 #     the Caddy host that serves them (Let's Encrypt cert, matching the
 #     client pin) at https://api.warrenbrowse.com/updates/desktop/. Values:
-#     _USER=warren-deploy, _HOST=185.146.232.126 (bvc01, the beta host),
+#     _USER=warren-deploy, _HOST=the beta host,
 #     _PATH=/srv/warren-updates/desktop (a beta run uploads to its `beta/`
 #     subdirectory instead, served as /updates/desktop by the beta vhost). When
 #     unset, the signed manifests are only attached as a run artifact.

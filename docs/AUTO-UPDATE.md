@@ -16,7 +16,7 @@ Releases", updater never spawned). We **re-enabled and re-pointed** that
 infrastructure instead of bolting on `electron-updater`, because:
 
 - It updates the privileged daemon, not just the Electron GUI bundle.
-- It already verifies the installer's signature and checksum.
+- It already verifies the installer's SHA-256 against the signed metadata.
 - It already has a forced-update primitive (the `supported` flag).
 - It avoids a second, redundant update mechanism fighting the daemon-driven one.
 
@@ -71,7 +71,8 @@ computes:
 
 ```
 supported = current_version >= minimum_supported_version      (if the field is set)
-          = current_version is listed in releases[]           (fallback, upstream behaviour)
+          = current_version is listed in releases[],
+            or is newer than every release listed there        (fallback)
           = true                                               (always, for -dev builds)
 ```
 
@@ -160,8 +161,8 @@ through the manifest, whose `metadata_version` floor refuses a rollback.
 ## Signing key
 
 The update key can ship a privileged installer to every user, so it is the
-**highest-privilege key in the system**. It is a **dedicated, offline-generated
-ed25519 key** that signs software we ship and nothing else: these update
+**highest-privilege key in the system**. It is a **dedicated ed25519 key** that
+signs software we ship and nothing else: these update
 manifests, and the `SHA256SUMS` of every headless (warren-cli) release, which
 the warren-cli installers refuse to install without (`ci/sign-headless-sums.sh`,
 an SSH signature in the namespace `warren-cli-sha256sums/1`, so neither kind of
@@ -169,12 +170,13 @@ signature can pass for the other). Do NOT reuse the relay/admin signing key
 (it is online and its lineage was burned once:
 `admin/admin-signing.key.BURNED-committed-do-not-use`).
 
-- Generate offline: `cargo run -p mullvad-release -- generate-key` (prints
+- Generate it with `cargo run -p mullvad-release -- generate-key` (prints
   "Secret key:" and "Public key:").
 - The **public** key (hex) goes in `mullvad-update/warren-trusted-metadata-signing-pubkeys`
   (committed). Manifests signed by any other key fail verification, fail-closed.
-- The **secret** key is stored offline and as the CI secret
-  `WARREN_UPDATE_SIGNING_KEY`.
+- The **secret** key is the CI secret `WARREN_UPDATE_SIGNING_KEY`, so it is
+  online: the release job holds it while it runs. Moving the signature off the
+  shared runners is pending.
 - **Rotation:** add the new pubkey on its own line (both trusted during the
   overlap), ship a release so clients pick up the new trust file, then drop the
   retired line. The warren-cli installers pin the key as well
@@ -191,29 +193,26 @@ This host is used **on purpose**: Caddy issues a **Let's Encrypt** cert
 (`mullvad-update/src/defaults.rs` → `PINNED_CERTIFICATE`, with system roots
 disabled). The marketing site `warrenbrowse.com` is Cloudflare Pages and serves
 a Cloudflare cert; serving manifests from there would fail the TLS pin. (The
-manifests are ed25519-signed, so TLS is only defense-in-depth, but a failed pin
-means no updates at all.)
+manifests are ed25519-signed, and the release job checks the signature of the
+manifest it extends before carrying its history forward, so TLS is
+defense-in-depth for the manifests; a failed pin still means no updates at
+all. The installer download itself is not pinned: its SHA-256 in the signed
+manifest is what protects it.)
 
 - Source of truth: `warren-core/infra/docker/Caddyfile` (the `{$WARREN_API_DOMAIN}`
   vhost gains `handle_path /updates/*` → `file_server` rooted at `/srv/updates`)
   and `docker-compose.yml` (mounts host `/srv/warren-updates` →
   `/srv/updates:ro`).
-- **Live prod reality:** the API host (`warren-backend-api`, Hetzner hel1,
-  `204.168.244.76`) runs the stack with **docker compose**, but from a
-  hand-managed directory `/srv/warren/` (NOT the repo, NOT a git clone; files
-  are deployed by `update-prod.sh` with `.bak.<ts>` backups before each change).
-  The live compose is `/srv/warren/compose.prod.yml` and the live config is
-  `/srv/warren/Caddyfile`. SSH access is **`root@204.168.244.76`** (there is no
-  `warren` user; the docs under `warren-core` that show `warren@<ip>` are
-  outdated). So applying this change in prod means editing those two files in
-  `/srv/warren/` and recreating only the caddy container.
+- The live host's address, login and directory layout are operational detail
+  and are not recorded in this public document.
 - Override at runtime with the `WARREN_UPDATE_URL` / `WARREN_METADATA_URL` env
   vars (staging mirrors, local testing).
 
 ### One-time host setup
 
-Run on the API host (`ssh root@204.168.244.76`). A dedicated unprivileged
+Run on the update host, as an administrator. A dedicated unprivileged
 `warren-deploy` user owns the manifest dir so CI never logs in as root.
+`<stack-dir>` is the directory the host's compose stack runs from.
 
 ```sh
 # 1. Dedicated deploy user + the served directory.
@@ -230,13 +229,13 @@ chmod 700 /srv/warren-updates/.ssh && chmod 600 /srv/warren-updates/.ssh/authori
 #    -> the private key goes into the WARREN_UPDATES_SSH_KEY secret.
 
 # 3. Add the Caddy route + the mount, then recreate only caddy (~seconds blip).
-cd /srv/warren
+cd <stack-dir>
 cp Caddyfile Caddyfile.bak.$(date +%s)
 cp compose.prod.yml compose.prod.yml.bak.$(date +%s)
 #    - add `handle_path /updates/*` to the {$WARREN_API_DOMAIN} vhost
 #      (wrap the existing `reverse_proxy warren-api:8080` in `handle { }`)
 #    - add `- /srv/warren-updates:/srv/updates:ro` to the caddy service volumes
-docker run --rm -v /srv/warren/Caddyfile:/etc/caddy/Caddyfile:ro caddy:2.8-alpine \
+docker run --rm -v <stack-dir>/Caddyfile:/etc/caddy/Caddyfile:ro caddy:2.8-alpine \
     caddy validate --config /etc/caddy/Caddyfile      # sanity-check before applying
 docker compose -f compose.prod.yml up -d caddy
 
@@ -286,7 +285,7 @@ GitHub repo **secrets**
 | --- | --- |
 | `WARREN_UPDATE_SIGNING_KEY` | the dedicated ed25519 secret (hex) |
 | `WARREN_UPDATES_SSH_USER` | `warren-deploy` |
-| `WARREN_UPDATES_SSH_HOST` | the host that runs the update receiver (`185.146.232.126`, the beta host, since 2026-11-17) |
+| `WARREN_UPDATES_SSH_HOST` | the host that runs the update receiver (the beta host since 2026-11-17) |
 | `WARREN_UPDATES_SSH_KEY` | the CI deploy private key (the `warren-deploy` key) |
 
 GitHub repo **variable**
@@ -299,12 +298,13 @@ GitHub repo **variable**
 
 ### Ordering gotcha
 
-The installer URLs inside a manifest point at the GitHub Release assets, which
-only resolve once the release is **non-draft**: manifests going live against a
-draft release make clients see "update available" and then 404 on the download.
-This is why `publish-release` publishes the release and verifies `isDraft` is
-false BEFORE `publish-update-metadata` runs. Keep that ordering: never publish
-manifests for a release that is still a draft.
+The installer URLs inside a manifest point at the update host
+(`--asset-base-url`, the same base as the manifests), where the job uploads
+the installers together with the signed JSON. Without that option they would
+point at the GitHub Release assets, which only resolve once the release is
+**non-draft**. `publish-release` still publishes the release and verifies
+`isDraft` is false BEFORE `publish-update-metadata` runs: keep that ordering,
+so a manifest never goes live for a release that is still a draft.
 
 ## Per-platform capability
 
