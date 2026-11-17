@@ -4,11 +4,9 @@
 Tests can be triggered locally from Xcode in the Test navigator or by running tests from the diamond in the editor gutter.
 
 #### On GitHub
-There are five workflows running tests:
- - [ios-end-to-end-tests.yml](https://github.com/WarrenBrowse/warren-app/actions/workflows/ios-end-to-end-tests.yml) - super workflow which other workflows reuse. This is also the workflow you can manually trigger to run all tests or optionally specify which tests to run.
- - [ios-end-to-end-tests-nightly.yml](https://github.com/WarrenBrowse/warren-app/actions/workflows/ios-end-to-end-tests-nightly.yml) - scheduled nightly test run, running all tests.
- - [ios-end-to-end-tests-merge-to-main.yml](https://github.com/WarrenBrowse/warren-app/actions/workflows/ios-end-to-end-tests-merge-to-main.yml) - automatically triggered by a PR merge to `main`.
- - [ios-end-to-end-tests-api.yml](https://github.com/WarrenBrowse/warren-app/actions/workflows/ios-end-to-end-tests-api.yml) - manually triggered tests focusing on making sure the API is functioning as intended.
+`ios-checks.yml` runs the `WarrenVPNUITestsSmoke` plan on a simulator on every push touching
+the iOS app. The device workflows inherited from upstream ran on a self-hosted device lab this
+project does not have, and were removed; the full `WarrenVPNUITestsAll` plan runs locally.
 
 ## Adding more tests
 When adding more files with test suites they must be added to the `WarrenVPNUITestsAll` test plan and also added to the appropriate node(s) in `ios/WarrenVPNUITests/tests.json` file in order to run in CI. For new test cases in already existing test suite nothing needs to be done. The test case/suite values in `tests.json` translate to input for `xcodebuild -only-testing` which is in the format `<target-name>/<test-suite-name>/<test-case-name>`. The GitHub actions workflow will add the `<target-name>` part so only `<test-suite-name>/<test-case-name>` is required, where `<test-case-name>` is optional. So for example `AccountTests` and `AccountTests/testLogin` are both valid values.
@@ -40,7 +38,7 @@ The test device must be on the office WiFi `app-team-ios-tests` in order to be a
 1. Make sure device is added to provisioning profiles
 2. Enable developer mode
 3. Disable passcode in iOS settings - otherwise tests cannot be started without manually entering passcode
-4. Set the value of `TEST_DEVICE_UDID` to the UDID of the test device in `ios-end-to-end-tests.yml`.
+4. Set the value of `TEST_DEVICE_UDID` to the UDID of the test device in the workflow that drives it.
 5. Make sure the test device is connected to the WiFi `app-team-ios-tests`
 6. Make sure iCloud syncing of keychain is off on the device so that the device isn't getting WiFi passwords from another device causing it to sometimes connect to another WiFi.
 7. After the device is set up download updated provisioning profiles on the GitHub runner computer(Download manual profiles in Xcode settings)

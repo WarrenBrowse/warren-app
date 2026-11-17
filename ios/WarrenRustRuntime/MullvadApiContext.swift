@@ -34,25 +34,29 @@ public class MullvadApiContext: @unchecked Sendable {
         self.accessMethodChangeListeners = accessMethodChangeListeners
 
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
-        context =
-            switch disableTls {
-            case true:
-                mullvad_api_init_new_tls_disabled(
+        if disableTls {
+            // The TLS-less client exists for the mock API server only, and the
+            // Release library is built without it.
+            #if WARREN_API_MOCK
+                context = mullvad_api_init_new_tls_disabled(
                     host,
                     address,
                     accessMethodWrapper,
                     onAccessChangeCallback,
                     selfPtr
                 )
-            case false:
-                mullvad_api_init_new(
-                    host,
-                    address,
-                    accessMethodWrapper,
-                    onAccessChangeCallback,
-                    selfPtr
-                )
-            }
+            #else
+                throw Error.failedToConstructApiClient
+            #endif
+        } else {
+            context = mullvad_api_init_new(
+                host,
+                address,
+                accessMethodWrapper,
+                onAccessChangeCallback,
+                selfPtr
+            )
+        }
 
         if context._0 == nil {
             throw Error.failedToConstructApiClient

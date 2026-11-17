@@ -14,8 +14,8 @@
 # This is the Android gate's twin (`android-checks.yml`): the fast, hermetic
 # signal, no device and no signing identity. The runner is GitHub-hosted and
 # free on this public repository, so the gate needs nothing from the
-# self-hosted pool. The UI and screenshot suites need a booted app and stay on
-# the dispatch-only workflows.
+# self-hosted pool. One UI smoke test runs on the simulator; the rest of the UI
+# suite and the screenshots stay local.
 
 name: iOS checks
 
@@ -158,3 +158,99 @@ jobs:
         with:
           name: ios-test-report
           path: ios/xcode-test-report.xcresult
+
+      # One UI test, the wallet chooser a first launch lands on: it needs no
+      # network and no wallet, and it is what proves the app still launches
+      # and draws its first screen. The full UI suite stays local.
+      - name: Run the UI smoke test
+        run: |
+          set -o pipefail && env NSUnbufferedIO=YES xcodebuild \
+            -project WarrenVPN.xcodeproj \
+            -scheme WarrenVPNUITests \
+            -parallel-testing-enabled NO \
+            -destination "platform=iOS Simulator,name=iPhone 17" \
+            -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
+            -disableAutomaticPackageResolution \
+            -only-testing:WarrenVPNUITests/WalletFlowTests/testLoginChooserExposesCreateAndRestore \
+            CODE_SIGN_IDENTITY="-" \
+            test 2>&1 | xcbeautify
+        working-directory: ios/
+
+  # The unit tests above build Debug for the simulator only. What ships is
+  # Release for devices: another Rust target, the `--locked` build, the
+  # features build-rust-library.sh strips there, and Swift compiled without
+  # the debug conditions. A link error of that build alone once reached main
+  # unseen, so it is built here on every push, unsigned.
+  device-release:
+    name: iOS device build (Release) and tunnel FFI tests
+    runs-on: macos-26
+    timeout-minutes: 120
+    env:
+      SOURCE_PACKAGES_PATH: .spm
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
+        with:
+          submodules: false
+
+      - name: Checkout the golden vectors submodule
+        env:
+          ENGINE_TOKEN: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -n "$ENGINE_TOKEN" ]; then
+            auth="$(printf 'x-access-token:%s' "$ENGINE_TOKEN" | base64 | tr -d '\n')"
+            git -c "http.extraheader=AUTHORIZATION: basic ${auth}" \
+              submodule update --init vectors
+          else
+            git submodule update --init vectors
+          fi
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Setup project
+        uses: ./.github/actions/ios/setup-project-toolchain
+        with:
+          ios_rust_target: aarch64-apple-ios
+          xcode_version: ''
+
+      # `undocumented_unsafe_blocks` is held off for now: the inherited API
+      # client (`warren-ios/src/api_client/`) has dozens of undocumented blocks
+      # and is being cut down. Every other lint gates, on the device target.
+      - name: Clippy for the device target
+        run: |
+          cargo clippy --locked --all-targets --all-features -p warren-ios \
+            --target aarch64-apple-ios -- -D warnings -A clippy::undocumented_unsafe_blocks
+
+      # The tunnel handle only compiles for iOS with the `tunnel` feature, so
+      # its tests cannot run on the macOS host. The test binary runs on the
+      # simulator instead, which executes a plain iOS command-line binary.
+      - name: Tunnel FFI tests on the simulator
+        run: |
+          set -euo pipefail
+          rustup target add aarch64-apple-ios-sim
+          bin=$(cargo test --locked --lib -p warren-ios --features tunnel \
+            --target aarch64-apple-ios-sim --no-run --message-format=json \
+            | jq -r 'select(.reason == "compiler-artifact" and .executable != null
+                and .target.name == "warren_ios") | .executable' | tail -1)
+          test -n "$bin"
+          udid=$(xcrun simctl list devices available --json \
+            | jq -r '[.devices[][] | select(.name == "iPhone 17")][0].udid')
+          xcrun simctl boot "$udid" || true
+          xcrun simctl bootstatus "$udid" -b
+          xcrun simctl spawn "$udid" "$bin"
+
+      - name: Release build for devices, unsigned
+        run: |
+          set -o pipefail && env NSUnbufferedIO=YES xcodebuild \
+            -project WarrenVPN.xcodeproj \
+            -scheme WarrenVPN \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
+            -disableAutomaticPackageResolution \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | xcbeautify
+        working-directory: ios/
