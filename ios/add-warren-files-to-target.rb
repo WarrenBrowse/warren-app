@@ -29,7 +29,7 @@ FILES_TO_ADD = {
   "WarrenVPN/UI appearance/UIColor+Warren.swift" => "WarrenVPN",
 
   # Wallet flow (UIKit shells + SwiftUI hosted views + Interactor + Keychain).
-  # WarrenWalletKeychain moved to Shared/ (C.4.3.Z) so PacketTunnel
+  # WarrenWalletKeychain moved to Shared/ so PacketTunnel
   # extension can read the wallet seed for actor.bindWalletSigningSeed.
   # Kept the WarrenVPN entry plus added PacketTunnelCore + PacketTunnel
   # via SHARED_MULTI_TARGET below.
@@ -44,7 +44,7 @@ FILES_TO_ADD = {
   "WarrenVPN/View controllers/Wallet/WarrenWalletIdentityView.swift" => "WarrenVPN",
   "WarrenVPN/Coordinators/WarrenWalletCoordinator.swift" => "WarrenVPN",
 
-  # P3.1 wallet-as-login: Create/Restore login coordinator + logout-wipe helper.
+  # Wallet-as-login: Create/Restore login coordinator + logout-wipe helper.
   "WarrenVPN/Coordinators/WarrenWalletLoginCoordinator.swift" => "WarrenVPN",
   "WarrenVPN/Classes/WarrenWalletLogout.swift" => "WarrenVPN",
 
@@ -100,13 +100,13 @@ FILES_TO_ADD = {
   "WarrenVPN/View controllers/Wallet/WarrenMnemonicText.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/Wallet/WarrenMnemonicTextTests.swift" => "WarrenVPNTests",
 
-  # C.4.3 Warren Quinn tunnel implementation + actor scaffold inside
+  # Warren Quinn tunnel implementation + actor scaffold inside
   # `PacketTunnelCore` (slots next to GotaTunTunnelImplementation +
   # GotaTunActor, conforms `TunnelImplementation` + `PacketTunnelActorProtocol`).
   "PacketTunnelCore/Actor/WarrenQuinnActor.swift" => "PacketTunnelCore",
   "PacketTunnelCore/Actor/WarrenQuinnTunnelImplementation.swift" => "PacketTunnelCore",
 
-  # C.4.3.X follow-up : shared App Group key constants consumed by both
+  # Shared App Group key constants consumed by both
   # the PacketTunnel extension (producer) and the main app
   # (consumer). Wired into WarrenVPN target alongside the existing
   # Shared/* files (ApplicationConfiguration etc.).
@@ -117,7 +117,7 @@ FILES_TO_ADD = {
   "WarrenRustRuntime/WarrenAccountClient.swift" => "WarrenRustRuntime",
   "WarrenRustRuntime/WarrenQuinnAdapter.swift" => "WarrenRustRuntime",
 
-  # C.4.5 partial : no-op TunnelObfuscation stub. Provides the
+  # No-op TunnelObfuscation stub. Provides the
   # namespace + protocol + enum surface that ProtocolObfuscator
   # consumes, without the Rust FFI dep (Warren's HTTP/3 mimicry is
   # baked into the warren-tunnel Quinn layer, not a local proxy).
@@ -155,7 +155,7 @@ FILES_TO_ADD = {
     "WarrenVPNTests",
   "PacketTunnelCoreTests/WarrenQuinnActorTests.swift" => "PacketTunnelCoreTests",
 
-  # P3.1 wallet-as-login unit tests: DeviceState synthesizer + route
+  # Wallet-as-login unit tests: DeviceState synthesizer + route
   # decision. WarrenWalletRoutingTests references `nextWarrenRoutes`/
   # `AppRoute`; it compiles now that WarrenVPNTests is a HOSTED target
   # (TEST_HOST=WarrenVPN.app) and reaches app internals via
