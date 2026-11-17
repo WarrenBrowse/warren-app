@@ -680,6 +680,7 @@ impl WalletAccessControl {
         Ok(InstallGuard {
             access: self,
             claimed,
+            finished: false,
             _lock: lock,
         })
     }
@@ -707,12 +708,14 @@ impl WalletAccessControl {
 ///
 /// Dropped without [`InstallGuard::finish`], for instance because the client
 /// went away while the daemon was installing, it keeps the ownership it
-/// claimed: the install may still complete, and a wallet must never be left
-/// without its owner by a hang-up.
+/// claimed and keeps counting as an install in progress: the install may
+/// still complete, and a wallet must never be left without its owner, nor
+/// open to every account, by a hang-up.
 #[must_use]
 pub struct InstallGuard<'a> {
     access: &'a WalletAccessControl,
     claimed: bool,
+    finished: bool,
     _lock: tokio::sync::MutexGuard<'a, ()>,
 }
 
@@ -726,7 +729,8 @@ impl InstallGuard<'_> {
     /// End the install. An install that reported failure gives back the
     /// ownership it claimed, unless a wallet is there anyway: an import that
     /// stored its mnemonic and then failed to log in has still installed it.
-    pub fn finish(self, reported_success: bool) {
+    pub fn finish(mut self, reported_success: bool) {
+        self.finished = true;
         if self.claimed && !reported_success && !(self.access.wallet_installed)() {
             let mut owner = self.access.lock_owner();
             if let Err(error) = self.access.store.clear() {
@@ -739,7 +743,12 @@ impl InstallGuard<'_> {
 
 impl Drop for InstallGuard<'_> {
     fn drop(&mut self) {
-        self.access.installing.store(false, Ordering::SeqCst);
+        // An install whose end was never reported may still write its
+        // mnemonic: it keeps counting as one until the next install ends or
+        // the daemon restarts and finds the wallet, or not, in storage.
+        if self.finished {
+            self.access.installing.store(false, Ordering::SeqCst);
+        }
     }
 }
 
@@ -1168,6 +1177,41 @@ mod tests {
         install.finish(true);
 
         assert_eq!(scratch.store().load().unwrap(), None);
+    }
+
+    /// An administrator's install whose client went away may still be running
+    /// in the daemon, and write the mnemonic after the guard is gone: until an
+    /// install ends, another account reads no identity.
+    #[tokio::test]
+    async fn an_abandoned_administrator_install_still_guards_the_wallet() {
+        let scratch = Scratch::new("admin-abandoned");
+        let access = control(&scratch, false, Some(OWNER));
+
+        drop(access.begin_install(Some(&admin())).await.unwrap());
+
+        assert_eq!(
+            access.admit(Some(&user(OTHER)), RpcClass::Identity),
+            Err(Refusal::ClaimNeedsConsoleUser)
+        );
+    }
+
+    /// An install that ended leaves nothing behind it: with no wallet, the
+    /// machine is vacant again.
+    #[tokio::test]
+    async fn an_administrator_install_that_failed_leaves_the_machine_vacant() {
+        let scratch = Scratch::new("admin-failed");
+        let access = control(&scratch, false, Some(OWNER));
+
+        access
+            .begin_install(Some(&admin()))
+            .await
+            .unwrap()
+            .finish(false);
+
+        assert_eq!(
+            access.admit(Some(&user(OTHER)), RpcClass::Identity),
+            Ok(Admission::Allowed)
+        );
     }
 
     /// A mnemonic found in storage at boot is a wallet even when it did not
