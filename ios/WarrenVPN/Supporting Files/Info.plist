@@ -28,6 +28,8 @@
 	</array>
 	<key>HostName</key>
 	<string>$(HOST_NAME)</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Reveal the recovery phrase for your Warren wallet</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>The app needs this to connect and test a new method.</string>
 	<key>ApplicationSecurityGroupIdentifier</key>
