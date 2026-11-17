@@ -17,7 +17,8 @@ use talpid_cgroup::v2::CGroup2;
 use talpid_dns::ResolvedDnsConfig;
 use talpid_tunnel::TunnelMetadata;
 use talpid_types::net::{
-    ALLOWED_LAN_MULTICAST_NETS, AllowedEndpoint, AllowedTunnelTraffic, Endpoint, TransportProtocol,
+    ALLOWED_IN_TUNNEL_LAN_NETS, ALLOWED_LAN_MULTICAST_NETS, ALLOWED_LAN_NETS, AllowedEndpoint,
+    AllowedTunnelTraffic, Endpoint, TransportProtocol,
 };
 use talpid_types::split_tunnel::INCLUDE_FWMARK;
 
@@ -931,6 +932,7 @@ impl<'a> PolicyBatch<'a> {
                 if let Some(tunnel) = tunnel {
                     match allowed_tunnel_traffic {
                         AllowedTunnelTraffic::All => {
+                            self.add_block_lan_in_tunnel_rules(&tunnel.interface)?;
                             self.add_allow_tunnel_rules(&tunnel.interface)?;
                         }
                         AllowedTunnelTraffic::None => (),
@@ -996,6 +998,8 @@ impl<'a> PolicyBatch<'a> {
                         DnsGate::DropElsewhere => self.add_drop_dns_rule(),
                     }
                 }
+                // Private destinations stay out of the tunnel, past the DNS rules above.
+                self.add_block_lan_in_tunnel_rules(&tunnel.interface)?;
                 self.add_allow_tunnel_rules(&tunnel.interface)?;
                 if *allow_lan {
                     self.add_block_cve_2019_14899(tunnel);
@@ -1281,6 +1285,43 @@ impl<'a> PolicyBatch<'a> {
             add_verdict(&mut rule, &Verdict::Accept);
             self.batch.add(&rule, nftnl::MsgType::Add);
         }
+        Ok(())
+    }
+
+    /// Drop traffic between the tunnel interface and the LAN, before allowing LAN traffic
+    /// on other interfaces.
+    fn add_block_lan_in_tunnel_rules(&mut self, tunnel_interface: &str) -> Result<()> {
+        let ends = [
+            (&self.out_chain, Direction::Out, End::Dst),
+            (&self.forward_chain, Direction::Out, End::Dst),
+        ];
+
+        // Accept: Tunnel => LAN / Private IP ranges that *should* be reachable in the tunnel.
+        for (chain, direction, end) in ends {
+            for net in ALLOWED_IN_TUNNEL_LAN_NETS {
+                let mut rule = Rule::new(chain);
+                check_iface(&mut rule, direction, tunnel_interface)?;
+                check_net(&mut rule, end, net);
+                add_verdict(&mut rule, &Verdict::Accept);
+                self.batch.add(&rule, nftnl::MsgType::Add);
+            }
+        }
+
+        // Drop: LAN => Tunnel / Multicast ranges + LAN Sharing ranges.
+        for (chain, direction, end) in ends {
+            let nets = ALLOWED_LAN_NETS
+                .iter()
+                .chain(ALLOWED_LAN_MULTICAST_NETS.iter());
+
+            for net in nets {
+                let mut rule = Rule::new(chain);
+                check_iface(&mut rule, direction, tunnel_interface)?;
+                check_net(&mut rule, end, *net);
+                add_verdict(&mut rule, &Verdict::Drop);
+                self.batch.add(&rule, nftnl::MsgType::Add);
+            }
+        }
+
         Ok(())
     }
 
@@ -2333,5 +2374,95 @@ mod dns_gate_kernel_tests {
         firewall.reset_policy().unwrap();
         assert!(lan_refused, "DNS to a LAN resolver left beside the tunnel");
         assert!(!tunnel_refused, "DNS through the tunnel was refused");
+    }
+}
+
+/// Private destinations sent into the tunnel, against the kernel's nftables: run
+/// as root.
+#[cfg(test)]
+mod lan_in_tunnel_kernel_tests {
+    use super::*;
+    use std::net::Ipv4Addr;
+    use std::process::{Command, Stdio};
+    use talpid_dns::DnsConfig;
+
+    const TUN: &str = "warren-lantest";
+
+    struct StandInTunnel;
+
+    impl StandInTunnel {
+        fn up() -> Self {
+            let ip = |args: &[&str]| {
+                let status = Command::new("ip").args(args).status().unwrap();
+                assert!(status.success(), "ip {args:?}");
+            };
+            let _ = Command::new("ip")
+                .args(["link", "del", TUN])
+                .stderr(Stdio::null())
+                .status();
+            ip(&["link", "add", TUN, "type", "dummy"]);
+            ip(&["addr", "add", "10.66.0.2/32", "dev", TUN]);
+            ip(&["link", "set", TUN, "up"]);
+            // A private network and the exit's pool, both routed into the tunnel.
+            ip(&["route", "add", "172.20.0.0/24", "dev", TUN]);
+            ip(&["route", "add", "10.66.0.0/24", "dev", TUN]);
+            StandInTunnel
+        }
+    }
+
+    impl Drop for StandInTunnel {
+        fn drop(&mut self) {
+            let _ = Command::new("ip").args(["link", "del", TUN]).status();
+        }
+    }
+
+    fn connected() -> FirewallPolicy {
+        FirewallPolicy::Connected {
+            peer_endpoints: vec![],
+            tunnel: TunnelMetadata {
+                interface: TUN.to_owned(),
+                ips: vec![IpAddr::V4(Ipv4Addr::new(10, 66, 0, 2))],
+                ipv4_gateway: Ipv4Addr::new(10, 66, 0, 1),
+                ipv6_gateway: None,
+                daita_active: false,
+                effective_mtu: None,
+                legs_bonded: 0,
+                legs_not_delivering: 0,
+            },
+            allow_lan: false,
+            lan_networks: vec![],
+            dns_config: DnsConfig::default().resolve(&[IpAddr::V4(Ipv4Addr::new(10, 66, 0, 1))]),
+        }
+    }
+
+    /// A datagram the output chain drops fails its send with EPERM; one the
+    /// policy lets into the stand-in tunnel is sent and vanishes.
+    fn dropped(target: &str) -> bool {
+        let socket = std::net::UdpSocket::bind("0.0.0.0:0").unwrap();
+        match socket.send_to(b"probe", target) {
+            Err(error) => error.kind() == io::ErrorKind::PermissionDenied,
+            Ok(_) => false,
+        }
+    }
+
+    #[test]
+    #[ignore = "needs root"]
+    fn private_destinations_never_enter_the_tunnel_but_the_exit_pool_does() {
+        let _tunnel = StandInTunnel::up();
+        let mut firewall = Firewall::new(0, None, None).unwrap();
+        firewall.apply_policy(connected()).unwrap();
+
+        let private_dropped = dropped("172.20.0.9:80");
+        let pool_dropped = dropped("10.66.0.9:80");
+
+        firewall.reset_policy().unwrap();
+        assert!(
+            private_dropped,
+            "a private destination was let into the tunnel"
+        );
+        assert!(
+            !pool_dropped,
+            "the exit's own pool was dropped in the tunnel"
+        );
     }
 }

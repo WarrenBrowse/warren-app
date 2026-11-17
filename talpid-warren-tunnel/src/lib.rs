@@ -5535,6 +5535,26 @@ mod tests {
         );
     }
 
+    /// The firewall drops private destinations on the tunnel interface except
+    /// the exit's own pool, where its gateway, resolver and port mapping live.
+    /// The two tables must name the same ranges, or DNS and NAT-PMP break.
+    #[test]
+    fn the_in_tunnel_exceptions_are_the_exits_own_pool() {
+        use talpid_types::net::ALLOWED_IN_TUNNEL_LAN_NETS;
+        let v4 = ipnetwork::IpNetwork::new(
+            IpAddr::V4(warrenguard_config::TUNNEL_POOL_NETWORK),
+            warrenguard_config::TUNNEL_POOL_PREFIX,
+        )
+        .unwrap();
+        let v6 = ipnetwork::IpNetwork::new(
+            IpAddr::V6(warrenguard_config::TUNNEL_POOL_NETWORK_V6),
+            warrenguard_config::TUNNEL_POOL_PREFIX_V6,
+        )
+        .unwrap();
+
+        assert_eq!(ALLOWED_IN_TUNNEL_LAN_NETS, [v4, v6]);
+    }
+
     #[test]
     fn a_tunnel_with_no_default_route_never_reports_itself_up() {
         let relay_v4: IpAddr = "192.0.2.10".parse().unwrap();

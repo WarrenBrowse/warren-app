@@ -11,6 +11,18 @@ pub const ALLOWED_LAN_NETS: [IpNetwork; 6] = [
     v6(Ipv6Addr::new(0xfc00, 0, 0, 0, 0, 0, 0, 0), 7),
 ];
 
+/// Private networks that are legitimately reachable *inside* a Warren tunnel.
+///
+/// [`ALLOWED_LAN_NETS`] covers the entire private address space, but the exit's own pool lives on
+/// the other side of the tunnel: its gateway, which hosts the resolver and the port mapping
+/// service, and this client's tunnel addresses. Traffic to it must keep working when LAN traffic
+/// is dropped on the tunnel interface. The engine's `TUNNEL_POOL_*` constants are the authority;
+/// a test in `talpid-warren-tunnel` holds the two equal.
+pub const ALLOWED_IN_TUNNEL_LAN_NETS: [IpNetwork; 2] = [
+    v4(Ipv4Addr::new(10, 66, 0, 0), 16),
+    v6(Ipv6Addr::new(0xfdcc, 0x000f, 0x0001, 0, 0, 0, 0, 0), 64),
+];
+
 /// When "allow local network" is enabled the app will allow traffic to these networks.
 pub const ALLOWED_LAN_MULTICAST_NETS: [IpNetwork; 8] = [
     // Local network broadcast. Not routable
