@@ -6,6 +6,7 @@
 #include "rules/ifirewallrule.h"
 #include "rules/ports.h"
 #include "rules/baseline/blockall.h"
+#include "rules/baseline/blocklanintunnel.h"
 #include "rules/baseline/permitdhcp.h"
 #include "rules/baseline/permitndp.h"
 #include "rules/baseline/permitdhcpserver.h"
@@ -231,6 +232,9 @@ bool FwContext::applyPolicyConnecting
 		{
 			case WinFwAllowedTunnelTrafficType::All:
 			{
+				ruleset.emplace_back(std::make_unique<baseline::BlockLanInTunnel>(
+					*tunnelInterfaceAlias
+				));
 				ruleset.emplace_back(std::make_unique<baseline::PermitVpnTunnel>(
 					relayClients,
 					*tunnelInterfaceAlias,
@@ -348,6 +352,10 @@ bool FwContext::applyPolicyConnected
 			tunnelInterfaceAlias, nonTunnelDnsServers
 		));
 	}
+
+	ruleset.emplace_back(std::make_unique<baseline::BlockLanInTunnel>(
+		tunnelInterfaceAlias
+	));
 
 	ruleset.emplace_back(std::make_unique<baseline::PermitVpnTunnel>(
 		relayClients,

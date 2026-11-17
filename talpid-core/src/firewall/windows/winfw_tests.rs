@@ -581,6 +581,30 @@ fn external_dns_reaches_resolvers_through_the_tunnel_only() {
     }
 }
 
+/// The filters that keep private destinations out of the tunnel, and let the
+/// exit's own pool (its gateway, resolver and port mapping) in.
+const LAN_IN_TUNNEL: [&str; 4] = [
+    "Permit outbound connections to the exit pool inside the tunnel (IPv4)",
+    "Block outbound connections to the LAN on tunnel interface (IPv4)",
+    "Permit outbound connections to the exit pool inside the tunnel (IPv6)",
+    "Block outbound connections to the LAN on tunnel interface (IPv6)",
+];
+
+#[test]
+#[ignore = "needs an elevated process and winfw.dll; applies a connected policy"]
+fn a_connected_policy_keeps_private_destinations_out_of_the_tunnel() {
+    let _lock = WINFW.lock().unwrap_or_else(|poison| poison.into_inner());
+    let engine = Engine::open();
+    let _fw = Winfw::init();
+
+    apply_connected(false);
+    let names = engine.filter_names(our_provider());
+
+    for name in LAN_IN_TUNNEL {
+        assert!(names.iter().any(|n| n == name), "missing filter {name:?}");
+    }
+}
+
 #[test]
 #[ignore = "needs an elevated process and winfw.dll; applies a connected policy"]
 fn include_only_keeps_the_system_resolvers_encrypted_dns_in_the_tunnel() {
