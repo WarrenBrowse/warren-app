@@ -240,10 +240,10 @@ fn disarm_deadman() -> Result<(), Error> {
 /// firewall; nobody answering means the machine is sealed with no owner.
 async fn deadman_fire() -> Result<(), Error> {
     let daemon_answers = MullvadProxyClient::new().await.is_ok();
-    let verdict = deadman::deadman_verdict(daemon_answers);
+    let verdict = deadman::deadman_verdict(daemon_answers, lockdown_mode().await);
     eprintln!("Update guard fired: {verdict:?}");
     let outcome = match verdict {
-        deadman::DeadmanVerdict::DaemonAlive => Ok(()),
+        deadman::DeadmanVerdict::DaemonAlive | deadman::DeadmanVerdict::KeepBlocked => Ok(()),
         deadman::DeadmanVerdict::ResetFirewall => reset_firewall().await,
     };
     // The guard removes itself on EVERY path, including a failed reset: leaving
@@ -251,6 +251,19 @@ async fn deadman_fire() -> Result<(), Error> {
     // taken over.
     let _ = deadman::disarm();
     outcome
+}
+
+/// Whether the user chose Lockdown mode, read without writing the settings.
+/// Settings that cannot be found or read count as off, the default.
+async fn lockdown_mode() -> bool {
+    match mullvad_paths::settings_dir() {
+        Ok(dir) => {
+            mullvad_daemon::settings::SettingsPersister::read_only(&dir)
+                .await
+                .lockdown_mode
+        }
+        Err(_) => false,
+    }
 }
 
 async fn prepare_restart() -> Result<(), Error> {

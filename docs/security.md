@@ -320,6 +320,11 @@ The intended use case for this setting is when the user want to only switch betw
 connectivity at all and using VPN. With this setting active, the device can never communicate
 with the internet outside of a VPN tunnel.
 
+This holds through an app update too. Every installer arms an update guard that resets the
+firewall when no daemon answers ten minutes later, so a failed update cannot leave the machine
+offline. With Lockdown mode on, the guard leaves the block in place and only removes itself; the
+next daemon start takes the block over.
+
 ## DNS
 
 DNS is treated a bit differently from other protocols. Since a user's DNS history can give a

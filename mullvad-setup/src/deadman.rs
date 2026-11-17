@@ -14,11 +14,13 @@
 //! bundle cannot take it) and runs on an OS timer (no process of ours needs to
 //! survive).
 //!
-//! Its verdict is the one that matters and nothing else: **is a daemon managing
-//! this machine**. If one answers, the update finished and the guard removes
-//! itself. If none does, the firewall has no owner and the guard resets it.
+//! Its verdict rests first on one question: **is a daemon managing this
+//! machine**. If one answers, the update finished and the guard removes
+//! itself. If none does, the firewall has no owner and the guard resets it,
+//! unless the user chose Lockdown mode, which promises no traffic outside the
+//! tunnel even then: the block stays and the guard only removes itself.
 //! `reset-firewall` already refuses to run while a daemon answers, so the
-//! verdict is enforced twice, independently.
+//! daemon half of the verdict is enforced twice, independently.
 //!
 //! Idempotent in every path: arming twice replaces the timer, firing removes
 //! the guard, and disarming a guard that was never armed succeeds.
@@ -65,8 +67,8 @@ pub fn deadman_binary(state_dir: &Path) -> PathBuf {
 /// What the guard should do when its timer fires.
 ///
 /// Split out from the IO so the decision is pinned by a test rather than by
-/// reading a platform script. `daemon_answers` is the whole verdict: a daemon
-/// answering means the update finished and someone owns the firewall.
+/// reading a platform script. A daemon answering means the update finished
+/// and someone owns the firewall; with none, Lockdown mode decides.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DeadmanVerdict {
     /// A daemon is managing the machine: remove the guard, touch nothing else.
@@ -74,15 +76,18 @@ pub enum DeadmanVerdict {
     /// Nobody is managing the machine while it is sealed: reset the firewall,
     /// then remove the guard.
     ResetFirewall,
+    /// Nobody is managing the machine, and the user chose Lockdown mode: keep
+    /// the block, remove the guard. The next daemon start takes it over.
+    KeepBlocked,
 }
 
 /// The guard's decision. Pure on purpose (see [`DeadmanVerdict`]).
 #[must_use]
-pub fn deadman_verdict(daemon_answers: bool) -> DeadmanVerdict {
-    if daemon_answers {
-        DeadmanVerdict::DaemonAlive
-    } else {
-        DeadmanVerdict::ResetFirewall
+pub fn deadman_verdict(daemon_answers: bool, lockdown_mode: bool) -> DeadmanVerdict {
+    match (daemon_answers, lockdown_mode) {
+        (true, _) => DeadmanVerdict::DaemonAlive,
+        (false, true) => DeadmanVerdict::KeepBlocked,
+        (false, false) => DeadmanVerdict::ResetFirewall,
     }
 }
 
@@ -94,10 +99,34 @@ mod tests {
     /// `reset-firewall` already asks before it does anything. A guard that
     /// convicted on anything else (a marker file, a version, a timestamp) could
     /// tear down a firewall a live daemon is deliberately holding.
+    /// The Linux guard must outlive a reboot inside its window: a unit file
+    /// enabled under timers.target does, a systemd-run transient timer does not.
     #[test]
-    fn the_verdict_is_only_ever_whether_a_daemon_owns_the_machine() {
-        assert_eq!(deadman_verdict(true), DeadmanVerdict::DaemonAlive);
-        assert_eq!(deadman_verdict(false), DeadmanVerdict::ResetFirewall);
+    fn the_linux_guard_is_a_timer_enabled_at_boot() {
+        let (service, timer) = linux_units(
+            Path::new("/var/cache/warren/update-guard/warren-setup"),
+            600,
+        );
+
+        assert!(
+            service
+                .contains("ExecStart=\"/var/cache/warren/update-guard/warren-setup\" deadman-fire")
+        );
+        assert!(timer.contains("OnActiveSec=600"));
+        assert!(timer.contains("WantedBy=timers.target"));
+    }
+
+    #[test]
+    fn a_live_daemon_is_never_overridden() {
+        assert_eq!(deadman_verdict(true, false), DeadmanVerdict::DaemonAlive);
+        assert_eq!(deadman_verdict(true, true), DeadmanVerdict::DaemonAlive);
+    }
+
+    #[test]
+    fn with_no_daemon_the_firewall_opens_only_outside_lockdown() {
+        assert_eq!(deadman_verdict(false, false), DeadmanVerdict::ResetFirewall);
+        // Lockdown promises no traffic outside the tunnel, even with no daemon.
+        assert_eq!(deadman_verdict(false, true), DeadmanVerdict::KeepBlocked);
     }
 
     /// The macOS preinstall deletes the app bundle after arming the lockdown.
@@ -283,15 +312,20 @@ pub fn arm() -> Result<(), Error> {
 /// [`Error::Stage`] if the staged copy exists and cannot be removed.
 pub fn disarm() -> Result<(), Error> {
     let job = deadman_job_name(channel_suffix());
+    // Files first: on macOS the guard disarms itself from inside its own
+    // launchd job, and removing that job ends this process.
+    let staged = unstage();
     let _ = unschedule(&job);
-    unstage()
+    staged
 }
 
 /// Registers a one-shot job that runs `binary deadman-fire` in `delay` seconds.
 ///
-/// One implementation per platform because there is no portable one-shot timer,
-/// and each uses the scheduler that survives a logout and a reboot: launchd on
-/// macOS, a systemd transient timer on Linux, the task scheduler on Windows.
+/// One implementation per platform because there is no portable one-shot timer.
+/// Each survives a logout, and a reboot inside the window: launchd reloads the
+/// daemon plist at boot (macOS), the systemd timer is a unit file enabled under
+/// `timers.target` and counts from boot again (Linux), and the Windows task
+/// runs as soon as it can when its start time passed while the machine was off.
 #[cfg(target_os = "macos")]
 fn schedule(job: &str, binary: &Path, delay: u64) -> Result<(), Error> {
     // A `StartInterval` agent would repeat; the guard removes itself on the
@@ -327,25 +361,44 @@ fn schedule(job: &str, binary: &Path, delay: u64) -> Result<(), Error> {
 #[cfg(target_os = "macos")]
 fn unschedule(job: &str) -> Result<(), Error> {
     let path = PathBuf::from(format!("/Library/LaunchDaemons/{job}.plist"));
-    let _ = std::process::Command::new("launchctl")
-        .args(["unload", "-w"])
-        .arg(&path)
-        .status();
-    match std::fs::remove_file(&path) {
+    // The plist goes before the job: removing the job ends the guard's own
+    // process when it disarms itself, and a plist left behind would be loaded
+    // again at the next boot.
+    let removed = match std::fs::remove_file(&path) {
         Ok(()) => Ok(()),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
         Err(error) => Err(Error::Schedule(error)),
-    }
+    };
+    let _ = std::process::Command::new("launchctl")
+        .args(["remove", job])
+        .status();
+    removed
+}
+
+/// The service and timer unit files of the Linux guard. A unit file enabled
+/// under `timers.target` survives a reboot, where a `systemd-run` transient
+/// timer does not; `OnActiveSec` then counts from boot again.
+#[cfg_attr(not(any(test, target_os = "linux")), expect(dead_code))]
+fn linux_units(binary: &Path, delay: u64) -> (String, String) {
+    let service = format!(
+        "[Unit]\nDescription=Warren update guard\n\n[Service]\nType=oneshot\nExecStart=\"{}\" deadman-fire\n",
+        binary.display()
+    );
+    let timer = format!(
+        "[Unit]\nDescription=Warren update guard timer\n\n[Timer]\nOnActiveSec={delay}\nAccuracySec=1s\n\n[Install]\nWantedBy=timers.target\n"
+    );
+    (service, timer)
 }
 
 #[cfg(target_os = "linux")]
-fn schedule(job: &str, binary: &Path, delay: u64) -> Result<(), Error> {
-    let status = std::process::Command::new("systemd-run")
-        .arg(format!("--unit={job}"))
-        .arg(format!("--on-active={delay}"))
-        .arg("--timer-property=AccuracySec=1s")
-        .arg(binary)
-        .arg("deadman-fire")
+fn linux_unit_dir() -> PathBuf {
+    PathBuf::from("/etc/systemd/system")
+}
+
+#[cfg(target_os = "linux")]
+fn systemctl(args: &[&str]) -> Result<(), Error> {
+    let status = std::process::Command::new("systemctl")
+        .args(args)
         .status()
         .map_err(Error::Schedule)?;
     status
@@ -355,12 +408,29 @@ fn schedule(job: &str, binary: &Path, delay: u64) -> Result<(), Error> {
 }
 
 #[cfg(target_os = "linux")]
+fn schedule(job: &str, binary: &Path, delay: u64) -> Result<(), Error> {
+    let (service, timer) = linux_units(binary, delay);
+    let dir = linux_unit_dir();
+    std::fs::write(dir.join(format!("{job}.service")), service).map_err(Error::Schedule)?;
+    std::fs::write(dir.join(format!("{job}.timer")), timer).map_err(Error::Schedule)?;
+    systemctl(&["daemon-reload"])?;
+    systemctl(&["enable", "--now", &format!("{job}.timer")])
+}
+
+#[cfg(target_os = "linux")]
 fn unschedule(job: &str) -> Result<(), Error> {
-    // Stopping the timer is enough; a transient unit disappears with it.
-    let _ = std::process::Command::new("systemctl")
-        .arg("stop")
-        .arg(format!("{job}.timer"))
-        .status();
+    let _ = systemctl(&["disable", "--now", &format!("{job}.timer")]);
+    let dir = linux_unit_dir();
+    for unit in [format!("{job}.timer"), format!("{job}.service")] {
+        match std::fs::remove_file(dir.join(unit)) {
+            Ok(()) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(Error::Schedule(error)),
+        }
+    }
+    // Also clears a transient timer an older guard registered.
+    let _ = systemctl(&["stop", &format!("{job}.timer")]);
+    let _ = systemctl(&["daemon-reload"]);
     Ok(())
 }
 
@@ -370,10 +440,13 @@ fn schedule(job: &str, binary: &Path, delay: u64) -> Result<(), Error> {
     // would need the absolute start time computed and formatted here, in the
     // machine's locale. `New-ScheduledTaskTrigger -Once -At` takes a computed
     // DateTime, so the arithmetic stays where the clock is.
+    // `-StartWhenAvailable`: a start time that passed while the machine was
+    // off runs at the next boot instead of never.
     let script = format!(
         "$a = New-ScheduledTaskAction -Execute '{binary}' -Argument 'deadman-fire'; \
          $t = New-ScheduledTaskTrigger -Once -At ((Get-Date).AddSeconds({delay})); \
-         Register-ScheduledTask -TaskName '{job}' -Action $a -Trigger $t \
+         $s = New-ScheduledTaskSettingsSet -StartWhenAvailable; \
+         Register-ScheduledTask -TaskName '{job}' -Action $a -Trigger $t -Settings $s \
            -User 'SYSTEM' -RunLevel Highest -Force | Out-Null",
         binary = binary.display()
     );
