@@ -10,7 +10,6 @@
     <string name="settings">Inställningar</string>
     <string name="settings_account">Konto</string>
     <string name="account_paid_until">Betalat till</string>
-    <string name="time_left_x">Tid kvar: %1$s</string>
     <string name="account_credit_has_expired">Du har ingen VPN-tid kvar på det här kontot.</string>
     <string name="faqs_and_guides">Vanliga frågor och guider</string>
     <string name="privacy_policy_label">Sekretesspolicy</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">Värde: %1$s</string>
     <string name="hint_default">Standard</string>
     <string name="back">Tillbaka</string>
-    <string name="blocked_connection">ANSLUTNINGEN BLOCKERAD</string>
     <string name="connected">Ansluten</string>
     <string name="cancel">Avbryt</string>
     <string name="disconnect">Koppla från</string>
     <string name="disconnected">Frånkopplad</string>
     <string name="reconnect">Återanslut</string>
     <string name="dismiss">Ignorera</string>
-    <string name="switch_location">Växla plats</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">Blockerar internet</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">Anslutningen avbröts</string>
     <string name="you_are_visible">Du är synlig</string>
     <string name="you_are_protected">Du är skyddad</string>
-    <string name="connection_established">Anslutning upprättad</string>
     <string name="connection_in_progress">Anslutning pågår</string>
     <string name="connection_not_encrypted">Din anslutning är inte krypterad</string>
     <string name="random_location">Slumpmässig plats</string>
@@ -184,12 +180,9 @@
     <string name="enable_anyway">Aktivera ändå</string>
     <string name="udp_over_tcp">UDP över TCP</string>
     <string name="port_x">Port: %1$s</string>
-    <string name="connect_panel_connection_details">Anslutningsinformation</string>
     <string name="feature_quantum_resistant">Kvantresistens</string>
     <string name="feature_custom_dns">Anpassad DNS</string>
     <string name="dns_content_blockers">DNS-innehållsblockerare</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">In</string>
     <string name="connect">Anslut</string>
     <string name="close">Stäng</string>

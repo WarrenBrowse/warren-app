@@ -10,7 +10,6 @@
     <string name="settings">Setări</string>
     <string name="settings_account">Cont</string>
     <string name="account_paid_until">Plătit până la</string>
-    <string name="time_left_x">Timp rămas: %1$s</string>
     <string name="account_credit_has_expired">Nu mai aveți timp VPN disponibil pe acest cont.</string>
     <string name="faqs_and_guides">Întrebări frecvente &amp; Ghiduri</string>
     <string name="privacy_policy_label">Politica de confidențialitate</string>
@@ -33,14 +32,12 @@
     <string name="mtu_x">Valoare: %s</string>
     <string name="hint_default">Implicit</string>
     <string name="back">Înapoi</string>
-    <string name="blocked_connection">CONEXIUNE BLOCATĂ</string>
     <string name="connected">Conectat</string>
     <string name="cancel">Anulează</string>
     <string name="disconnect">Deconectează</string>
     <string name="disconnected">Deconectat</string>
     <string name="reconnect">Reconectează</string>
     <string name="dismiss">Închide</string>
-    <string name="switch_location">Schimbă locația</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">Se blochează internetul</string>
@@ -74,7 +71,6 @@
     <string name="connection_interrupted">Conexiune întreruptă</string>
     <string name="you_are_visible">Ești vizibil</string>
     <string name="you_are_protected">Ești protejat</string>
-    <string name="connection_established">Conexiune stabilită</string>
     <string name="connection_in_progress">Conectare în curs</string>
     <string name="connection_not_encrypted">Conexiunea ta nu este criptată</string>
     <string name="random_location">Locație aleatorie</string>
@@ -192,12 +188,9 @@
     <string name="enable_anyway">Activează oricum</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
     <string name="port_x">Port: %s</string>
-    <string name="connect_panel_connection_details">Detalii conexiune</string>
     <string name="feature_quantum_resistant">Rezistență cuantică</string>
     <string name="feature_custom_dns">DNS personalizat</string>
     <string name="dns_content_blockers">Blocatoare de conținut DNS</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">Intrare</string>
     <string name="connect">Conectează</string>
     <string name="close">Închide</string>

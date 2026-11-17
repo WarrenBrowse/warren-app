@@ -10,7 +10,6 @@
     <string name="settings">ဆက်တင်</string>
     <string name="settings_account">အကောင့်</string>
     <string name="account_paid_until">ဖော်ပြပါအထိ ပေးချေထားပြီး</string>
-    <string name="time_left_x">ကျန်သည့် အချိန်- %1$s</string>
     <string name="account_credit_has_expired">ဤအကောင့်တွင် နောက်ထပ် VPN သုံးနိုင်ချိန် မကျန်တော့ပါ။</string>
     <string name="faqs_and_guides">မေးလေ့ရှိသည့် မေးခွန်းများနှင့် လမ်းညွှန်များ</string>
     <string name="privacy_policy_label">ကိုယ်ပိုင်အချက်အလက် မူဝါဒ</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">တန်ဖိုး- %1$s</string>
     <string name="hint_default">ပုံသေ</string>
     <string name="back">နောက်သို့</string>
-    <string name="blocked_connection">ပိတ်ဆို့ထားသည့် ချိတ်ဆက်မှု</string>
     <string name="connected">ချိတ်ဆက်ပြီး</string>
     <string name="cancel">မလုပ်တော့ပါ</string>
     <string name="disconnect">ချိတ်ဆက်မှုဖြုတ်ရန်</string>
     <string name="disconnected">ချိတ်ဆက်မှု ဖြုတ်ထားပြီး</string>
     <string name="reconnect">ပြန်ချိတ်ဆက်ရန်</string>
     <string name="dismiss">ဖယ်ပစ်ရန်</string>
-    <string name="switch_location">တည်နေရာ ပြောင်းရန်</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">အင်တာနက် ပိတ်ဆို့နေပါသည်</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">ချိတ်ဆက်မှု ပြတ်တောက်သွားသည်</string>
     <string name="you_are_visible">သင် ထင်ရှားနေသည်</string>
     <string name="you_are_protected">သင် အကာအကွယ် ရရှိနေသည်</string>
-    <string name="connection_established">ချိတ်ဆက်မှု တည်ဆောက်ပြီးပါပြီ</string>
     <string name="connection_in_progress">ချိတ်ဆက်နေဆဲ</string>
     <string name="connection_not_encrypted">သင့်ချိတ်ဆက်မှုကို ကုဒ်ဝှက်ထားခြင်း မရှိပါ</string>
     <string name="random_location">ကျပန်း တည်နေရာ</string>
@@ -180,12 +176,9 @@
     <string name="enable_anyway">မည်သို့ပင်ဖြစ်စေ ဖွင့်ရန်</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
     <string name="port_x">ပေါ့တ်- %1$s</string>
-    <string name="connect_panel_connection_details">ချိတ်ဆက်မှု အသေးစိတ်အချက်များ</string>
     <string name="feature_quantum_resistant">Quantum ခုခံမှု</string>
     <string name="feature_custom_dns">စိတ်ကြိုက် DNS</string>
     <string name="dns_content_blockers">DNS အကြောင်းအရာ ပိတ်ဆို့မှုများ</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">အဝင်</string>
     <string name="connect">ချိတ်ဆက်ရန်</string>
     <string name="close">ပိတ်ရန်</string>

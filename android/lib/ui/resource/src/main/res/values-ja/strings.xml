@@ -10,7 +10,6 @@
     <string name="settings">設定</string>
     <string name="settings_account">アカウント</string>
     <string name="account_paid_until">次の日時まで支払い済み</string>
-    <string name="time_left_x">残り時間: %1$s</string>
     <string name="account_credit_has_expired">このアカウントには、もう残っているVPN時間がありません。</string>
     <string name="faqs_and_guides">よくある質問とガイド</string>
     <string name="privacy_policy_label">プライバシーポリシー</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">値: %1$s</string>
     <string name="hint_default">デフォルト</string>
     <string name="back">戻る</string>
-    <string name="blocked_connection">ブロックされた接続</string>
     <string name="connected">接続済み</string>
     <string name="cancel">キャンセル</string>
     <string name="disconnect">接続解除</string>
     <string name="disconnected">未接続</string>
     <string name="reconnect">再接続</string>
     <string name="dismiss">閉じる</string>
-    <string name="switch_location">場所を切り替える</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">インターネットをブロック中</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">接続が中断されました</string>
     <string name="you_are_visible">あなたは見られています</string>
     <string name="you_are_protected">保護されています</string>
-    <string name="connection_established">接続が確立されました</string>
     <string name="connection_in_progress">接続中</string>
     <string name="connection_not_encrypted">接続が暗号化されていません</string>
     <string name="random_location">ランダムな場所</string>
@@ -180,12 +176,9 @@
     <string name="enable_anyway">それでも有効にする</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
     <string name="port_x">ポート: %1$s</string>
-    <string name="connect_panel_connection_details">接続の詳細</string>
     <string name="feature_quantum_resistant">耐量子</string>
     <string name="feature_custom_dns">カスタムDNS</string>
     <string name="dns_content_blockers">DNSコンテンツブロッカー</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">内側</string>
     <string name="connect">接続</string>
     <string name="close">閉じる</string>

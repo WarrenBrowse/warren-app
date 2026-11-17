@@ -10,7 +10,6 @@
     <string name="settings">Asetukset</string>
     <string name="settings_account">Tili</string>
     <string name="account_paid_until">Maksu ennen</string>
-    <string name="time_left_x">Aikaa jäljellä: %1$s</string>
     <string name="account_credit_has_expired">Sinulla ei ole enempää VPN-aikaa jäljellä tällä tilillä.</string>
     <string name="faqs_and_guides">Usein kysytyt kysymykset ja oppaat</string>
     <string name="privacy_policy_label">Tietosuojakäytäntö</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">Arvo: %1$s</string>
     <string name="hint_default">Oletus</string>
     <string name="back">Takaisin</string>
-    <string name="blocked_connection">ESTETTY YHTEYS</string>
     <string name="connected">Yhdistetty</string>
     <string name="cancel">Peruuta</string>
     <string name="disconnect">Katkaise yhteys</string>
     <string name="disconnected">Yhteys katkaistu</string>
     <string name="reconnect">Yhdistä uudelleen</string>
     <string name="dismiss">Jätä huomiotta</string>
-    <string name="switch_location">Vaihda sijaintia</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">Verkkoyhteys estetään</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">Yhteys keskeytyi</string>
     <string name="you_are_visible">Olet näkyvissä</string>
     <string name="you_are_protected">Olet suojattu</string>
-    <string name="connection_established">Yhteys muodostettu</string>
     <string name="connection_in_progress">Yhteyttä muodostetaan</string>
     <string name="connection_not_encrypted">Yhteyttäsi ei ole salattu</string>
     <string name="random_location">Satunnainen sijainti</string>
@@ -184,12 +180,9 @@
     <string name="enable_anyway">Ota silti käyttöön</string>
     <string name="udp_over_tcp">UDP TCP:n kautta</string>
     <string name="port_x">Portti: %1$s</string>
-    <string name="connect_panel_connection_details">Yhteyden tiedot</string>
     <string name="feature_quantum_resistant">Kvanttihyökkäysten esto</string>
     <string name="feature_custom_dns">Mukautettu DNS</string>
     <string name="dns_content_blockers">DNS-sisällönestotoiminnot</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">Saapuva</string>
     <string name="connect">Yhdistä</string>
     <string name="close">Sulje</string>

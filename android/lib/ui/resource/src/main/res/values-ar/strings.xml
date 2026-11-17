@@ -10,7 +10,6 @@
     <string name="settings">الإعدادات</string>
     <string name="settings_account">الحساب</string>
     <string name="account_paid_until">مدفوع حتى</string>
-    <string name="time_left_x">الوقت المتبقي: %1$s</string>
     <string name="account_credit_has_expired">لم يتبقَّ لديك أي وقت لاستخدام شبكة VPN على هذا الحساب.</string>
     <string name="faqs_and_guides">الأسئلة الشائعة والأدلة</string>
     <string name="privacy_policy_label">سياسة الخصوصية</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">القيمة: %1$s</string>
     <string name="hint_default">افتراضي</string>
     <string name="back">رجوع</string>
-    <string name="blocked_connection">اتصال محظور</string>
     <string name="connected">متصل</string>
     <string name="cancel">إلغاء</string>
     <string name="disconnect">قطع الاتصال</string>
     <string name="disconnected">تم قطع الاتصال</string>
     <string name="reconnect">إعادة الاتصال</string>
     <string name="dismiss">تجاهل</string>
-    <string name="switch_location">تبديل الموقع</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">الإنترنت محظور</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">انقطع الاتصال</string>
     <string name="you_are_visible">أنت مكشوف</string>
     <string name="you_are_protected">أنت محمي</string>
-    <string name="connection_established">تم إنشاء الاتصال</string>
     <string name="connection_in_progress">جارٍ الاتصال</string>
     <string name="connection_not_encrypted">اتصالك غير مشفّر</string>
     <string name="random_location">موقع عشوائي</string>
@@ -200,12 +196,9 @@
     <string name="enable_anyway">التفعيل على أي حال</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
     <string name="port_x">المنفذ: %1$s</string>
-    <string name="connect_panel_connection_details">تفاصيل الاتصال</string>
     <string name="feature_quantum_resistant">مقاومة هجمات الحواسيب الكمّية</string>
     <string name="feature_custom_dns">DNS مُخصَّص</string>
     <string name="dns_content_blockers">أدوات حظر محتوى DNS</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">داخل</string>
     <string name="connect">الاتصال</string>
     <string name="close">إغلاق</string>

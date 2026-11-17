@@ -10,7 +10,6 @@
     <string name="settings">Indstillinger</string>
     <string name="settings_account">Konto</string>
     <string name="account_paid_until">Betalt indtil</string>
-    <string name="time_left_x">Resterende tid: %1$s</string>
     <string name="account_credit_has_expired">Du har ikke mere VPN-tid tilbage på denne konto.</string>
     <string name="faqs_and_guides">Ofte stillede spørgsmål og vejledninger</string>
     <string name="privacy_policy_label">Fortrolighedspolitik</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">Værdi: %1$s</string>
     <string name="hint_default">Standard</string>
     <string name="back">Tilbage</string>
-    <string name="blocked_connection">FORBINDELSE BLOKERET</string>
     <string name="connected">Tilsluttet</string>
     <string name="cancel">Annuller</string>
     <string name="disconnect">Afbryd forbindelse</string>
     <string name="disconnected">Afbrudt</string>
     <string name="reconnect">Genopret forbindelse</string>
     <string name="dismiss">Afvis</string>
-    <string name="switch_location">Skift placering</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">Blokerer internettet</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">Forbindelsen blev afbrudt</string>
     <string name="you_are_visible">Du er synlig</string>
     <string name="you_are_protected">Du er beskyttet</string>
-    <string name="connection_established">Forbindelse oprettet</string>
     <string name="connection_in_progress">Forbindelse i gang</string>
     <string name="connection_not_encrypted">Din forbindelse er ikke krypteret</string>
     <string name="random_location">Tilfældig placering</string>
@@ -184,12 +180,9 @@
     <string name="enable_anyway">Aktivér alligevel</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
     <string name="port_x">Port: %1$s</string>
-    <string name="connect_panel_connection_details">Forbindelsesoplysninger</string>
     <string name="feature_quantum_resistant">Kvantemodstand</string>
     <string name="feature_custom_dns">Brugerdefineret DNS</string>
     <string name="dns_content_blockers">DNS-indholdsblokkere</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">Ind</string>
     <string name="connect">Tilslut</string>
     <string name="close">Luk</string>

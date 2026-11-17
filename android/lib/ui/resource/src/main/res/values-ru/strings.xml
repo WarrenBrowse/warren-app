@@ -10,7 +10,6 @@
     <string name="settings">Настройки</string>
     <string name="settings_account">Учетная запись</string>
     <string name="account_paid_until">Оплачено до</string>
-    <string name="time_left_x">Осталось времени: %1$s</string>
     <string name="account_credit_has_expired">На этой учетной записи времени VPN не осталось.</string>
     <string name="faqs_and_guides">Ответы на вопросы и руководства</string>
     <string name="privacy_policy_label">Политика конфиденциальности</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">Значение: %1$s</string>
     <string name="hint_default">По умолчанию</string>
     <string name="back">Назад</string>
-    <string name="blocked_connection">ПОДКЛЮЧЕНИЕ ЗАБЛОКИРОВАНО</string>
     <string name="connected">Подключено</string>
     <string name="cancel">Отмена</string>
     <string name="disconnect">Отключить</string>
     <string name="disconnected">Разъединено</string>
     <string name="reconnect">Переподключить</string>
     <string name="dismiss">Закрыть</string>
-    <string name="switch_location">Сменить местоположение</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">Блокируется доступ в Интернет</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">Соединение прервано</string>
     <string name="you_are_visible">Вас видно</string>
     <string name="you_are_protected">Вы защищены</string>
-    <string name="connection_established">Соединение установлено</string>
     <string name="connection_in_progress">Подключение выполняется</string>
     <string name="connection_not_encrypted">Ваше соединение не зашифровано</string>
     <string name="random_location">Случайное местоположение</string>
@@ -192,12 +188,9 @@
     <string name="enable_anyway">Всё равно включить</string>
     <string name="udp_over_tcp">UDP через TCP</string>
     <string name="port_x">Порт: %1$s</string>
-    <string name="connect_panel_connection_details">Сведения о подключении</string>
     <string name="feature_quantum_resistant">Квантовая устойчивость</string>
     <string name="feature_custom_dns">Пользовательский DNS</string>
     <string name="dns_content_blockers">DNS-блокировщики контента</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">Вход</string>
     <string name="connect">Подключить</string>
     <string name="close">Закрыть</string>

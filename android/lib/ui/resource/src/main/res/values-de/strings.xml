@@ -10,7 +10,6 @@
     <string name="settings">Einstellungen</string>
     <string name="settings_account">Konto</string>
     <string name="account_paid_until">Bezahlt bis</string>
-    <string name="time_left_x">Verbleibende Zeit: %1$s</string>
     <string name="account_credit_has_expired">Sie haben keine VPN-Zeit mehr auf diesem Konto.</string>
     <string name="faqs_and_guides">Häufig gestellte Fragen &amp; Anleitungen</string>
     <string name="privacy_policy_label">Datenschutzrichtlinie</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">Wert: %1$s</string>
     <string name="hint_default">Standard</string>
     <string name="back">Zurück</string>
-    <string name="blocked_connection">GESPERRTE VERBINDUNG</string>
     <string name="connected">Verbunden</string>
     <string name="cancel">Abbrechen</string>
     <string name="disconnect">Verbindung trennen</string>
     <string name="disconnected">Verbindung getrennt</string>
     <string name="reconnect">Erneut verbinden</string>
     <string name="dismiss">Ausblenden</string>
-    <string name="switch_location">Ort wechseln</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">Internet wird gesperrt</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">Verbindung unterbrochen</string>
     <string name="you_are_visible">Sie sind sichtbar</string>
     <string name="you_are_protected">Sie sind geschützt</string>
-    <string name="connection_established">Verbindung hergestellt</string>
     <string name="connection_in_progress">Verbindung wird hergestellt</string>
     <string name="connection_not_encrypted">Ihre Verbindung ist nicht verschlüsselt</string>
     <string name="random_location">Zufälliger Standort</string>
@@ -184,12 +180,9 @@
     <string name="enable_anyway">Trotzdem aktivieren</string>
     <string name="udp_over_tcp">UDP über TCP</string>
     <string name="port_x">Port: %1$s</string>
-    <string name="connect_panel_connection_details">Verbindungsdetails</string>
     <string name="feature_quantum_resistant">Quantenresistenz</string>
     <string name="feature_custom_dns">Eigenes DNS</string>
     <string name="dns_content_blockers">DNS-Inhaltssperren</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">Eingehend</string>
     <string name="connect">Verbinden</string>
     <string name="close">Schließen</string>

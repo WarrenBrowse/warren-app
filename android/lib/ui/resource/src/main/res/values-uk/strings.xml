@@ -10,7 +10,6 @@
     <string name="settings">Налаштування</string>
     <string name="settings_account">Обліковий запис</string>
     <string name="account_paid_until">Оплачено до</string>
-    <string name="time_left_x">Залишилося часу: %1$s</string>
     <string name="account_credit_has_expired">На балансі облікового запису не залишилося часу для використання VPN.</string>
     <string name="faqs_and_guides">Поширені запитання і посібники</string>
     <string name="privacy_policy_label">Політика конфіденційності</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">Значення: %1$s</string>
     <string name="hint_default">За замовчуванням</string>
     <string name="back">Назад</string>
-    <string name="blocked_connection">ПІДКЛЮЧЕННЯ ЗАБЛОКОВАНО</string>
     <string name="connected">Підключено</string>
     <string name="cancel">Скасувати</string>
     <string name="disconnect">Відключити</string>
     <string name="disconnected">Відключено</string>
     <string name="reconnect">Перепідключити</string>
     <string name="dismiss">Закрити</string>
-    <string name="switch_location">Змінити розташування</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">Інтернет заблоковано</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">З’єднання перервано</string>
     <string name="you_are_visible">Вас видно</string>
     <string name="you_are_protected">Ви захищені</string>
-    <string name="connection_established">З\'єднання встановлено</string>
     <string name="connection_in_progress">Підключення триває</string>
     <string name="connection_not_encrypted">Ваше з\'єднання не зашифроване</string>
     <string name="random_location">Випадкове розташування</string>
@@ -192,12 +188,9 @@
     <string name="enable_anyway">Усе одно увімкнути</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
     <string name="port_x">Порт: %1$s</string>
-    <string name="connect_panel_connection_details">Відомості про підключення</string>
     <string name="feature_quantum_resistant">Квантова стійкість</string>
     <string name="feature_custom_dns">Користувацький DNS</string>
     <string name="dns_content_blockers">DNS-блокувальники контенту</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">Вхід</string>
     <string name="connect">Підключити</string>
     <string name="close">Закрити</string>

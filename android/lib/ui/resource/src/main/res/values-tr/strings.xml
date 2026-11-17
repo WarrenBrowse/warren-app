@@ -10,7 +10,6 @@
     <string name="settings">Ayarlar</string>
     <string name="settings_account">Hesap</string>
     <string name="account_paid_until">Şu tarihe kadar ödendi:</string>
-    <string name="time_left_x">Kalan süre: %1$s</string>
     <string name="account_credit_has_expired">Bu hesap için artık VPN süreniz kalmadı.</string>
     <string name="faqs_and_guides">SSS ve Kılavuzlar</string>
     <string name="privacy_policy_label">Gizlilik politikası</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">Değer: %1$s</string>
     <string name="hint_default">Varsayılan</string>
     <string name="back">Geri</string>
-    <string name="blocked_connection">ENGELLENEN BAĞLANTI</string>
     <string name="connected">Bağlandı</string>
     <string name="cancel">İptal et</string>
     <string name="disconnect">Bağlantıyı Kes</string>
     <string name="disconnected">Bağlantı kesildi</string>
     <string name="reconnect">Yeniden Bağlan</string>
     <string name="dismiss">Reddet</string>
-    <string name="switch_location">Konum değiştir</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">İnternet bağlantısı engelleniyor</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">Bağlantı kesintiye uğradı</string>
     <string name="you_are_visible">Görünür durumdasınız</string>
     <string name="you_are_protected">Korunuyorsunuz</string>
-    <string name="connection_established">Bağlantı kuruldu</string>
     <string name="connection_in_progress">Bağlantı sürüyor</string>
     <string name="connection_not_encrypted">Bağlantınız şifrelenmemiş</string>
     <string name="random_location">Rastgele konum</string>
@@ -184,12 +180,9 @@
     <string name="enable_anyway">Yine de etkinleştir</string>
     <string name="udp_over_tcp">TCP üzerinden UDP</string>
     <string name="port_x">Port: %1$s</string>
-    <string name="connect_panel_connection_details">Bağlantı ayrıntıları</string>
     <string name="feature_quantum_resistant">Kuantum direnci</string>
     <string name="feature_custom_dns">Özel DNS</string>
     <string name="dns_content_blockers">DNS içerik engelleyiciler</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">Giriş</string>
     <string name="connect">Bağlan</string>
     <string name="close">Kapat</string>

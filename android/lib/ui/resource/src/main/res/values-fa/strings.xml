@@ -10,7 +10,6 @@
     <string name="settings">تنظیمات</string>
     <string name="settings_account">حساب</string>
     <string name="account_paid_until">پرداخت شده تا</string>
-    <string name="time_left_x">زمان باقی‌مانده: %1$s</string>
     <string name="account_credit_has_expired">شما هیچگونه زمان VPN باقیمانده دیگری در این حساب ندارید.</string>
     <string name="faqs_and_guides">پرسش‌های متداول و راهنماها</string>
     <string name="privacy_policy_label">سیاست حفظ حریم خصوصی</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">مقدار: %1$s</string>
     <string name="hint_default">پیش‌فرض</string>
     <string name="back">بازگشت</string>
-    <string name="blocked_connection">اتصال مسدود شده</string>
     <string name="connected">متصل شد</string>
     <string name="cancel">لغو</string>
     <string name="disconnect">قطع اتصال</string>
     <string name="disconnected">اتصال قطع شد</string>
     <string name="reconnect">اتصال دوباره</string>
     <string name="dismiss">رد کردن</string>
-    <string name="switch_location">تغییر مکان</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">مسدود کردن اینترنت</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">اتصال قطع شد</string>
     <string name="you_are_visible">شما قابل مشاهده هستید</string>
     <string name="you_are_protected">شما محافظت می‌شوید</string>
-    <string name="connection_established">اتصال برقرار شد</string>
     <string name="connection_in_progress">اتصال در حال انجام</string>
     <string name="connection_not_encrypted">اتصال شما رمزگذاری نشده است</string>
     <string name="random_location">مکان تصادفی</string>
@@ -184,12 +180,9 @@
     <string name="enable_anyway">با این حال فعال شود</string>
     <string name="udp_over_tcp">‏UDP روی TCP</string>
     <string name="port_x">پورت: %1$s</string>
-    <string name="connect_panel_connection_details">جزئیات اتصال</string>
     <string name="feature_quantum_resistant">مقاومت کوانتومی</string>
     <string name="feature_custom_dns">DNS سفارشی</string>
     <string name="dns_content_blockers">مسدودکننده‌های محتوای DNS</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">ورودی</string>
     <string name="connect">اتصال</string>
     <string name="close">بستن</string>

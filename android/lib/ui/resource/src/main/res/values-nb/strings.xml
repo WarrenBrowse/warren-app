@@ -10,7 +10,6 @@
     <string name="settings">Innstillinger</string>
     <string name="settings_account">Konto</string>
     <string name="account_paid_until">Betalt fram til</string>
-    <string name="time_left_x">Tid igjen: %1$s</string>
     <string name="account_credit_has_expired">Du har ikke mer VPN-tid igjen på kontoen.</string>
     <string name="faqs_and_guides">Ofte stilte spørsmål og veiledninger</string>
     <string name="privacy_policy_label">Retningslinjer for personvern</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">Verdi: %1$s</string>
     <string name="hint_default">Standard</string>
     <string name="back">Tilbake</string>
-    <string name="blocked_connection">TILKOBLING BLOKKERT</string>
     <string name="connected">Tilkoblet</string>
     <string name="cancel">Avbryt</string>
     <string name="disconnect">Koble fra</string>
     <string name="disconnected">Frakoblet</string>
     <string name="reconnect">Koble til på nytt</string>
     <string name="dismiss">Ignorer</string>
-    <string name="switch_location">Bytt plassering</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">Blokkerer internettet</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">Tilkoblingen ble avbrutt</string>
     <string name="you_are_visible">Du er synlig</string>
     <string name="you_are_protected">Du er beskyttet</string>
-    <string name="connection_established">Tilkobling opprettet</string>
     <string name="connection_in_progress">Tilkobling pågår</string>
     <string name="connection_not_encrypted">Tilkoblingen din er ikke kryptert</string>
     <string name="random_location">Tilfeldig plassering</string>
@@ -184,12 +180,9 @@
     <string name="enable_anyway">Aktiver uansett</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
     <string name="port_x">Port: %1$s</string>
-    <string name="connect_panel_connection_details">Tilkoblingsdetaljer</string>
     <string name="feature_quantum_resistant">Kvantemotstand</string>
     <string name="feature_custom_dns">Tilpasset DNS</string>
     <string name="dns_content_blockers">DNS-innholdsblokkering</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">Inngående</string>
     <string name="connect">Koble til</string>
     <string name="close">Lukk</string>

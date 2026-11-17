@@ -10,7 +10,6 @@
     <string name="settings">Instellingen</string>
     <string name="settings_account">Account</string>
     <string name="account_paid_until">Betaald tot</string>
-    <string name="time_left_x">Resterende tijd: %1$s</string>
     <string name="account_credit_has_expired">U hebt geen VPN-tijd meer op dit account.</string>
     <string name="faqs_and_guides">Veelgestelde vragen en gidsen</string>
     <string name="privacy_policy_label">Privacybeleid</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">Waarde: %1$s</string>
     <string name="hint_default">Standaard</string>
     <string name="back">Terug</string>
-    <string name="blocked_connection">VERBINDING GEBLOKKEERD</string>
     <string name="connected">Verbonden</string>
     <string name="cancel">Annuleren</string>
     <string name="disconnect">Verbinding verbreken</string>
     <string name="disconnected">Verbinding verbroken</string>
     <string name="reconnect">Opnieuw verbinden</string>
     <string name="dismiss">Negeren</string>
-    <string name="switch_location">Locatie wijzigen</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">Internet blokkeren</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">Verbinding onderbroken</string>
     <string name="you_are_visible">Je bent zichtbaar</string>
     <string name="you_are_protected">Je bent beschermd</string>
-    <string name="connection_established">Verbinding tot stand gebracht</string>
     <string name="connection_in_progress">Verbinding wordt gemaakt</string>
     <string name="connection_not_encrypted">Je verbinding is niet versleuteld</string>
     <string name="random_location">Willekeurige locatie</string>
@@ -184,12 +180,9 @@
     <string name="enable_anyway">Toch inschakelen</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
     <string name="port_x">Poort: %1$s</string>
-    <string name="connect_panel_connection_details">Verbindingsgegevens</string>
     <string name="feature_quantum_resistant">Kwantumbestendigheid</string>
     <string name="feature_custom_dns">Aangepaste DNS</string>
     <string name="dns_content_blockers">DNS-contentblokkeringen</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">In</string>
     <string name="connect">Verbinden</string>
     <string name="close">Sluiten</string>

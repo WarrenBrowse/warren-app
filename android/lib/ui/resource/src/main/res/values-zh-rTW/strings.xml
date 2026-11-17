@@ -10,7 +10,6 @@
     <string name="settings">設定</string>
     <string name="settings_account">帳戶</string>
     <string name="account_paid_until">支付至</string>
-    <string name="time_left_x">剩餘時間：%1$s</string>
     <string name="account_credit_has_expired">您這個帳戶已經沒有剩餘的 VPN 時間了。</string>
     <string name="faqs_and_guides">常見問題集與指南</string>
     <string name="privacy_policy_label">隱私權政策</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">值：%1$s</string>
     <string name="hint_default">預設</string>
     <string name="back">返回</string>
-    <string name="blocked_connection">被封鎖的連線</string>
     <string name="connected">已連線</string>
     <string name="cancel">取消</string>
     <string name="disconnect">中斷連線</string>
     <string name="disconnected">已中斷連線</string>
     <string name="reconnect">重新連線</string>
     <string name="dismiss">取消</string>
-    <string name="switch_location">切換位置</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">正在封鎖網路</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">連線已中斷</string>
     <string name="you_are_visible">您已暴露</string>
     <string name="you_are_protected">您已受到保護</string>
-    <string name="connection_established">連線已建立</string>
     <string name="connection_in_progress">正在連線</string>
     <string name="connection_not_encrypted">您的連線未加密</string>
     <string name="random_location">隨機位置</string>
@@ -180,12 +176,9 @@
     <string name="enable_anyway">仍然啟用</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
     <string name="port_x">連接埠：%1$s</string>
-    <string name="connect_panel_connection_details">連線詳細資訊</string>
     <string name="feature_quantum_resistant">抗量子</string>
     <string name="feature_custom_dns">自訂 DNS</string>
     <string name="dns_content_blockers">DNS 內容封鎖程式</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">入境</string>
     <string name="connect">連線</string>
     <string name="close">關閉</string>

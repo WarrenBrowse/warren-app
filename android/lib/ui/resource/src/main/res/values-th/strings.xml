@@ -10,7 +10,6 @@
     <string name="settings">การตั้งค่า</string>
     <string name="settings_account">บัญชี</string>
     <string name="account_paid_until">ชำระเงินแล้วจนถึง</string>
-    <string name="time_left_x">เหลือเวลา: %1$s</string>
     <string name="account_credit_has_expired">คุณไม่มีเวลาใช้งาน VPN เหลืออยู่ในบัญชีนี้แล้ว</string>
     <string name="faqs_and_guides">คำถามที่พบบ่อยและคำแนะนำ</string>
     <string name="privacy_policy_label">นโยบายความเป็นส่วนตัว</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">ค่า: %1$s</string>
     <string name="hint_default">ค่าเริ่มต้น</string>
     <string name="back">ย้อนกลับ</string>
-    <string name="blocked_connection">การเชื่อมต่อที่ถูกบล็อก</string>
     <string name="connected">เชื่อมต่อแล้ว</string>
     <string name="cancel">ยกเลิก</string>
     <string name="disconnect">ตัดการเชื่อมต่อ</string>
     <string name="disconnected">ตัดการเชื่อมต่อแล้ว</string>
     <string name="reconnect">เชื่อมต่อใหม่</string>
     <string name="dismiss">ละทิ้ง</string>
-    <string name="switch_location">สลับตำแหน่ง</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">กำลังบล็อกอินเทอร์เน็ต</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">การเชื่อมต่อถูกขัดจังหวะ</string>
     <string name="you_are_visible">คุณถูกมองเห็นได้</string>
     <string name="you_are_protected">คุณได้รับการปกป้อง</string>
-    <string name="connection_established">เชื่อมต่อสำเร็จ</string>
     <string name="connection_in_progress">กำลังเชื่อมต่อ</string>
     <string name="connection_not_encrypted">การเชื่อมต่อของคุณไม่ได้เข้ารหัส</string>
     <string name="random_location">ตำแหน่งแบบสุ่ม</string>
@@ -180,12 +176,9 @@
     <string name="enable_anyway">เปิดใช้งานต่อไป</string>
     <string name="udp_over_tcp">UDP-ผ่าน-TCP</string>
     <string name="port_x">พอร์ต: %1$s</string>
-    <string name="connect_panel_connection_details">รายละเอียดการเชื่อมต่อ</string>
     <string name="feature_quantum_resistant">การต่อต้านควอนตัม</string>
     <string name="feature_custom_dns">DNS แบบกำหนดเอง</string>
     <string name="dns_content_blockers">ตัวบล็อกเนื้อหา DNS</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">เข้า</string>
     <string name="connect">เชื่อมต่อ</string>
     <string name="close">ปิด</string>

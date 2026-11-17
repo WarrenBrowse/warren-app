@@ -10,7 +10,6 @@
     <string name="settings">Ustawienia</string>
     <string name="settings_account">Konto</string>
     <string name="account_paid_until">Płatne do</string>
-    <string name="time_left_x">Pozostało: %1$s</string>
     <string name="account_credit_has_expired">Na tym koncie nie masz już czasu VPN.</string>
     <string name="faqs_and_guides">Często zadawane pytania i poradniki</string>
     <string name="privacy_policy_label">Polityka prywatności</string>
@@ -31,14 +30,12 @@
     <string name="mtu_x">Wartość: %1$s</string>
     <string name="hint_default">Domyślnie</string>
     <string name="back">Wstecz</string>
-    <string name="blocked_connection">ZABLOKOWANE POŁĄCZENIE</string>
     <string name="connected">Połączono</string>
     <string name="cancel">Anuluj</string>
     <string name="disconnect">Rozłącz</string>
     <string name="disconnected">Rozłączono</string>
     <string name="reconnect">Połącz ponownie</string>
     <string name="dismiss">Odrzuć</string>
-    <string name="switch_location">Zmień lokalizację</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">Blokowanie Internetu</string>
@@ -72,7 +69,6 @@
     <string name="connection_interrupted">Połączenie przerwane</string>
     <string name="you_are_visible">Jesteś widoczny</string>
     <string name="you_are_protected">Jesteś chroniony</string>
-    <string name="connection_established">Połączenie ustanowione</string>
     <string name="connection_in_progress">Trwa łączenie</string>
     <string name="connection_not_encrypted">Twoje połączenie nie jest szyfrowane</string>
     <string name="random_location">Losowa lokalizacja</string>
@@ -192,12 +188,9 @@
     <string name="enable_anyway">Mimo to włącz</string>
     <string name="udp_over_tcp">UDP-przez-TCP</string>
     <string name="port_x">Port: %1$s</string>
-    <string name="connect_panel_connection_details">Szczegóły połączenia</string>
     <string name="feature_quantum_resistant">Odporność na ataki z użyciem komputerów kwantowych</string>
     <string name="feature_custom_dns">Niestandardowy serwer DNS</string>
     <string name="dns_content_blockers">Funkcje blokowania treści DNS</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">Wejście</string>
     <string name="connect">Połącz</string>
     <string name="close">Zamknij</string>

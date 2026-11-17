@@ -9,7 +9,6 @@
     <string name="settings">Settings</string>
     <string name="settings_account">Account</string>
     <string name="account_paid_until">Paid until</string>
-    <string name="time_left_x">Time left: %1$s</string>
     <string name="account_credit_has_expired">You have no more VPN time left on this account.</string>
     <string name="faqs_and_guides">FAQs &amp; Guides</string>
     <string name="privacy_policy_label">Privacy policy</string>
@@ -33,14 +32,12 @@
     <string name="mtu_x">Value: %s</string>
     <string name="hint_default">Default</string>
     <string name="back">Back</string>
-    <string name="blocked_connection">BLOCKED CONNECTION</string>
     <string name="connected">Connected</string>
     <string name="cancel">Cancel</string>
     <string name="disconnect">Disconnect</string>
     <string name="disconnected">Disconnected</string>
     <string name="reconnect">Reconnect</string>
     <string name="dismiss">Dismiss</string>
-    <string name="switch_location">Switch location</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="blocking_internet">Blocking internet</string>
@@ -74,7 +71,6 @@
     <string name="connection_interrupted">Connection interrupted</string>
     <string name="you_are_visible">You are visible</string>
     <string name="you_are_protected">You are protected</string>
-    <string name="connection_established">Connection established</string>
     <string name="connection_in_progress">Connection in progress</string>
     <string name="connection_not_encrypted">Your connection is not encrypted</string>
     <string name="random_location">Random location</string>
@@ -193,12 +189,9 @@
     <string name="enable_anyway">Enable anyway</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
     <string name="port_x">Port: %s</string>
-    <string name="connect_panel_connection_details">Connection details</string>
     <string name="feature_quantum_resistant">Quantum resistance</string>
     <string name="feature_custom_dns">Custom DNS</string>
     <string name="dns_content_blockers">DNS content blockers</string>
-    <string name="ipv4">IPv4</string>
-    <string name="ipv6">IPv6</string>
     <string name="connection_details_in">In</string>
     <string name="connect">Connect</string>
     <string name="close">Close</string>
