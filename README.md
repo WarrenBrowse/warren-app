@@ -226,8 +226,9 @@ Useful dev behavior details:
 
 ## Releasing the app
 
-The upstream release procedure is documented in [Release.md](Release.md). **No public Warren release
-yet**; the repo stays private during the POC phase.
+A release is a pushed tag: `beta-vX.Y.Z` for the beta channel, `vX.Y.Z` for
+production. The procedure, the guards and how to withdraw a release are in
+[docs/RUNBOOK-RELEASE.md](docs/RUNBOOK-RELEASE.md).
 
 ## Environment variables used by the daemon
 

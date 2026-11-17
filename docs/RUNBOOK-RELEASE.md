@@ -1,147 +1,119 @@
-# Warren VPN: Release Runbook
+# Warren VPN: release runbook
 
-How to tag, push, and publish a Warren VPN release.
+How a release is cut, what the pipeline does with it, and how to withdraw one.
+Which channel is live and what is dormant is deployment state: the
+`warren-release-channels` skill of the workspace has it. How the in-app update
+works (signing, hosting, the forced-update floor): `docs/AUTO-UPDATE.md`.
 
-For how the in-app auto-update and forced-update system works (signing, hosting,
-the `minimum_supported_version` lever, Android/iOS plan), see
-`docs/AUTO-UPDATE.md`.
+## Channels and tags
 
-## Pre-tag checklist
+The shape of the tag picks the channel, and nothing else does
+(`ci/resolve-release-channel.sh`):
 
-Run the verification script:
+| tag | channel | artifacts | update host |
+| --- | --- | --- | --- |
+| `beta-vX.Y.Z` | beta | `WarrenVPN-Beta-*` | `api.beta.warrenbrowse.com` |
+| `vX.Y.Z` | prod | `WarrenVPN-*` | `api.warrenbrowse.com` |
 
-```sh
-bash scripts/release/verify-beta.sh
-```
+A run builds and publishes one channel. The two version series are independent,
+and the app and the headless client (`daemon-v*`, `daemon-beta-v*`) share one
+version space. A prod tag is refused while any signing identity is missing
+(`ci/require-signing-identities.sh`).
 
-All sections must report PASS. If any FAIL is shown, fix the underlying issue and re-run.
+## Before the tag
 
-For platform-specific skips (e.g. running on Linux but only Linux+Windows+Android matter for now):
-
-```sh
-bash scripts/release/verify-beta.sh --skip-ios --skip-android
-```
-
-Once green, check that all required secrets are configured on
-https://github.com/WarrenBrowse/warren-app/settings/secrets/actions, following `docs/RELEASE-PROCUREMENT.md`. Re-run a dry-run via `gh workflow run` if in doubt:
-
-```sh
-gh workflow run release.yml --ref main --field tag=v0.1.0-beta.1
-```
-
-## Update CHANGELOG.md
-
-Replace the `[Unreleased]` section's heading with the new version and add the date:
-
-```diff
-- ## [Unreleased]
-+ ## [0.1.0-beta.1] - 2026-05-22
-```
-
-Then create a new empty `[Unreleased]` block on top, with the standard `### Added/Changed/Fixed/Security/Removed` headings, for future changes.
-
-Commit:
-
-```sh
-git add CHANGELOG.md
-git commit -m "chore: prepare v0.1.0-beta.1"
-git push origin main
-```
+1. `main` is green: Warren checks, Android checks, iOS checks.
+2. Bump the version with `scripts/release/bump-version.sh <X.Y.Z>` and commit
+   the files it lists.
+3. Write the version's notes in `CHANGELOG.md`, `CHANGELOG.fr.md` and
+   `CHANGELOG.ro.md`, under `## [X.Y.Z] - <date>`. The release refuses a version
+   missing from any of the three (`ci/require-release-notes.sh`): the GitHub
+   release body, the in-app what's-new and the signed manifests all show them.
+4. Optional: `bash scripts/release/verify-beta.sh` runs locally what the release
+   would catch.
+5. Optional: to force clients below a version to update, set the channel's
+   floor before tagging: `scripts/release/set-update-min-version.sh --beta
+   <version>` (without `--beta` for prod).
+6. Push to `main` and wait for its checks.
 
 ## Tag and push
 
 ```sh
-git tag -a v0.1.0-beta.1 -m "Warren VPN beta 1"
-git push origin v0.1.0-beta.1
+git tag -l 'beta-v[0-9]*' | sort -V | tail -1   # never a bare `git tag -l | tail`
+git ls-remote --tags origin 'beta-v*'
+git tag -a beta-vX.Y.Z -m "Warren VPN Beta X.Y.Z"
+git push origin beta-vX.Y.Z
 ```
 
-This triggers `.github/workflows/release.yml`. The workflow:
+`tag-guard` then refuses, before anything is built:
 
-1. Builds installers in parallel on `macos-14`, `ubuntu-22.04`, `windows-2022`, `macos-15` (iOS), `ubuntu-22.04` (Android).
-2. Signs each artifact when the corresponding secret is present (skip-if-no-secrets logic).
-3. Uploads the signed iOS `.ipa` to TestFlight via `xcrun altool`.
-4. Uploads the signed Android `.aab` to Google Play internal-test track via `r0adkll/upload-google-play`.
-5. Assembles the GitHub Release as a **draft** while the builds run, then, once every build job is green, adds the SHA-256 checksums and the CHANGELOG notes and **publishes it automatically** (a tag with a pre-release suffix, e.g. `v0.1.0-beta.1`, is published as a pre-release and does not become "latest"). A failed build leaves the release a draft, so nothing half-built is ever public.
-6. `publish-update-metadata`: generates the per-platform signed update manifests, signs them with `WARREN_UPDATE_SIGNING_KEY`, and `scp`s them to the update host. No-op when that secret is unset. See `docs/AUTO-UPDATE.md`.
+- a ref that is not a release tag;
+- a tagged commit that `origin/main` does not carry (`ci/require-tag-on-main.sh`);
+- a version that is not strictly above every tag of its series
+  (`ci/check-release-version.sh`);
+- missing release notes, and on prod a missing signing identity.
 
-Monitor the run live at https://github.com/WarrenBrowse/warren-app/actions.
+A failed run is re-run from the Actions tab, or with `gh workflow run
+release.yml --ref beta-vX.Y.Z`: the workflow only starts from the tag itself.
 
-Expected wall-clock duration: ~25-40 minutes.
+## What the pipeline does
 
-## Post-build
+`.github/workflows/release.yml`, in order:
 
-1. Open the published Release at https://github.com/WarrenBrowse/warren-app/releases.
-2. Verify the artifact list contains:
-    - macOS: `WarrenVPN-*.dmg`, `WarrenVPN-*.pkg`
-    - Linux: `WarrenVPN-*.deb`, `WarrenVPN-*.rpm`, `warren-vpn-daemon_*.deb`, `warren-vpn-daemon_*.rpm`
-    - Windows: `WarrenVPN-*.exe`, `WarrenVPN-*.msi`
-    - iOS: `WarrenVPN.ipa` (artifact only; TestFlight upload happens automatically)
-    - Android: `app-prod-release.aab`, `app-prod-release.apk`
-    - `SHA256SUMS`
-3. Check the release body: CI extracts this version's CHANGELOG section, so a missing or misnumbered `## [x.y.z]` header shows up as a bare fallback note. Edit it by hand if needed.
+1. `tests`: the whole Warren test scope (`warren-tests.yml`, the same suite as
+   the push gate). Nothing is built if it fails.
+2. Builds, each uploading to a draft release and recording the hashes of what
+   it uploads:
+   - `build-macos`: universal `.pkg`, on the self-hosted macOS pool;
+   - `build-linux`, `build-linux-arm64`: `.deb`, `.rpm`, `.pacman`, on
+     `ubuntu-24.04` and `ubuntu-24.04-arm` inside the Debian 11 build image;
+   - `build-linux-sysvinit`, `build-nixos`: repackage the amd64 `.deb` and
+     install-test it;
+   - `build-windows`: the NSIS installer, on `windows-2025`;
+   - `build-android`: the APK (and the AAB on prod), on the self-hosted macOS
+     pool;
+   - `build-ios`: dormant until the repository variable `WARREN_ENABLE_IOS` is
+     `true`.
+   Signing is per platform and only happens when its secrets exist
+   (`docs/RELEASE-PROCUREMENT.md`).
+3. `release-headless` (`release-daemon.yml`): the warren-cli release of the same
+   version.
+4. `publish-release`, once every build and the headless release succeeded:
+   refuses a draft that does not hold exactly the bytes the builds recorded
+   (`ci/release-asset-sums.sh`), writes `SHA256SUMS` from those hashes, sets the
+   notes and publishes. A beta is a pre-release and never becomes `latest`.
+5. `publish-update-metadata` (`update-metadata.yml`): generates the update
+   manifests, signs them in a job that holds only the update key, uploads
+   installers and manifests to the update host through its receiver, attaches
+   the torrents and `SHA256SUMS.sshsig` to the release, and asks the tracker
+   whether the release is seeded (a warning, never a failure). The download
+   page reads `downloads.json` from the update host: nothing to edit by hand.
 
-## TestFlight + Play Store
+A failed Release run triggers `refresh-update-metadata.yml`, which re-signs the
+latest published release of each live channel, so a run that died after
+publishing never leaves the served manifests behind. The same workflow runs on
+the first of every month to renew the manifests' expiry.
 
-After the CI run completes:
+## Withdrawing a release
 
-- iOS internal testers receive the TestFlight invite by email within ~10 minutes (assuming App Store Connect processing succeeded).
-- Android internal testers receive the Play Store update within ~15 minutes via the configured email list.
+Clients take the highest version listed in the signed manifest, and the
+history is carried from one manifest to the next, so withdrawing a version is
+re-signing the release below it without it:
 
-If uploads fail (e.g. version code conflict, missing privacy nutrition labels), the error appears in the corresponding workflow log. Fix and re-tag with `v0.1.0-beta.2`.
+```sh
+gh workflow run refresh-update-metadata.yml --repo WarrenBrowse/warren-app \
+  -f tag=beta-v<previous good version> -f drop_version=<bad version>
+```
 
-## Update warrenbrowse-site (download page only)
+Several versions are comma-separated. Then fix on `main` and cut the next
+version; the withdrawn version stays out of every later manifest. Leave the
+GitHub release and its tag in place: the tag guard refuses to reuse a version
+anyway.
 
-This is the human-facing download page, served from Cloudflare Pages. It is
-**separate** from the auto-update manifests (those are signed JSON served from
-`api.warrenbrowse.com/updates/`, published automatically by CI; see
-`docs/AUTO-UPDATE.md`). Do not confuse the two.
+## Versioning
 
-Once the release is public:
-
-1. Update `warrenbrowse-site/src/pages/download.astro` and `warrenbrowse-site/src/pages/fr/download.astro` with the new release URLs and SHA-256 checksums.
-2. Commit and push to deploy via Cloudflare Pages.
-
-## Auto-update manifests
-
-The `publish-update-metadata` job publishes the signed update manifests
-automatically, after `publish-release` has flipped the GitHub Release
-non-draft and verified it (the manifests point straight at the release assets,
-whose URLs 404 while the release is a draft). One thing to remember at release
-time:
-
-- To **force** an update for this release, set the repo variable
-  `WARREN_UPDATE_MIN_VERSION` before tagging (clients below it are hard-blocked
-  by the forced-update screen). Leave it unset for a normal, optional update.
-
-First-time setup of the signing key, secrets, and the update host is documented
-in `docs/AUTO-UPDATE.md`.
-
-## Rollback procedure
-
-If a critical bug is found after publishing:
-
-1. **Do not delete the GitHub Release** (binaries cached by users will still work). Instead, mark it as "Pre-release" or "Draft" to hide it from the latest-release endpoint.
-2. **Do not delete the tag** (rewrites git history visible to other devs and breaks the tag-build link).
-3. Fix the bug on `main`. Verify with `scripts/release/verify-beta.sh`.
-4. Bump the version (e.g. `v0.1.0-beta.2`) and re-tag.
-5. The old beta.1 stays in release history; users see beta.2 as the new latest.
-
-For TestFlight specifically, Apple lets you "Expire" a build to prevent further installs from existing testers. Same for Play Console internal-test.
-
-## Versioning convention
-
-- Beta releases: `v0.1.0-beta.<n>` (incremental)
-- Release candidates: `v0.1.0-rc.<n>`
-- Production: `v0.1.0`, `v0.1.1`, `v0.2.0`, etc.
-- For mobile, `versionCode` (Android) and `CFBundleVersion` (iOS) MUST be strictly monotonic. The CI computes them from `git rev-list --count HEAD` to guarantee monotonicity across re-tags.
-
-## When to ship
-
-A new release is appropriate when **at least one** of the following applies:
-
-- A user-visible feature lands (post `### Added` in CHANGELOG).
-- A security vulnerability is fixed (post `### Security`, ship within 24h ideally).
-- A critical bug is fixed (post `### Fixed`).
-- Mullvad upstream sync brings important changes (post all relevant categories).
-
-Avoid shipping for internal refactors that don't affect users. Bundle multiple changes into one release to limit user-facing version churn.
+- Desktop and Android share the version (`bump-version.sh`); iOS keeps its
+  calendar version in `ios/Configurations/Version.xcconfig`.
+- The beta Android `versionCode` is computed from the tag
+  (`major * 10000 + minor * 100 + patch`), so it only grows along the beta
+  line.

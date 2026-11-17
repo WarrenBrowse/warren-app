@@ -251,18 +251,10 @@ down the used passwords:
    keytool -genkey -v -keystore app-keys.jks -alias release -keyalg RSA -keysize 4096 -validity 10000
    ```
 
-## Creating an alpha release
+## Creating a release
 
-Run the [prepare-release.sh](scripts/prepare-release.sh) script with the desired version you wish
-to release as an argument. The prepare script will download the latest relay list and update the
-version files, and add as commits.
-
-```bash
-# Replace `202X.X-alphaX` with the alpha version you intend to create.
-./scripts/prepare-release.sh 202X.X-alphaX
-```
-
-Continue by following the instructions provided by the script.
+The Android app ships with the desktop release, on the same tag and version:
+see [docs/RUNBOOK-RELEASE.md](../../docs/RUNBOOK-RELEASE.md).
 
 ## Gradle dependency metadata verification lockfile
 This lockfile helps ensuring the integrity of the gradle dependencies in the project.

@@ -12,9 +12,9 @@
 # account exists (re-enable by setting the repo variable
 # WARREN_ENABLE_IOS=true).
 #
-# The two Linux architectures are built by two jobs on two runner pools, each
-# native: build-linux on the x86_64 (Rosetta) pool, build-linux-arm64 on the
-# aarch64 one. Nothing is cross-compiled.
+# The two Linux architectures are built by two jobs, each native:
+# build-linux on ubuntu-24.04, build-linux-arm64 on ubuntu-24.04-arm, both in
+# the Debian 11 build image. Nothing is cross-compiled.
 #
 # Every installer above 8 MiB also ships as a BitTorrent download: the
 # metadata job writes a single-file .torrent beside it (web seeded on the
@@ -385,11 +385,10 @@ jobs:
         with:
           warren-api-url: ${{ needs.tag-guard.outputs.api-url }}
 
-      - name: Verify Linux packaging deps (preinstalled on self-hosted runner)
+      - name: Verify Linux packaging deps (baked into the build image)
         run: |
-          # The self-hosted Linux runner is pre-provisioned (rpm, build toolchain).
-          # No `sudo apt-get` here: the runner user has no passwordless sudo, and
-          # `fpm` is not an apt package (the build packages .deb/.rpm itself).
+          # The job image carries rpm and the build toolchain; electron-builder
+          # brings its own fpm.
           rpm --version
 
       - name: Build
@@ -491,7 +490,7 @@ jobs:
         with:
           warren-api-url: ${{ needs.tag-guard.outputs.api-url }}
 
-      - name: Verify Linux packaging deps (preinstalled on self-hosted runner)
+      - name: Verify Linux packaging deps (baked into the build image)
         # rpm feeds fpm's rpm target; bsdtar (libarchive-tools, installed by the
         # build-env action) feeds the pacman one. electron-builder downloads its
         # own aarch64 fpm, so nothing here needs a system ruby.
@@ -545,13 +544,12 @@ jobs:
   # Two Linux distributions the .deb/.rpm/.pacman set does not reach, each
   # getting the artifact it can actually install. Both jobs consume the .deb
   # build-linux already published to the draft release, so neither recompiles
-  # anything: they add minutes, not another hour of Rosetta build. Both are
-  # amd64 only, by the artifact they name: the sysvinit distributions and the
-  # NixOS flake target the x86_64 desktop, and neither script is arch-generic.
+  # anything: they add minutes, not another hour of build. Both are amd64
+  # only, by the artifact they name: the sysvinit distributions and the NixOS
+  # flake target the x86_64 desktop, and neither script is arch-generic.
   #
-  # They run on the docker-capable runner because both need a container the
-  # Rosetta build runner cannot give them: a systemd-less Debian to install
-  # into, and a nix that the build runner has no root to install.
+  # Both need docker on the runner itself: a systemd-less Debian to install
+  # into, and a nix container, which the build image cannot host.
   build-linux-sysvinit:
     name: Build Linux .deb (sysvinit)
     permissions:
@@ -642,9 +640,8 @@ jobs:
           {
             echo "WARREN_DEB=${prefix}-${WARREN_VERSION}-linux-amd64.deb"
             echo "WARREN_NIXOS_TARBALL=${prefix}-${WARREN_VERSION}-linux-x86_64-nixos.tar.gz"
-            # The flake pins the update host, never the GitHub asset: the
-            # repository is private, so a release asset answers 404 without a
-            # token and `nix build` could fetch nothing.
+            # The flake pins the update host, which serves every installer
+            # beside the manifests, never the GitHub asset.
             echo "WARREN_ASSET_BASE=$base"
           } >> "$GITHUB_ENV"
 
