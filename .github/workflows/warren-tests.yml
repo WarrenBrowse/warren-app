@@ -313,6 +313,36 @@ jobs:
         timeout-minutes: 20
         run: cargo check --locked -p warren-ios --target aarch64-apple-ios
 
+  # Every dependency change is held to the advisory database and the license
+  # policy before anything is built from it. The npm and Ruby lockfiles join
+  # the scan once their pending major upgrades (Electron, fastlane) land.
+  supply-chain:
+    name: Supply chain (cargo deny, osv-scanner)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: cargo deny (advisories, bans, licenses, sources)
+        uses: EmbarkStudios/cargo-deny-action@70f81531115945ba6eb6b941ec9d39d063438eb9  # v2.1.2
+        with:
+          log-level: warn
+          rust-version: stable
+          command: check all
+          arguments: --locked
+
+      - name: osv-scanner on Cargo.lock
+        uses: google/osv-scanner-action/osv-scanner-action@2a387edfbe02a11d856b89172f6e978100177eb4  # v2.3.2
+        with:
+          scan-args: |-
+            --config=osv-scanner.toml
+            --lockfile=Cargo.lock
+
   desktop-warren-typecheck:
     name: Desktop Warren UI (type-check + lint)
     runs-on: ubuntu-24.04

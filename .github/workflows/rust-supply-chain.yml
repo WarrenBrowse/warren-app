@@ -18,6 +18,10 @@ permissions: {}
 jobs:
   check-supply-chain:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # The daily run opens an issue when a newly published advisory fails it.
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
@@ -41,3 +45,17 @@ jobs:
           log-level: error
           rust-version: stable
           command: check licenses
+
+      - name: Open an issue when the daily scan finds something
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Daily supply-chain scan failed"
+          if gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number --jq '.[0].number' | grep -q .; then
+            echo "an open issue already tracks it"
+            exit 0
+          fi
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" \
+            --body "cargo deny failed on the scheduled run: $RUN_URL"
