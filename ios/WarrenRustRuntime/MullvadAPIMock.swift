@@ -6,6 +6,7 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
+#if WARREN_API_MOCK
 import Foundation
 import WarrenRustRuntimeProxy
 
@@ -34,3 +35,4 @@ public class MullvadApiMock {
         mullvad_api_mock_drop(self.mock)
     }
 }
+#endif

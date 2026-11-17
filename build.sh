@@ -188,17 +188,15 @@ if [[ "$OPTIMIZE" == "true" || "$SIGN" == "true" ]]; then
     # Release/signed builds must embed the quinn fork. Verify before the
     # expensive build, not only in CI.
     assert_quinn_fork_locked
+    # An optimized build is a published one, signed or not: it builds the
+    # dependency set the lockfile records, never a fresh resolution.
+    CARGO_ARGS+=(--locked)
 fi
 
 if [[ "$SIGN" == "true" ]]; then
     # Refuse to build signed builds on dirty working directories. Prevents release builds
     # from being built from potentially modified code/assets.
     assert_clean_working_directory
-
-    # Will not allow an outdated lockfile when building with signatures
-    # (The build servers should never build without --locked for
-    # reproducibility and supply chain security)
-    CARGO_ARGS+=(--locked)
 
     # Accept Warren-prefixed env vars in parallel to upstream Mullvad CSC_*.
     # When the Warren variant is set, it takes precedence. This lets CI release
@@ -259,8 +257,10 @@ fi
 if [[ "$IS_RELEASE" == "true" ]]; then
     log_info "Removing old Rust build artifacts..."
     cargo clean
-else
-    # Allow dev builds to override which API server to use at runtime.
+fi
+# Only an unoptimized dev build may override the API server at runtime: every
+# optimized build is one CI publishes, signed or not.
+if [[ "$OPTIMIZE" != "true" ]]; then
     CARGO_ARGS+=(--features api-override)
 fi
 

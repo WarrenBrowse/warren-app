@@ -27,6 +27,7 @@ mod cancellation;
 mod completion;
 mod device;
 pub(super) mod helpers;
+#[cfg(feature = "api-mock")]
 mod mock;
 mod response;
 mod retry_strategy;

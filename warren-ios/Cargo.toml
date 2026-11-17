@@ -71,7 +71,7 @@ hyper = { version = "1.4.1", features = ["client", "http1"] }
 hyper-util = { workspace = true }
 libc = "0.2"
 log = { workspace = true }
-mockito = { workspace = true }
+mockito = { workspace = true, optional = true }
 # Mullvad API client retained transitionally for legacy account-number flows
 # in `src/api_client/`. To be replaced by the SDK's `warren-api` client.
 mullvad-api = { path = "../mullvad-api", default-features = false }
@@ -143,6 +143,9 @@ tempfile = "3"
 default = []
 # Allow the API server to be used
 api-override = ["mullvad-api/api-override"]
+# The mock API server the Swift REST tests drive (`mullvad_api_mock_*`).
+# Never in the Release configuration, which build-rust-library.sh strips it from.
+api-mock = ["dep:mockito"]
 # Pull in the Quinn tunnel stack. The iOS `PacketDevice` bridge (`IosTun`)
 # has landed, so the iOS Xcode build phase enables this feature. It stays
 # off the crate default so a no-tunnel host build path remains minimal.

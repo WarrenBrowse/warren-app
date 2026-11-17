@@ -461,6 +461,11 @@ jobs:
         shell: bash
         run: bash ci/test-publish-to-update-host.sh
 
+      - name: Production signing identities guard
+        working-directory: .
+        shell: bash
+        run: bash ci/test-require-signing-identities.sh
+
       # `ci/git-config-global.sh` fronts the build-env action's remaining
       # `git config --global` writes (`safe.directory`), on every OS. A
       # regression in its retry loop, its lock grep or its stale-lock removal

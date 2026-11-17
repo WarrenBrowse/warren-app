@@ -194,6 +194,15 @@ jobs:
           bash ci/check-release-version.sh \
             "${{ steps.channel.outputs.channel }}" "${{ steps.channel.outputs.version }}"
 
+      # A production release never ships unsigned nor on the beta debug key.
+      - name: Refuse a production tag without every signing identity
+        env:
+          WARREN_CSC_LINK_MACOS: ${{ secrets.WARREN_CSC_LINK_MACOS }}
+          WARREN_CSC_KEY_PASSWORD_MACOS: ${{ secrets.WARREN_CSC_KEY_PASSWORD_MACOS }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
+        run: bash ci/require-signing-identities.sh "${{ steps.channel.outputs.channel }}"
+
   # build-* job `needs: [tests]`, so a red test skips all builds and the publish.
   # Same reusable suite as the push/PR warren-checks.yml (single source of truth).
   tests:

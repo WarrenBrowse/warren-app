@@ -44,6 +44,20 @@ if [[ "$CONFIGURATION" == "Release" || "$CONFIGURATION" == "MockRelease" ]]; the
     LOCKEDFLAG=--locked
 fi
 
+# The build users install never carries the runtime API override nor the mock
+# API server: only the test configurations keep them.
+if [[ "$CONFIGURATION" == "Release" ]]; then
+    kept=
+    for feature in $FEATURE_FLAGS; do
+        case "$feature" in
+            api-override|api-mock) ;;
+            *) kept="${kept:+$kept }$feature" ;;
+        esac
+    done
+    FEATURE_FLAGS=$kept
+    echo "Release build: features '${FEATURE_FLAGS}'"
+fi
+
 # For whatever reason, Xcode includes its toolchain paths in the PATH variable such as
 #
 # /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
