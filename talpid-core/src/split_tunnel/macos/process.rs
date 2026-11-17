@@ -536,6 +536,13 @@ impl InnerProcessStates {
 
     fn status(&self, pid: pid_t) -> ExclusionStatus {
         match self.processes.get(&pid) {
+            // What the process runs now is unknown: in include-only mode it
+            // must not be sent outside the tunnel on its old program's status,
+            // and in exclude mode it stays in the tunnel.
+            Some(info) if info.exec_unresolved => match self.mode {
+                SplitTunnelMode::IncludeOnly => ExclusionStatus::Unknown,
+                SplitTunnelMode::Exclude => ExclusionStatus::Unlisted,
+            },
             Some(info) if info.is_listed() => ExclusionStatus::Listed,
             Some(_) => ExclusionStatus::Unlisted,
             None => ExclusionStatus::Unknown,
@@ -588,10 +595,12 @@ impl InnerProcessStates {
             return;
         };
         if msg.target.executable.path_truncated {
-            log::error!("Ignoring an exec with a truncated path");
+            log::error!("An exec with a truncated path: the process is judged unknown");
+            info.exec_unresolved = true;
             return;
         }
 
+        info.exec_unresolved = false;
         info.exec_path = PathBuf::from(msg.target.executable.path);
         info.listed_by
             .extend(listing_paths(&info.exec_path, &self.paths).cloned());
@@ -610,12 +619,17 @@ impl InnerProcessStates {
 struct ProcessInfo {
     exec_path: PathBuf,
     listed_by: HashSet<PathBuf>,
+    /// The last exec named a program whose path came cut short, so neither
+    /// `exec_path` nor `listed_by` describes what the process runs. Forks
+    /// inherit it.
+    exec_unresolved: bool,
 }
 
 impl fmt::Debug for ProcessInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ProcessInfo")
             .field("listed", &self.is_listed())
+            .field("exec_unresolved", &self.exec_unresolved)
             .finish_non_exhaustive()
     }
 }
@@ -625,6 +639,7 @@ impl ProcessInfo {
         ProcessInfo {
             exec_path,
             listed_by: HashSet::new(),
+            exec_unresolved: false,
         }
     }
 
@@ -986,6 +1001,67 @@ mod test {
         states.set_split_apps(SplitTunnelMode::Exclude, HashSet::new());
 
         assert_eq!(states.status(10), ExclusionStatus::Unlisted);
+    }
+
+    fn truncated_exec(path: &str) -> ESExecEvent {
+        let mut event = exec(path);
+        event.target.executable.path_truncated = true;
+        event
+    }
+
+    #[test]
+    fn an_exec_whose_path_was_cut_short_is_not_let_outside_the_tunnel_in_include_only() {
+        let mut states = states_with(10, "/bin/zsh");
+        states.set_split_apps(
+            SplitTunnelMode::IncludeOnly,
+            HashSet::from([PathBuf::from(FIREFOX)]),
+        );
+
+        states.handle_exec(
+            10,
+            truncated_exec("/Applications/Firefox.app/Contents/MacOS/f"),
+        );
+        states.handle_fork(10, PathBuf::from("/bin/zsh"), fork(11));
+
+        assert_eq!(states.status(10), ExclusionStatus::Unknown);
+        assert_eq!(
+            states.status(11),
+            ExclusionStatus::Unknown,
+            "a child inherits it"
+        );
+    }
+
+    #[test]
+    fn an_exec_whose_path_was_cut_short_stays_in_the_tunnel_in_exclude_mode() {
+        let mut states = states_with(10, "/bin/zsh");
+        states.set_split_apps(
+            SplitTunnelMode::Exclude,
+            HashSet::from([PathBuf::from(FIREFOX)]),
+        );
+
+        states.handle_exec(
+            10,
+            truncated_exec("/Applications/Firefox.app/Contents/MacOS/f"),
+        );
+
+        assert_eq!(states.status(10), ExclusionStatus::Unlisted);
+    }
+
+    #[test]
+    fn a_complete_exec_after_a_cut_short_one_is_judged_again() {
+        let mut states = states_with(10, "/bin/zsh");
+        states.set_split_apps(
+            SplitTunnelMode::IncludeOnly,
+            HashSet::from([PathBuf::from(FIREFOX)]),
+        );
+
+        states.handle_exec(
+            10,
+            truncated_exec("/Applications/Firefox.app/Contents/MacOS/f"),
+        );
+        states.handle_exec(10, exec("/Applications/Firefox.app/Contents/MacOS/firefox"));
+
+        assert_eq!(states.status(10), ExclusionStatus::Listed);
     }
 
     #[test]
