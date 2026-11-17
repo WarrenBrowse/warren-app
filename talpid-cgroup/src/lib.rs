@@ -12,13 +12,15 @@ use std::path::{Path, PathBuf};
 pub mod v1;
 pub mod v2;
 
-pub const SPLIT_TUNNEL_CGROUP_NAME: &str = "mullvad-exclusions";
+/// The cgroup of the programs excluded from the tunnel, this environment's own (see
+/// [`warren_product_env::ProductEnv::linux_exclusion_cgroup`]).
+pub const SPLIT_TUNNEL_CGROUP_NAME: &str = warren_product_env::CURRENT.linux_exclusion_cgroup();
 
 /// The cgroup2 whose processes alone are tunneled in include-only mode
 /// ("VPN only for these apps"). Created by the daemon; `warren-include` only
 /// ever joins it, so an included app never lands in a cgroup the firewall
 /// does not know.
-pub const INCLUDE_CGROUP_NAME: &str = "warren-inclusions";
+pub const INCLUDE_CGROUP_NAME: &str = warren_product_env::CURRENT.linux_inclusion_cgroup();
 
 /// The cgroup2, under [`INCLUDE_CGROUP_NAME`], of the programs opened locked
 /// to the VPN (`warren-include --locked`): blocked whenever no tunnel carries

@@ -11,6 +11,7 @@ anyhow.workspace = true
 log.workspace = true
 nix = { workspace = true, features = ["fs", "mount", "process", "user"] }
 thiserror.workspace = true
+warren-product-env = { path = "../warren-product-env" }
 
 [lints]
 workspace = true

@@ -7,6 +7,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
+warren-product-env = { path = "../warren-product-env" }
 base64 = "0.22.0"
 ipnetwork = { workspace = true, features = ["serde"] }
 log = { workspace = true }

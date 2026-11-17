@@ -97,6 +97,81 @@ impl ProductEnv {
         }
     }
 
+    /// Linux cgroup (cgroup2, and net_cls on v1 hosts) of the programs excluded from the tunnel.
+    /// Each environment has its own, and none is the `mullvad-exclusions` of Mullvad VPN, whose
+    /// launcher puts any caller's program there: a shared name would let it out of this tunnel.
+    #[must_use]
+    pub const fn linux_exclusion_cgroup(self) -> &'static str {
+        match self {
+            ProductEnv::Prod => "warren-exclusions",
+            ProductEnv::Staging => "warren-staging-exclusions",
+            ProductEnv::Beta => "warren-beta-exclusions",
+        }
+    }
+
+    /// Linux cgroup2 of the programs an include-only tunnel carries. Prod keeps the name every
+    /// environment shared before they were told apart.
+    #[must_use]
+    pub const fn linux_inclusion_cgroup(self) -> &'static str {
+        match self {
+            ProductEnv::Prod => "warren-inclusions",
+            ProductEnv::Staging => "warren-staging-inclusions",
+            ProductEnv::Beta => "warren-beta-inclusions",
+        }
+    }
+
+    /// net_cls classid of [`Self::linux_exclusion_cgroup`] on cgroup v1 hosts.
+    #[must_use]
+    pub const fn linux_net_cls_classid(self) -> u32 {
+        match self {
+            ProductEnv::Prod => 0x0057_0001,
+            ProductEnv::Staging => 0x0057_0002,
+            ProductEnv::Beta => 0x0057_0003,
+        }
+    }
+
+    /// Firewall mark of the traffic that leaves outside the tunnel (the tunnel's own carrier and
+    /// the excluded programs), also the id of the tunnel's routing table.
+    #[must_use]
+    pub const fn linux_tunnel_fwmark(self) -> u32 {
+        match self {
+            ProductEnv::Prod => 0x7772_6e70,
+            ProductEnv::Staging => 0x7772_6e73,
+            ProductEnv::Beta => 0x7772_6e62,
+        }
+    }
+
+    /// Conntrack mark of the connections of excluded programs.
+    #[must_use]
+    pub const fn linux_exclusion_ct_mark(self) -> u32 {
+        match self {
+            ProductEnv::Prod => 0xf51,
+            ProductEnv::Staging => 0xf53,
+            ProductEnv::Beta => 0xf52,
+        }
+    }
+
+    /// Firewall mark of the traffic an include-only tunnel captures. Prod keeps the value every
+    /// environment shared before they were told apart.
+    #[must_use]
+    pub const fn linux_include_fwmark(self) -> u32 {
+        match self {
+            ProductEnv::Prod => 0x696e_636c,
+            ProductEnv::Staging => 0x696e_6373,
+            ProductEnv::Beta => 0x696e_6362,
+        }
+    }
+
+    /// Conntrack mark of the connections an include-only tunnel captures.
+    #[must_use]
+    pub const fn linux_include_ct_mark(self) -> u32 {
+        match self {
+            ProductEnv::Prod => 0xf61,
+            ProductEnv::Staging => 0xf63,
+            ProductEnv::Beta => 0xf62,
+        }
+    }
+
     /// D-Bus name this environment's NetworkManager VPN service plugin owns,
     /// which is also the `service-type` its connection profiles carry.
     ///
@@ -409,6 +484,38 @@ pub const FORUM_PUBLIC_URL: &str = CURRENT.forum_public_url();
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn linux_split_identifiers_are_unique_per_environment_and_never_mullvads() {
+        let names = |env: ProductEnv| [env.linux_exclusion_cgroup(), env.linux_inclusion_cgroup()];
+        let values = |env: ProductEnv| {
+            [
+                env.linux_net_cls_classid(),
+                env.linux_tunnel_fwmark(),
+                env.linux_exclusion_ct_mark(),
+                env.linux_include_fwmark(),
+                env.linux_include_ct_mark(),
+            ]
+        };
+        for (i, a) in ALL.iter().enumerate() {
+            for b in &ALL[i + 1..] {
+                for (x, y) in names(*a).iter().zip(names(*b)) {
+                    assert_ne!(*x, y, "{a:?} and {b:?} share a cgroup");
+                }
+                for (x, y) in values(*a).iter().zip(values(*b)) {
+                    assert_ne!(*x, y, "{a:?} and {b:?} share a mark");
+                }
+            }
+        }
+        for env in ALL {
+            assert_ne!(env.linux_exclusion_cgroup(), "mullvad-exclusions");
+            assert_ne!(env.linux_net_cls_classid(), 0x4d_9f41);
+            assert_ne!(env.linux_tunnel_fwmark(), 0x6d6f_6c65);
+            assert_ne!(env.linux_exclusion_ct_mark(), 0xf41);
+            assert_ne!(env.linux_tunnel_fwmark(), env.linux_include_fwmark());
+            assert_ne!(env.linux_exclusion_ct_mark(), env.linux_include_ct_mark());
+        }
+    }
 
     #[test]
     fn windows_service_names_are_unique_per_environment() {

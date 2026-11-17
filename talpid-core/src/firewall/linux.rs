@@ -1569,7 +1569,7 @@ fn check_ct_established(rule: &mut Rule<'_>) {
 
 /// Conntrack mark of the connections an include-only tunnel carries. Distinct
 /// from the exclusion mark ([`split_tunnel::MARK`]).
-const INCLUDE_CT_MARK: u32 = 0xf42;
+const INCLUDE_CT_MARK: u32 = warren_product_env::CURRENT.linux_include_ct_mark();
 
 /// What include-only adds to a policy, by rule, in the order it is added.
 /// Kept apart from the netfilter batch so the shape of every state can be

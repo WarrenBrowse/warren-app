@@ -26,10 +26,12 @@ use anyhow::Result;
 use warrenguard_route_split::default_route_split::{IncludeFwmark, TunLookupScope};
 
 /// Firewall mark the nftables split-tunnel rules apply (as packet `meta mark`)
-/// to traffic from excluded processes. Mirrors `mullvad_types::TUNNEL_FWMARK`
-/// (kept as a local literal to avoid a `mullvad-types` dependency edge from
-/// this crate). Hex form so it matches the `ip rule show` display.
-const SPLIT_TUNNEL_FWMARK: &str = "0x6d6f6c65";
+/// to traffic from excluded processes, this environment's own (the same value
+/// as `mullvad_types::TUNNEL_FWMARK`). Hex form so it matches the `ip rule
+/// show` display.
+static SPLIT_TUNNEL_FWMARK: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
+    format!("{:#x}", warren_product_env::CURRENT.linux_tunnel_fwmark())
+});
 
 /// What the tunnel lookup captures, and the exclusion bypass that goes with
 /// it. Exclusion and include-only never coexist: an include-only tunnel drops
@@ -40,7 +42,10 @@ fn route_selection(include_only: bool) -> Result<(Option<&'static str>, TunLooku
         let mark = IncludeFwmark::new(talpid_types::split_tunnel::INCLUDE_FWMARK)?;
         Ok((None, TunLookupScope::Marked(mark)))
     } else {
-        Ok((Some(SPLIT_TUNNEL_FWMARK), TunLookupScope::AllTraffic))
+        Ok((
+            Some(SPLIT_TUNNEL_FWMARK.as_str()),
+            TunLookupScope::AllTraffic,
+        ))
     }
 }
 
@@ -141,7 +146,7 @@ mod tests {
     fn a_full_tunnel_keeps_the_exclusion_bypass_and_captures_everything() {
         let (bypass, scope) = route_selection(false).unwrap();
 
-        assert_eq!(bypass, Some(SPLIT_TUNNEL_FWMARK));
+        assert_eq!(bypass, Some(SPLIT_TUNNEL_FWMARK.as_str()));
         assert_eq!(scope, TunLookupScope::AllTraffic);
     }
 }

@@ -205,7 +205,8 @@ This IP+port+protocol combination should only be allowed for the process establi
 VPN tunnel, or only administrator level processes, depending on what the platform firewall
 allows restricting. On Windows the rule only allows processes from binaries in certain paths. macOS
 the rule only allows packets from processes running as `root`. On Linux, the rule only allows
-packets that have the mark `0x6d6f6c65` set: setting a firewall mark on traffic requires elevated
+packets that carry this environment's tunnel mark (`ProductEnv::linux_tunnel_fwmark`; every
+environment has its own, none shared with Mullvad VPN): setting a firewall mark on traffic requires elevated
 privileges when using tunnels that support marking traffic, otherwise the rule is the same as on
 macOS: the packet needs to originate from a process running as `root`.
 This process/user check is important to not allow unprivileged programs

@@ -14,9 +14,8 @@ pub const NET_CLS_DIR_OVERRIDE_ENV_VAR: &str = "TALPID_NET_CLS_MOUNT_DIR";
 /// The path where linux normally mounts the net_cls cgroup v1 filesystem.
 pub const DEFAULT_NET_CLS_DIR: &str = "/sys/fs/cgroup/net_cls";
 
-/// Identifies packets coming from the cgroup.
-/// This should be an arbitrary but unique integer.
-pub const NET_CLS_CLASSID: u32 = 0x4d9f41;
+/// Identifies packets coming from the cgroup, this environment's own.
+pub const NET_CLS_CLASSID: u32 = warren_product_env::CURRENT.linux_net_cls_classid();
 
 /// A handle to a v1 net_cls cgroup
 pub struct CGroup1 {

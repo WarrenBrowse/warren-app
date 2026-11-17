@@ -3393,6 +3393,7 @@ dependencies = [
  "uuid",
  "vec1",
  "warren-contract",
+ "warren-product-env",
 ]
 
 [[package]]
@@ -5669,6 +5670,7 @@ dependencies = [
  "log",
  "nix 0.31.3",
  "thiserror 2.0.21",
+ "warren-product-env",
 ]
 
 [[package]]
@@ -5873,6 +5875,7 @@ dependencies = [
  "serde",
  "shadowsocks-crypto",
  "thiserror 2.0.21",
+ "warren-product-env",
  "x25519-dalek",
  "zeroize",
 ]
@@ -5900,6 +5903,7 @@ dependencies = [
  "tokio",
  "tun 0.8.14",
  "warren-app-routes",
+ "warren-product-env",
  "warren-standing",
  "warrenguard-backoff",
  "warrenguard-config",

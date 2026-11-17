@@ -107,6 +107,23 @@ impl CGroup2 {
         Ok(())
     }
 
+    /// Absolute path of this cgroup2.
+    pub fn path(&self) -> &std::path::Path {
+        &self.path
+    }
+
+    /// Moves every process of `other` into this cgroup2, and returns how many it moved. A
+    /// process that exits meanwhile is skipped.
+    pub fn adopt_all(&self, other: &mut CGroup2) -> Result<usize, Error> {
+        let mut moved = 0;
+        for pid in other.list_pids()? {
+            if self.add_pid(Pid::from_raw(pid)).is_ok() {
+                moved += 1;
+            }
+        }
+        Ok(moved)
+    }
+
     /// List all PIDs in this cgroup2.
     pub fn list_pids(&mut self) -> Result<Vec<pid_t>, Error> {
         let mut file = &self.procs;

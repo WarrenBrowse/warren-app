@@ -14,10 +14,35 @@ use talpid_cgroup::{
 };
 
 use crate::firewall;
+use talpid_types::ErrorExt;
 
-/// Value used to mark packets and associated connections.
-/// This should be an arbitrary but unique integer.
-pub const MARK: u32 = 0xf41;
+/// Value used to mark packets and associated connections, this environment's own.
+pub const MARK: u32 = warren_product_env::CURRENT.linux_exclusion_ct_mark();
+
+/// The inclusion cgroup every environment shared before each had its own.
+const LEGACY_INCLUDE_CGROUP_NAME: &str = "warren-inclusions";
+
+/// Moves the programs an earlier version included, and those it locked, from the cgroup
+/// `legacy` under `root` into `included`, then removes what is left of `legacy`. Without it an
+/// upgrade would let an included program out of an include-only tunnel, and a locked one off its
+/// lock, until it is launched again.
+fn adopt_legacy_inclusions(root: &CGroup2, legacy: &str, included: &CGroup2) -> Result<(), Error> {
+    let legacy_path = root.path().join(legacy);
+    if !legacy_path.exists() {
+        return Ok(());
+    }
+    let locked_legacy = legacy_path.join(talpid_cgroup::LOCKED_CGROUP_NAME);
+    if locked_legacy.exists() {
+        let locked = included.create_or_open_child(talpid_cgroup::LOCKED_CGROUP_NAME)?;
+        let moved = locked.adopt_all(&mut CGroup2::open(&locked_legacy)?)?;
+        log::info!("Moved {moved} locked programs out of the shared inclusion cgroup");
+        let _ = std::fs::remove_dir(&locked_legacy);
+    }
+    let moved = included.adopt_all(&mut CGroup2::open(&legacy_path)?)?;
+    log::info!("Moved {moved} included programs out of the shared inclusion cgroup");
+    let _ = std::fs::remove_dir(&legacy_path);
+    Ok(())
+}
 
 mod inet_sockets;
 
@@ -104,6 +129,17 @@ impl PidManager {
         assert_nft_supports_cgroup2(&root)
             .context("cgroup2 not supported by nftables, are you running an old kernel?")?;
         let included = root.create_or_open_child(INCLUDE_CGROUP_NAME)?;
+        if INCLUDE_CGROUP_NAME != LEGACY_INCLUDE_CGROUP_NAME
+            && let Err(error) =
+                adopt_legacy_inclusions(&root, LEGACY_INCLUDE_CGROUP_NAME, &included)
+        {
+            log::error!(
+                "{}",
+                error.display_chain_with_msg(
+                    "Failed to adopt the programs an earlier version included"
+                )
+            );
+        }
         Ok(IncludedCGroup { root, included })
     }
 
@@ -413,5 +449,55 @@ fn assert_nft_supports_cgroup2(cgroup: &CGroup2) -> Result<(), Error> {
 impl Default for PidManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod legacy_inclusion_tests {
+    use super::*;
+    use std::process::{Child, Command};
+
+    const LEGACY: &str = "warren-test-legacy-inclusions";
+    const ADOPTING: &str = "warren-test-adopting-inclusions";
+
+    fn sleeper() -> Child {
+        Command::new("sleep").arg("60").spawn().unwrap()
+    }
+
+    #[test]
+    #[ignore = "needs root: creates cgroups and moves processes between them"]
+    fn the_programs_of_the_shared_inclusion_cgroup_move_to_this_environments() {
+        let root = CGroup2::open(talpid_cgroup::CGROUP2_DEFAULT_MOUNT_PATH).unwrap();
+        let legacy = root.create_or_open_child(LEGACY).unwrap();
+        let legacy_locked = legacy
+            .create_or_open_child(talpid_cgroup::LOCKED_CGROUP_NAME)
+            .unwrap();
+        let mut included_program = sleeper();
+        let mut locked_program = sleeper();
+        legacy
+            .add_pid(Pid::from_raw(included_program.id() as pid_t))
+            .unwrap();
+        legacy_locked
+            .add_pid(Pid::from_raw(locked_program.id() as pid_t))
+            .unwrap();
+        let mut adopting = root.create_or_open_child(ADOPTING).unwrap();
+
+        adopt_legacy_inclusions(&root, LEGACY, &adopting).unwrap();
+
+        let included_now = adopting.list_pids().unwrap();
+        let mut adopting_locked = adopting
+            .create_or_open_child(talpid_cgroup::LOCKED_CGROUP_NAME)
+            .unwrap();
+        let locked_now = adopting_locked.list_pids().unwrap();
+        let legacy_gone = !root.path().join(LEGACY).exists();
+        let _ = included_program.kill();
+        let _ = locked_program.kill();
+        let _ = included_program.wait();
+        let _ = locked_program.wait();
+        let _ = std::fs::remove_dir(adopting_locked.path());
+        let _ = std::fs::remove_dir(adopting.path());
+        assert!(included_now.contains(&(included_program.id() as pid_t)));
+        assert!(locked_now.contains(&(locked_program.id() as pid_t)));
+        assert!(legacy_gone, "the shared cgroup was left behind");
     }
 }
