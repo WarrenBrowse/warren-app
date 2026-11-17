@@ -219,9 +219,39 @@ addition here is `allow_external_dns`.
 
 The upstream WireGuard PSK/KEM negotiation was removed together with the WireGuard data plane.
 On the Warren QUIC data plane, post-quantum protection is applied to the multi-hop seal: the
-payload for the exit is sealed with an X-Wing hybrid KEM (ML-KEM + X25519) against the exit's
-supervisor key, with an automatic classical fallback when the peer does not advertise a
-post-quantum key. The PQ seal is preferred by default on desktop and iOS.
+payload for the exit is sealed with an X-Wing hybrid KEM (ML-KEM-768 + X25519) against the exit's
+long-lived keys. The outer QUIC connection to the first hop keeps a classical X25519 key exchange.
+
+The exit's ML-KEM key is used only when the operational signature covers it (the post-quantum
+descriptor context), on every client: `MultiHopConfig::signed_mlkem768_pubkey` (desktop main and
+route sessions, Android route sessions), `negotiate_pq` (Android main session) and
+`SelectedCircuit::signed_mlkem768_pubkey` (iOS). A key added to a descriptor signed under a
+classical context is ignored.
+
+The quantum-resistant tunnel setting (on by default) makes the seal a requirement on desktop:
+every session, main and per-app, is dialed with `require_pq`, so an exit offering no signed key
+fails the connect with a "post-quantum" handshake error instead of sealing classically. With the
+setting off, the client still prefers the post-quantum seal wherever the exit offers it. The
+tunnel state reports `quantum_resistant` when the exit's signed key is in use.
+
+The inner seal encapsulates to the exit's long-lived keys, which rotate only with the exit's
+identity: it is not forward secret with respect to those keys.
+
+#### Session settings per platform
+
+The three clients build the engine's `SupervisorConfig` themselves. Shared values come from one
+place; the rest differ on purpose, as listed here.
+
+| setting | desktop | Android | iOS |
+|---|---|---|---|
+| redial backoff | `Backoff::CLIENT_REDIAL` | same | same |
+| main session admission | `main_anchor::MAIN_SESSION_ADMISSION` (tokens only) | same constant | tokens only, written inline (the crate does not link `warren-app-routes`) |
+| post-quantum seal required | quantum-resistant setting | no (preferred when offered) | no (preferred when offered) |
+| idle cover (no fixed keep-alive) | `WARREN_IDLE_COVER` knob, default on, off while DAITA is on | off: fixed 5 s keep-alive (open decision) | on |
+| DAITA | setting | setting | off |
+| IPv6 inside the tunnel | setting | setting | off |
+| bonded connections | setting | 1 | 1 (Network Extension memory cap) |
+| UDP GSO | per circuit (`MultiHopConfig::enable_gso`) | off | off (no GSO on Darwin) |
 
 ### Detecting device offline
 

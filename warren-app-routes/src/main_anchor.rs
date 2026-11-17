@@ -26,6 +26,13 @@ use warrenguard_transport::route_anchor::{RouteAnchorConfig, RouteAnchorHandle};
 
 use crate::{Credentials, RouteAdmissionSource};
 
+/// The admission of the tunnel's main session, on every client that runs
+/// it through this crate. Tokens only: the wallet-signed v6 request tells the
+/// exit which account is connected, so the main session never falls back to
+/// it (poka, 2026-10-14).
+pub const MAIN_SESSION_ADMISSION: warrenguard_transport::supervisor::SessionAdmission =
+    warrenguard_transport::supervisor::SessionAdmission::TokensOnly;
+
 /// How long the first tunnel of a daemon run waits for the wallet's tokens of
 /// the current epoch (or the end of its first refresh round) before its main
 /// session is set up. The refresh starts as that tunnel connects and mints
@@ -113,6 +120,18 @@ fn take_up(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn the_main_session_is_admitted_on_tokens_only_and_never_names_the_wallet() {
+        assert!(
+            matches!(
+                super::MAIN_SESSION_ADMISSION,
+                warrenguard_transport::supervisor::SessionAdmission::TokensOnly
+            ),
+            "the wallet-signed v6 admission tells the exit which account is connected; \
+             the main session must never fall back to it"
+        );
+    }
+
     #[tokio::test(start_paused = true)]
     async fn a_first_tunnel_waits_for_the_first_refresh_and_no_longer() {
         let (credentials, followed) = watch::channel(Credentials::default());

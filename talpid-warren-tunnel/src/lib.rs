@@ -29,7 +29,6 @@ use talpid_types::net::AllowedTunnelTraffic;
 use warrenguard_multihop::RejectionReason;
 use warrenguard_transport::multihop::{MultiHopError, NoSessionTokenCause};
 use warrenguard_transport::route_anchor::RouteAnchorHandle;
-use warrenguard_transport::supervisor::SessionAdmission;
 pub use warrenguard_transport::supervisor::SetupClock;
 // Re-exported below so downstream crates (talpid-core, mullvad-daemon)
 // can construct `MultiHopConfig` without depending on warrenguard-multihop
@@ -3983,10 +3982,9 @@ fn multi_hop_daita_shared(
 /// the closure by a scheduling round, never by a dial.
 const SUPERVISOR_VERDICT_WAIT: std::time::Duration = std::time::Duration::from_millis(500);
 
-/// The admission of the tunnel's main session. Tokens only: the wallet-signed
-/// v6 request tells the exit which account is connected, so the main session
-/// never falls back to it (poka, 2026-10-14; Lexter compliance report § 3.1).
-pub const MAIN_SESSION_ADMISSION: SessionAdmission = SessionAdmission::TokensOnly;
+/// The admission of the tunnel's main session, shared with Android
+/// (Lexter compliance report § 3.1).
+pub use warren_app_routes::main_anchor::MAIN_SESSION_ADMISSION;
 
 /// Why the main supervisor stopped, as far as the first-session error needs it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -4503,15 +4501,6 @@ mod tests {
             panic!("a handshake failure");
         };
         assert!(!other.contains("reachable"), "{other}");
-    }
-
-    #[test]
-    fn the_main_session_is_admitted_on_tokens_only_and_never_names_the_wallet() {
-        assert!(
-            matches!(MAIN_SESSION_ADMISSION, SessionAdmission::TokensOnly),
-            "the wallet-signed v6 admission tells the exit which account is connected; \
-             the main session must never fall back to it"
-        );
     }
 
     #[test]

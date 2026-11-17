@@ -601,7 +601,8 @@ async fn run_multi_hop_session(
         };
 
         let (supervisor, sessions) = MultiHopSupervisor::new(supervisor_config);
-        let supervisor = supervisor.with_session_admission(crate::MAIN_SESSION_ADMISSION);
+        let supervisor = supervisor
+            .with_session_admission(warren_app_routes::main_anchor::MAIN_SESSION_ADMISSION);
         // The main session anchors whenever apps can be attributed, a
         // country set or not, so a country chosen while connected gets its
         // route by anchor without a reconnect (warren-core doc 107; the
