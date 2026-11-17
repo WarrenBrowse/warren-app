@@ -39,6 +39,10 @@ fi
 
 # NOTE: This path must be kept in sync with the path defined
 # in mullvad-daemon/src/macos_launch_daemon.rs and preinstall
+#
+# NOTE: Packaging replaces the DAEMON_SPAWN_CONSTRAINT placeholder below: with
+# the daemon's cdhash on a signed build, with nothing otherwise. See
+# desktop/packages/mullvad-vpn/tasks/distribution.cjs.
 DAEMON_PLIST_PATH="/Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist"
 
 DAEMON_PLIST=$(cat <<-EOM
@@ -57,6 +61,8 @@ DAEMON_PLIST=$(cat <<-EOM
 
                 <key>UserName</key>
                 <string>root</string>
+
+                @DAEMON_SPAWN_CONSTRAINT@
 
                 <key>RunAtLoad</key>
                 <true/>

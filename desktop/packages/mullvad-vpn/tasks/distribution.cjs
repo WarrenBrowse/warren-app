@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const builder = require('electron-builder');
 const { Arch } = require('electron-builder');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 
 const noCompression = process.argv.includes('--no-compression');
 const shouldNotarize = process.argv.includes('--notarize');
@@ -825,10 +825,19 @@ function packMac() {
     execFileSync('npm', ['-w', 'nseventforwarder', 'run', 'build-arm']);
   }
 
+  // The pkg scripts are written per build, because a signed build pins the
+  // launch daemon to the cdhash of the daemon it packs.
+  const pkgScriptsDir = buildAssets(`pkg-scripts-${productEnvName}`);
+  const signed = process.env.CSC_IDENTITY_AUTO_DISCOVERY === 'true';
+
   return builder.build({
     targets: builder.Platform.MAC.createTarget(),
     config: {
       ...config,
+      pkg: {
+        ...config.pkg,
+        scripts: pkgScriptsDir,
+      },
       asarUnpack: ['**/*.node'],
       beforeBuild: async (options) => {
         switch (options.arch) {
@@ -857,6 +866,14 @@ function packMac() {
           await removeNseventforwarderNativeModules();
         }
         config.beforePack?.(context);
+
+        // A signed build writes them in afterSign, once the daemon has its
+        // final cdhash; until then the placeholder stays, so a pkg built
+        // without that step fails below instead of shipping it.
+        fs.rmSync(pkgScriptsDir, { recursive: true, force: true });
+        if (!signed) {
+          writePkgScripts(pkgScriptsDir, '');
+        }
       },
       afterPack: (context) => {
         config.afterPack?.(context);
@@ -869,6 +886,8 @@ function packMac() {
         return Promise.resolve();
       },
       afterAllArtifactBuild: async (_buildResult) => {
+        assertSpawnConstraintResolved(pkgScriptsDir);
+
         // Remove the folder that contains the unpacked app. Electron builder cleans up some of
         // these directories and it's changed between versions without a mention in the changelog.
         for (const dir of appOutDirs) {
@@ -882,9 +901,81 @@ function packMac() {
       afterSign: (context) => {
         const appOutDir = context.appOutDir;
         appOutDirs.push(appOutDir);
+
+        // Only the merged app goes into a universal pkg.
+        if (universal && context.arch !== Arch.universal) {
+          return;
+        }
+        const daemonPath = path.join(
+          appOutDir,
+          `${context.packager.appInfo.productFilename}.app`,
+          'Contents/Resources/warren-daemon',
+        );
+        writePkgScripts(pkgScriptsDir, daemonSpawnConstraintFor(daemonPath, signed));
       },
     },
   });
+}
+
+// The launch daemon runs the daemon binary of the installed bundle as root,
+// and on some machines any admin account can replace that bundle. A launchd
+// spawn constraint on the daemon's cdhash makes launchd refuse any other
+// binary. It is only set for a Developer ID build: an unsigned build carries an
+// ad-hoc signature, and a constraint launchd refused would leave no daemon.
+const DAEMON_SPAWN_CONSTRAINT_PLACEHOLDER = '@DAEMON_SPAWN_CONSTRAINT@';
+
+function daemonSpawnConstraintFor(daemonPath, signed, cdhashesOf = daemonCdhashes) {
+  return signed ? daemonSpawnConstraint(cdhashesOf(daemonPath)) : '';
+}
+
+// A universal binary has one cdhash per architecture, and either may run.
+// The plist sits in an unquoted heredoc of postinstall, hence the escaped `$in`.
+function daemonSpawnConstraint(cdhashesHex) {
+  const data = cdhashesHex.map(
+    (cdhash) => `<data>${Buffer.from(cdhash, 'hex').toString('base64')}</data>`,
+  );
+  const value =
+    data.length === 1 ? data[0] : `<dict><key>\\$in</key><array>${data.join('')}</array></dict>`;
+  return `<key>SpawnConstraint</key><dict><key>cdhash</key>${value}</dict>`;
+}
+
+function daemonCdhashes(daemonPath) {
+  const archs = execFileSync('lipo', ['-archs', daemonPath], { encoding: 'utf8' })
+    .trim()
+    .split(/\s+/);
+  return archs.map((arch) => {
+    // codesign prints the signature details on stderr.
+    const { stderr } = spawnSync('codesign', ['--display', '-vvv', '--arch', arch, daemonPath], {
+      encoding: 'utf8',
+    });
+    const match = stderr.match(/^CDHash=([0-9a-f]+)$/m);
+    if (!match) {
+      throw new Error(`Failed to read the cdhash of ${daemonPath} (${arch})`);
+    }
+    return match[1];
+  });
+}
+
+// Writes this environment's preinstall and postinstall into `outDir`, with
+// `spawnConstraint` in place of the placeholder of the launch daemon plist.
+function writePkgScripts(outDir, spawnConstraint) {
+  fs.rmSync(outDir, { recursive: true, force: true });
+  fs.mkdirSync(outDir, { recursive: true });
+  for (const script of ['preinstall', 'postinstall']) {
+    const src = distAssets(path.join('pkg-scripts', script));
+    let text = transformEnvAssetText(fs.readFileSync(src, 'utf8'));
+    if (script === 'postinstall') {
+      text = text.replace(DAEMON_SPAWN_CONSTRAINT_PLACEHOLDER, () => spawnConstraint);
+    }
+    fs.writeFileSync(path.join(outDir, script), text, { mode: fs.statSync(src).mode });
+  }
+}
+
+function assertSpawnConstraintResolved(pkgScriptsDir) {
+  const postinstall = fs.readFileSync(path.join(pkgScriptsDir, 'postinstall'), 'utf8');
+  if (postinstall.includes(DAEMON_SPAWN_CONSTRAINT_PLACEHOLDER)) {
+    throw new Error('The daemon spawn constraint was not written into postinstall');
+  }
 }
 
 function packLinux() {
@@ -1099,3 +1190,8 @@ exports.linuxAfterPack = linuxAfterPack;
 exports.macSignOptionsForFile = macSignOptionsForFile;
 exports.macSignAsyncOptions = macSignAsyncOptions;
 exports.MAC_DAEMON_ENTITLEMENTS = MAC_DAEMON_ENTITLEMENTS;
+exports.DAEMON_SPAWN_CONSTRAINT_PLACEHOLDER = DAEMON_SPAWN_CONSTRAINT_PLACEHOLDER;
+exports.daemonSpawnConstraint = daemonSpawnConstraint;
+exports.daemonSpawnConstraintFor = daemonSpawnConstraintFor;
+exports.writePkgScripts = writePkgScripts;
+exports.assertSpawnConstraintResolved = assertSpawnConstraintResolved;
