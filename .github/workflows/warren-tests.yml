@@ -346,8 +346,7 @@ jobs:
         run: cargo check --locked -p warren-ios --target aarch64-apple-ios
 
   # Every dependency change is held to the advisory database and the license
-  # policy before anything is built from it. The npm lockfile joins the scan
-  # once its pending major upgrade (Electron) lands.
+  # policy before anything is built from it.
   supply-chain:
     name: Supply chain (cargo deny, osv-scanner)
     runs-on: ubuntu-24.04
@@ -377,6 +376,15 @@ jobs:
             --config=osv-scanner.toml
             --lockfile=Cargo.lock
             --lockfile=ios/Gemfile.lock
+
+      # Its own exceptions, as in the daily scan (osv-scanner-scheduled.yml).
+      - name: osv-scanner on the desktop lockfile
+        if: success() || failure()
+        uses: google/osv-scanner-action/osv-scanner-action@2a387edfbe02a11d856b89172f6e978100177eb4  # v2.3.2
+        with:
+          scan-args: |-
+            --config=desktop/osv-scanner.toml
+            --lockfile=desktop/package-lock.json
 
   desktop-warren-typecheck:
     name: Desktop Warren UI (type-check + lint)
