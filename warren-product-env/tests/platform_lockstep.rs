@@ -174,7 +174,8 @@ fn the_desktop_typescript_table_is_the_crates() {
 /// The Android URL resources of one flavor: the library defaults, with the
 /// flavor's overlay on top.
 fn android_flavor_urls(env: ProductEnv) -> Vec<(String, String)> {
-    let re = Regex::new(r#"<string name="([a-z_]+)"[^>]*>(https://[^<]*)</string>"#).expect("regex");
+    let re =
+        Regex::new(r#"<string name="([a-z_]+)"[^>]*>(https://[^<]*)</string>"#).expect("regex");
     let default = repo_file(ANDROID_DEFAULT_URLS);
     let overlay_path = ANDROID_FLAVOR_URLS.replace("{env}", env.name());
     let overlay =
@@ -206,7 +207,8 @@ fn the_android_website_and_checkout_links_are_the_channels() {
             let checkout = value.contains("checkout.");
             if site {
                 assert!(
-                    value == env.website_url() || value.starts_with(&format!("{}/", env.website_url())),
+                    value == env.website_url()
+                        || value.starts_with(&format!("{}/", env.website_url())),
                     "{}: {name} = {value} is not under {}",
                     env.name(),
                     env.website_url()
@@ -214,7 +216,8 @@ fn the_android_website_and_checkout_links_are_the_channels() {
             }
             if checkout {
                 assert!(
-                    value == env.checkout_url() || value.starts_with(&format!("{}/", env.checkout_url())),
+                    value == env.checkout_url()
+                        || value.starts_with(&format!("{}/", env.checkout_url())),
                     "{}: {name} = {value} is not under {}",
                     env.name(),
                     env.checkout_url()
