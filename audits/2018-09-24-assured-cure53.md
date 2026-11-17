@@ -28,8 +28,8 @@ certain terminology, they adjusted the report to provide better clarity and prod
 version.
 
 The reports are also available directly in this repository:
-* [pentest-report_mullvad_v2.pdf](./pentest-report_mullvad_v2.pdf)
-* [pentest-report_mullvad_v1.pdf](./pentest-report_mullvad_v1.pdf)
+* [pentest-report_mullvad_v2.pdf](https://github.com/mullvad/mullvadvpn-app/blob/440c97f36a6dbf77eebd25d0e1ef52a3efd4ff43/audits/pentest-report_mullvad_v2.pdf)
+* [pentest-report_mullvad_v1.pdf](https://github.com/mullvad/mullvadvpn-app/blob/440c97f36a6dbf77eebd25d0e1ef52a3efd4ff43/audits/pentest-report_mullvad_v1.pdf)
 
 ## Overview of findings
 

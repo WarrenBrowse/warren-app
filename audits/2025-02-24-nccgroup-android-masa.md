@@ -13,4 +13,4 @@ The MASA certificate is hosted by App Defence Alliance:
 * [2025-02-24 MASA certificate](https://appdefensealliance.dev/reports/net.mullvad.mullvadvpn_1740398400000000.pdf)
 
 We also host certificate in our repository:
-* [2025-02-24 MASA certificate](2025-02-24-nccgroup-android-masa.pdf)
+* [2025-02-24 MASA certificate](https://github.com/mullvad/mullvadvpn-app/blob/440c97f36a6dbf77eebd25d0e1ef52a3efd4ff43/audits/2025-02-24-nccgroup-android-masa.pdf)

@@ -22,7 +22,7 @@ Quoting the key conclusions and recommendations chapter of the report:
 The [full audit report] can be found next to this file, or [on Assured's website].
 
 [Assured Security Consultants]: https://www.assured.se/
-[full audit report]: ./2025-03-20-assured-MUL020_Installer_Downloader_Audit.pdf
+[full audit report]: https://github.com/mullvad/mullvadvpn-app/blob/440c97f36a6dbf77eebd25d0e1ef52a3efd4ff43/audits/2025-03-20-assured-MUL020_Installer_Downloader_Audit.pdf
 [on Assured's website]: https://www.assured.se/publications/Assured_Mullvad_Installer_Downloader_Audit_2025.pdf
 
 ## Overview of findings
