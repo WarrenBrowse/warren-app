@@ -255,7 +255,6 @@ android {
                     // Fixes packaging error caused by: jetified-junit-*
                     "META-INF/LICENSE.md",
                     "META-INF/LICENSE-notice.md",
-                    "META-INF/io.netty.versions.properties",
                     "META-INF/INDEX.LIST",
                 )
         }
@@ -609,18 +608,6 @@ dependencies {
     // Baseline profile
     baselineProfile(projects.test.baselineprofile)
 
-    // playImplementation(projects.lib.billing) dropped.
-
-    // This dependency can be replaced when minimum SDK is 29 or higher.
-    // It can then be replaced with InetAddress.isNumericAddress
-    implementation(libs.commons.validator) {
-        // This dependency has a known vulnerability
-        // https://osv.dev/vulnerability/GHSA-wxr5-93ph-8wr9
-        // It is not used so let's exclude it.
-        // Unfortunately, this is not possible to do using libs.version.toml
-        // https://github.com/gradle/gradle/issues/26367#issuecomment-2120830998
-        exclude("commons-beanutils", "commons-beanutils")
-    }
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.activity.compose)
     // AppCompat delegate: the per-app language picker below API 33, and the
@@ -630,23 +617,14 @@ dependencies {
     implementation(libs.androidx.fragment)
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.coresplashscreen)
-    implementation(libs.androidx.credentials) {
-        // This dependency adds a lot of unused permissions to the app.
-        // It is not used so let's exclude it.
-        // Unfortunately, this is not possible to do using libs.version.toml
-        // https://github.com/gradle/gradle/issues/26367#issuecomment-2120830998
-        exclude("androidx.biometric", "biometric")
-    }
     implementation(libs.androidx.ktx)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.metrics.performance)
     implementation(libs.androidx.tv)
-    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.arrow)
     implementation(libs.arrow.optics)
-    implementation(libs.arrow.resilience)
     implementation(libs.compose.constrainlayout)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
@@ -658,7 +636,6 @@ dependencies {
     implementation(libs.koin)
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
-    implementation(libs.kotlin.reflect)
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.protobuf.kotlin.lite)

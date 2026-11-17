@@ -13,13 +13,12 @@ android {
 
 protobuf {
     protoc { artifact = libs.plugins.protobuf.protoc.get().toString() }
-    plugins {
-        create("java") { artifact = libs.plugins.grpc.protoc.gen.grpc.java.get().toString() }
-    }
     generateProtoTasks {
         all().forEach {
-            it.plugins { create("java") { option("lite") } }
-            it.builtins { create("kotlin") { option("lite") } }
+            it.builtins {
+                create("java") { option("lite") }
+                create("kotlin") { option("lite") }
+            }
         }
     }
 }
@@ -31,7 +30,6 @@ dependencies {
 
     implementation(libs.arrow)
     implementation(libs.arrow.optics)
-    implementation(libs.arrow.resilience)
     implementation(libs.kermit)
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlinx.coroutines.android)

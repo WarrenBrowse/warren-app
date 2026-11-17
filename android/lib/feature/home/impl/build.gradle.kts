@@ -31,11 +31,4 @@ dependencies {
     implementation(libs.koin.compose)
     implementation(libs.arrow)
     implementation(libs.compose.constrainlayout)
-    implementation(libs.androidx.credentials) {
-        // This dependency adds a lot of unused permissions to the app.
-        // It is not used so let's exclude it.
-        // Unfortunately, this is not possible to do using libs.version.toml
-        // https://github.com/gradle/gradle/issues/26367#issuecomment-2120830998
-        exclude("androidx.biometric", "biometric")
-    }
 }

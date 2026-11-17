@@ -70,7 +70,6 @@ import com.warrenbrowse.vpn.screen.outoftime.OutOfTimeGateViewModel
 import com.warrenbrowse.vpn.screen.privacy.PrivacyDisclaimerViewModel
 import com.warrenbrowse.vpn.screen.splash.SplashViewModel
 import com.warrenbrowse.vpn.serviceconnection.ServiceConnectionManager
-import org.apache.commons.validator.routines.InetAddressValidator
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
@@ -94,7 +93,6 @@ val uiModule = module {
     }
     single { ApplicationsProvider(get(), get()) }
     scope<MainActivity> { scoped { ServiceConnectionManager(androidContext()) } }
-    single { InetAddressValidator.getInstance() }
     single { androidContext().assets }
     single { androidContext().contentResolver }
 

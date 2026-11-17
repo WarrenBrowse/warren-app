@@ -25,7 +25,7 @@ dependencies {
 
     implementation(libs.compose.material3)
     implementation(libs.compose.ui)
-    implementation(libs.compose.ui.tooling)
+    debugImplementation(libs.compose.ui.tooling)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.constrainlayout)
     implementation(libs.kermit)
@@ -33,8 +33,6 @@ dependencies {
     implementation(libs.compose.icons.extended)
     implementation(libs.androidx.ktx)
     implementation(libs.androidx.animation)
-
-    implementation(libs.accompanist.drawablepainter)
 
     // Warren wallet UI (D.5) - BiometricPrompt gating in `BiometricGate.kt`.
     implementation(libs.androidx.biometric)

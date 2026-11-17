@@ -16,7 +16,7 @@ dependencies {
     implementation(projects.lib.ui.util)
 
     implementation(libs.compose.ui)
-    implementation(libs.compose.ui.tooling)
+    debugImplementation(libs.compose.ui.tooling)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.compose.icons.extended)

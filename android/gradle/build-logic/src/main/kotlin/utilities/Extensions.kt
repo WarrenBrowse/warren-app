@@ -1,8 +1,5 @@
 package utilities
 
-import org.gradle.api.artifacts.Dependency
-import org.gradle.api.artifacts.dsl.DependencyHandler
-
 fun String.isNonStableVersion(): Boolean {
     val nonStableQualifiers = listOf("alpha", "beta", "rc")
 
@@ -13,6 +10,3 @@ fun String.isNonStableVersion(): Boolean {
 
     return isNonStable
 }
-
-fun DependencyHandler.playImplementation(dependencyNotation: Any): Dependency? =
-    add("playImplementation", dependencyNotation)
