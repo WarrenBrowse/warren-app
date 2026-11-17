@@ -57,11 +57,13 @@ need.
 | `package` | this flake's | the package providing the daemon, CLI and app |
 | `enableExcludeWrapper` | `true` | setuid wrapper behind `warren-exclude`, which sends one process around the tunnel |
 | `enableIncludeWrapper` | `true` | setuid wrapper behind `warren-include`, which runs one process inside the tunnel while "VPN only for these apps" is on |
-| `enableEarlyBootBlocking` | `false` | blocks traffic before the network comes up, closing the boot window |
+| `enableEarlyBootBlocking` | `true` | blocks traffic before the network comes up, closing the boot window |
 
-`enableEarlyBootBlocking` is what the `.deb` installs everywhere else. It is off
-by default here because it runs before any NixOS network configuration and can
-fight a custom one; turn it on if you have no such configuration.
+`enableEarlyBootBlocking` is what the `.deb` installs everywhere else, and the
+daemon is ordered before `network-online.target` like the packaged unit, so the
+kill switch is in place before anything waiting for the network starts. The
+blocker runs before any NixOS network configuration; turn it off if it fights a
+custom one.
 
 ## Updating
 

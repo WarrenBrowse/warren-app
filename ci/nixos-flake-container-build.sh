@@ -112,6 +112,50 @@ case "$exec_start" in
     *) fail "the module's ExecStart does not point at the built package: $exec_start" ;;
 esac
 
+step "the default module protects the boot like the packaged unit"
+# dist-assets/linux/warren-daemon.service orders the daemon before
+# network-online.target and the packages always enable the early boot blocker.
+# A module that started the daemon after the network came online, or left the
+# blocker off by default, would give every NixOS host a boot window of traffic
+# outside the tunnel that no other distribution has.
+ordering="$(
+    nix eval --impure --raw --expr "
+    let
+      flake = builtins.getFlake \"path:$FLAKE\";
+      system = flake.inputs.nixpkgs.lib.nixosSystem {
+        system = \"x86_64-linux\";
+        modules = [
+          flake.nixosModules.default
+          {
+            services.${package}.enable = true;
+            boot.loader.grub.enable = false;
+            fileSystems.\"/\" = { device = \"/dev/null\"; fsType = \"ext4\"; };
+            system.stateVersion = \"26.05\";
+          }
+        ];
+      };
+      units = system.config.systemd.services;
+      daemon = units.\"warren-daemon${suffix}\";
+    in
+      builtins.concatStringsSep \" \" (
+        map (unit: \"before:\" + unit) daemon.before
+        ++ map (unit: \"after:\" + unit) daemon.after
+        ++ map (unit: \"wants:\" + unit) daemon.wants
+        ++ (if units ? \"warren-early-boot-blocking${suffix}\" then [ \"early-boot\" ] else [ ])
+      )
+  "
+)"
+echo "daemon ordering: $ordering"
+case " $ordering " in *" before:network-online.target "*) ;;
+    *) fail "the module does not start the daemon before network-online.target" ;;
+esac
+case " $ordering " in *" after:network-online.target "* | *" wants:network-online.target "*)
+    fail "the module waits for the network to be online before the daemon starts" ;;
+esac
+case " $ordering " in *" early-boot "*) ;;
+    *) fail "the module leaves the early boot blocker off by default" ;;
+esac
+
 step "pack the published tarball"
 mkdir -p "$OUT/$DIR_NAME"
 cp "$FLAKE/flake.nix" "$FLAKE/flake.lock" "$FLAKE/package.nix" "$FLAKE/module.nix" \

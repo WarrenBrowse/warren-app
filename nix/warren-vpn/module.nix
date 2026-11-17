@@ -63,12 +63,16 @@ in
         default = true;
       };
 
-    enableEarlyBootBlocking = mkEnableOption ''
-      a unit that blocks all traffic before the network is configured, closing the
-      window between boot and the daemon taking over. It matches what the .deb
-      installs on other distributions, and is off by default here because it runs
-      before any NixOS network configuration and can fight a custom one
-    '';
+    enableEarlyBootBlocking =
+      mkEnableOption ''
+        a unit that blocks all traffic before the network is configured, closing the
+        window between boot and the daemon taking over. It matches what the .deb
+        installs on other distributions. It runs before any NixOS network
+        configuration, so turn it off if it fights a custom one
+      ''
+      // {
+        default = true;
+      };
   };
 
   config = mkIf cfg.enable {
@@ -133,12 +137,11 @@ in
       ${daemon} = {
         description = "Warren VPN daemon";
         wantedBy = [ "multi-user.target" ];
-        wants = [
-          "network.target"
-          "network-online.target"
-        ];
+        # The same ordering as dist-assets/linux/warren-daemon.service: the
+        # daemon has to own the firewall before the network counts as online,
+        # or every boot opens a window of traffic outside the tunnel.
+        before = [ "network-online.target" ];
         after = [
-          "network-online.target"
           "NetworkManager.service"
           "systemd-resolved.service"
         ]
