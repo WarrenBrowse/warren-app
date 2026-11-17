@@ -1,6 +1,6 @@
 { pkgs, desktop-toolchain }:
 pkgs.devshell.mkShell {
-  name = "mullvad-desktop-devshell";
+  name = "warren-desktop-devshell";
   packages = desktop-toolchain.packages ++ [
     pkgs.cargo-insta
     pkgs.cargo-deny

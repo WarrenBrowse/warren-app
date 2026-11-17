@@ -99,7 +99,7 @@ exec_start="$(
             services.${package}.enableEarlyBootBlocking = true;
             boot.loader.grub.enable = false;
             fileSystems.\"/\" = { device = \"/dev/null\"; fsType = \"ext4\"; };
-            system.stateVersion = \"25.11\";
+            system.stateVersion = \"26.05\";
           }
         ];
       };

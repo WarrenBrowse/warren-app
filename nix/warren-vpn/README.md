@@ -41,6 +41,14 @@ below installs.
 }
 ```
 
+The flake pins the nixpkgs its release was built and tested against, on a
+supported NixOS release branch. To build it against your system's nixpkgs
+instead, so the app's libraries follow your own security updates, add:
+
+```nix
+inputs.warren-vpn.inputs.nixpkgs.follows = "nixpkgs";
+```
+
 The option is named after the channel (`services.warren-vpn` on prod,
 `services.warren-vpn-beta` on beta), like every installed name, so both channels
 can sit on one machine without merging into a single service.

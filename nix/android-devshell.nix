@@ -1,6 +1,6 @@
 { pkgs, android-toolchain }:
 pkgs.devshell.mkShell {
-  name = "mullvad-android-devshell";
+  name = "warren-android-devshell";
   inherit (android-toolchain) packages;
 
   env = import ./android-env.nix {
