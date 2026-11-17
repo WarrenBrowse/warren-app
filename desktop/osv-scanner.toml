@@ -1,1 +1,19 @@
 # See repository root `osv-scanner.toml` for instructions and rules for this file.
+
+# minimatch: denial of service through glob part amplification.
+[[IgnoredVulns]]
+id = "CVE-2026-118764" # GHSA-g3hv-75wg-m249
+ignoreUntil = 2027-02-17
+reason = "Dev dependency of electron-builder (app-builder-lib, @electron/universal), matching patterns written in our own build config at packaging time; never shipped in the app. The fix is minimatch 11, which those packages do not accept yet."
+
+# picomatch: ReDoS through repeated single-branch extglobs.
+[[IgnoredVulns]]
+id = "CVE-2026-112366" # GHSA-fc5q-39xc-vjpf
+ignoreUntil = 2027-02-17
+reason = "Dev dependency of the build and test tooling (vite, vitest, fast-glob), matching patterns from our own config; never shipped in the app. No fixed version is published."
+
+# zod: memory exhaustion validating oversized constrained collections.
+[[IgnoredVulns]]
+id = "CVE-2023-54404" # GHSA-mrhx-c7xc-m3w5
+ignoreUntil = 2027-02-17
+reason = "Dev dependency of eslint-plugin-react-compiler, validating the plugin's own lint options at lint time; never shipped in the app. The fix is zod 4, which that plugin does not accept."
