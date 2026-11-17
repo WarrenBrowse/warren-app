@@ -106,6 +106,7 @@ fn create_dir_recursive_with_permissions(
     if path == Path::new("") {
         return Ok(());
     }
+    reject_reparse_points(path)?;
 
     match std::fs::create_dir(path) {
         Ok(()) => {
@@ -140,6 +141,24 @@ fn create_dir_recursive_with_permissions(
 
     std::fs::create_dir(path).map_err(|e| Error::CreateDirFailed(path.display().to_string(), e))?;
     set_security_permissions(path, user_permissions)
+}
+
+/// Refuses `path` when it, or a directory above it, is a reparse point (a junction or a symbolic
+/// link). The privileged directories live where any account can create entries before the first
+/// install, and the security descriptor applied by name below lands on the target of a link, so a
+/// junction planted there would hand its target to whoever chose it.
+fn reject_reparse_points(path: &Path) -> Result<()> {
+    use std::os::windows::fs::MetadataExt;
+    const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
+    for ancestor in path.ancestors() {
+        let Ok(metadata) = std::fs::symlink_metadata(ancestor) else {
+            continue;
+        };
+        if metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0 {
+            return Err(Error::ReparsePoint(ancestor.display().to_string()));
+        }
+    }
+    Ok(())
 }
 
 /// Recursively creates directories for the given path with permissions that give full access to
@@ -587,4 +606,41 @@ fn is_local_system_user_token(token: &impl AsRawHandle) -> io::Result<bool> {
             local_system_sid.as_mut_ptr().cast::<c_void>(),
         )
     } != 0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn scratch(tag: &str) -> PathBuf {
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let dir = std::env::temp_dir().join(format!("warren-paths-{tag}-{unique}"));
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn a_privileged_directory_is_never_made_through_a_junction() {
+        let root = scratch("junction");
+        let target = root.join("chosen-by-another-account");
+        std::fs::create_dir(&target).unwrap();
+        let junction = root.join("product");
+        let status = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(&junction)
+            .arg(&target)
+            .status()
+            .unwrap();
+        assert!(status.success(), "mklink /J failed");
+
+        let result = create_privileged_directory(&junction.join("cache"));
+
+        assert!(matches!(result, Err(Error::ReparsePoint(_))), "{result:?}");
+        assert!(!target.join("cache").exists());
+        let _ = std::fs::remove_dir(&junction);
+        let _ = std::fs::remove_dir_all(&root);
+    }
 }

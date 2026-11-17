@@ -39,6 +39,10 @@ pub enum Error {
     NoProgramDataDir,
 
     #[cfg(windows)]
+    #[error("Refusing a privileged directory under the reparse point {0}")]
+    ReparsePoint(String),
+
+    #[cfg(windows)]
     #[error("Failed to create security attributes")]
     GetSecurityAttributes(#[source] io::Error),
 
