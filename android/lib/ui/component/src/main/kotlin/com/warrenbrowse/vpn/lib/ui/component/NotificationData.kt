@@ -176,6 +176,12 @@ fun InAppNotification.toNotificationData(
                 message = stringResource(id = R.string.host_offline_notification_message),
                 statusLevel = statusLevel,
             )
+        InAppNotification.DeviceRevocationUnconfirmed ->
+            NotificationData(
+                title = stringResource(id = R.string.device_revocation_unconfirmed_title),
+                message = stringResource(id = R.string.device_revocation_unconfirmed_message),
+                statusLevel = statusLevel,
+            )
         InAppNotification.ExitEgressDead ->
             NotificationData(
                 title = stringResource(id = R.string.exit_egress_dead_title),

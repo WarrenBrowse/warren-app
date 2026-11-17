@@ -807,4 +807,6 @@
     <string name="update_banner_version">Sürüm %1$s</string>
     <string name="update_banner_install">Yükle</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">BAĞLANTI KESME ONAYLANMADI</string>
+    <string name="device_revocation_unconfirmed_message">Sunucu bu cihazın hesabınızla bağlantısının kesildiğini söylüyor, ancak hesabınız bunu onaylamadı. Bu cihazdan hiçbir şey silinmedi.</string>
 </resources>

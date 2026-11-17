@@ -53,9 +53,16 @@ interface WarrenDeviceBridge {
 
     /**
      * Whether the registry revoked this device since [forgetDeviceRevocation]: its token and
-     * entitlement refreshes have stopped and its device identity is forgotten.
+     * entitlement refreshes have stopped and its session ended.
      */
     fun deviceRevoked(): Boolean
+
+    /**
+     * Whether that revocation was proven: the account wallet signed it for this device, or this
+     * device asked for it. Only then is the device identity forgotten natively, and only then may
+     * the app forget the wallet. `false` keeps the wallet, which is the safe answer.
+     */
+    fun deviceRevocationVerified(): Boolean = false
 
     /** The revocation was taken in (the user left the revoked screen, or logged in again). */
     fun forgetDeviceRevocation()
@@ -75,8 +82,28 @@ class DeviceRepository(
     private val _deviceState = MutableStateFlow<DeviceState?>(null)
     val deviceState: StateFlow<DeviceState?> = _deviceState.asStateFlow()
 
+    private val _revocationUnconfirmed = MutableStateFlow(false)
+
+    /**
+     * Whether the API refused this device as revoked without the account wallet's signature over
+     * that: the session ended and the wallet stays, and the app says so until the login changes.
+     */
+    val revocationUnconfirmed: StateFlow<Boolean> = _revocationUnconfirmed.asStateFlow()
+
     /** Whether the registry revoked this device since the app last took a revocation in. */
     fun revokedByRegistry(): Boolean = bridge?.deviceRevoked() == true
+
+    /** Whether that revocation was proven, the only case in which the wallet may leave. */
+    fun revocationVerified(): Boolean = bridge?.deviceRevocationVerified() == true
+
+    /**
+     * Takes an unproven revocation in: the native flag is consumed, the wallet stays, and the
+     * banner says the disconnection was not confirmed.
+     */
+    fun showRevocationUnconfirmed() {
+        bridge?.forgetDeviceRevocation()
+        _revocationUnconfirmed.value = true
+    }
 
     /**
      * Takes the registry's revocation in: the wallet has left the device, and the revoked screen
@@ -85,6 +112,11 @@ class DeviceRepository(
     fun showRevoked() {
         bridge?.forgetDeviceRevocation()
         _deviceState.value = DeviceState.Revoked
+    }
+
+    /** The wallet the unproven revocation concerned has left: the banner goes with it. */
+    fun clearRevocationUnconfirmed() {
+        _revocationUnconfirmed.value = false
     }
 
     /** Drops a revocation that concerns no wallet any more, without a screen. */
@@ -96,6 +128,7 @@ class DeviceRepository(
     fun acknowledgeRevocation() {
         bridge?.forgetDeviceRevocation()
         _deviceState.value = null
+        _revocationUnconfirmed.value = false
     }
 
     /** The account's devices, this one marked. */

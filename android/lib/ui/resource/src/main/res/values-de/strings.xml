@@ -807,4 +807,6 @@
     <string name="update_banner_version">Version %1$s</string>
     <string name="update_banner_install">Installieren</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">TRENNUNG NICHT BESTÄTIGT</string>
+    <string name="device_revocation_unconfirmed_message">Der Server meldet, dass dieses Gerät von Ihrem Konto getrennt wurde, aber Ihr Konto hat dies nicht bestätigt. Auf diesem Gerät wurde nichts gelöscht.</string>
 </resources>

@@ -829,4 +829,6 @@
     <string name="update_banner_version">Версія %1$s</string>
     <string name="update_banner_install">Встановити</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">ВІДКЛЮЧЕННЯ НЕ ПІДТВЕРДЖЕНО</string>
+    <string name="device_revocation_unconfirmed_message">Сервер повідомляє, що цей пристрій відключено від вашого облікового запису, але ваш обліковий запис цього не підтвердив. З цього пристрою нічого не видалено.</string>
 </resources>

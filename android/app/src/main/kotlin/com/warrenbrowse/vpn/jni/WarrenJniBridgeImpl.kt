@@ -42,6 +42,10 @@ class WarrenJniBridgeImpl : WarrenJniBridge, WarrenStandingBridge, WarrenDeviceB
 
     override fun deviceRevoked(): Boolean = ready { WarrenJni.deviceRevoked() }
 
+    override fun deviceRevocationVerified(): Boolean = ready {
+        WarrenJni.deviceRevocationVerified()
+    }
+
     override fun forgetDeviceRevocation() = ready { WarrenJni.forgetDeviceRevocation() }
 
     override fun forgetAccountStanding() = ready { WarrenJni.forgetAccountStanding() }

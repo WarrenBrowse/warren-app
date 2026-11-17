@@ -810,4 +810,6 @@
     <string name="update_banner_version">Versão %1$s</string>
     <string name="update_banner_install">Instalar</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">DESLIGAMENTO NÃO CONFIRMADO</string>
+    <string name="device_revocation_unconfirmed_message">O servidor indica que este dispositivo foi desligado da sua conta, mas a sua conta não o confirmou. Nada foi apagado deste dispositivo.</string>
 </resources>

@@ -446,6 +446,12 @@ object WarrenJni {
     /** Whether the registry revoked this device since [forgetDeviceRevocation]. */
     external fun deviceRevoked(): Boolean
 
+    /**
+     * Whether that revocation was proven: the account wallet signed it for this device, or this
+     * device asked for it. Only then was the device identity forgotten.
+     */
+    external fun deviceRevocationVerified(): Boolean
+
     /** The revocation was taken in. */
     external fun forgetDeviceRevocation()
 

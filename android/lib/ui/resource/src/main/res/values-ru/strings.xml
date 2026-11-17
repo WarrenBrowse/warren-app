@@ -829,4 +829,6 @@
     <string name="update_banner_version">Версия %1$s</string>
     <string name="update_banner_install">Установить</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">ОТКЛЮЧЕНИЕ НЕ ПОДТВЕРЖДЕНО</string>
+    <string name="device_revocation_unconfirmed_message">Сервер сообщает, что это устройство было отключено от вашего аккаунта, но ваш аккаунт этого не подтвердил. С этого устройства ничего не удалено.</string>
 </resources>

@@ -807,4 +807,6 @@
     <string name="update_banner_version">Versio %1$s</string>
     <string name="update_banner_install">Asenna</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">YHTEYDEN KATKAISUA EI VAHVISTETTU</string>
+    <string name="device_revocation_unconfirmed_message">Palvelimen mukaan tämän laitteen yhteys tiliisi katkaistiin, mutta tilisi ei vahvistanut sitä. Tästä laitteesta ei poistettu mitään.</string>
 </resources>

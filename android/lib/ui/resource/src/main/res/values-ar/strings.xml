@@ -851,4 +851,6 @@
     <string name="update_banner_version">الإصدار %1$s</string>
     <string name="update_banner_install">تثبيت</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">لم يتم تأكيد قطع الاتصال</string>
+    <string name="device_revocation_unconfirmed_message">يفيد الخادم بأن هذا الجهاز قد فُصل عن حسابك، لكن حسابك لم يؤكد ذلك. لم يُمحَ أي شيء من هذا الجهاز.</string>
 </resources>

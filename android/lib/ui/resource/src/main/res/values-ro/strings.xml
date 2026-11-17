@@ -822,4 +822,6 @@
     <string name="update_banner_version">Versiunea %1$s</string>
     <string name="update_banner_install">Instalează</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">DECONECTARE NECONFIRMATĂ</string>
+    <string name="device_revocation_unconfirmed_message">Serverul spune că acest dispozitiv a fost deconectat de la contul tău, dar contul tău nu a confirmat acest lucru. Nimic nu a fost șters de pe acest dispozitiv.</string>
 </resources>

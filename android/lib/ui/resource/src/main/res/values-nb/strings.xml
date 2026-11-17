@@ -807,4 +807,6 @@
     <string name="update_banner_version">Versjon %1$s</string>
     <string name="update_banner_install">Installer</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">FRAKOBLING IKKE BEKREFTET</string>
+    <string name="device_revocation_unconfirmed_message">Serveren sier at denne enheten ble koblet fra kontoen din, men kontoen din har ikke bekreftet det. Ingenting ble slettet fra denne enheten.</string>
 </resources>

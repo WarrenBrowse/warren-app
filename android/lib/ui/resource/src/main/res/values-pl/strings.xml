@@ -829,4 +829,6 @@
     <string name="update_banner_version">Wersja %1$s</string>
     <string name="update_banner_install">Zainstaluj</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">ROZŁĄCZENIE NIEPOTWIERDZONE</string>
+    <string name="device_revocation_unconfirmed_message">Serwer podaje, że to urządzenie zostało odłączone od Twojego konta, ale Twoje konto tego nie potwierdziło. Nic nie zostało usunięte z tego urządzenia.</string>
 </resources>

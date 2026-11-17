@@ -58,6 +58,9 @@ class ManageDevicesViewModelTest {
 
             override fun deviceRevoked() = revoked
 
+            // A revocation these tests raise is one the account signed.
+            override fun deviceRevocationVerified() = revoked
+
             override fun forgetDeviceRevocation() {
                 revoked = false
             }

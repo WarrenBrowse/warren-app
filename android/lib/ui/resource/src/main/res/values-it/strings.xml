@@ -810,4 +810,6 @@
     <string name="update_banner_version">Versione %1$s</string>
     <string name="update_banner_install">Installa</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">DISCONNESSIONE NON CONFERMATA</string>
+    <string name="device_revocation_unconfirmed_message">Il server indica che questo dispositivo è stato disconnesso dal tuo account, ma il tuo account non lo ha confermato. Non è stato cancellato nulla da questo dispositivo.</string>
 </resources>

@@ -844,4 +844,6 @@
         <item quantity="other">%1$d years left</item>
     </plurals>
     <string name="home_select_location">Select location. Current location is %1$s</string>
+    <string name="device_revocation_unconfirmed_title">DISCONNECTION NOT CONFIRMED</string>
+    <string name="device_revocation_unconfirmed_message">The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device.</string>
 </resources>

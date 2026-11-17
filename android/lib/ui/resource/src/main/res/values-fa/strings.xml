@@ -807,4 +807,6 @@
     <string name="update_banner_version">نسخهٔ %1$s</string>
     <string name="update_banner_install">نصب</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">قطع اتصال تأیید نشد</string>
+    <string name="device_revocation_unconfirmed_message">سرور می‌گوید اتصال این دستگاه از حساب شما قطع شده است، اما حساب شما آن را تأیید نکرده است. چیزی از این دستگاه پاک نشد.</string>
 </resources>

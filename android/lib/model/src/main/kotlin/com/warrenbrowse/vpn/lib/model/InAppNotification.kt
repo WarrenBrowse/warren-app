@@ -94,6 +94,15 @@ sealed class InAppNotification {
         override val priority: Long = 1006
     }
 
+    // The API refused this device as disconnected without the account
+    // wallet's signature over that: the session ended and the wallet stayed
+    // (desktop WarrenRevocationUnconfirmedNotificationProvider). No credential
+    // is issued until the login changes, so it ranks with the offline family.
+    data object DeviceRevocationUnconfirmed : InAppNotification() {
+        override val statusLevel = StatusLevel.Error
+        override val priority: Long = 1006
+    }
+
     data class TunnelStateError(val error: ErrorState) : InAppNotification() {
         override val statusLevel =
             if (error.cause is ErrorStateCause.IsOffline) {

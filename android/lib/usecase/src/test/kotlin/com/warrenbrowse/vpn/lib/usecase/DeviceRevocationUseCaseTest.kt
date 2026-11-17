@@ -32,6 +32,7 @@ class DeviceRevocationUseCaseTest {
     private val bridge =
         object : WarrenDeviceBridge {
             var revoked = false
+            var verified = true
 
             override fun listDevices(mnemonic: String) = error("not called")
 
@@ -47,6 +48,8 @@ class DeviceRevocationUseCaseTest {
             }
 
             override fun deviceRevoked() = revoked
+
+            override fun deviceRevocationVerified() = revoked && verified
 
             override fun forgetDeviceRevocation() {
                 revoked = false
@@ -103,6 +106,23 @@ class DeviceRevocationUseCaseTest {
 
         assertEquals(listOf("logout while null"), events)
         assertEquals(DeviceState.Revoked, devices.deviceState.value)
+    }
+
+    @Test
+    fun `a revocation the account did not sign keeps the wallet and says so`() = runTest {
+        bridge.revoked = true
+        bridge.verified = false
+
+        useCase.takeInRevocation()
+
+        assertEquals(emptyList<String>(), events, "the wallet must not be logged out")
+        assertNull(devices.deviceState.value, "no revoked screen")
+        assertTrue(devices.revocationUnconfirmed.value)
+        assertTrue(!bridge.revoked, "the native flag is taken in once")
+
+        wallet.flow.value = WalletState.Absent
+        useCase.takeInRevocation()
+        assertTrue(!devices.revocationUnconfirmed.value, "the banner leaves with the wallet")
     }
 
     @Test

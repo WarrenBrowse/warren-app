@@ -20,6 +20,10 @@ import kotlinx.coroutines.sync.withLock
  * decision 1): the tunnel comes down, the wallet leaves the device, and the app shows its revoked
  * screen. Coming back takes the recovery phrase.
  *
+ * Only a revocation the account wallet signed for this device goes that far: whoever answers for
+ * the API could otherwise make every device forget its wallet. An unproven one ends the session
+ * natively all the same, keeps the wallet, and raises the banner that says so.
+ *
  * The native side learns the revocation on its own (a token or entitlement refresh, a device
  * registry call, the registration at a dial) and ends a running session on it; this reads the flag
  * it raises, which costs an atomic load and no request.
@@ -38,10 +42,16 @@ class DeviceRevocationUseCase(
      */
     suspend fun takeInRevocation() =
         acting.withLock {
+            if (wallet.state.value is WalletState.Absent) devices.clearRevocationUnconfirmed()
             if (!devices.revokedByRegistry()) return@withLock
             // A revocation learned after the wallet left concerns a wallet already gone.
             if (wallet.state.value is WalletState.Absent) {
                 devices.dropRevocation()
+                return@withLock
+            }
+            if (!devices.revocationVerified()) {
+                Logger.w { "revoked device: the account did not sign it; keeping the wallet" }
+                devices.showRevocationUnconfirmed()
                 return@withLock
             }
             when (val outcome = logOut()) {

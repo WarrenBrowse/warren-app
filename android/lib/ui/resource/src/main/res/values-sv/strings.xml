@@ -807,4 +807,6 @@
     <string name="update_banner_version">Version %1$s</string>
     <string name="update_banner_install">Installera</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">FRÅNKOPPLING INTE BEKRÄFTAD</string>
+    <string name="device_revocation_unconfirmed_message">Servern säger att den här enheten kopplades från ditt konto, men ditt konto har inte bekräftat det. Ingenting raderades från den här enheten.</string>
 </resources>

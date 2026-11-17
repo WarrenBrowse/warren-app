@@ -807,4 +807,6 @@
     <string name="update_banner_version">Versie %1$s</string>
     <string name="update_banner_install">Installeren</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">LOSKOPPELEN NIET BEVESTIGD</string>
+    <string name="device_revocation_unconfirmed_message">De server meldt dat dit apparaat is losgekoppeld van je account, maar je account heeft dat niet bevestigd. Er is niets van dit apparaat gewist.</string>
 </resources>

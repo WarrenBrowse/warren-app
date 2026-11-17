@@ -796,4 +796,6 @@
     <string name="update_banner_version">版本 %1$s</string>
     <string name="update_banner_install">安装</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">断开连接未经确认</string>
+    <string name="device_revocation_unconfirmed_message">服务器称此设备已与您的账户断开连接，但您的账户并未确认。此设备上的任何内容均未被删除。</string>
 </resources>

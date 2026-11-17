@@ -56,6 +56,7 @@ import com.warrenbrowse.vpn.lib.usecase.inappnotification.ConnectingStuckNotific
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitEgressNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.EnvStandDownUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitSwitchedNotificationUseCase
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.DeviceRevocationUnconfirmedNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.HostOfflineNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.AlwaysOnVpnAdviceNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
@@ -132,6 +133,8 @@ val uiModule = module {
         AlwaysOnVpnAdviceNotificationUseCase(get<UserPreferencesRepository>()::showAlwaysOnVpnAdvice)
     } bind InAppNotificationUseCase::class
     single { HostOfflineNotificationUseCase(get()) } bind
+        InAppNotificationUseCase::class
+    single { DeviceRevocationUnconfirmedNotificationUseCase(get(), get()) } bind
         InAppNotificationUseCase::class
     // The connect card ORs the wedge verdict into its offline flag; only the
     // banner keeps the two causes apart.

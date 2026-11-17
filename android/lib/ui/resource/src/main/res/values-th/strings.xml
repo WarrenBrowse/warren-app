@@ -796,4 +796,6 @@
     <string name="update_banner_version">เวอร์ชัน %1$s</string>
     <string name="update_banner_install">ติดตั้ง</string>
     <string name="beta_badge_label">BETA</string>
+    <string name="device_revocation_unconfirmed_title">ยังไม่ได้ยืนยันการตัดการเชื่อมต่อ</string>
+    <string name="device_revocation_unconfirmed_message">เซิร์ฟเวอร์แจ้งว่าอุปกรณ์นี้ถูกตัดการเชื่อมต่อจากบัญชีของคุณ แต่บัญชีของคุณไม่ได้ยืนยันเรื่องนี้ ไม่มีสิ่งใดถูกลบออกจากอุปกรณ์นี้</string>
 </resources>
