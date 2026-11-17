@@ -9,8 +9,6 @@ android {
     namespace = "com.warrenbrowse.vpn.lib.ui.component"
 
     buildFeatures { compose = true }
-
-    kotlin { compilerOptions { freeCompilerArgs.add("-XXLanguage:+WhenGuards") } }
 }
 
 dependencies {
