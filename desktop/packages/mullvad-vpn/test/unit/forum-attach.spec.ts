@@ -119,6 +119,33 @@ describe('pending forum request buffer', () => {
     expect(pending.get(1000 + PENDING_ATTACH_MAX_AGE_MS + 1)).toBeUndefined();
   });
 
+  it('hands back a request it drops by replacement or expiry, so its report can be deleted', () => {
+    const discarded: IForumAttachRequest[] = [];
+    const pending = new PendingForumRequest<IForumAttachRequest>(PENDING_ATTACH_MAX_AGE_MS, (old) =>
+      discarded.push(old),
+    );
+    const second = { ...request, reportId: '223e4567-e89b-12d3-a456-426614174000' };
+
+    pending.set(request, 1000);
+    pending.set(second, 2000);
+    pending.get(2000 + PENDING_ATTACH_MAX_AGE_MS + 1);
+
+    expect(discarded).toEqual([request, second]);
+  });
+
+  it('does not hand back a request the caller cleared after answering it', () => {
+    const discarded: IForumAttachRequest[] = [];
+    const pending = new PendingForumRequest<IForumAttachRequest>(PENDING_ATTACH_MAX_AGE_MS, (old) =>
+      discarded.push(old),
+    );
+
+    pending.set(request, 1000);
+    pending.clear();
+    pending.set(request, 2000);
+
+    expect(discarded).toEqual([]);
+  });
+
   it('takes its max age from the caller, since login and attach sessions differ', () => {
     // One shared constant mirrored neither: connect expires a login session
     // after 5 minutes and an attach session after 30, so a single value both

@@ -348,21 +348,33 @@ export const PENDING_ATTACH_MAX_AGE_MS = 30 * 60 * 1000;
  * renderer fetches this buffer when the prompt mounts instead. The request
  * stays buffered until approved/cancelled so reopening the window re-shows an
  * unanswered prompt.
+ *
+ * `onDiscard` receives a request dropped unanswered, replaced by a newer one or
+ * expired, so whatever it holds on disk can go with it. A request the caller
+ * clears after answering it is the caller's to clean up.
  */
 export class PendingForumRequest<T> {
   private request?: T;
   private receivedAt = 0;
 
-  public constructor(private readonly maxAgeMs: number) {}
+  public constructor(
+    private readonly maxAgeMs: number,
+    private readonly onDiscard: (request: T) => void = () => undefined,
+  ) {}
 
   public set(request: T, now: number): void {
+    if (this.request) {
+      this.onDiscard(this.request);
+    }
     this.request = request;
     this.receivedAt = now;
   }
 
   public get(now: number): T | undefined {
     if (this.request && now - this.receivedAt > this.maxAgeMs) {
+      const expired = this.request;
       this.clear();
+      this.onDiscard(expired);
     }
     return this.request;
   }

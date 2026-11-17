@@ -335,8 +335,12 @@ class ApplicationMain
   // Last count the monitor published, replayed in the initial state: the
   // renderer boots after the first digest has already been matched.
   private forumUnread = 0;
+  // A request replaced by a newer link or left to expire takes the report it
+  // collected with it, so repeated links do not pile reports up in the OS
+  // temp dir.
   private pendingForumAttach = new PendingForumRequest<IForumAttachRequest>(
     PENDING_ATTACH_MAX_AGE_MS,
+    (request) => this.deleteCollectedReport(request.reportId),
   );
 
   private purchaseFlow: PurchaseFlow;
