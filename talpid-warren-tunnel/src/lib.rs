@@ -982,23 +982,20 @@ pub use warren_app_routes::MultiHopConfig;
 #[derive(thiserror::Error, Debug)]
 #[non_exhaustive]
 pub enum Error {
-    /// The QUIC handshake (`connect` / `connect_multi`) failed
-    /// (timeout, exit rejected, protocol version mismatch, etc.).
-    /// The underlying warren-tunnel error is stringified so the
-    /// `Display` does not leak identity material (no-log Warren).
-    #[error("Warren handshake failed: {0}")]
-    Handshake(String),
+    /// The first session could not be established.
+    #[error("Warren handshake failed")]
+    Handshake(#[source] HandshakeFailure),
 
     /// Could not open the TUN device via
     /// [`talpid_tunnel::tun_provider::TunProvider`].
-    #[error("Warren tun setup failed: {0}")]
-    TunSetup(String),
+    #[error("Warren tun setup failed")]
+    TunSetup(#[source] TunSetupFailure),
 
     /// The routes that send traffic into the tunnel could not be installed.
     /// The session is up but carries nothing, so the tunnel must never report
     /// itself connected: the state machine blocks with this cause instead.
-    #[error("Warren tunnel routes not installed: {0}")]
-    RouteSetup(String),
+    #[error("Warren tunnel routes not installed")]
+    RouteSetup(#[source] RouteSetupFailure),
 
     /// Transient backend error that the state machine should retry:
     /// TUN I/O error, temporary network disruption, or a session
@@ -1006,8 +1003,8 @@ pub enum Error {
     /// tunnel data plane was interrupted but the configuration and
     /// credentials are still valid - a reconnect is expected to
     /// succeed.
-    #[error("Warren tunnel transient backend error (recoverable): {0}")]
-    BackendTransient(String),
+    #[error("Warren tunnel transient backend error (recoverable)")]
+    BackendTransient(#[source] TransientCause),
 
     /// The exit refused the session for a policy reason that clears on its
     /// own: the wallet is absent from the exit's allowlist, which is exactly
@@ -1038,7 +1035,7 @@ pub enum Error {
     /// fatal: that would strand a just-subscribed user in an
     /// uncancelable-until-manual-reconnect state.
     #[error("Warren tunnel fatal backend error: {0}")]
-    BackendFatal(String),
+    BackendFatal(FatalCause),
 
     /// No multi-hop circuit was supplied. The Warren fleet is multi-hop
     /// only, so the daemon's circuit selection always populates
@@ -1085,6 +1082,138 @@ impl Error {
         match self {
             Error::SessionRejected(refusal) => Some(refusal),
             _ => None,
+        }
+    }
+}
+
+/// Why the first session could not be established.
+#[derive(thiserror::Error, Debug)]
+#[non_exhaustive]
+pub enum HandshakeFailure {
+    /// The daemon closed the tunnel while the multi-hop start was waiting.
+    #[error("multi-hop start aborted by the daemon close signal")]
+    ClosedBeforeStart,
+    /// The daemon closed the tunnel during the first dial.
+    #[error("multi-hop first dial aborted by the daemon close signal")]
+    ClosedDuringFirstDial,
+    /// The supervisor produced no session within the bound.
+    #[error("multi-hop supervisor did not produce an initial session within {0:?}")]
+    NoInitialSessionWithin(std::time::Duration),
+    /// No entry relay is reachable over the address families this network has.
+    #[error("no entry relay reachable on this network's address families")]
+    Unroutable,
+    /// The quantum-resistant setting requires the post-quantum seal and the
+    /// exit's signed descriptor offers no ML-KEM key.
+    #[error(
+        "the exit offers no signed post-quantum key, and the quantum-resistant tunnel setting \
+         requires the post-quantum seal"
+    )]
+    PostQuantumUnavailable,
+    /// The supervisor stopped before its first session, for another reason.
+    #[error("multi-hop supervisor stopped before an initial session")]
+    SupervisorStopped,
+    /// The exit negotiated a DAITA configuration this client cannot run.
+    #[error("negotiated DAITA spec unusable")]
+    DaitaSpec(#[source] warrenguard_daita::DaitaError),
+    /// The physical interface the carrier socket is pinned to is unknown.
+    #[error("cannot resolve the physical interface for the carrier socket bypass")]
+    NoPhysicalInterface(#[source] anyhow::Error),
+}
+
+/// Why the TUN device could not be opened.
+#[derive(thiserror::Error, Debug)]
+#[non_exhaustive]
+pub enum TunSetupFailure {
+    /// A thread panicked while holding the TUN provider.
+    #[error("tun_provider mutex poisoned")]
+    ProviderPoisoned,
+    /// The provider refused to open the device.
+    #[error("the TUN provider could not open the device")]
+    Open(#[source] talpid_tunnel::tun_provider::Error),
+}
+
+/// Why the routes into the tunnel could not be installed.
+#[derive(thiserror::Error, Debug)]
+#[non_exhaustive]
+pub enum RouteSetupFailure {
+    /// The relay is reached over IPv6: the macOS split keys its cleanup on
+    /// the relay's IPv4 host address.
+    #[error("the relay is reached over IPv6, which the default route split does not support")]
+    RelayOverIpv6,
+    /// The split of the default route failed.
+    #[error("default route split")]
+    DefaultRouteSplit(#[source] anyhow::Error),
+    /// The host route that keeps the relay off the tunnel failed.
+    #[error("relay bypass route")]
+    RelayBypass(#[source] talpid_routing::Error),
+    /// The routes into the tunnel failed.
+    #[error("tunnel routes")]
+    TunnelRoutes(#[source] talpid_routing::Error),
+}
+
+/// Why a session ended in a way a reconnect is expected to fix.
+#[derive(thiserror::Error, Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum TransientCause {
+    /// The exit's inner address pool is exhausted.
+    #[error("exit rejected the session ({0}); its address pool is exhausted")]
+    AddressPoolExhausted(RejectionReason),
+    /// The exit saw this setup before: the path replayed it.
+    #[error("exit refused a replayed setup ({0}); redialling")]
+    SetupReplayed(RejectionReason),
+    /// One exit refused this device's time, which may be that exit's clock.
+    #[error("exit refused the setup's time ({0}); trying again")]
+    ClockRefusedOnce(RejectionReason),
+    /// Sessions establish but no return traffic flows.
+    #[error(
+        "tunnel datapath dead: sessions establish but no return traffic flows \
+         (consecutive zero-downlink redials)"
+    )]
+    DatapathDead,
+    /// A guard of the live session (pumps, liveness, migration, drain, egress
+    /// probe, carrier guard) ended it, with the reason it logged.
+    #[error("pump terminated abnormally: {0}")]
+    SessionEnded(String),
+}
+
+/// Why the exit, or this device's clock, ends every session for good. The
+/// [`Display`](std::fmt::Display) of each opens on the auth-failed token the
+/// app localizes; the state machine hands it on as the blocked reason.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum FatalCause {
+    /// The wallet is on the fleet-wide ban list for port-forwarding abuse.
+    BannedForPortForwarding(RejectionReason),
+    /// The wallet is on the fleet-wide ban list for another reason.
+    Banned(RejectionReason),
+    /// The account already uses its maximum number of simultaneous devices.
+    DeviceLimit(RejectionReason),
+    /// Two different exits refused this device's time.
+    ClockSkew(RejectionReason),
+}
+
+impl std::fmt::Display for FatalCause {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FatalCause::BannedForPortForwarding(reason) => write!(
+                f,
+                "[BANNED_PORT_FORWARDING] exit rejected the session ({reason}); access \
+                 suspended for port-forwarding abuse"
+            ),
+            FatalCause::Banned(reason) => write!(
+                f,
+                "[BANNED] exit rejected the session ({reason}); access suspended"
+            ),
+            FatalCause::DeviceLimit(reason) => write!(
+                f,
+                "[TOO_MANY_CONNECTIONS] exit refused the session ({reason}); the account \
+                 already uses its maximum number of simultaneous devices"
+            ),
+            FatalCause::ClockSkew(reason) => write!(
+                f,
+                "{CLOCK_SKEW_REASON} two exits refused this device's time ({reason}); set the \
+                 date and time to automatic"
+            ),
         }
     }
 }
@@ -1162,34 +1291,28 @@ impl std::fmt::Display for Refusal {
 /// the subscription active.
 fn reject_error(reason: RejectionReason) -> Error {
     match reason {
-        RejectionReason::Banned(BAN_REASON_PORT_FORWARDING) => Error::BackendFatal(format!(
-            "[BANNED_PORT_FORWARDING] exit rejected the session ({reason}); access suspended for \
-             port-forwarding abuse"
-        )),
-        RejectionReason::Banned(_) => Error::BackendFatal(format!(
-            "[BANNED] exit rejected the session ({reason}); access suspended"
-        )),
-        RejectionReason::IpExhausted => Error::BackendTransient(format!(
-            "exit rejected the session ({reason}); its address pool is exhausted"
-        )),
+        RejectionReason::Banned(BAN_REASON_PORT_FORWARDING) => {
+            Error::BackendFatal(FatalCause::BannedForPortForwarding(reason))
+        }
+        RejectionReason::Banned(_) => Error::BackendFatal(FatalCause::Banned(reason)),
+        RejectionReason::IpExhausted => {
+            Error::BackendTransient(TransientCause::AddressPoolExhausted(reason))
+        }
         // A setup seen before at this exit: the path replayed it, a redial
         // sends a fresh one.
-        RejectionReason::SetupReplayed => Error::BackendTransient(format!(
-            "exit refused a replayed setup ({reason}); redialling"
-        )),
+        RejectionReason::SetupReplayed => {
+            Error::BackendTransient(TransientCause::SetupReplayed(reason))
+        }
         // One exit refusing the clock may be that exit's own: retry, and let
         // `refusal_error` blame the device once a second exit says the same.
-        RejectionReason::ClockSkew => Error::BackendTransient(format!(
-            "exit refused the setup's time ({reason}); trying again"
-        )),
+        RejectionReason::ClockSkew => {
+            Error::BackendTransient(TransientCause::ClockRefusedOnce(reason))
+        }
         // The engine ends a walk with `DeviceLimit` once every token was
         // refused as in use; a lone `SerialInUse` never reaches here, and
         // means the same thing if it does.
         RejectionReason::DeviceLimit | RejectionReason::SerialInUse => {
-            Error::BackendFatal(format!(
-                "[TOO_MANY_CONNECTIONS] exit refused the session ({reason}); the account already \
-             uses its maximum number of simultaneous devices"
-            ))
+            Error::BackendFatal(FatalCause::DeviceLimit(reason))
         }
         RejectionReason::NotAllowlisted | RejectionReason::PolicyRefused => {
             Error::SessionRejected(Refusal {
@@ -1219,12 +1342,9 @@ fn require_default_route<G>(
     let IpAddr::V4(relay_v4) = relay else {
         // The macOS split keys its cleanup on the relay's IPv4 host address,
         // so a placeholder there could delete an unrelated host route.
-        return Err(Error::RouteSetup(
-            "the relay is reached over IPv6, which the default route split does not support"
-                .to_owned(),
-        ));
+        return Err(Error::RouteSetup(RouteSetupFailure::RelayOverIpv6));
     };
-    install(relay_v4).map_err(|e| Error::RouteSetup(format!("default route split: {e:#}")))
+    install(relay_v4).map_err(|e| Error::RouteSetup(RouteSetupFailure::DefaultRouteSplit(e)))
 }
 
 /// Token the app reads to tell the user the device clock is wrong, never an
@@ -1247,10 +1367,7 @@ fn refusal_error(
     if reason == RejectionReason::ClockSkew
         && let warrenguard_wire::Retryability::Fatal(_) = tally.record(exit)
     {
-        return Error::BackendFatal(format!(
-            "{CLOCK_SKEW_REASON} two exits refused this device's time ({reason}); set the \
-             date and time to automatic"
-        ));
+        return Error::BackendFatal(FatalCause::ClockSkew(reason));
     }
     reject_error(reason)
 }
@@ -1657,9 +1774,7 @@ impl WarrenTunnelMonitor {
                 }
             });
             if !waited {
-                return Err(Error::Handshake(
-                    "multi-hop start aborted by the daemon close signal".to_owned(),
-                ));
+                return Err(Error::Handshake(HandshakeFailure::ClosedBeforeStart));
             }
         }
         let dialled_exit = cfg.exit.exit_id;
@@ -1864,8 +1979,8 @@ impl WarrenTunnelMonitor {
                     }
                     let remaining = deadline.saturating_duration_since(tokio::time::Instant::now());
                     if remaining.is_zero() {
-                        return Err(Error::Handshake(format!(
-                            "multi-hop supervisor did not produce an initial session within {initial_wait_bound:?}"
+                        return Err(Error::Handshake(HandshakeFailure::NoInitialSessionWithin(
+                            initial_wait_bound,
                         )));
                     }
                     // Wake on whichever fires first: a Cancel, a live session,
@@ -1875,15 +1990,13 @@ impl WarrenTunnelMonitor {
                     tokio::select! {
                         biased;
                         _ = &mut close_rx => {
-                            return Err(Error::Handshake(
-                                "multi-hop first dial aborted by the daemon close signal".to_owned(),
-                            ));
+                            return Err(Error::Handshake(HandshakeFailure::ClosedDuringFirstDial));
                         }
                         changed = tokio::time::timeout(remaining, client_rx.changed()) => {
                             if changed.is_err() {
-                                return Err(Error::Handshake(format!(
-                                    "multi-hop supervisor did not produce an initial session within {initial_wait_bound:?}"
-                                )));
+                                return Err(Error::Handshake(
+                                    HandshakeFailure::NoInitialSessionWithin(initial_wait_bound),
+                                ));
                             }
                             if matches!(changed, Ok(Err(_))) {
                                 let verdict = match tokio::time::timeout(
@@ -1981,11 +2094,11 @@ impl WarrenTunnelMonitor {
             let mut provider = args
                 .tun_provider
                 .lock()
-                .map_err(|_| Error::TunSetup("tun_provider mutex poisoned".to_owned()))?;
+                .map_err(|_| Error::TunSetup(TunSetupFailure::ProviderPoisoned))?;
             *provider.config_mut() = tun_config.clone();
             provider
                 .open_tun()
-                .map_err(|e| Error::TunSetup(format!("{e}")))?
+                .map_err(|e| Error::TunSetup(TunSetupFailure::Open(e)))?
         };
         // No inner address: the exit keys the session on it (see
         // `tun_address_line`).
@@ -2115,13 +2228,13 @@ impl WarrenTunnelMonitor {
             route_manager
                 .add_routes(macos_bypass_routes.into_iter().collect())
                 .await
-                .map_err(|e| format!("relay bypass route: {e}"))?;
+                .map_err(RouteSetupFailure::RelayBypass)?;
             route_manager
                 .add_routes(routes.into_iter().collect())
                 .await
-                .map_err(|e| format!("tunnel routes: {e}"))?;
+                .map_err(RouteSetupFailure::TunnelRoutes)?;
             log::info!("Warren multi-hop tunnel routes installed (tun={metadata_iface_for_log})");
-            Ok::<(), String>(())
+            Ok::<(), RouteSetupFailure>(())
         });
         if let Err(reason) = routes_installed {
             supervisor_handle.abort();
@@ -3021,11 +3134,7 @@ impl WarrenTunnelMonitor {
                     // (a retry may land on a healed network) but VISIBLE: the
                     // state machine leaves Connected instead of masquerading
                     // over a dead datapath.
-                    Err(Error::BackendTransient(
-                        "tunnel datapath dead: sessions establish but no return \
-                         traffic flows (consecutive zero-downlink redials)"
-                            .to_owned(),
-                    ))
+                    Err(Error::BackendTransient(TransientCause::DatapathDead))
                 }
                 close_res = close_rx => {
                     // External close: daemon requests shutdown. Err =
@@ -3050,9 +3159,7 @@ impl WarrenTunnelMonitor {
                     //   exit (QUIC session closed gracefully by the
                     //   exit, e.g. idle_timeout). No error to report.
                     match pump_res {
-                        Ok(msg) => Err(Error::BackendTransient(format!(
-                            "pump terminated abnormally: {msg}"
-                        ))),
+                        Ok(msg) => Err(Error::BackendTransient(TransientCause::SessionEnded(msg))),
                         Err(_) => Ok(()),
                     }
                 }
@@ -3957,7 +4064,7 @@ fn multi_hop_daita_shared(
     match negotiated {
         Some(spec) if spec.is_enabled() => {
             let state = warrenguard_daita::DaitaState::from_config(&spec, Instant::now())
-                .map_err(|e| Error::Handshake(format!("negotiated DAITA spec unusable: {e}")))?;
+                .map_err(|e| Error::Handshake(HandshakeFailure::DaitaSpec(e)))?;
             log::info!(
                 "{TRACE_PREFIX} multi-hop DAITA negotiated machines={}",
                 state.machines_count()
@@ -4030,9 +4137,7 @@ pub const NO_SESSION_TOKEN_REASON: &str = "[NO_SESSION_TOKEN]";
 /// refusal patience out.
 fn initial_session_closed(verdict: SupervisorVerdict) -> Error {
     match verdict {
-        SupervisorVerdict::Unroutable => Error::Handshake(
-            "no entry relay reachable on this network's address families".to_owned(),
-        ),
+        SupervisorVerdict::Unroutable => Error::Handshake(HandshakeFailure::Unroutable),
         SupervisorVerdict::NoToken(NoSessionTokenCause::AllInUse) => {
             let reason = format!(
                 "[TOO_MANY_CONNECTIONS] the exit refused every session token \
@@ -4056,14 +4161,10 @@ fn initial_session_closed(verdict: SupervisorVerdict) -> Error {
                  ({cause}) although the subscription is active"
             )),
         }),
-        SupervisorVerdict::PostQuantumUnavailable => Error::Handshake(
-            "the exit offers no signed post-quantum key, and the quantum-resistant tunnel \
-             setting requires the post-quantum seal"
-                .to_owned(),
-        ),
-        SupervisorVerdict::Other => {
-            Error::Handshake("multi-hop supervisor stopped before an initial session".to_owned())
+        SupervisorVerdict::PostQuantumUnavailable => {
+            Error::Handshake(HandshakeFailure::PostQuantumUnavailable)
         }
+        SupervisorVerdict::Other => Error::Handshake(HandshakeFailure::SupervisorStopped),
     }
 }
 
@@ -4275,9 +4376,7 @@ async fn discover_warren_phys_ifindex() -> Result<u32, Error> {
                 "Warren: failed to discover the physical interface for the mandatory \
                  carrier-socket bypass: {e}"
             );
-            Error::Handshake(format!(
-                "cannot resolve the physical interface for the carrier socket bypass: {e}"
-            ))
+            Error::Handshake(HandshakeFailure::NoPhysicalInterface(e))
         })
 }
 
@@ -4484,7 +4583,11 @@ mod tests {
         )) else {
             panic!("a handshake failure");
         };
-        assert!(reason.contains("post-quantum"), "{reason}");
+        assert!(
+            matches!(reason, HandshakeFailure::PostQuantumUnavailable),
+            "{reason:?}"
+        );
+        assert!(reason.to_string().contains("post-quantum"), "{reason}");
     }
 
     #[test]
@@ -4494,13 +4597,17 @@ mod tests {
             panic!("a handshake failure");
         };
         assert!(
-            unroutable.contains("no entry relay reachable"),
+            matches!(unroutable, HandshakeFailure::Unroutable),
+            "{unroutable:?}"
+        );
+        assert!(
+            unroutable.to_string().contains("no entry relay reachable"),
             "{unroutable}"
         );
         let Error::Handshake(other) = initial_session_closed(SupervisorVerdict::Other) else {
             panic!("a handshake failure");
         };
-        assert!(!other.contains("reachable"), "{other}");
+        assert!(!other.to_string().contains("reachable"), "{other}");
     }
 
     #[test]
@@ -4780,7 +4887,8 @@ mod tests {
             "one exit may have the wrong clock: {first:?}"
         );
         assert!(
-            matches!(&second, Error::BackendFatal(m) if m.starts_with(CLOCK_SKEW_REASON)),
+            matches!(&second, Error::BackendFatal(cause @ FatalCause::ClockSkew(_))
+                if cause.to_string().starts_with(CLOCK_SKEW_REASON)),
             "{second:?}"
         );
     }
@@ -4862,9 +4970,9 @@ mod tests {
         ] {
             let err = reject_error(RejectionReason::Banned(code));
             match &err {
-                Error::BackendFatal(msg) => assert!(
-                    msg.starts_with(expected_token),
-                    "ban code {code} must carry {expected_token} so the funnel parses it, got {msg:?}"
+                Error::BackendFatal(cause) => assert!(
+                    cause.to_string().starts_with(expected_token),
+                    "ban code {code} must carry {expected_token} so the funnel parses it, got {cause:?}"
                 ),
                 other => panic!("a ban must map to BackendFatal, got {other:?}"),
             }
@@ -4885,9 +4993,9 @@ mod tests {
         // user to the checkout for nothing.
         let err = reject_error(RejectionReason::DeviceLimit);
         match &err {
-            Error::BackendFatal(msg) => assert!(
-                msg.starts_with("[TOO_MANY_CONNECTIONS]"),
-                "a device limit must carry [TOO_MANY_CONNECTIONS] so the funnel parses it, got {msg:?}"
+            Error::BackendFatal(cause) => assert!(
+                cause.to_string().starts_with("[TOO_MANY_CONNECTIONS]"),
+                "a device limit must carry [TOO_MANY_CONNECTIONS] so the funnel parses it, got {cause:?}"
             ),
             other => panic!("a device limit must map to BackendFatal, got {other:?}"),
         }
@@ -4930,7 +5038,8 @@ mod tests {
     fn a_lone_serial_in_use_reads_as_the_device_limit() {
         let err = reject_error(RejectionReason::SerialInUse);
         assert!(
-            matches!(&err, Error::BackendFatal(msg) if msg.starts_with("[TOO_MANY_CONNECTIONS]")),
+            matches!(&err, Error::BackendFatal(cause @ FatalCause::DeviceLimit(_))
+                if cause.to_string().starts_with("[TOO_MANY_CONNECTIONS]")),
             "got {err:?}"
         );
     }
@@ -5557,7 +5666,7 @@ mod tests {
         // A transient handshake error (network glitch) must be
         // retryable on the state-machine side so a session is not
         // killed by a single packet loss.
-        let e = Error::Handshake("simulated".into());
+        let e = Error::Handshake(HandshakeFailure::SupervisorStopped);
         assert!(e.is_recoverable());
     }
 
@@ -5568,7 +5677,7 @@ mod tests {
         // TUN I/O errors and peer-initiated session closes are
         // transient: the configuration is still valid, a fresh
         // connect should succeed without operator action.
-        let e = Error::BackendTransient("tun read timeout".into());
+        let e = Error::BackendTransient(TransientCause::DatapathDead);
         assert!(
             e.is_recoverable(),
             "BackendTransient must be recoverable so the state machine reconnects \
@@ -5580,7 +5689,7 @@ mod tests {
     fn backend_fatal_error_is_not_recoverable() {
         // Auth failures and explicit session rejections are fatal:
         // retrying immediately would produce the same outcome.
-        let e = Error::BackendFatal("auth rejected by exit".into());
+        let e = Error::BackendFatal(FatalCause::Banned(RejectionReason::Banned(0)));
         assert!(
             !e.is_recoverable(),
             "BackendFatal must NOT be recoverable - the state machine must enter \
@@ -5618,7 +5727,8 @@ mod tests {
             Err::<&str, _>(anyhow::anyhow!("route socket refused"))
         });
         assert!(
-            matches!(&failed, Err(Error::RouteSetup(m)) if m.contains("route socket refused")),
+            matches!(&failed, Err(Error::RouteSetup(RouteSetupFailure::DefaultRouteSplit(e)))
+                if e.to_string().contains("route socket refused")),
             "{failed:?}"
         );
         assert!(!failed.unwrap_err().is_recoverable());
@@ -5629,7 +5739,10 @@ mod tests {
             called = true;
             Ok::<_, anyhow::Error>("guard")
         });
-        assert!(matches!(v6, Err(Error::RouteSetup(_))), "{v6:?}");
+        assert!(
+            matches!(v6, Err(Error::RouteSetup(RouteSetupFailure::RelayOverIpv6))),
+            "{v6:?}"
+        );
         assert!(!called, "an IPv6 relay must not reach the IPv4 split");
     }
 
@@ -5637,35 +5750,28 @@ mod tests {
     fn tun_setup_error_is_not_recoverable() {
         // Privilege or kernel-module issue: retrying will not help
         // without operator action (modprobe, capability grant, ...).
-        let e = Error::TunSetup("permission denied".into());
+        let e = Error::TunSetup(TunSetupFailure::ProviderPoisoned);
         assert!(!e.is_recoverable());
     }
 
     #[test]
-    fn backend_transient_display_contains_message() {
-        // Verify Display is wired so the state machine can surface
-        // the error string in telemetry / logs.
-        let e = Error::BackendTransient("pump I/O error".into());
-        let s = e.to_string();
-        assert!(
-            s.contains("recoverable"),
-            "display must mention recoverable: {s}"
-        );
-        assert!(
-            s.contains("pump I/O error"),
-            "display must contain the message: {s}"
-        );
+    fn the_logged_chain_of_a_transient_error_names_its_cause() {
+        // The state machine logs `display_chain`, which walks the source.
+        use talpid_types::ErrorExt;
+        let e = Error::BackendTransient(TransientCause::SessionEnded(
+            "multi-hop uplink: tun read".to_owned(),
+        ));
+        let s = e.display_chain();
+        assert!(s.contains("recoverable"), "{s}");
+        assert!(s.contains("multi-hop uplink: tun read"), "{s}");
     }
 
     #[test]
-    fn backend_fatal_display_contains_message() {
-        let e = Error::BackendFatal("session rejected: bad credentials".into());
+    fn a_fatal_error_reads_as_the_auth_failed_token_of_its_cause() {
+        let e = Error::BackendFatal(FatalCause::Banned(RejectionReason::Banned(0)));
         let s = e.to_string();
-        assert!(s.contains("fatal"), "display must mention fatal: {s}");
-        assert!(
-            s.contains("bad credentials"),
-            "display must contain the message: {s}"
-        );
+        assert!(s.contains("fatal"), "{s}");
+        assert!(s.contains("[BANNED] exit rejected the session"), "{s}");
     }
 
     // --- WarrenTunnelParameters must not implement Clone ---

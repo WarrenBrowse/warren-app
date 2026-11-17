@@ -300,16 +300,13 @@ pub(crate) async fn subscribe_route_events(
         tokio::sync::mpsc::UnboundedReceiver<()>,
         Option<Box<dyn std::any::Any + Send>>,
     ),
-    String,
+    talpid_routing::Error,
 > {
     let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
     #[cfg(target_os = "macos")]
     {
         use futures::StreamExt;
-        let mut events = route_manager
-            .default_route_listener()
-            .await
-            .map_err(|e| format!("default_route_listener: {e}"))?;
+        let mut events = route_manager.default_route_listener().await?;
         tokio::spawn(async move {
             while let Some(_event) = events.next().await {
                 if tx.send(()).is_err() {
@@ -323,10 +320,7 @@ pub(crate) async fn subscribe_route_events(
     {
         use futures::StreamExt;
         use talpid_routing::CallbackMessage;
-        let mut events = route_manager
-            .change_listener()
-            .await
-            .map_err(|e| format!("change_listener: {e}"))?;
+        let mut events = route_manager.change_listener().await?;
         tokio::spawn(async move {
             while let Some(msg) = events.next().await {
                 let is_default_route = match &msg {
@@ -347,8 +341,7 @@ pub(crate) async fn subscribe_route_events(
             .add_default_route_change_callback(Box::new(move |_event, _family| {
                 let _ = tx.send(());
             }))
-            .await
-            .map_err(|e| format!("add_default_route_change_callback: {e}"))?;
+            .await?;
         Ok((rx, Some(Box::new(handle) as Box<dyn std::any::Any + Send>)))
     }
     #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]

@@ -869,7 +869,9 @@ mod retry_policy_tests {
 
     fn network_glitch() -> tunnel_monitor::Error {
         tunnel_monitor::Error::WarrenTunnelMonitoring(
-            talpid_warren_tunnel::Error::BackendTransient("tun read timeout".to_owned()),
+            talpid_warren_tunnel::Error::BackendTransient(
+                talpid_warren_tunnel::TransientCause::SessionEnded("tun read timeout".to_owned()),
+            ),
         )
     }
 

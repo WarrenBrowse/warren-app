@@ -47,8 +47,8 @@ impl From<Error> for ErrorStateCause {
             // misleading "no matching relay" the retry loop used to
             // produce. This is the single funnel for every exit-side
             // rejection surfaced as `talpid_warren_tunnel::Error::BackendFatal`.
-            Error::WarrenTunnelMonitoring(talpid_warren_tunnel::Error::BackendFatal(reason)) => {
-                ErrorStateCause::AuthFailed(Some(reason))
+            Error::WarrenTunnelMonitoring(talpid_warren_tunnel::Error::BackendFatal(cause)) => {
+                ErrorStateCause::AuthFailed(Some(cause.to_string()))
             }
             #[cfg(target_os = "windows")]
             error => match error.get_tunnel_device_error() {
