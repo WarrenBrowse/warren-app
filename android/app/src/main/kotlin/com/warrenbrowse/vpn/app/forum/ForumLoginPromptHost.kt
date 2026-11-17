@@ -17,7 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -60,7 +60,7 @@ fun ForumLoginPromptHost() {
     val controller = koinInject<ForumLoginController>()
     val useCase = koinInject<WarrenForumLoginUseCase>()
     val journal = koinInject<ForumJournal>()
-    val pending by controller.pending.collectAsState()
+    val pending by controller.pending.collectAsStateWithLifecycle()
     val link = pending ?: return
 
     val context = LocalContext.current

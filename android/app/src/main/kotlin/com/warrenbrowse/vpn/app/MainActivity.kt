@@ -9,7 +9,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -48,6 +47,7 @@ import com.warrenbrowse.vpn.app.forum.classifyForumAttachLink
 import com.warrenbrowse.vpn.app.forum.classifyForumLoginLink
 import com.warrenbrowse.vpn.app.forum.forumDeepLinkAction
 import com.warrenbrowse.vpn.app.perf.JankLogger
+import com.warrenbrowse.vpn.app.perf.logJankToLogcat
 import com.warrenbrowse.vpn.di.uiModule
 import com.warrenbrowse.vpn.lib.common.constant.InternalIntentToken
 import com.warrenbrowse.vpn.lib.common.constant.KEY_OPEN_FORUM_ACTIVITY
@@ -169,7 +169,7 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
                 val endNanos = frame.frameStartNanos + frame.frameDurationUiNanos
                 jankLogger
                     .onFrame(endNanos, frame.frameDurationUiNanos, frame.isJank)
-                    ?.let { line -> Log.w(JANK_LOG_TAG, line) }
+                    ?.let(::logJankToLogcat)
             }
 
         // This is to protect against tapjacking attacks
@@ -398,8 +398,4 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
 
             awaitClose { removeOnNewIntentListener(listener) }
         }
-
-    private companion object {
-        const val JANK_LOG_TAG = "WarrenJank"
-    }
 }

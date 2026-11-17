@@ -30,7 +30,6 @@ import androidx.compose.material3.Text
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -125,7 +124,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
     val uriHandler = LocalUriHandler.current
     val scope = rememberCoroutineScope()
 
-    val state by walletRepository.state.collectAsState()
+    val state by walletRepository.state.collectAsStateWithLifecycle()
     // The Devices row's count (desktop AccountView): one list call per visit,
     // and a row without a count when it fails, since the list says why.
     val deviceRepository = koinInject<DeviceRepository>()

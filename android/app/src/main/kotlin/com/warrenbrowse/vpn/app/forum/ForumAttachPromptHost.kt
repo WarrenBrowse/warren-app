@@ -19,7 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,7 +72,7 @@ fun ForumAttachPromptHost() {
     val controller = koinInject<ForumAttachController>()
     val useCase = koinInject<WarrenForumAttachUseCase>()
     val journal = koinInject<ForumJournal>()
-    val pending by controller.pending.collectAsState()
+    val pending by controller.pending.collectAsStateWithLifecycle()
     val link = pending ?: return
 
     val context = LocalContext.current

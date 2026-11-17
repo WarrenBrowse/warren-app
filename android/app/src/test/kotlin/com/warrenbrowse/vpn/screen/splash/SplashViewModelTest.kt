@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.screen.splash
 
+import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
 import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
@@ -17,7 +18,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 
+@ExtendWith(TestCoroutineRule::class)
 class SplashViewModelTest {
 
     private val mockPrefs: UserPreferencesRepository = mockk()
