@@ -137,6 +137,7 @@ import {
   IpcInput,
   OLD_LOG_FILES,
 } from './logging';
+import { clearMnemonicFromClipboard } from './mnemonic-clipboard';
 import NotificationController, {
   NotificationControllerDelegate,
   NotificationSender,
@@ -1882,15 +1883,9 @@ class ApplicationMain
     IpcMainEventChannel.app.handleGetPathBaseName((filePath) =>
       Promise.resolve(path.basename(filePath)),
     );
-    IpcMainEventChannel.app.handleClearMnemonicFromClipboard((mnemonic) => {
-      // Only wipe the clipboard if it still holds our mnemonic, so we
-      // never clobber something the user copied in between.
-      if (clipboard.readText() === mnemonic) {
-        clipboard.clear();
-        return Promise.resolve(true);
-      }
-      return Promise.resolve(false);
-    });
+    IpcMainEventChannel.app.handleClearMnemonicFromClipboard((mnemonic) =>
+      clearMnemonicFromClipboard(clipboard, mnemonic),
+    );
 
     IpcMainEventChannel.navigation.handleSetHistory((history) => {
       this.navigationHistory = history;
