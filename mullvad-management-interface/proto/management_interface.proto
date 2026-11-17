@@ -697,6 +697,10 @@ enum FeatureIndicator {
   // At least one bonded transport leg does not deliver, so part of the
   // capacity is gone on an otherwise up tunnel.
   DEGRADED_BOND = 19;
+  // Split tunneling in include-only mode: only the selected apps are tunneled.
+  INCLUDE_ONLY = 20;
+  // At least one app leaves through an exit of its own.
+  APP_EXITS = 21;
 }
 
 message ObfuscationInfo {

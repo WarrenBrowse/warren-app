@@ -130,6 +130,13 @@ pub enum FeatureIndicator {
     ///
     /// An indicator, never a guard: nothing acts on it.
     DegradedBond,
+
+    /// Split tunneling in include-only mode: every app but the selected ones
+    /// talks to the network outside the tunnel.
+    IncludeOnly,
+
+    /// At least one app leaves through an exit of its own (per-app exits).
+    AppExits,
 }
 
 impl FeatureIndicator {
@@ -155,6 +162,8 @@ impl FeatureIndicator {
             FeatureIndicator::DaitaUnavailable => "DAITA: not active on this server",
             FeatureIndicator::ReducedMtu => "Reduced MTU",
             FeatureIndicator::DegradedBond => "Degraded Bond",
+            FeatureIndicator::IncludeOnly => "Only Selected Apps Tunneled",
+            FeatureIndicator::AppExits => "Per-App Exits",
         }
     }
 }
@@ -250,6 +259,12 @@ pub fn compute_feature_indicators(
     // settings recompute (which reuses the live endpoint) reproduces it.
     let degraded_bond = endpoint.legs_not_delivering > 0;
 
+    // Unlike exclusions these change what the tunnel carries on every OS: in
+    // include-only mode everything but the selected apps is outside it.
+    let include_only =
+        settings.app_routing.split_mode == crate::app_routing::SplitMode::IncludeOnly;
+    let app_exits = !settings.app_routing.effective_app_exits().is_empty();
+
     let protocol_features = vec![
         (split_tunneling, FeatureIndicator::SplitTunneling),
         (lan_sharing, FeatureIndicator::LanSharing),
@@ -274,6 +289,8 @@ pub fn compute_feature_indicators(
         (daita_unavailable, FeatureIndicator::DaitaUnavailable),
         (reduced_mtu, FeatureIndicator::ReducedMtu),
         (degraded_bond, FeatureIndicator::DegradedBond),
+        (include_only, FeatureIndicator::IncludeOnly),
+        (app_exits, FeatureIndicator::AppExits),
     ];
 
     // use the booleans to filter into a list of only the active features
@@ -515,7 +532,62 @@ mod tests {
             FeatureIndicator::DaitaUnavailable => {}
             FeatureIndicator::ReducedMtu => {}
             FeatureIndicator::DegradedBond => {}
+            FeatureIndicator::IncludeOnly => {}
+            FeatureIndicator::AppExits => {}
         }
+    }
+
+    #[test]
+    fn include_only_and_per_app_exits_are_shown() {
+        use crate::app_routing::{AppId, ExitChoice, SplitMode};
+
+        let mut settings = Settings::default();
+        let endpoint = TunnelEndpoint {
+            endpoint: Endpoint {
+                address: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 8080),
+                protocol: TransportProtocol::Udp,
+            },
+            quantum_resistant: Default::default(),
+            obfuscation: Default::default(),
+            entry_endpoint: Default::default(),
+            tunnel_interface: Default::default(),
+            daita: Default::default(),
+            effective_mtu: Default::default(),
+            legs_bonded: Default::default(),
+            legs_not_delivering: Default::default(),
+            tunnel_type: Default::default(),
+        };
+
+        settings.app_routing.split_mode = SplitMode::IncludeOnly;
+        let shown = compute_feature_indicators(&settings, &endpoint, false);
+        assert!(
+            shown
+                .active_features()
+                .any(|f| f == FeatureIndicator::IncludeOnly)
+        );
+        assert!(
+            !shown
+                .active_features()
+                .any(|f| f == FeatureIndicator::AppExits)
+        );
+
+        settings.app_routing.split_mode = SplitMode::Off;
+        settings.app_routing.app_exits_enabled = true;
+        settings.app_routing.set_app_exit(
+            AppId::parse("/usr/bin/curl").unwrap(),
+            ExitChoice::new("se", None).unwrap(),
+        );
+        let shown = compute_feature_indicators(&settings, &endpoint, false);
+        assert!(
+            shown
+                .active_features()
+                .any(|f| f == FeatureIndicator::AppExits)
+        );
+        assert!(
+            !shown
+                .active_features()
+                .any(|f| f == FeatureIndicator::IncludeOnly)
+        );
     }
 
     #[cfg(daita)]

@@ -24,6 +24,8 @@ impl From<mullvad_types::features::FeatureIndicator> for proto::FeatureIndicator
             mullvad_types::features::FeatureIndicator::DaitaUnavailable => DaitaUnavailable,
             mullvad_types::features::FeatureIndicator::ReducedMtu => ReducedMtu,
             mullvad_types::features::FeatureIndicator::DegradedBond => DegradedBond,
+            mullvad_types::features::FeatureIndicator::IncludeOnly => IncludeOnly,
+            mullvad_types::features::FeatureIndicator::AppExits => AppExits,
         }
     }
 }
@@ -51,6 +53,8 @@ impl From<proto::FeatureIndicator> for mullvad_types::features::FeatureIndicator
             proto::FeatureIndicator::DaitaUnavailable => Self::DaitaUnavailable,
             proto::FeatureIndicator::ReducedMtu => Self::ReducedMtu,
             proto::FeatureIndicator::DegradedBond => Self::DegradedBond,
+            proto::FeatureIndicator::IncludeOnly => Self::IncludeOnly,
+            proto::FeatureIndicator::AppExits => Self::AppExits,
         }
     }
 }
