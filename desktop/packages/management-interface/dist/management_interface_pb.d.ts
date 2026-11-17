@@ -4982,6 +4982,8 @@ export enum FeatureIndicator {
     DAITA_UNAVAILABLE = 17,
     REDUCED_MTU = 18,
     DEGRADED_BOND = 19,
+    INCLUDE_ONLY = 20,
+    APP_EXITS = 21,
 }
 
 export enum Ownership {

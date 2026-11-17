@@ -38477,7 +38477,9 @@ proto.mullvad_daemon.management_interface.FeatureIndicator = {
   ALLOW_EXTERNAL_DNS: 16,
   DAITA_UNAVAILABLE: 17,
   REDUCED_MTU: 18,
-  DEGRADED_BOND: 19
+  DEGRADED_BOND: 19,
+  INCLUDE_ONLY: 20,
+  APP_EXITS: 21
 };
 
 /**
