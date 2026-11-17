@@ -237,6 +237,11 @@ impl TunnelState for ErrorState {
                 let _ = complete_tx.send(());
                 SameState(self)
             }
+            #[cfg(target_os = "macos")]
+            Some(TunnelCommand::ReassertFirewall) => {
+                shared_values.reassert_firewall();
+                SameState(self)
+            }
             #[cfg(any(target_os = "macos", target_os = "linux", windows))]
             Some(TunnelCommand::TailnetInterfacesChanged) => SameState(self),
             Some(TunnelCommand::Connectivity(connectivity)) => {

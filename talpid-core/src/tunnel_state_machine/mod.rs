@@ -6,6 +6,8 @@ mod disconnecting_state;
 mod error_state;
 mod exit_refusal;
 mod lan_routes;
+#[cfg(target_os = "macos")]
+mod pf_watch;
 #[cfg(any(target_os = "macos", target_os = "linux", windows))]
 mod tailnet_watch;
 mod tunnel_monitor;
@@ -312,6 +314,9 @@ pub enum TunnelCommand {
     /// their firewall policy again so it lets tailnet traffic through the interfaces there now.
     #[cfg(any(target_os = "macos", target_os = "linux", windows))]
     TailnetInterfacesChanged,
+    /// Time to check that pf still enforces the policy, and to apply it again if it does not.
+    #[cfg(target_os = "macos")]
+    ReassertFirewall,
     /// Notify the state machine of the connectivity of the device.
     Connectivity(Connectivity),
     /// Open tunnel connection.
@@ -560,6 +565,11 @@ impl TunnelStateMachine {
             }
             Err(error) => log::warn!("Failed to watch for tailnet interface changes: {error}"),
         }
+        #[cfg(target_os = "macos")]
+        tokio::spawn(pf_watch::run_pf_watch(
+            args.command_tx.clone(),
+            pf_watch::INTERVAL,
+        ));
         // Linux and Windows have no such listener here: a periodic look at the interfaces
         // stands in for the events, and only a change of the tailnet set becomes a command.
         #[cfg(any(target_os = "linux", windows))]
@@ -1065,6 +1075,17 @@ impl SharedTunnelStateValues {
             true
         } else {
             false
+        }
+    }
+
+    /// Applies the current firewall policy again if pf lost it.
+    #[cfg(target_os = "macos")]
+    pub fn reassert_firewall(&mut self) {
+        if let Err(error) = self.firewall.reassert_policy() {
+            log::error!(
+                "{}",
+                error.display_chain_with_msg("Failed to check that pf still enforces the policy")
+            );
         }
     }
 

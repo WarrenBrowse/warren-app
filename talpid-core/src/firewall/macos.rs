@@ -109,6 +109,53 @@ impl Firewall {
         Ok(())
     }
 
+    /// Applies the last policy again if pf lost it, and says whether it had to. Reloading the main
+    /// ruleset (`pfctl -f /etc/pf.conf`, which other VPN clients and firewall tools do) drops the
+    /// reference to this anchor, and disabling pf drops every rule: either leaves the policy
+    /// defined and enforcing nothing, with nothing else here to notice.
+    pub fn reassert_policy(&mut self) -> Result<bool> {
+        let Some(policy) = self.last_policy.clone() else {
+            return Ok(false);
+        };
+        let was_running = self.is_enabled();
+        let anchor_was_gone = self.restore_anchor()?;
+        if was_running && !anchor_was_gone {
+            return Ok(false);
+        }
+        log::warn!(
+            "pf lost the firewall policy (pf running: {was_running}, anchor referenced: {}); \
+             applying it again",
+            !anchor_was_gone
+        );
+        self.pf.try_enable()?;
+        self.set_rules(&policy)?;
+        // Whatever pf let through while the policy was gone keeps flowing on its states.
+        if let Err(error) = self.flush_states(&policy, false) {
+            log::error!("Failed to clear PF connection states: {error}");
+        }
+        Ok(true)
+    }
+
+    /// Inserts the references to this anchor that the main ruleset lacks, and says whether any
+    /// was missing.
+    fn restore_anchor(&mut self) -> Result<bool> {
+        let mut kinds = vec![pfctl::AnchorKind::Scrub];
+        if *NAT_WORKAROUND {
+            kinds.push(pfctl::AnchorKind::Nat);
+        }
+        kinds.push(pfctl::AnchorKind::Filter);
+
+        let mut missing = false;
+        for kind in kinds {
+            match self.pf.add_anchor(ANCHOR_NAME, kind) {
+                Ok(()) => missing = true,
+                Err(error) if error.kind() == pfctl::ErrorKind::StateAlreadyActive => {}
+                Err(error) => return Err(error),
+            }
+        }
+        Ok(missing)
+    }
+
     /// Clear PF connection states. That is, forget connections that were previously approved by a
     /// `pass` rule, and force PF to make new verdicts.
     /// PF retains approved connections forever, even after a responsible anchor or rule has been
@@ -1457,5 +1504,116 @@ mod tests {
         assert_eq!(with.len(), without.len() + 1);
         assert!(without.contains(&no_nat_on("utun14")));
         assert!(without.contains(&masquerade_to("10.66.0.2")));
+    }
+}
+
+/// [`Firewall::reassert_policy`] against the kernel's pf: run as root. The policy is a connected
+/// one whose "tunnel" is the interface of the default route, with any resolver allowed through
+/// it, so the machine keeps its network while the tests run.
+#[cfg(test)]
+mod reassert_kernel_tests {
+    use super::*;
+    use std::net::Ipv4Addr;
+    use std::process::Command;
+    use talpid_dns::DnsConfig;
+
+    fn output_of(program: &str, args: &[&str]) -> String {
+        let output = Command::new(program).args(args).output().unwrap();
+        assert!(output.status.success(), "{program} {args:?}");
+        String::from_utf8_lossy(&output.stdout).into_owned()
+    }
+
+    fn default_interface() -> String {
+        output_of("route", &["-n", "get", "default"])
+            .lines()
+            .find_map(|line| line.trim().strip_prefix("interface: "))
+            .expect("a default route")
+            .to_owned()
+    }
+
+    fn anchor_referenced() -> bool {
+        output_of("pfctl", &["-sr"]).contains(&format!("anchor \"{ANCHOR_NAME}\""))
+    }
+
+    fn pf_running() -> bool {
+        output_of("pfctl", &["-s", "info"]).contains("Status: Enabled")
+    }
+
+    fn connected_through_the_default_interface() -> FirewallPolicy {
+        FirewallPolicy::Connected {
+            peer_endpoints: vec![],
+            tunnel: TunnelMetadata {
+                interface: default_interface(),
+                ips: vec![IpAddr::V4(Ipv4Addr::new(10, 66, 0, 2))],
+                ipv4_gateway: Ipv4Addr::new(10, 66, 0, 1),
+                ipv6_gateway: None,
+                daita_active: false,
+                effective_mtu: None,
+                legs_bonded: 0,
+                legs_not_delivering: 0,
+            },
+            allow_lan: false,
+            lan_networks: vec![],
+            dns_config: DnsConfig::default()
+                .allow_external_dns(true)
+                .resolve(&[IpAddr::V4(Ipv4Addr::new(10, 66, 0, 1))], 53),
+            redirect_interface: None,
+        }
+    }
+
+    #[test]
+    #[ignore = "needs root; reloads /etc/pf.conf"]
+    fn a_reloaded_main_ruleset_gets_the_policy_back() {
+        let mut firewall = Firewall::new().unwrap();
+        firewall
+            .apply_policy(connected_through_the_default_interface())
+            .unwrap();
+        let armed = anchor_referenced();
+
+        output_of("pfctl", &["-f", "/etc/pf.conf"]);
+        let lost = !anchor_referenced();
+        let reasserted = firewall.reassert_policy().unwrap();
+        let back = anchor_referenced();
+        let reasserted_twice = firewall.reassert_policy().unwrap();
+
+        firewall.reset_policy().unwrap();
+        assert!(armed, "the policy never referenced its anchor");
+        assert!(
+            lost,
+            "reloading pf.conf kept the anchor: nothing was tested"
+        );
+        assert!(
+            reasserted && back,
+            "the anchor stayed out of the main ruleset"
+        );
+        assert!(!reasserted_twice, "an armed policy was applied again");
+    }
+
+    #[test]
+    #[ignore = "needs root; disables pf"]
+    fn a_disabled_pf_is_enabled_again() {
+        let mut firewall = Firewall::new().unwrap();
+        firewall
+            .apply_policy(connected_through_the_default_interface())
+            .unwrap();
+
+        output_of("pfctl", &["-d"]);
+        let stopped = !pf_running();
+        let reasserted = firewall.reassert_policy().unwrap();
+        let running = pf_running();
+
+        firewall.reset_policy().unwrap();
+        assert!(stopped, "pfctl -d left pf running: nothing was tested");
+        assert!(reasserted && running, "pf stayed disabled");
+    }
+
+    #[test]
+    fn nothing_is_reasserted_before_a_policy_is_applied() {
+        // `last_policy` is checked before pf is touched, so this needs no root.
+        let Ok(mut firewall) = Firewall::new() else {
+            return;
+        };
+
+        assert!(!firewall.reassert_policy().unwrap());
     }
 }
