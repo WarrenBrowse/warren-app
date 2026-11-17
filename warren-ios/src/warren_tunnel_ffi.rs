@@ -480,7 +480,14 @@ impl From<Option<warrenguard_multihop::RejectionReason>> for TerminalVerdict {
             // An exhausted address pool is a refusal too, but an expiry prompt
             // is the wrong thing to say about it, so it stays ordinary until
             // iOS has somewhere to say it.
-            Some(RejectionReason::IpExhausted) | None => Self::Ordinary,
+            // A replayed setup and a clock one exit refused end the attempt
+            // only: the next dial sends a fresh, freshly dated setup.
+            Some(
+                RejectionReason::IpExhausted
+                | RejectionReason::SetupReplayed
+                | RejectionReason::ClockSkew,
+            )
+            | None => Self::Ordinary,
             // The account already uses its maximum number of devices, which
             // the expiry prompt would misname. The engine ends a token walk
             // with `DeviceLimit` once every token was refused as in use; a
