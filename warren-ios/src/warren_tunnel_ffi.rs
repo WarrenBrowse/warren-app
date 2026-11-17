@@ -773,6 +773,8 @@ mod handle_impl {
     // The [`Send`]/[`Sync`] markers are required so the entry can live
     // inside a [`Mutex`] shared across Tokio tasks.
     unsafe impl<F: Send> Send for CallbackEntry<F> {}
+    // SAFETY: as for `Send` above; shared access only ever copies the
+    // pointer out, and every call through it holds the slot's mutex.
     unsafe impl<F: Send + Sync> Sync for CallbackEntry<F> {}
 
     /// State owned by a single Warren tunnel handle.
@@ -1006,6 +1008,9 @@ mod handle_impl {
                     let cb_entry = me.outbound_callback.lock().ok();
                     let Some(cb_entry) = cb_entry else { continue };
                     if let Some(entry) = cb_entry.as_ref() {
+                        // SAFETY: see the comment above; the slot's lock is
+                        // held for the whole call, so stop cannot release the
+                        // context under it.
                         unsafe {
                             (entry.callback)(packet.as_ptr(), packet.len(), entry.context);
                         }
@@ -1452,6 +1457,10 @@ fn tunnel_signing_key(wallet_seed: &[u8; 32]) -> ed25519_dalek::SigningKey {
 /// generation advance), so this function selects the circuit once per
 /// (re)connect and the supervisor reconnects to the stable circuit on drops.
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the session's start parameters, each consumed once by the task"
+)]
 fn spawn_multi_hop(
     arc: std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>,
     directory_json: String,
@@ -2031,13 +2040,11 @@ fn spawn_multi_hop(
                     // Raise the anti-rollback high-water mark only on the first
                     // connect, so an unusable forged directory never poisons the
                     // persisted mark, and a later reconnect does not re-raise it.
-                    if first {
-                        if let Some(path) = gen_path.as_deref() {
-                            crate::warren_multihop_generation::raise_high_water(
-                                path,
-                                accepted_generation,
-                            );
-                        }
+                    if first && let Some(path) = gen_path.as_deref() {
+                        crate::warren_multihop_generation::raise_high_water(
+                            path,
+                            accepted_generation,
+                        );
                     }
                 }
                 WatchTransition::Reconnecting => {
@@ -2532,17 +2539,23 @@ pub unsafe extern "C" fn warren_tunnel_start(
         // 1-hop circuit collapsed onto one node). A null directory is a
         // malformed config, never a valid request, so fail closed with a null
         // handle.
+        // SAFETY: every string field of `params` is null or a valid
+        // null-terminated C string for this call (caller precondition), and
+        // the same holds for the three reads below.
         let Some(json) = (unsafe { cstr_to_str(params.multihop_directory_json) }) else {
             return std::ptr::null_mut();
         };
         let directory_json = json.to_owned();
         let two_hop = params.multihop_two_hop != 0;
+        // SAFETY: as above.
         let entry_country = unsafe { cstr_to_str(params.multihop_entry_country) }
             .unwrap_or("")
             .to_owned();
+        // SAFETY: as above.
         let exit_country = unsafe { cstr_to_str(params.multihop_exit_country) }
             .unwrap_or("")
             .to_owned();
+        // SAFETY: as above.
         let generation_state_path =
             unsafe { cstr_to_str(params.multihop_generation_state_path) }.map(str::to_owned);
         // SAFETY: `params.pin_store_path` is null or a valid
@@ -2959,6 +2972,8 @@ pub unsafe extern "C" fn warren_tunnel_inject_inbound_packet(
         let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
             return RC_INVALID_INPUT;
         };
+        // SAFETY: `data` is non-null and points to `len` readable bytes for
+        // this call (caller precondition); the bytes are copied at once.
         let packet = unsafe { std::slice::from_raw_parts(data, len) }.to_vec();
         arc.bytes_in
             .fetch_add(len as u64, std::sync::atomic::Ordering::Relaxed);
@@ -2998,6 +3013,8 @@ pub unsafe extern "C" fn warren_multihop_check_generation(
         let Some(json) = (unsafe { cstr_to_str(directory_json) }) else {
             return -1;
         };
+        // SAFETY: `generation_state_path` is null or a valid null-terminated
+        // C string for this call (caller precondition).
         let min_generation = unsafe { cstr_to_str(generation_state_path) }
             .map(std::path::PathBuf::from)
             .as_deref()
@@ -3179,6 +3196,8 @@ unsafe fn clone_arc_from_raw(
     // The Box allocation itself is untouched - only `warren_tunnel_stop`
     // reconstitutes it via `Box::from_raw`.
     let box_ptr = handle as *const std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>;
+    // SAFETY: see above; the box is live, so reading the `Arc` it holds is
+    // sound, and cloning it only bumps the atomic count.
     let cloned = unsafe { (*box_ptr).clone() };
     Some(cloned)
 }
