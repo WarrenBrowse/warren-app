@@ -41,10 +41,6 @@
                  android:supportsRtl="true"
                  tools:ignore="CredManMissingDal,CredentialDependency,GoogleAppIndexingWarning">
 
-        <profileable
-                android:enabled="true"
-                android:shell="true" />
-
         <!--
             MainActivity
             Must be exported in order to be launchable.

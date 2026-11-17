@@ -1,0 +1,10 @@
+<!-- Profiling from adb is for the measured builds only: the shipped release
+     variants carry no profileable element, so a host attached over adb cannot
+     profile the installed app. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <profileable
+                android:enabled="true"
+                android:shell="true" />
+    </application>
+</manifest>
