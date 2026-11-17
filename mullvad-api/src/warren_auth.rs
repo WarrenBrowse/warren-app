@@ -22,7 +22,9 @@
 //!
 //! **Server-side validation** (see `warren-core/crates/warren-api/`):
 //! 1. `|now - timestamp| <= 60 s` (clock skew window)
-//! 2. `nonce` not seen in the previous 120 s (in-RAM LRU)
+//! 2. `nonce` not seen in the previous 120 s (kept in the API's database, so
+//!    a server restart does not reopen a replay; while the database is down
+//!    the server answers 401 to a valid request too)
 //! 3. signature verifies against the pubkey
 //! 4. pubkey is in the active subscription table
 //!
