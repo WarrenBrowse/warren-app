@@ -78933,6 +78933,148 @@
         }
       }
     },
+    "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يفيد الخادم بأن هذا الجهاز قد فُصل عن حسابك، لكن حسابك لم يؤكد ذلك. لم يُمحَ أي شيء من هذا الجهاز."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveren siger, at denne enhed blev frakoblet fra din konto, men din konto har ikke bekræftet det. Intet blev slettet fra denne enhed."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server meldet, dass dieses Gerät von Ihrem Konto getrennt wurde, aber Ihr Konto hat dies nicht bestätigt. Auf diesem Gerät wurde nichts gelöscht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor indica que este dispositivo se desconectó de tu cuenta, pero tu cuenta no lo ha confirmado. No se borró nada de este dispositivo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سرور می‌گوید اتصال این دستگاه از حساب شما قطع شده است، اما حساب شما آن را تأیید نکرده است. چیزی از این دستگاه پاک نشد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Palvelimen mukaan tämän laitteen yhteys tiliisi katkaistiin, mutta tilisi ei vahvistanut sitä. Tästä laitteesta ei poistettu mitään."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur indique que cet appareil a été déconnecté de votre compte, mais votre compte ne l'a pas confirmé. Rien n'a été effacé de cet appareil."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il server indica che questo dispositivo è stato disconnesso dal tuo account, ma il tuo account non lo ha confermato. Non è stato cancellato nulla da questo dispositivo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバーはこのデバイスがアカウントから接続解除されたと伝えていますが、アカウントはそれを確認していません。このデバイスからは何も消去されていません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버에서는 이 장치가 계정에서 연결 해제되었다고 하지만, 계정에서 이를 확인하지 않았습니다. 이 장치에서 삭제된 것은 없습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤစက်ကို သင့်အကောင့်မှ ချိတ်ဆက်မှုဖြုတ်လိုက်သည်ဟု ဆာဗာက ဆိုသော်လည်း သင့်အကောင့်က ၎င်းကို အတည်မပြုခဲ့ပါ။ ဤစက်မှ မည်သည့်အရာကိုမျှ မဖျက်ခဲ့ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveren sier at denne enheten ble koblet fra kontoen din, men kontoen din har ikke bekreftet det. Ingenting ble slettet fra denne enheten."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De server meldt dat dit apparaat is losgekoppeld van je account, maar je account heeft dat niet bevestigd. Er is niets van dit apparaat gewist."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serwer podaje, że to urządzenie zostało odłączone od Twojego konta, ale Twoje konto tego nie potwierdziło. Nic nie zostało usunięte z tego urządzenia."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor indica que este dispositivo foi desligado da sua conta, mas a sua conta não o confirmou. Nada foi apagado deste dispositivo."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serverul spune că acest dispozitiv a fost deconectat de la contul tău, dar contul tău nu a confirmat acest lucru. Nimic nu a fost șters de pe acest dispozitiv."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер сообщает, что это устройство было отключено от вашего аккаунта, но ваш аккаунт этого не подтвердил. С этого устройства ничего не удалено."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servern säger att den här enheten kopplades från ditt konto, men ditt konto har inte bekräftat det. Ingenting raderades från den här enheten."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เซิร์ฟเวอร์แจ้งว่าอุปกรณ์นี้ถูกตัดการเชื่อมต่อจากบัญชีของคุณ แต่บัญชีของคุณไม่ได้ยืนยันเรื่องนี้ ไม่มีสิ่งใดถูกลบออกจากอุปกรณ์นี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunucu bu cihazın hesabınızla bağlantısının kesildiğini söylüyor, ancak hesabınız bunu onaylamadı. Bu cihazdan hiçbir şey silinmedi."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер повідомляє, що цей пристрій відключено від вашого облікового запису, але ваш обліковий запис цього не підтвердив. З цього пристрою нічого не видалено."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器称此设备已与您的账户断开连接，但您的账户并未确认。此设备上的任何内容均未被删除。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伺服器表示此裝置已與您的帳戶中斷連線，但您的帳戶並未確認。此裝置上的任何內容均未被刪除。"
+          }
+        }
+      }
+    },
     "This device": {
       "localizations": {
         "ar": {

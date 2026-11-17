@@ -57,6 +57,16 @@ final class DeviceBannerRoutingTests: XCTestCase {
         )
     }
 
+    /// A revocation the account did not sign: the banner says the wallet was
+    /// kept, and opens nothing.
+    func testAnUnconfirmedRevocationSaysNothingWasErased() {
+        XCTAssertNil(TunnelStatusNotificationProvider.action(for: .deviceRevocationUnconfirmed))
+        XCTAssertEqual(
+            TunnelStatusNotificationProvider.bodyText(for: .deviceRevocationUnconfirmed),
+            "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
+        )
+    }
+
     func testTheRevokedScreenSaysAnotherDeviceOfTheAccountDisconnectedIt() {
         XCTAssertEqual(
             RevokedDeviceView.bodyText,

@@ -99,6 +99,10 @@ typedef enum WarrenTunnelEventTagC {
    * Terminal counterpart of `ClockSkew`.
    */
   EventClockSkew = 16,
+  /**
+   * Terminal counterpart of `DeviceRevocationUnconfirmed`.
+   */
+  EventDeviceRevocationUnconfirmed = 17,
 } WarrenTunnelEventTagC;
 
 /**
@@ -165,6 +169,12 @@ typedef enum WarrenTunnelStateC {
    * Terminal; the app asks for automatic date and time.
    */
   ClockSkew = 11,
+  /**
+   * The API refused this device as revoked, but the account wallet did not
+   * sign that revocation: the session ended and the identity stays.
+   * Terminal; the app keeps the wallet and says so.
+   */
+  DeviceRevocationUnconfirmed = 12,
 } WarrenTunnelStateC;
 
 typedef struct ApiContext ApiContext;
@@ -1126,6 +1136,13 @@ char *warren_device_revoke(const uint8_t *seed, const char *device_id);
  * ends on it with `EventDeviceRevoked`.
  */
 bool warren_device_revoked(void);
+
+/**
+ * Whether that revocation was proven: the account wallet signed it for
+ * this device, or this device asked for it. Only then is the device
+ * identity forgotten, and only then may the app forget the wallet.
+ */
+bool warren_device_revocation_verified(void);
 
 /**
  * The revocation was taken in (the user left the revoked screen, or

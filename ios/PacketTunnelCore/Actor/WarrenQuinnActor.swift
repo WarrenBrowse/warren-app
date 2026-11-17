@@ -253,6 +253,10 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             nextState = .error(ObservedBlockedState(reason: .noSessionToken))
         case .clockSkew:
             nextState = .error(ObservedBlockedState(reason: .clockSkew))
+        case .deviceRevocationUnconfirmed:
+            // Not the revoked view: nothing proves the account holder asked,
+            // so the wallet stays and the banner says why the tunnel is down.
+            nextState = .error(ObservedBlockedState(reason: .deviceRevocationUnconfirmed))
         case .banned(let reason, _):
             // A suspension, which neither the out-of-time screen nor a plain
             // disconnect describes. Its `[BANNED*]` token says whether it is

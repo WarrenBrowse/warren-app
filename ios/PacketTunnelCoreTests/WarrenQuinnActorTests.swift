@@ -144,6 +144,21 @@ final class WarrenQuinnActorTests: XCTestCase {
         XCTAssertEqual(blocked.reason, .deviceRevoked)
     }
 
+    /// The API refused this device as revoked without the account wallet's
+    /// signature: its own reason, never the revoked view that leads to
+    /// forgetting the wallet.
+    func test_applyEvent_deviceRevocationUnconfirmed_keepsTheRevokedViewAway() async {
+        let actor = makeStartedActor()
+        actor.applyEvent(.connected)
+        actor.applyEvent(.deviceRevocationUnconfirmed)
+        let state = await actor.observedState
+        guard case let .error(blocked) = state else {
+            return XCTFail("Expected .error, got \(state)")
+        }
+        XCTAssertEqual(blocked.reason, .deviceRevocationUnconfirmed)
+        XCTAssertFalse(blocked.reason.recoverableError(), "a redial meets the same refusal")
+    }
+
     /// Two different exits refused this device's time: its own reason, on
     /// which the app asks for automatic date and time.
     func test_applyEvent_clockSkew_surfacesClockSkew() async {

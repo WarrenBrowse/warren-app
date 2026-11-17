@@ -250,6 +250,11 @@ public enum BlockedStateReason: String, Codable, Equatable, Sendable {
     /// until the user sets the date and time to automatic.
     case clockSkew
 
+    /// The API refused this device as revoked, but the account wallet did not
+    /// sign that revocation: the session ended, the wallet stays, and the app
+    /// says so rather than showing the revoked screen.
+    case deviceRevocationUnconfirmed
+
     /// Device revoked.
     case deviceRevoked
 
@@ -280,7 +285,8 @@ public enum BlockedStateReason: String, Codable, Equatable, Sendable {
             .noSessionToken:
             return true
         case .deviceRevoked, .deviceLoggedOut, .tunnelAdapter, .accountExpired, .invalidAccount, .unknown,
-            .accountBanned, .accountBannedPortForwarding, .tooManyDevices, .clockSkew:
+            .accountBanned, .accountBannedPortForwarding, .tooManyDevices, .clockSkew,
+            .deviceRevocationUnconfirmed:
             return false
         }
     }

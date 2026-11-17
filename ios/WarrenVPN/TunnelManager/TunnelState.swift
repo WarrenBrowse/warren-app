@@ -139,7 +139,7 @@ enum TunnelState: Equatable, CustomStringConvertible, Sendable {
         switch self {
         case .reconnecting, .connecting, .connected, .waitingForConnectivity(.noConnection), .error(.accountExpired),
             .error(.tooManyDevices), .error(.noSessionToken), .error(.clockSkew), .error(.deviceRevoked),
-            .error(.offline),
+            .error(.deviceRevocationUnconfirmed), .error(.offline),
             .negotiatingEphemeralPeer:
             true
         case .pendingReconnect, .disconnecting, .disconnected, .waitingForConnectivity(.noNetwork), .error:

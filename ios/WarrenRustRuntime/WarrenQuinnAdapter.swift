@@ -226,6 +226,9 @@ public enum WarrenTunnelEvent: Sendable {
     /// Two different exits refused this device's time on the dated session
     /// setup. Terminal; the app asks for automatic date and time.
     case clockSkew
+    /// The API refused this device as revoked without the account wallet's
+    /// signature over that. Terminal; the app keeps the wallet and says so.
+    case deviceRevocationUnconfirmed
     case reconnecting
     case failover(toExit: String)
     case natPmpMapped(internalPort: UInt16, externalPort: UInt16, lifetime: UInt32)
@@ -554,6 +557,7 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
         case DeviceRevoked: mappedState = .failed("device revoked")
         case NoSessionToken: mappedState = .failed("no session token")
         case ClockSkew: mappedState = .failed("device clock refused")
+        case DeviceRevocationUnconfirmed: mappedState = .failed("device revocation unconfirmed")
         default: mappedState = .disconnected
         }
         let connectedDuration: UInt64? =
@@ -971,6 +975,7 @@ private let eventCallbackBridge:
         case EventDeviceRevoked: mapped = .deviceRevoked
         case EventNoSessionToken: mapped = .noSessionToken
         case EventClockSkew: mapped = .clockSkew
+        case EventDeviceRevocationUnconfirmed: mapped = .deviceRevocationUnconfirmed
         case EventBanned:
             let reason = event.data_ban_reason.flatMap { String(cString: $0) } ?? ""
             let lapses = event.data_ban_lapses_at_unix_secs

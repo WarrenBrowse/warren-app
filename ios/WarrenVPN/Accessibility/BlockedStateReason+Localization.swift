@@ -69,6 +69,11 @@ extension BlockedStateReason {
             )
         case .clockSkew:
             NSLocalizedString("This device’s clock is off: set it right to connect.", comment: "")
+        case .deviceRevocationUnconfirmed:
+            NSLocalizedString(
+                "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device.",
+                comment: ""
+            )
         default:
             NSLocalizedString(
                 "Unable to start tunnel connection. Please report the problem on our community forum.",
