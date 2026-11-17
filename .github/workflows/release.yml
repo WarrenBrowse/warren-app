@@ -203,6 +203,13 @@ jobs:
         env:
           WARREN_CSC_LINK_MACOS: ${{ secrets.WARREN_CSC_LINK_MACOS }}
           WARREN_CSC_KEY_PASSWORD_MACOS: ${{ secrets.WARREN_CSC_KEY_PASSWORD_MACOS }}
+          WARREN_NOTARIZE_KEYCHAIN_PROFILE: ${{ secrets.WARREN_NOTARIZE_KEYCHAIN_PROFILE }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          TRUSTED_SIGNING_ENDPOINT: ${{ secrets.TRUSTED_SIGNING_ENDPOINT }}
+          TRUSTED_SIGNING_ACCOUNT: ${{ secrets.TRUSTED_SIGNING_ACCOUNT }}
+          TRUSTED_SIGNING_PROFILE: ${{ secrets.TRUSTED_SIGNING_PROFILE }}
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
           WARREN_CHANNEL: ${{ steps.channel.outputs.channel }}
@@ -700,7 +707,8 @@ jobs:
     # TRUSTED_SIGNING_PROFILE reach the build's environment; since 1 June 2023
     # an OV/EV code-signing key must live on FIPS 140-2 hardware, so the
     # downloadable-.pfx model no longer works. None is set today and the
-    # installers ship unsigned.
+    # installers ship unsigned; the job hands them to the build the day they
+    # exist, and a prod tag is refused without them (tag-guard).
     runs-on: windows-2025
     timeout-minutes: 150
     env:
@@ -708,6 +716,12 @@ jobs:
       WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
       WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
       WARREN_API_URL: ${{ needs.tag-guard.outputs.api-url }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      TRUSTED_SIGNING_ENDPOINT: ${{ secrets.TRUSTED_SIGNING_ENDPOINT }}
+      TRUSTED_SIGNING_ACCOUNT: ${{ secrets.TRUSTED_SIGNING_ACCOUNT }}
+      TRUSTED_SIGNING_PROFILE: ${{ secrets.TRUSTED_SIGNING_PROFILE }}
     steps:
       - name: Allow long paths
         run: git config --system core.longpaths true
