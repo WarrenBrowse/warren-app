@@ -323,6 +323,8 @@ runs:
       uses: arduino/setup-protoc@c65c819552d16ad3c9b72d9dfd5ba5237b9c906b  # v3.0.0
       with:
         repo-token: ${{ inputs.protoc-token }}
+        # The same protoc as the Windows release build (ci/codemagic/windows-env.sh).
+        version: "23.4"
 
     - name: Checkout Mullvad binaries submodule
       # macOS does not depend on any of our binaries.
@@ -365,12 +367,6 @@ runs:
       with:
         vs-version: latest
 
-    - name: Install latest zig
-      if: runner.os == 'Windows'
-      uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29  # v2.2.1
-      with:
-        version: 0.14.1
-
     - name: Install build dependencies
       if: runner.os == 'Linux'
       shell: bash
@@ -402,15 +398,6 @@ runs:
           # shellcheck disable=SC2086
           sudo apt-get install -y $missing
         fi
-
-    - name: Install Go
-      uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16  # v6.5.0
-      with:
-        go-version: 1.21.3
-        # No go.mod at the repo root (wireguard-go is built through build.sh with
-        # its own module), so setup-go's default dependency cache warns
-        # "Dependencies file is not found ... go.mod". Nothing to cache here.
-        cache: false
 
     - name: Setup node
       uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5.0.0

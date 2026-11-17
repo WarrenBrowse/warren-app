@@ -43,8 +43,6 @@ install_toolchains() {
     timed install_rustup
     rustup target add x86_64-pc-windows-msvc i686-pc-windows-msvc
     timed install_protoc
-    timed install_zig
-    timed install_go
     add_msbuild
 }
 

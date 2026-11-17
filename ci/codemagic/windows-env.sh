@@ -8,9 +8,9 @@
 # Every build starts on a fresh VM that carries none of the tools the old
 # self-hosted runner had installed, so each one is fetched here at the version
 # the other jobs use: rustup (the toolchain itself comes from
-# rust-toolchain.toml), protoc 23.x (arduino/setup-protoc@v3's default series),
-# zig 0.14.1 and Go 1.21.3 (mullvad-build-env), and the Node version pinned in
-# desktop/package.json's volta block.
+# rust-toolchain.toml), protoc 23.4 (the version mullvad-build-env pins), and
+# the Node version pinned in desktop/package.json's volta block. Each archive
+# is checked against a pinned or published SHA-256 before it is unpacked.
 #
 # Nothing is cached between builds. A release must never inherit an
 # intermediate from another channel (the beta-v1.1.9 winfw.dll carried prod
@@ -50,8 +50,9 @@ CM_TOOLS="${CM_TOOLS:-$HOME/cm-tools}"
 mkdir -p "$CM_TOOLS"
 
 PROTOC_VERSION=23.4
-ZIG_VERSION=0.14.1
-GO_VERSION=1.21.3
+# protoc-23.4-win64.zip from the GitHub release, hashed on 2026-11-17. protoc
+# writes code that is compiled into the daemon, so it is not taken on TLS alone.
+PROTOC_SHA256=a309c39442fb75f0db343cb22c111a00f91cdf0767f332e170644b9378e2bcc6
 
 fetch() { # fetch <url> <dest>
     curl -fsSL --retry 5 --retry-all-errors --connect-timeout 30 -o "$2" "$1"
@@ -107,23 +108,11 @@ install_rustup() {
 
 install_protoc() {
     tool_dir protoc- "protoc-$PROTOC_VERSION" \
-        "https://github.com/protocolbuffers/protobuf/releases/download/v$PROTOC_VERSION/protoc-$PROTOC_VERSION-win64.zip"
+        "https://github.com/protocolbuffers/protobuf/releases/download/v$PROTOC_VERSION/protoc-$PROTOC_VERSION-win64.zip" \
+        "" "$PROTOC_SHA256"
     export PATH="$CM_TOOLS/protoc-$PROTOC_VERSION/bin:$PATH"
     export PROTOC="$CM_TOOLS/protoc-$PROTOC_VERSION/bin/protoc.exe"
     protoc --version
-}
-
-install_zig() {
-    local name="zig-x86_64-windows-$ZIG_VERSION"
-    tool_dir zig- "zig-$ZIG_VERSION" "https://ziglang.org/download/$ZIG_VERSION/$name.zip" "$name"
-    export PATH="$CM_TOOLS/zig-$ZIG_VERSION:$PATH"
-    zig version
-}
-
-install_go() {
-    tool_dir go- "go-$GO_VERSION" "https://go.dev/dl/go$GO_VERSION.windows-amd64.zip" go
-    export PATH="$CM_TOOLS/go-$GO_VERSION/bin:$PATH"
-    go version
 }
 
 install_node() { # install_node <version>
