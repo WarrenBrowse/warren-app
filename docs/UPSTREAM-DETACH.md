@@ -58,6 +58,39 @@ UI) is Warren-owned and no longer chases upstream.
   transport) is kept as reference, not deleted. See
   `.planning/PRODUCT-obfuscation-transport.md`.
 
+## Binaries shipped as Mullvad built them
+
+### The Windows split-tunnel driver
+
+Split tunneling and include-only on Windows run on Mullvad's kernel driver,
+shipped unchanged: `dist-assets/binaries/<target>/split-tunnel/mullvad-split-tunnel.sys`
+(version 1.3.0.0 in its `.inf`), signed by Mullvad VPN AB and countersigned by
+the Microsoft Windows Hardware Compatibility Publisher. Warren keeps it
+(decision of 2026-11-17): a driver of its own needs an EV certificate and a
+Hardware Dev Center account, and the source it would be built from is the same
+`win-split-tunnel` tree. What that decision carries:
+
+- Warren cannot patch or re-sign it. A flaw in it, a revocation of Mullvad's
+  certificate or an entry on Microsoft's vulnerable driver blocklist breaks
+  split tunneling until Mullvad ships a new build, which then reaches Warren
+  through the `dist-assets/binaries` submodule pin.
+- Its names are fixed: service `mullvad-split-tunnel`, device
+  `\\.\MULLVADSPLITTUNNEL` (`talpid-core/src/split_tunnel/windows/`). It is one
+  machine-wide resource. Only the production installer resets it on install
+  and uninstall (`dist-assets/windows/installer.nsh`); beta and staging leave it
+  alone so they never pull it from under a production install.
+- On a machine that also runs Mullvad VPN, the two products drive the same
+  service and device, and the driver holds one configuration at a time. The
+  production WFP objects of `winfw` also keep Mullvad's GUIDs: its salt is 0 for
+  prod (`build-windows-modules.sh`), and only beta and staging derive their own.
+  Running Warren and Mullvad VPN side by side on Windows is not supported.
+- System tools show the driver under Mullvad's name.
+- The driver is GPL: the source offer for a Windows release covers
+  `win-split-tunnel` at the commit the `dist-assets/binaries` pin carries.
+
+Wintun (`wintun.dll`, signed by WireGuard LLC) is in the same position, with no
+known name collision.
+
 ## Reversibility
 
 Reversible: the remote and tag remain. If upstream ships something large that
