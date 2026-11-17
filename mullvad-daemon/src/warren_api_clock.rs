@@ -66,6 +66,13 @@ impl ApiClock {
         client.with_server_clock(Arc::clone(&self.clock))
     }
 
+    /// What a tunnel's dated setup is stamped with: this clock, so an exit
+    /// sees the time the API accepts.
+    pub(crate) fn setup_clock(&self) -> talpid_warren_tunnel::SetupClock {
+        let clock = Arc::clone(&self.clock);
+        Arc::new(move || clock.now())
+    }
+
     /// The clock itself, to tell the clients stamping with it.
     #[cfg(test)]
     pub(crate) fn server_clock(&self) -> &Arc<ServerClock> {
@@ -183,6 +190,26 @@ mod tests {
     /// 2023-11-14 22:13:20 UTC.
     const SERVER_NOW: u64 = 1_700_000_000;
     const SERVER_DATE: &str = "Tue, 14 Nov 2023 22:13:20 GMT";
+
+    #[test]
+    fn a_tunnel_setup_is_dated_on_the_servers_clock() {
+        // An exit refuses a setup dated more than two minutes from its clock,
+        // the API a signature more than one; a machine the API already
+        // corrected must not be refused by every exit on the raw clock.
+        let api = ApiClock::new();
+        let device_now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        api.server_clock().observe_date(SERVER_DATE, device_now);
+
+        let dated = (api.setup_clock())();
+
+        assert!(
+            (SERVER_NOW..SERVER_NOW + 5).contains(&dated),
+            "a setup dated {dated}, the server reads {SERVER_NOW}"
+        );
+    }
 
     #[test]
     fn a_machine_behind_the_broker_signs_at_the_brokers_clock() {

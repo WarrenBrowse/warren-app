@@ -139,6 +139,7 @@ pub fn assemble_from_last_good(
         city: last_good.city.clone(),
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
+        setup_clock: Some(crate::warren_api_clock::shared().setup_clock()),
         features: DEFAULT_FEATURES,
         alpn_protocols: last_good.alpn_protocols.clone(),
         multi_hop,
@@ -298,6 +299,7 @@ pub fn assemble_for_attempt(
         city: selection.city,
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
+        setup_clock: Some(crate::warren_api_clock::shared().setup_clock()),
         features: DEFAULT_FEATURES,
         alpn_protocols,
         multi_hop,
@@ -433,6 +435,7 @@ pub fn assemble_failover_for_attempt(
         city: alternative.location().city().to_owned(),
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
+        setup_clock: Some(crate::warren_api_clock::shared().setup_clock()),
         features: DEFAULT_FEATURES,
         alpn_protocols,
         multi_hop,
@@ -621,6 +624,7 @@ pub fn assemble_custom(
         city: custom.label.clone(),
         signing_key,
         n_connections: DEFAULT_N_CONNECTIONS,
+        setup_clock: Some(crate::warren_api_clock::shared().setup_clock()),
         features: DEFAULT_FEATURES,
         // Empty -> client offers the `ALPN_H3` default inside the
         // multi-hop client, which is exactly what a plain `warrenguard

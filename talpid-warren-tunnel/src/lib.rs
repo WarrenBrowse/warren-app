@@ -30,6 +30,7 @@ use warrenguard_multihop::RejectionReason;
 use warrenguard_transport::multihop::{MultiHopError, NoSessionTokenCause};
 use warrenguard_transport::route_anchor::RouteAnchorHandle;
 use warrenguard_transport::supervisor::SessionAdmission;
+pub use warrenguard_transport::supervisor::SetupClock;
 // Re-exported below so downstream crates (talpid-core, mullvad-daemon)
 // can construct `MultiHopConfig` without depending on warrenguard-multihop
 // directly. Same pattern as `warren-relay-selector::warren_types`.
@@ -423,6 +424,11 @@ pub struct WarrenTunnelParameters {
     /// (classic), `N > 1` = multi-flow bonding aggregated by identity
     /// on the exit side.
     pub n_connections: u8,
+
+    /// The clock a dated setup is stamped with. `None` reads the device clock;
+    /// the daemon passes the API's corrected clock, so an exit never refuses
+    /// a time the API accepts.
+    pub setup_clock: Option<SetupClock>,
 
     /// Client feature bitmask advertised in the `Setup` frame
     /// (cf. `warrenguard_wire::features`). `0` = IPv4 baseline.
@@ -1674,7 +1680,7 @@ impl WarrenTunnelMonitor {
             // one identity (sticky inner IP) and pins flows by 5-tuple
             // hash.
             n_connections: usize::from(params.n_connections).max(1),
-            setup_clock: None,
+            setup_clock: params.setup_clock.clone(),
             // docs/59 Lot 3: the pre-swap NAT-PMP reservation and the
             // post-swap re-map observer are wired by the daemon from its
             // live port-forward config (next step); the transport carries
@@ -4886,6 +4892,7 @@ mod tests {
             exit_addr: WarrenExitAddr::new(exit_id),
             signing_key: signing,
             n_connections: 2,
+            setup_clock: None,
             features: 0x1,
             multi_hop: None,
             alpn_protocols: Vec::new(),
@@ -4987,6 +4994,7 @@ mod tests {
             exit_addr: WarrenExitAddr::new(exit_id),
             signing_key: signing,
             n_connections: 1,
+            setup_clock: None,
             features: 0,
             multi_hop: Some(mh),
             alpn_protocols: Vec::new(),
@@ -5055,6 +5063,7 @@ mod tests {
             exit_addr: WarrenExitAddr::new(WarrenPubkey::from_bytes([0u8; 32])),
             signing_key: SigningKey::from_bytes(&[0u8; 32]),
             n_connections: 1,
+            setup_clock: None,
             features: 0,
             multi_hop: None,
             alpn_protocols: Vec::new(),
@@ -6630,6 +6639,7 @@ mod route_anchor_tests {
             exit_addr: WarrenExitAddr::new(WarrenPubkey::from_bytes([1u8; 32])),
             signing_key: SigningKey::from_bytes(&[0u8; 32]),
             n_connections: 1,
+            setup_clock: None,
             features: 0,
             multi_hop: None,
             alpn_protocols: Vec::new(),
