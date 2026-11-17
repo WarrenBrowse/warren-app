@@ -56,16 +56,34 @@ describe('macOS signing of the daemon', () => {
   );
 
   it(
-    'leaves every other binary on the entitlements Electron needs',
+    'leaves the Electron app and helpers on the entitlements Electron needs',
     async () => {
       const { macSignOptionsForFile } = await distribution();
 
       for (const file of [
         APP,
         `${APP}/Contents/Frameworks/Warren VPN Helper (Renderer).app`,
-        `${APP}/Contents/Resources/warren`,
+        `${APP}/Contents/MacOS/Warren VPN`,
       ]) {
         expect(macSignOptionsForFile(file, DEFAULTS), file).toBe(DEFAULTS);
+      }
+    },
+    timeoutMs,
+  );
+
+  // The CLI, the problem reporter and warren-setup (which the installer runs as
+  // root) are Rust binaries: none of them JITs or loads foreign libraries, so
+  // the exceptions Electron's template grants would only weaken them.
+  it(
+    'gives the other Rust binaries no hardened runtime exception either',
+    async () => {
+      const { macSignOptionsForFile, MAC_DAEMON_ENTITLEMENTS } = await distribution();
+
+      for (const binary of ['warren', 'warren-problem-report', 'warren-setup']) {
+        expect(
+          macSignOptionsForFile(`${APP}/Contents/Resources/${binary}`, DEFAULTS),
+          binary,
+        ).toEqual({ ...DEFAULTS, entitlements: MAC_DAEMON_ENTITLEMENTS });
       }
     },
     timeoutMs,

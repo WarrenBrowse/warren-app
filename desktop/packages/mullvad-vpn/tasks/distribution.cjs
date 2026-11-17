@@ -940,16 +940,24 @@ function buildAssets(relativePath) {
   return root(path.join('build', relativePath));
 }
 
-// Every nested binary is signed with the inherited Electron entitlements (JIT,
-// unsigned executable memory), which the Chromium helpers need. The daemon gets
-// none: it runs as root, spawns eslogger, and opens utun, /dev/bpf and /dev/pf,
-// none of which the hardened runtime restricts. Its signing identifier comes from
-// the Info.plist the daemon's build script embeds, so it is stable per product
-// environment and a Full Disk Access grant survives an update.
+// The Electron app and its helpers are signed with the inherited Electron
+// entitlements (JIT, unsigned executable memory), which Chromium needs. The
+// Rust binaries get none. The daemon runs as root, spawns eslogger, and opens
+// utun, /dev/bpf and /dev/pf, none of which the hardened runtime restricts; its
+// signing identifier comes from the Info.plist the daemon's build script
+// embeds, so it is stable per product environment and a Full Disk Access grant
+// survives an update. The CLI, the problem reporter and warren-setup (run as
+// root by the installer) neither JIT nor load foreign libraries.
 const MAC_DAEMON_ENTITLEMENTS = distAssets('macos/warren-daemon.entitlements');
+const MAC_RUST_BINARIES = new Set([
+  'warren-daemon',
+  'warren',
+  'warren-problem-report',
+  'warren-setup',
+]);
 
 function macSignOptionsForFile(filePath, fileOptions) {
-  if (path.basename(filePath) !== 'warren-daemon') {
+  if (!MAC_RUST_BINARIES.has(path.basename(filePath))) {
     return fileOptions;
   }
   return { ...fileOptions, entitlements: MAC_DAEMON_ENTITLEMENTS };
