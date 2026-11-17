@@ -167,9 +167,7 @@ use futures::{
 use geoip::GeoIpHandler;
 use leak_checker::{LeakChecker, LeakInfo};
 use management_interface::ManagementInterfaceServer;
-use mullvad_api::{
-    ApiEndpoint, CachedRelayList, access_mode::AccessMethodEvent, proxy::ApiConnectionMode,
-};
+use mullvad_api::{ApiEndpoint, CachedRelayList, access_mode::AccessMethodEvent};
 use mullvad_relay_selector::RelaySelector;
 #[cfg(target_os = "android")]
 use mullvad_types::account::{PlayExternalObfuscatedAccountId, PlayPurchase};
@@ -1290,7 +1288,6 @@ pub struct Daemon {
     /// points at, and the dual-homing check needs its gateway.
     #[cfg(target_os = "macos")]
     warren_route_manager: RouteManagerHandle,
-    cache_dir: PathBuf,
     /// Kept to allow runtime reads of the BIP39 mnemonic
     /// (`<settings_dir>/warren_mnemonic.txt`) via the
     /// `on_get_warren_mnemonic` handler.
@@ -2618,7 +2615,6 @@ impl Daemon {
             nm_vpn_indicator: nm_vpn_indicator::NmVpnIndicator::new(&config.settings_dir),
             #[cfg(target_os = "macos")]
             warren_route_manager: route_manager,
-            cache_dir: config.cache_dir,
             settings_dir: config.settings_dir,
             warren_status_cache,
             warren_standing_monitor,
@@ -3846,16 +3842,6 @@ impl Daemon {
         }
     }
 
-    fn save_connection_mode_to_cache(&self, connection_mode: ApiConnectionMode) {
-        // Save the new connection mode to cache!
-        let cache_dir = self.cache_dir.clone();
-        tokio::spawn(async move {
-            if connection_mode.save(&cache_dir).await.is_err() {
-                log::warn!("Failed to save {connection_mode:#?} to cache")
-            }
-        });
-    }
-
     fn handle_access_method_event(
         &mut self,
         event: AccessMethodEvent,
@@ -3863,12 +3849,7 @@ impl Daemon {
     ) {
         #[cfg(target_os = "android")]
         match event {
-            AccessMethodEvent::New {
-                setting,
-                connection_mode,
-                ..
-            } => {
-                self.save_connection_mode_to_cache(connection_mode.clone());
+            AccessMethodEvent::New { setting, .. } => {
                 // On android mullvad-api invokes protect on a socket to send requests
                 // outside the tunnel
                 let notifier = self.management_interface.notifier().clone();
@@ -3893,11 +3874,8 @@ impl Daemon {
                 });
             }
             AccessMethodEvent::New {
-                setting,
-                connection_mode,
-                endpoint,
+                setting, endpoint, ..
             } => {
-                self.save_connection_mode_to_cache(connection_mode.clone());
                 // Update the firewall to exempt a new API endpoint.
                 let (completion_tx, completion_rx) = oneshot::channel();
                 self.send_tunnel_command(TunnelCommand::AllowEndpoint(endpoint, completion_tx));
