@@ -406,6 +406,9 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             bypassCidrs: [],
             multihopDirectoryJSON: multihopDirectoryJSON,
             multihopTwoHop: twoHop,
+            // On by default; a store that cannot be read falls back to
+            // preferring the seal rather than refusing every exit.
+            requirePostQuantum: settings?.tunnelQuantumResistance.isEnabled ?? false,
             multihopEntryCountry: "",
             multihopExitCountry: exitCountry,
             multihopGenerationStatePath: multihopGenerationStatePath,

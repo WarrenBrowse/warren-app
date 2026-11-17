@@ -110,6 +110,10 @@ pub struct WarrenTunnelParametersC {
     /// surfaced via `warren_tunnel_take_pin_mismatch` for the user to trust
     /// or reject. Null disables pinning.
     pub pin_store_path: *const c_char,
+    /// 1 requires the post-quantum seal (the quantum-resistant tunnel
+    /// setting): an exit whose signed descriptor offers no ML-KEM key fails
+    /// the dial instead of sealing classically. 0 prefers it when offered.
+    pub require_post_quantum: u8,
 }
 
 /// Multi-hop entry relay configuration.
@@ -1473,6 +1477,7 @@ fn spawn_multi_hop(
     signing_key: ed25519_dalek::SigningKey,
     session_blinding: warren_api::BlindingKey,
     entitlement_blinding: warren_api::BlindingKey,
+    require_pq: bool,
 ) {
     use std::sync::atomic::Ordering;
 
@@ -1729,7 +1734,7 @@ fn spawn_multi_hop(
             // and cellular paths rarely benefit from multi-flow bonding.
             n_connections: 1,
             setup_clock: Some(warren_standing::server_clock::setup_clock()),
-            require_pq: false,
+            require_pq,
         };
         let (supervisor, watch) = MultiHopSupervisor::new(cfg);
         // Tokens only: the wallet-signed v6 request tells the exit which account
@@ -2547,6 +2552,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
         };
         let directory_json = json.to_owned();
         let two_hop = params.multihop_two_hop != 0;
+        let require_pq = params.require_post_quantum != 0;
         // SAFETY: as above.
         let entry_country = unsafe { cstr_to_str(params.multihop_entry_country) }
             .unwrap_or("")
@@ -2584,6 +2590,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
             signing_key,
             session_blinding,
             entitlement_blinding,
+            require_pq,
         );
         into_ffi_handle(arc)
     }

@@ -65,6 +65,10 @@ public struct WarrenTunnelConfig: Sendable {
     /// `false` a 1-hop circuit collapsed onto one node. Ignored when
     /// `multihopDirectoryJSON` is nil.
     public let multihopTwoHop: Bool
+    /// Require the post-quantum seal (the quantum-resistant tunnel setting):
+    /// an exit offering no signed ML-KEM key fails the connect instead of
+    /// sealing classically.
+    public let requirePostQuantum: Bool
     /// Optional ISO 3166-1 alpha-2 entry-country hint (empty = any).
     public let multihopEntryCountry: String
     /// Optional ISO 3166-1 alpha-2 exit-country hint (empty = any).
@@ -92,6 +96,7 @@ public struct WarrenTunnelConfig: Sendable {
         bypassCidrs: [String] = [],
         multihopDirectoryJSON: String? = nil,
         multihopTwoHop: Bool = false,
+        requirePostQuantum: Bool = false,
         multihopEntryCountry: String = "",
         multihopExitCountry: String = "",
         multihopGenerationStatePath: String? = nil,
@@ -109,6 +114,7 @@ public struct WarrenTunnelConfig: Sendable {
         self.bypassCidrs = bypassCidrs
         self.multihopDirectoryJSON = multihopDirectoryJSON
         self.multihopTwoHop = multihopTwoHop
+        self.requirePostQuantum = requirePostQuantum
         self.multihopEntryCountry = multihopEntryCountry
         self.multihopExitCountry = multihopExitCountry
         self.multihopGenerationStatePath = multihopGenerationStatePath
@@ -767,7 +773,8 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
                                                     multihop_entry_country: entryC,
                                                     multihop_exit_country: exitC,
                                                     multihop_generation_state_path: genPtr,
-                                                    pin_store_path: pinPtr
+                                                    pin_store_path: pinPtr,
+                                                    require_post_quantum: config.requirePostQuantum ? 1 : 0
                                                 )
                                                 return warren_tunnel_start(&parameters, -1)
                                             }

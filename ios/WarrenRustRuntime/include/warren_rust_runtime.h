@@ -337,6 +337,12 @@ typedef struct WarrenTunnelParametersC {
    * or reject. Null disables pinning.
    */
   const char *pin_store_path;
+  /**
+   * 1 requires the post-quantum seal (the quantum-resistant tunnel
+   * setting): an exit whose signed descriptor offers no ML-KEM key fails
+   * the dial instead of sealing classically. 0 prefers it when offered.
+   */
+  uint8_t require_post_quantum;
 } WarrenTunnelParametersC;
 
 /**
