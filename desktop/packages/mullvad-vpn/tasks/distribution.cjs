@@ -213,17 +213,45 @@ function pacmanPreUpgrade() {
 // win target), and a git checkout on Windows materializes the symlink as a
 // regular file whose content is the link target, so read the target through
 // lstat and only recreate a symlink when the source actually is one.
-// The NSIS include needs one thing the generic rewrite cannot express: that
-// it is packaging a non-production product. The split-tunnel driver is a
+// The NSIS include needs two things the generic rewrite cannot express. That
+// it is packaging a non-production product: the split-tunnel driver is a
 // single machine-wide resource, so the installer must skip the driver reset
-// rather than fight a production install for it.
+// rather than fight a production install for it. And the keys of this
+// environment's firewall filters, which winfw derives by XORing the first
+// field of each production GUID with the salt build-windows-modules.sh passes
+// it (WarrenEnvGuid in mullvadguids.h); with production's keys, the
+// installer's "internet access will be unblocked" warning never sees a beta
+// or staging kill switch. product-env-installer.spec.ts reads the salts from
+// that script, so the two tables cannot drift.
+const WINFW_GUID_SALT = { prod: 0, beta: 0x5be7a001, staging: 0x57a61009 };
+const INSTALLER_FILTER_GUIDS = {
+  BLOCK_OUTBOUND_IPV4_FILTER_GUID: 'a81c5411-0fd0-43a9-a9be-313f299de64f',
+  PERSISTENT_BLOCK_OUTBOUND_IPV4_FILTER_GUID: '79860c64-9a5e-48a3-b5f3-d64b41659aa5',
+};
+
+function saltedGuid(guid, salt) {
+  const [first, ...rest] = guid.split('-');
+  const data1 = ((parseInt(first, 16) ^ salt) >>> 0).toString(16).padStart(8, '0');
+  return [data1, ...rest].join('-');
+}
+
 function envInstallerScript() {
   const rel = path.join('windows', 'installer.nsh');
   if (productEnvName === 'prod') {
     return distAssets(rel);
   }
+  const salt = WINFW_GUID_SALT[productEnvName];
+  if (salt === undefined) {
+    throw new Error(`no winfw GUID salt for product environment '${productEnvName}'`);
+  }
+  const defines = [
+    '!define WARREN_NON_PROD_INSTALL 1',
+    ...Object.entries(INSTALLER_FILTER_GUIDS).map(
+      ([name, guid]) => `!define ${name} "{${saltedGuid(guid, salt)}}"`,
+    ),
+  ];
   const out = envAsset(rel);
-  fs.writeFileSync(out, `!define WARREN_NON_PROD_INSTALL 1\n${fs.readFileSync(out, 'utf8')}`);
+  fs.writeFileSync(out, `${defines.join('\n')}\n${fs.readFileSync(out, 'utf8')}`);
   return out;
 }
 

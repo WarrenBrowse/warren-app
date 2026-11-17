@@ -52,8 +52,14 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 # electron-builder uses a GUID here rather than the application name.
 !define INSTALL_REGISTRY_KEY "Software\${PRODUCT_NAME}"
 
+# winfw's production keys for two of its block-all filters. A beta or staging
+# build defines its own salted keys ahead of this file (distribution.cjs).
+!ifndef BLOCK_OUTBOUND_IPV4_FILTER_GUID
 !define BLOCK_OUTBOUND_IPV4_FILTER_GUID "{a81c5411-0fd0-43a9-a9be-313f299de64f}"
+!endif
+!ifndef PERSISTENT_BLOCK_OUTBOUND_IPV4_FILTER_GUID
 !define PERSISTENT_BLOCK_OUTBOUND_IPV4_FILTER_GUID "{79860c64-9a5e-48a3-b5f3-d64b41659aa5}"
+!endif
 
 #
 # UnloadPlugins
@@ -641,37 +647,6 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 		Abort
 	${EndIf}
 
-	# Application settings key
-	# Migrate 2018.(x<6) to current
-	registry::MoveKey "HKLM\SOFTWARE\8fa2c331-e09e-5709-bc74-c59df61f0c7e" "HKLM\SOFTWARE\${PRODUCT_NAME}"
-
-	# Discard return value
-	Pop $0
-	Pop $0
-
-	# Application uninstall key
-	# Migrate 2018.(x<6) to current
-	registry::MoveKey "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\8fa2c331-e09e-5709-bc74-c59df61f0c7e" "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APP_GUID}"
-
-	# Discard return value
-	Pop $0
-	Pop $0
-
-	# Application uninstall key
-	# Migrate 2018.6 through 2019.7 to current
-	registry::MoveKey "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Warren VPN" "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APP_GUID}"
-
-	# Discard return value
-	Pop $0
-	Pop $0
-
-	# Migrate 2019.8 through 2020.5 to current
-	registry::MoveKey "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{${APP_GUID}}" "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APP_GUID}"
-
-	# Discard return value
-	Pop $0
-	Pop $0
-
 	WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APP_GUID}" "NewVersion" "${VERSION}"
 
 	Pop $1
@@ -693,28 +668,12 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 #
 !macro customCheckAppRunning
 	push $R0
-	push $R1
 
-	# This must be done here for compatibility with <= 2021.2,
-	# since those versions do not kill the GUI in the uninstaller.
-	Var /GLOBAL OldVersion
-	ReadRegStr $OldVersion HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${APP_GUID}" "DisplayVersion"
-	StrCpy $R0 $OldVersion 4 # Major version
-	StrCpy $R1 $OldVersion 1 5 # Minor version
-	${If} $R0 > 2021
-		Goto customCheckAppRunning_skip_kill
-	${OrIf} $R0 == 2021
-		${If} $R1 > 2
-			Goto customCheckAppRunning_skip_kill
-		${EndIf}
-	${EndIf}
-
-	# Killing without /f will likely cause the daemon to disconnect.
+	# The GUI is closed here, whatever version is installed. Killing without /f
+	# will likely cause the daemon to disconnect.
 	nsExec::Exec `"$SYSDIR\taskkill.exe" /f /t /im "${APP_EXECUTABLE_FILENAME}"` $R0
 	Sleep 500
 
-	customCheckAppRunning_skip_kill:
-	pop $R1
 	pop $R0
 
 !macroend
@@ -737,12 +696,12 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	#
 	# The electron-builder NSIS logic, that runs before 'customInstall' is activated,
 	# makes a copy of the installer file:
-	# C:\Users\%CURRENTUSER%\AppData\Local\mullvad-vpn-updater\installer.exe
+	# C:\Users\%CURRENTUSER%\AppData\Local\<package name>-updater\installer.exe
 	#
 	# Let's undo this and remove the entire folder in AppData.
 	#
 	SetShellVarContext current
-	RMDir /r "$LOCALAPPDATA\mullvad-vpn-updater"
+	RMDir /r "$LOCALAPPDATA\${APP_PACKAGE_NAME}-updater"
 
 	${RemoveRelayCache}
 	${RemoveApiAddressCache}
@@ -752,7 +711,8 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 
 	# The split-tunnel driver is ONE machine-wide resource (service
 	# `mullvad-split-tunnel`, device `\\.\MULLVADSPLITTUNNEL`), not a
-	# per-install one. A non-production build has no claim on it: resetting it
+	# per-install one: it is Mullvad's signed build, shipped unchanged
+	# (docs/UPSTREAM-DETACH.md). A non-production build has no claim on it: resetting it
 	# would pull the driver out from under a production install, and the
 	# attempt fails outright (0x1) while that install holds it, aborting an
 	# install that never needed the reset in the first place.
@@ -792,7 +752,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	# Therefore we have to break the installed application to
 	# prevent users from running a half-installed product
 	#
-	Delete "$INSTDIR\warren-vpn.exe"
+	Delete "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
 
 	${FirewallWarningCheck}
 	${ExtractMullvadSetup}
@@ -1166,7 +1126,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	customRemoveFiles_abort:
 
 	# Break the install due to inconsistent state
-	Delete "$INSTDIR\warren-vpn.exe"
+	Delete "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
 
 	# If an error occurs during a downgrade or full uninstall, clear the firewall rules anyway
 	${If} $FullUninstall == 1
