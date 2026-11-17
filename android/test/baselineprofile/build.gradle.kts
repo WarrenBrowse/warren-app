@@ -92,9 +92,7 @@ baselineProfile { useConnectedDevices = true }
 configurations.all { resolutionStrategy { force("com.squareup.okio:okio:3.9.1") } }
 
 dependencies {
-    // Not `projects.test.common`: it ships the Mullvad page objects, exists
-    // for the prod flavor only, and the generator drives Warren's own flow
-    // through the UI tags directly.
+    // The generator drives Warren's own flow through the UI tags directly.
     implementation(projects.lib.ui.tag)
     implementation(libs.androidx.test.core)
     // The benchmark plugin pulls an older androidx.test:rules that the

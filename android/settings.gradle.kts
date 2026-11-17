@@ -95,11 +95,6 @@ include(
 include(
     ":test",
     ":test:arch",
-    ":test:common",
-    ":test:e2e",
-    // ":test:mockapi" - dropped: simulates the Mullvad API for tests Warren
-    //   no longer runs. Warren-API-backed tests land alongside the
-    //   warren-api-client integration.
     ":test:detekt",
     ":test:baselineprofile",
 )
