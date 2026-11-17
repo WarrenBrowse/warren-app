@@ -8,7 +8,6 @@ use warren_discovery_core::WarrenRelay;
 /// `exit_pubkey_hex`, `endpoint` (the first entry address, the Kotlin schema
 /// being single-endpoint), `country`, `city`, `active`, `weight`, and `name`,
 /// the fleet name the exit is shown by (`null` for an unnamed node).
-#[cfg_attr(not(target_os = "android"), allow(dead_code))]
 pub(crate) fn project_relays(relays: &[WarrenRelay]) -> Vec<serde_json::Value> {
     relays
         .iter()
