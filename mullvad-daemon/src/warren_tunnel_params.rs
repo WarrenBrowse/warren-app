@@ -160,6 +160,7 @@ pub fn assemble_from_last_good(
         include_only: false,
         tunnel_resolvers: Vec::new(),
         enable_daita: false,
+        require_pq: false,
         session_tokens: None,
         port_entitlement_provider: None,
         app_routes_rx: None,
@@ -351,6 +352,7 @@ pub fn assemble_for_attempt(
         // post-assemble wiring of `on_reconnect` and the NAT-PMP
         // observer.
         enable_daita: false,
+        require_pq: false,
         session_tokens: None,
         port_entitlement_provider: None,
         app_routes_rx: None,
@@ -464,6 +466,7 @@ pub fn assemble_failover_for_attempt(
         include_only: false,
         tunnel_resolvers: Vec::new(),
         enable_daita: false,
+        require_pq: false,
         session_tokens: None,
         port_entitlement_provider: None,
         app_routes_rx: None,
@@ -654,6 +657,7 @@ pub fn assemble_custom(
         include_only: false,
         tunnel_resolvers: Vec::new(),
         enable_daita: false,
+        require_pq: false,
         session_tokens: None,
         port_entitlement_provider: None,
         app_routes_rx: None,

@@ -108,6 +108,10 @@ pub struct RouteSessionConfig {
     /// one), so a route's exit judges the same time. `None` dates them on the
     /// device clock.
     pub setup_clock: Option<warrenguard_transport::supervisor::SetupClock>,
+    /// The user requires the post-quantum seal: a route to an exit whose
+    /// signed descriptor offers no ML-KEM key fails instead of sealing
+    /// classically, as the main session does.
+    pub require_pq: bool,
 }
 
 impl RouteSessionConfig {
@@ -127,6 +131,7 @@ impl RouteSessionConfig {
             retry_unavailable_after: RETRY_UNAVAILABLE_AFTER,
             credentials: None,
             setup_clock: None,
+            require_pq: false,
         }
     }
 
@@ -256,7 +261,7 @@ pub(crate) fn route_supervisor_config(
         relay: Arc::new(circuit.relay.clone()),
         exit_id: circuit.exit.exit_id,
         exit_x25519_multihop_pubkey: circuit.exit.exit_x25519_multihop_pubkey,
-        exit_mlkem768_pubkey: circuit.exit.exit_mlkem768_pubkey.clone(),
+        exit_mlkem768_pubkey: circuit.signed_mlkem768_pubkey(),
         operational_pubkey: circuit.operational_pubkey,
         // The supervisor wants a key, and under tokens-only or route admission
         // it never proves possession of it: a random one keeps the wallet out
@@ -276,7 +281,7 @@ pub(crate) fn route_supervisor_config(
         // every bonded leg is one more relay connection holding the token.
         n_connections: 1,
         setup_clock: config.setup_clock.clone(),
-        require_pq: false,
+        require_pq: config.require_pq,
         pre_swap_check: None,
         on_overlap_swapped: None,
         on_dial_refused: None,
@@ -909,6 +914,7 @@ mod tests {
         let mut config = RouteSessionConfig::new(None);
         config.wants_ipv6 = true;
         config.enable_daita = true;
+        config.require_pq = true;
 
         let built =
             route_supervisor_config(&circuit(), &config, &tokens_only(), IpAssignChannel::new());
@@ -917,6 +923,7 @@ mod tests {
         assert_eq!(built.exit_id.as_bytes(), &[9; 16]);
         assert!(built.wants_ipv6);
         assert!(built.enable_daita);
+        assert!(built.require_pq);
         assert_eq!(built.n_connections, 1);
     }
 

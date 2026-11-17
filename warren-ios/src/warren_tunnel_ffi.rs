@@ -1330,10 +1330,10 @@ fn circuit_target(
     circuit: crate::warren_multihop_directory::SelectedCircuit,
 ) -> warrenguard_transport::supervisor::CircuitTarget {
     warrenguard_transport::supervisor::CircuitTarget {
+        exit_mlkem768_pubkey: circuit.signed_mlkem768_pubkey(),
         relay: std::sync::Arc::new(circuit.relay),
         exit_id: circuit.exit.exit_id,
         exit_x25519_multihop_pubkey: circuit.exit.exit_x25519_multihop_pubkey,
-        exit_mlkem768_pubkey: circuit.exit.exit_mlkem768_pubkey,
     }
 }
 
@@ -1661,14 +1661,14 @@ fn spawn_multi_hop(
         let idle_cover = idle_cover_active(warrenguard_config::knobs::idle_cover_enabled(), false);
         let rtt_store = std::sync::Arc::clone(&arc_for_task.entry_rtt);
         let dialled_exit = circuit.exit.exit_id;
+        let exit_mlkem768_pubkey = circuit.signed_mlkem768_pubkey();
         let cfg = SupervisorConfig {
             relay: std::sync::Arc::new(circuit.relay),
             exit_id: circuit.exit.exit_id,
             exit_x25519_multihop_pubkey: circuit.exit.exit_x25519_multihop_pubkey,
-            // Prefer the PQ X-Wing seal when the verified exit descriptor
-            // advertises an ML-KEM key; `None`/empty keeps the byte-identical
-            // classical seal (supervisor dials with require_pq=false).
-            exit_mlkem768_pubkey: circuit.exit.exit_mlkem768_pubkey.clone(),
+            // The PQ X-Wing seal when the operational signature covers the
+            // exit's ML-KEM key; `None` keeps the classical seal.
+            exit_mlkem768_pubkey,
             operational_pubkey: circuit.operational_pubkey,
             client_signing: signing_key,
             bind_addr,

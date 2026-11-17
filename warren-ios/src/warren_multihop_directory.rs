@@ -78,6 +78,22 @@ pub struct SelectedCircuit {
     pub generation: u64,
 }
 
+impl SelectedCircuit {
+    /// The exit's ML-KEM-768 key to seal the session with, or `None` for the
+    /// classical seal: only a key the operational signature covers, as on
+    /// desktop and Android. A descriptor signed under a classical context
+    /// still verifies with a key added afterwards.
+    #[must_use]
+    pub fn signed_mlkem768_pubkey(&self) -> Option<Vec<u8>> {
+        match warrenguard_multihop::negotiate_pq(&self.operational_pubkey, &self.exit, false) {
+            Ok(warrenguard_multihop::PqAvailability::Available) => {
+                self.exit.exit_mlkem768_pubkey.clone()
+            }
+            _ => None,
+        }
+    }
+}
+
 /// Which of `candidates` (directory indices of entry nodes, in order of
 /// preference) this host's network can route, in the same order.
 ///
@@ -451,13 +467,41 @@ mod tests {
     use ed25519_dalek::{Signer, SigningKey};
     use warren_discovery_core::{NodeEntry, pick_circuit_by_weight};
     use warrenguard_multihop::{
-        ExitDescriptorSigned, ExitId, RelayDescriptorSigned, exit_descriptor_signing_payload,
+        ExitDescriptorSigned, ExitId, MLKEM768_ENCAPS_KEY_LEN, RelayDescriptorSigned,
+        exit_descriptor_signing_payload, exit_descriptor_signing_payload_pq,
         relay_descriptor_signing_payload, sign_node_attestation,
     };
 
     use super::*;
 
     const NOW: u64 = 1_000_000;
+
+    fn mlkem_key() -> Vec<u8> {
+        (0..MLKEM768_ENCAPS_KEY_LEN)
+            .map(|i| (i % 251) as u8)
+            .collect()
+    }
+
+    #[test]
+    fn a_circuit_seals_with_an_ml_kem_key_only_when_the_operational_signature_covers_it() {
+        let op = op_key();
+        let d = dir(vec![node(&op, 1, "DE", 1, 1)]);
+        let mut circuit = circuit_from(&d, 0, 0);
+        circuit.exit.exit_mlkem768_pubkey = Some(mlkem_key());
+        assert!(
+            circuit.signed_mlkem768_pubkey().is_none(),
+            "a key added to a classically signed descriptor"
+        );
+
+        let payload = exit_descriptor_signing_payload_pq(
+            circuit.exit.exit_id,
+            &circuit.exit.exit_x25519_multihop_pubkey,
+            circuit.exit.dns_disabled,
+            &mlkem_key(),
+        );
+        circuit.exit.signature = op.sign(&payload).to_bytes();
+        assert_eq!(circuit.signed_mlkem768_pubkey(), Some(mlkem_key()));
+    }
 
     /// A network that routes every entry.
     fn every_entry(_: &VerifiedMultiHopDirectory, candidates: &[usize]) -> Vec<usize> {

@@ -38,9 +38,10 @@ pub(crate) struct WarrenBackendInfo {
     /// (no entry endpoint), even though the transport rides the multi-hop
     /// wire protocol. See [`MultiHopConfig::single_node`].
     pub single_node: bool,
-    /// The exit's descriptor offers an ML-KEM key, so the engine seals the
-    /// inner session with the hybrid post-quantum KEM; without one it falls
-    /// back to the classical seal. What the tunnel state reports.
+    /// The operational signature covers the exit's ML-KEM key, so the engine
+    /// seals the inner session with the hybrid post-quantum KEM; without one
+    /// it falls back to the classical seal, or refuses the dial when the
+    /// post-quantum seal is required. What the tunnel state reports.
     pub quantum_resistant: bool,
 }
 
@@ -69,12 +70,10 @@ impl WarrenBackendInfo {
             // "one node", so default `false` there is harmless: that path
             // already has `relay_endpoint == None` and renders single-hop.
             single_node: p.multi_hop.as_ref().is_some_and(|mh| mh.single_node),
-            quantum_resistant: p.multi_hop.as_ref().is_some_and(|mh| {
-                mh.exit
-                    .exit_mlkem768_pubkey
-                    .as_ref()
-                    .is_some_and(|key| !key.is_empty())
-            }),
+            quantum_resistant: p
+                .multi_hop
+                .as_ref()
+                .is_some_and(|mh| mh.signed_mlkem768_pubkey().is_some()),
         }
     }
 }

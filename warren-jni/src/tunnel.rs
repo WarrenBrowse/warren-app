@@ -475,9 +475,7 @@ async fn run_multi_hop_session(
     // The exit's ML-KEM key is passed only when its signed descriptor advertises
     // a valid one (`negotiate_pq` verifies the operational signature over the
     // key, the anti-downgrade anchor); the supervisor dials `require_pq=false`,
-    // so a classical exit stays on the byte-identical X25519 seal. No exit
-    // publishes a PQ descriptor yet, so this currently always takes the
-    // classical path.
+    // so an exit publishing no signed key is sealed with X25519 alone.
     #[cfg(feature = "pq-hpke")]
     let exit_mlkem768_pubkey =
         match warrenguard_multihop::negotiate_pq(&dir.operational_pubkey, &exit_node.exit, false) {

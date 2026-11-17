@@ -70,10 +70,10 @@ pub fn migration_target(cfg: &MultiHopConfig) -> CircuitTarget {
         relay: std::sync::Arc::new(cfg.relay.clone()),
         exit_id: cfg.exit.exit_id,
         exit_x25519_multihop_pubkey: cfg.exit.exit_x25519_multihop_pubkey,
-        // Retarget the exit's verified ML-KEM key with the exit so a cross-exit
-        // migration keeps preferring the PQ seal; `None` when the exit publishes
-        // no PQ descriptor (classical fallback, require_pq=false).
-        exit_mlkem768_pubkey: cfg.exit.exit_mlkem768_pubkey.clone(),
+        // Retarget the exit's ML-KEM key with the exit so a cross-exit
+        // migration keeps the PQ seal; `None` when the operational signature
+        // does not cover a key.
+        exit_mlkem768_pubkey: cfg.signed_mlkem768_pubkey(),
     }
 }
 /// What the daemon's drain pass did about a draining exit, which is what the
@@ -615,6 +615,12 @@ pub struct WarrenTunnelParameters {
     /// verbatim through this field.
     pub enable_daita: bool,
 
+    /// Require the post-quantum seal on every session of this tunnel: an
+    /// exit whose signed descriptor offers no ML-KEM key fails the dial
+    /// instead of sealing classically. Driven by the quantum-resistant tunnel
+    /// setting.
+    pub require_pq: bool,
+
     /// Anonymous v7 session tokens (Privacy Pass, warren-core doc 64): the
     /// main session and every route session each open their own provider from
     /// it. When a provider yields a non-empty stack, the session presents
@@ -700,6 +706,7 @@ impl std::fmt::Debug for WarrenTunnelParameters {
             .field("include_only", &self.include_only)
             .field("tunnel_resolvers", &self.tunnel_resolvers.len())
             .field("enable_daita", &self.enable_daita)
+            .field("require_pq", &self.require_pq)
             .field(
                 "app_routes_rx",
                 &self.app_routes_rx.as_ref().map(|_| "<watch-rx>"),
@@ -1661,10 +1668,9 @@ impl WarrenTunnelMonitor {
             relay: Arc::new(cfg.relay.clone()),
             exit_id: cfg.exit.exit_id,
             exit_x25519_multihop_pubkey: cfg.exit.exit_x25519_multihop_pubkey,
-            // Prefer the PQ X-Wing seal when the verified exit descriptor
-            // advertises an ML-KEM key; `None`/empty keeps the byte-identical
-            // classical seal (supervisor dials with require_pq=false).
-            exit_mlkem768_pubkey: cfg.exit.exit_mlkem768_pubkey.clone(),
+            // The PQ X-Wing seal when the operational signature covers the
+            // exit's ML-KEM key; `None` keeps the classical seal.
+            exit_mlkem768_pubkey: cfg.signed_mlkem768_pubkey(),
             operational_pubkey: cfg.operational_pubkey,
             // Copy the signing key field-by-field rather than cloning the
             // parent WarrenTunnelParameters struct (which is not Clone).
@@ -1703,7 +1709,7 @@ impl WarrenTunnelMonitor {
             // hash.
             n_connections: usize::from(params.n_connections).max(1),
             setup_clock: params.setup_clock.clone(),
-            require_pq: false,
+            require_pq: params.require_pq,
             // docs/59 Lot 3: the pre-swap NAT-PMP reservation and the
             // post-swap re-map observer are wired by the daemon from its
             // live port-forward config (next step); the transport carries
@@ -2435,6 +2441,7 @@ impl WarrenTunnelMonitor {
             config.on_exit_draining = params.on_exit_draining.clone();
             config.credentials = params.credentials.clone();
             config.setup_clock = params.setup_clock.clone();
+            config.require_pq = params.require_pq;
             #[cfg(target_os = "macos")]
             {
                 config.relay_escape = Some(macos_relay_escape(
@@ -3988,6 +3995,8 @@ enum SupervisorVerdict {
     Unroutable,
     /// The tokens-only main session had no token the exit would admit.
     NoToken(NoSessionTokenCause),
+    /// The post-quantum seal is required and the exit offers none.
+    PostQuantumUnavailable,
     /// Anything else.
     Other,
 }
@@ -3997,6 +4006,7 @@ impl SupervisorVerdict {
         match error {
             MultiHopError::NoReachableEntry => Self::Unroutable,
             MultiHopError::NoSessionToken(cause) => Self::NoToken(*cause),
+            MultiHopError::PostQuantumUnavailable => Self::PostQuantumUnavailable,
             _ => Self::Other,
         }
     }
@@ -4048,6 +4058,11 @@ fn initial_session_closed(verdict: SupervisorVerdict) -> Error {
                  ({cause}) although the subscription is active"
             )),
         }),
+        SupervisorVerdict::PostQuantumUnavailable => Error::Handshake(
+            "the exit offers no signed post-quantum key, and the quantum-resistant tunnel \
+             setting requires the post-quantum seal"
+                .to_owned(),
+        ),
         SupervisorVerdict::Other => {
             Error::Handshake("multi-hop supervisor stopped before an initial session".to_owned())
         }
@@ -4427,6 +4442,52 @@ mod tests {
     use super::*;
     use warrenguard_multihop::{ExitDescriptorSigned, RelayDescriptorSigned};
     use warrenguard_wire::WarrenPubkey;
+
+    #[test]
+    fn a_migration_never_carries_an_ml_kem_key_the_operational_signature_does_not_cover() {
+        let cfg = MultiHopConfig {
+            relay: RelayDescriptorSigned {
+                relay_id: [0xaa; 16],
+                relay_ed25519_pubkey: [0xbb; 32],
+                endpoint: "192.0.2.10:443".parse().unwrap(),
+                endpoint_v6: None,
+                signature: [0xcc; 64],
+                cover_domain: None,
+                tcp_fallback: false,
+            },
+            exit: ExitDescriptorSigned {
+                exit_id: warrenguard_multihop::ExitId::from_bytes([0xdd; 16]),
+                exit_ed25519_pubkey: [0xee; 32],
+                exit_x25519_multihop_pubkey: [0xff; 32],
+                exit_mlkem768_pubkey: Some(vec![
+                    0x5a;
+                    warrenguard_multihop::MLKEM768_ENCAPS_KEY_LEN
+                ]),
+                endpoint: None,
+                signature: [0x11; 64],
+                dns_disabled: false,
+                cover_domain: None,
+            },
+            operational_pubkey: SigningKey::from_bytes(&[0x42; 32]).verifying_key(),
+            exit_country: String::new(),
+            exit_city: String::new(),
+            enable_gso: false,
+            use_warren_obfuscation: true,
+            single_node: true,
+        };
+
+        assert!(migration_target(&cfg).exit_mlkem768_pubkey.is_none());
+    }
+
+    #[test]
+    fn a_first_session_refused_for_want_of_a_post_quantum_seal_says_so() {
+        let Error::Handshake(reason) = initial_session_closed(SupervisorVerdict::of(
+            &MultiHopError::PostQuantumUnavailable,
+        )) else {
+            panic!("a handshake failure");
+        };
+        assert!(reason.contains("post-quantum"), "{reason}");
+    }
 
     #[test]
     fn a_first_session_ended_by_an_unroutable_fleet_names_the_network() {
@@ -4920,6 +4981,7 @@ mod tests {
             include_only: false,
             tunnel_resolvers: Vec::new(),
             enable_daita: false,
+            require_pq: false,
             session_tokens: None,
             port_entitlement_provider: None,
             app_routes_rx: None,
@@ -5022,6 +5084,7 @@ mod tests {
             include_only: false,
             tunnel_resolvers: Vec::new(),
             enable_daita: false,
+            require_pq: false,
             session_tokens: None,
             port_entitlement_provider: None,
             app_routes_rx: None,
@@ -5091,6 +5154,7 @@ mod tests {
             include_only: false,
             tunnel_resolvers: Vec::new(),
             enable_daita: false,
+            require_pq: false,
             session_tokens: None,
             port_entitlement_provider: None,
             app_routes_rx: None,
@@ -6712,6 +6776,7 @@ mod route_anchor_tests {
             include_only: false,
             tunnel_resolvers: Vec::new(),
             enable_daita: false,
+            require_pq: false,
             session_tokens: None,
             port_entitlement_provider: None,
             app_routes_rx: routes

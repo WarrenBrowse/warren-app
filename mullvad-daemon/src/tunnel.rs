@@ -1009,6 +1009,7 @@ impl ParametersGenerator {
             )
         });
         let enable_daita = inner.warren_enable_daita;
+        let require_pq = inner.tunnel_options.wireguard.quantum_resistant.enabled();
         let n_connections_setting = inner.warren_n_connections;
         // IPv6 dual-stack opt-in (Mullvad `tunnel_options.generic.enable_ipv6`,
         // default false). Forwarded onto `params.features` post-assemble
@@ -1391,6 +1392,10 @@ impl ParametersGenerator {
         // wire path differs (Quinn + warrenguard-wire v3 here vs
         // WireGuard + maybenot-ffi in the upstream backend).
         params.enable_daita = enable_daita;
+        // The quantum-resistant tunnel setting requires the post-quantum seal:
+        // an exit offering no signed ML-KEM key fails the dial instead of
+        // sealing classically.
+        params.require_pq = require_pq;
         // Resolve the parallel-connection count (env var override >
         // persisted setting > compiled default). Mirrors the
         // post-assemble wiring of `enable_daita`.

@@ -112,9 +112,9 @@ pub fn load_from_settings_dir(settings_dir: &Path) -> Result<Option<MultiHopConf
 
     verify_relay_descriptor(&operational_pubkey, &parsed.relay)?;
     // Accept a PQ-signed exit descriptor (ML-KEM key bound under the operational
-    // signature) as well as a classical one, so a PQ-publishing exit is not
-    // rejected. Neither verifier accepting still fails closed. No exit publishes
-    // a PQ descriptor yet, so this resolves to the classical verifier as before.
+    // signature) as well as a classical one. Neither verifier accepting still
+    // fails closed. A key on a classically signed descriptor is never sealed
+    // with (`MultiHopConfig::signed_mlkem768_pubkey`).
     if verify_exit_descriptor_pq(&operational_pubkey, &parsed.exit).is_err() {
         verify_exit_descriptor(&operational_pubkey, &parsed.exit)?;
     }

@@ -1383,7 +1383,7 @@ fn main_supervisor_config(
         relay: Arc::new(circuit.relay.clone()),
         exit_id: circuit.exit.exit_id,
         exit_x25519_multihop_pubkey: circuit.exit.exit_x25519_multihop_pubkey,
-        exit_mlkem768_pubkey: circuit.exit.exit_mlkem768_pubkey.clone(),
+        exit_mlkem768_pubkey: circuit.signed_mlkem768_pubkey(),
         operational_pubkey: circuit.operational_pubkey,
         client_signing: ed25519_dalek::SigningKey::from_bytes(&rand::random()),
         bind_addr: SocketAddr::from((Ipv4Addr::UNSPECIFIED, 0)),

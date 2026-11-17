@@ -61,6 +61,25 @@ pub struct MultiHopConfig {
     pub single_node: bool,
 }
 
+impl MultiHopConfig {
+    /// The exit's ML-KEM-768 key to seal the session with, or `None` for the
+    /// classical seal.
+    ///
+    /// A key rides the descriptor whatever signed it, and a descriptor signed
+    /// under a classical context still verifies with a key added afterwards.
+    /// Only the operational signature over the key itself makes it usable,
+    /// so this is the single place every client reads the key from.
+    #[must_use]
+    pub fn signed_mlkem768_pubkey(&self) -> Option<Vec<u8>> {
+        match warrenguard_multihop::negotiate_pq(&self.operational_pubkey, &self.exit, false) {
+            Ok(warrenguard_multihop::PqAvailability::Available) => {
+                self.exit.exit_mlkem768_pubkey.clone()
+            }
+            _ => None,
+        }
+    }
+}
+
 impl std::fmt::Debug for MultiHopConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // No-log Warren: relay/exit pubkeys and endpoints are
@@ -98,5 +117,77 @@ pub fn multi_hop_bind_addr(relay_endpoint: std::net::SocketAddr) -> std::net::So
         std::net::SocketAddr::V6(_) => {
             std::net::SocketAddr::from((std::net::Ipv6Addr::UNSPECIFIED, 0))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use ed25519_dalek::{Signer, SigningKey};
+    use warrenguard_multihop::{
+        MLKEM768_ENCAPS_KEY_LEN, exit_descriptor_signing_payload,
+        exit_descriptor_signing_payload_pq,
+    };
+
+    use super::*;
+
+    fn mlkem_key() -> Vec<u8> {
+        (0..MLKEM768_ENCAPS_KEY_LEN)
+            .map(|i| (i % 251) as u8)
+            .collect()
+    }
+
+    fn circuit_signed_by(op: &SigningKey) -> MultiHopConfig {
+        let mut cfg = crate::test_support::circuit(1, 2);
+        cfg.operational_pubkey = op.verifying_key();
+        cfg
+    }
+
+    #[test]
+    fn a_key_signed_under_the_post_quantum_context_is_used() {
+        let op = SigningKey::from_bytes(&[0x77; 32]);
+        let mut cfg = circuit_signed_by(&op);
+        let key = mlkem_key();
+        let payload = exit_descriptor_signing_payload_pq(
+            cfg.exit.exit_id,
+            &cfg.exit.exit_x25519_multihop_pubkey,
+            cfg.exit.dns_disabled,
+            &key,
+        );
+        cfg.exit.signature = op.sign(&payload).to_bytes();
+        cfg.exit.exit_mlkem768_pubkey = Some(key.clone());
+
+        assert_eq!(cfg.signed_mlkem768_pubkey(), Some(key));
+    }
+
+    #[test]
+    fn a_key_added_to_a_classically_signed_descriptor_is_ignored() {
+        let op = SigningKey::from_bytes(&[0x77; 32]);
+        let mut cfg = circuit_signed_by(&op);
+        let payload = exit_descriptor_signing_payload(
+            cfg.exit.exit_id,
+            &cfg.exit.exit_x25519_multihop_pubkey,
+        );
+        cfg.exit.signature = op.sign(&payload).to_bytes();
+        cfg.exit.exit_mlkem768_pubkey = Some(mlkem_key());
+
+        assert!(cfg.signed_mlkem768_pubkey().is_none());
+    }
+
+    #[test]
+    fn a_key_signed_by_another_operational_key_is_ignored() {
+        let op = SigningKey::from_bytes(&[0x77; 32]);
+        let other = SigningKey::from_bytes(&[0x78; 32]);
+        let mut cfg = circuit_signed_by(&op);
+        let key = mlkem_key();
+        let payload = exit_descriptor_signing_payload_pq(
+            cfg.exit.exit_id,
+            &cfg.exit.exit_x25519_multihop_pubkey,
+            cfg.exit.dns_disabled,
+            &key,
+        );
+        cfg.exit.signature = other.sign(&payload).to_bytes();
+        cfg.exit.exit_mlkem768_pubkey = Some(key);
+
+        assert!(cfg.signed_mlkem768_pubkey().is_none());
     }
 }
