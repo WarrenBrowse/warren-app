@@ -51,6 +51,21 @@ on:
       - "talpid-cgroup/**"
       - "talpid-macos/**"
       - "mullvad-exclude/**"
+      # The rest of the workspace: the Linux job tests and lints every member,
+      # so a change confined to one of these has a gate to run.
+      - "talpid-dbus/**"
+      - "talpid-net/**"
+      - "talpid-future/**"
+      - "talpid-time/**"
+      - "mullvad-fs/**"
+      - "mullvad-logging/**"
+      - "mullvad-version/**"
+      - "mullvad-relay-selector/**"
+      - "mullvad-release-android/**"
+      - "mullvad-nsis/**"
+      - "warren-incidents/**"
+      - "warren-nm-vpn-service/**"
+      - "android/translations-converter/**"
       # The Windows leg (warren-tests.yml `windows-daemon`) builds winfw from
       # windows/ and links every Windows test binary against it, then lints
       # and tests these Windows-bearing crates. None of them was in this

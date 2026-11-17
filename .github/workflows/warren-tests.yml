@@ -183,16 +183,14 @@ jobs:
         # talpid-app-routing attributes each flow to the process owning its
         # socket; its Linux owner lookup (sock_diag, /proc) only runs here, and
         # its macOS one in the macOS job below.
+        #
+        # Every one of those crates joined a hand-kept list after a defect had
+        # already passed every gate. The scope is now the whole workspace: the
+        # Windows- and macOS-only members compile to empty crates here, and a
+        # new member is tested the day it is added.
         timeout-minutes: 30
         run: |
-          cargo nextest run --locked --profile warren-ci \
-            -p mullvad-daemon -p mullvad-api -p mullvad-types \
-            -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
-            -p mullvad-setup \
-            -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-dbus -p warren-jni \
-            -p talpid-app-routing -p warren-app-routes -p talpid-types -p talpid-cgroup -p mullvad-exclude \
-            -p warren-forum -p warren-product-env -p warren-ios -p warren-standing \
-            -p mullvad-update -p mullvad-release \
+          cargo nextest run --locked --profile warren-ci --workspace \
             --features mullvad-update/sign,mullvad-update/client
 
       # The profile retries a failed test once; name every test that needed it.
@@ -218,33 +216,18 @@ jobs:
           CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: sudo -E
         run: |
           cargo nextest run --locked --profile warren-ci --run-ignored only \
-            --test-threads 1 \
-            -p mullvad-daemon -p mullvad-api -p mullvad-types \
-            -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
-            -p mullvad-setup \
-            -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-dbus -p warren-jni \
-            -p talpid-app-routing -p warren-app-routes -p talpid-types -p talpid-cgroup -p mullvad-exclude \
-            -p warren-forum -p warren-product-env -p warren-ios -p warren-standing \
-            -p mullvad-update -p mullvad-release \
+            --test-threads 1 --workspace \
             --features mullvad-update/sign,mullvad-update/client \
             -E 'test(/^firewall::linux::/) | test(/^split_tunnel::linux::/) | test(/^early_boot_firewall::/)'
 
-      - name: cargo clippy Warren scope
-        # --no-deps: lint only these Warren crates, not their entire upstream
-        # Mullvad dependency tree. Without it, clippy -D warnings also fails on
-        # unrelated upstream crates (e.g. mullvad-relay-selector doc-style nits)
-        # that are not part of the Warren surface and carry their own upstream CI.
+      - name: cargo clippy (workspace)
+        # Every member, test code included. Clippy lints workspace members
+        # only, so the pinned sibling repos it compiles are not held to this
+        # repo's lints.
         timeout-minutes: 20
         run: |
-          crates="mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core talpid-dns talpid-dbus"
-          crates="$crates warren-jni warren-forum warren-product-env warren-ios warren-standing"
-          crates="$crates mullvad-paths mullvad-setup"
-          crates="$crates mullvad-update mullvad-release talpid-app-routing warren-app-routes"
-          crates="$crates talpid-types talpid-cgroup mullvad-exclude"
-          for crate in $crates; do
-            cargo clippy --no-deps --locked -p "$crate" -- -D warnings
-          done
-          cargo clippy --no-deps --locked -p mullvad-update --features sign,client --bins -- -D warnings
+          cargo clippy --locked --workspace --all-targets -- -D warnings
+          cargo clippy --locked -p mullvad-update --features sign,client --all-targets -- -D warnings
 
   pf-macos:
     name: pf firewall on macOS (root)
@@ -295,20 +278,12 @@ jobs:
         timeout-minutes: 20
         run: cargo test --locked -p talpid-dns
 
-      - name: cargo clippy talpid-dns (macOS implementation)
-        timeout-minutes: 10
-        run: cargo clippy --no-deps --locked -p talpid-dns --all-targets -- -D warnings
-
       # The per-app router reads the kernel's private PCB export on macOS; its
       # real-socket tests pin that layout against the running kernel, so they
       # have to run on a Mac.
       - name: cargo test talpid-app-routing (macOS owner lookup)
         timeout-minutes: 10
         run: cargo test --locked -p talpid-app-routing
-
-      - name: cargo clippy talpid-app-routing (macOS implementation)
-        timeout-minutes: 10
-        run: cargo clippy --no-deps --locked -p talpid-app-routing --all-targets -- -D warnings
 
       # The macOS split tunnel (the process classifier, the Full Disk Access
       # probe, the check that the daemon's own signature is anchored at Apple)
@@ -320,18 +295,14 @@ jobs:
           cargo test --locked -p talpid-macos
           cargo test --locked -p talpid-core --lib split_tunnel
 
-      - name: cargo clippy the macOS split tunnel
-        timeout-minutes: 10
-        run: |
-          cargo clippy --no-deps --locked -p talpid-macos --all-targets -- -D warnings
-          cargo clippy --no-deps --locked -p talpid-core -- -D warnings
-
       # The daemon and the CLI carry macOS-only code (the launch daemon, the
-      # installer guard, the keychain store) that the Linux job never compiles;
-      # before this step only a release tag's build-macos did.
-      - name: cargo check the daemon and the CLI (macOS)
+      # installer guard, the keychain store) that the Linux job never compiles,
+      # and so do the macOS halves of the routing and tunnel crates. Lint every
+      # member for this target, test code included. warren-nm-vpn-service is
+      # the NetworkManager plugin and builds on Linux only.
+      - name: cargo clippy (workspace, macOS)
         timeout-minutes: 30
-        run: cargo check --locked -p mullvad-daemon -p mullvad-cli
+        run: cargo clippy --locked --workspace --exclude warren-nm-vpn-service --all-targets -- -D warnings
 
       # warren-ios's FFI modules are `#![cfg(target_os = "ios")]`, so the Linux
       # job above compiles none of them: the whole forum login preflight (the
