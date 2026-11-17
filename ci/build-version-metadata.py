@@ -50,7 +50,9 @@ import datetime
 import hashlib
 import json
 import re
+import subprocess
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -268,20 +270,39 @@ def heal_missing_translations(releases: list, changelog_path: Path) -> list:
     return healed
 
 
-def fetch_previous(metadata_base_url: str, platform: str) -> tuple[int, list]:
+def fetch_previous(metadata_base_url: str, platform: str, verifier: str) -> tuple[int, list]:
     """Return (previous metadata_version, previous releases) for a platform.
 
-    On any network/parse error we conservatively start fresh: version 0 (so the
-    new manifest becomes 1) and no release history.
+    The history is carried into the manifest the release key signs next, so it
+    is taken from the update host only once `verifier verify` accepts its
+    signature: otherwise writing on that host would be enough to have an entry
+    signed. A platform the host has never served (404) starts the history at
+    version 0; any other failure stops the release rather than restart the
+    history and the version counter from scratch.
     """
     url = f"{metadata_base_url.rstrip('/')}/{platform}.json"
     try:
         with urllib.request.urlopen(url, timeout=15) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except (urllib.error.URLError, ValueError, TimeoutError) as error:
-        print(f"  no usable previous {platform}.json ({error}); starting fresh", file=sys.stderr)
-        return 0, []
-    signed = payload.get("signed", {})
+            body = response.read()
+    except urllib.error.HTTPError as error:
+        if error.code == 404:
+            print(f"  no previous {platform}.json on the host; starting its history", file=sys.stderr)
+            return 0, []
+        raise SystemExit(f"cannot read the previous {platform}.json ({error})")
+    except (urllib.error.URLError, TimeoutError, OSError) as error:
+        raise SystemExit(f"cannot read the previous {platform}.json ({error})")
+
+    with tempfile.NamedTemporaryFile(suffix=".json") as copy:
+        copy.write(body)
+        copy.flush()
+        checked = subprocess.run([verifier, "verify", "--file", copy.name], check=False)
+    if checked.returncode != 0:
+        raise SystemExit(f"the published {platform}.json is not signed by a trusted key")
+
+    try:
+        signed = json.loads(body.decode("utf-8")).get("signed", {})
+    except ValueError as error:
+        raise SystemExit(f"the published {platform}.json is not JSON ({error})")
     return int(signed.get("metadata_version", 0)), list(signed.get("releases", []))
 
 
@@ -563,7 +584,7 @@ def drop_downloads_versions(platforms: dict, dropped: set) -> dict:
 
 
 def build_platform(platform: str, installers: list, args, version: str, min_version: str) -> dict:
-    prev_version, prev_releases = fetch_previous(args.metadata_base_url, platform)
+    prev_version, prev_releases = fetch_previous(args.metadata_base_url, platform, args.verifier)
     prev_releases = drop_versions(prev_releases, args.dropped_versions)
     prev_releases = heal_missing_translations(prev_releases, Path(args.changelog))
     if platform == "ios":
@@ -601,6 +622,9 @@ def main() -> int:
                              "(required while the repo is private, see asset_base_url)")
     parser.add_argument("--changelog", required=True, help="Path to CHANGELOG.md")
     parser.add_argument("--metadata-base-url", required=True, help="Where the signed manifests are served")
+    parser.add_argument("--verifier", required=True,
+                        help="mullvad-version-metadata, whose `verify` checks the published "
+                             "manifests before their history is carried forward")
     parser.add_argument("--artifact-prefix", default="WarrenVPN",
                         help="Release-asset name prefix (WarrenVPN-Beta for the beta channel)")
     parser.add_argument("--channel", choices=sorted(SITE_SKIP_FORMATS), default="prod",

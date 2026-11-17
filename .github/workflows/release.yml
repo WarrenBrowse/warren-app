@@ -1239,6 +1239,7 @@ jobs:
         if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_CHANNEL == 'prod'
         run: |
           python3 ci/build-version-metadata.py \
+            --verifier target/release/mullvad-version-metadata \
             --tag "$TAG_NAME" \
             --version "$WARREN_VERSION" \
             --release-dir release-files \
@@ -1262,6 +1263,7 @@ jobs:
         if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_CHANNEL == 'beta'
         run: |
           python3 ci/build-version-metadata.py \
+            --verifier target/release/mullvad-version-metadata \
             --tag "$TAG_NAME" \
             --version "$WARREN_VERSION" \
             --release-dir release-files \

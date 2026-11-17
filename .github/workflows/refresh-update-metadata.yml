@@ -221,6 +221,7 @@ jobs:
             IFS="$old_ifs"
           fi
           python3 ci/build-version-metadata.py \
+            --verifier target/release/mullvad-version-metadata \
             --tag "$TAG_NAME" \
             --version "$VERSION" \
             --release-dir release-files \

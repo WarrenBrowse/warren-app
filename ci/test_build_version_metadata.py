@@ -10,6 +10,7 @@ a manifest pointing there is undownloadable for every user).
 """
 
 import argparse
+import json
 import importlib.util
 import tempfile
 import unittest
@@ -353,3 +354,56 @@ class DownloadsBitTorrentBlock(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FetchPrevious(unittest.TestCase):
+    """The previous manifest's history is carried into the next one the release
+    key signs, so it is taken from the update host only once its signature holds.
+    """
+
+    def setUp(self):
+        import functools
+        import http.server
+        import threading
+
+        self.root = Path(tempfile.mkdtemp())
+        handler = functools.partial(
+            http.server.SimpleHTTPRequestHandler, directory=str(self.root))
+        handler.log_message = lambda *args: None
+        self.server = http.server.HTTPServer(("127.0.0.1", 0), handler)
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        self.base = f"http://127.0.0.1:{self.server.server_address[1]}"
+        manifest = {"signatures": [], "signed": {"metadata_version": 41,
+                                                 "releases": [{"version": "1.1.0"}]}}
+        (self.root / "linux.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+    def tearDown(self):
+        self.server.shutdown()
+        self.server.server_close()
+
+    def verifier(self, exit_code: int) -> str:
+        path = self.root / f"verifier-{exit_code}"
+        path.write_text(f"#!/bin/sh\nexit {exit_code}\n", encoding="utf-8")
+        path.chmod(0o755)
+        return str(path)
+
+    def test_a_manifest_whose_signature_holds_gives_its_history(self):
+        version, releases = bvm.fetch_previous(self.base, "linux", self.verifier(0))
+
+        self.assertEqual((version, releases), (41, [{"version": "1.1.0"}]))
+
+    def test_a_manifest_whose_signature_fails_stops_the_release(self):
+        with self.assertRaises(SystemExit):
+            bvm.fetch_previous(self.base, "linux", self.verifier(1))
+
+    def test_an_unreachable_host_stops_the_release(self):
+        self.server.shutdown()
+        self.server.server_close()
+        self.server = type("Closed", (), {"shutdown": lambda s: None,
+                                          "server_close": lambda s: None})()
+
+        with self.assertRaises(SystemExit):
+            bvm.fetch_previous(self.base, "linux", self.verifier(0))
+
+    def test_a_platform_never_published_starts_the_history(self):
+        self.assertEqual(bvm.fetch_previous(self.base, "ios", self.verifier(1)), (0, []))
