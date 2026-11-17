@@ -91,7 +91,7 @@ public struct WarrenAboutView: View {
                 icon: "doc.text"
             )
             linkRow(
-                label: String(localized: "Source code (AGPL-3.0)", table: "Settings", comment: "Repo link"),
+                label: String(localized: "Source code (GPL-3.0)", table: "Settings", comment: "Repo link"),
                 url: "https://github.com/WarrenBrowse/warren-app",
                 icon: "chevron.left.forwardslash.chevron.right"
             )
@@ -104,7 +104,7 @@ public struct WarrenAboutView: View {
 
         Text(
             String(
-                localized: "Warren is a fork of Mullvad VPN. Mullvad's upstream code is licensed under GPL-3.0 ; Warren's modifications are under AGPL-3.0.",
+                localized: "Warren is a fork of the Mullvad VPN app, copyright Mullvad VPN AB. The app is licensed under GPL-3.0, and its tunnel engine, warrenguard, under AGPL-3.0.",
                 table: "Settings",
                 comment: "Bottom legal credit explaining the Mullvad fork relationship + license"
             )

@@ -20207,6 +20207,302 @@
           }
         }
       }
+    },
+    "Source code (GPL-3.0)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الشيفرة المصدرية (GPL-3.0)"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kildekode (GPL-3.0)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quellcode (GPL-3.0)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source code (GPL-3.0)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código fuente (GPL-3.0)"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کد منبع (GPL-3.0)"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lähdekoodi (GPL-3.0)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code source (GPL-3.0)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice sorgente (GPL-3.0)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ソースコード (GPL-3.0)"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "소스 코드 (GPL-3.0)"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ရင်းမြစ်ကုဒ် (GPL-3.0)"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kildekode (GPL-3.0)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Broncode (GPL-3.0)"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kod źródłowy (GPL-3.0)"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código-fonte (GPL-3.0)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cod sursă (GPL-3.0)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Исходный код (GPL-3.0)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Källkod (GPL-3.0)"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ซอร์สโค้ด (GPL-3.0)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaynak kodu (GPL-3.0)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихідний код (GPL-3.0)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "源代码 (GPL-3.0)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原始碼 (GPL-3.0)"
+          }
+        }
+      }
+    },
+    "Warren is a fork of the Mullvad VPN app, copyright Mullvad VPN AB. The app is licensed under GPL-3.0, and its tunnel engine, warrenguard, under AGPL-3.0.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren نسخة متفرعة من تطبيق Mullvad VPN، حقوق النشر لشركة Mullvad VPN AB. التطبيق مرخّص بموجب GPL-3.0، ومحرك النفق warrenguard بموجب AGPL-3.0."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren er en fork af Mullvad VPN-appen, copyright Mullvad VPN AB. Appen er licenseret under GPL-3.0, og dens tunnelmotor, warrenguard, under AGPL-3.0."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren ist ein Fork der Mullvad VPN App, Copyright Mullvad VPN AB. Die App steht unter der GPL-3.0, ihre Tunnel-Engine warrenguard unter der AGPL-3.0."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren is a fork of the Mullvad VPN app, copyright Mullvad VPN AB. The app is licensed under GPL-3.0, and its tunnel engine, warrenguard, under AGPL-3.0."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren es una bifurcación de la aplicación Mullvad VPN, copyright Mullvad VPN AB. La aplicación tiene licencia GPL-3.0, y su motor de túnel, warrenguard, licencia AGPL-3.0."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren انشعابی از برنامه Mullvad VPN با حق نشر Mullvad VPN AB است. این برنامه تحت مجوز GPL-3.0 و موتور تونل آن، warrenguard، تحت مجوز AGPL-3.0 است."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren on haara Mullvad VPN -sovelluksesta, tekijänoikeus Mullvad VPN AB. Sovelluksen lisenssi on GPL-3.0 ja sen tunnelimoottorin warrenguardin AGPL-3.0."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren est un fork de l'application Mullvad VPN, copyright Mullvad VPN AB. L'application est sous licence GPL-3.0, et son moteur de tunnel, warrenguard, sous AGPL-3.0."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren è un fork dell'app Mullvad VPN, copyright Mullvad VPN AB. L'app è distribuita con licenza GPL-3.0, e il suo motore del tunnel, warrenguard, con licenza AGPL-3.0."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren は Mullvad VPN AB が著作権を持つ Mullvad VPN アプリのフォークです。アプリは GPL-3.0、トンネルエンジン warrenguard は AGPL-3.0 でライセンスされています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren은 Mullvad VPN AB가 저작권을 가진 Mullvad VPN 앱의 포크입니다. 앱은 GPL-3.0, 터널 엔진 warrenguard는 AGPL-3.0 라이선스를 따릅니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren သည် Mullvad VPN AB မူပိုင်ဖြစ်သော Mullvad VPN အက်ပ်မှ ခွဲထွက်လာသော ဗားရှင်းဖြစ်သည်။ အက်ပ်ကို GPL-3.0 ဖြင့်၊ ၎င်း၏ တန်နယ်အင်ဂျင် warrenguard ကို AGPL-3.0 ဖြင့် လိုင်စင်ပေးထားသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren er en fork av Mullvad VPN-appen, copyright Mullvad VPN AB. Appen er lisensiert under GPL-3.0, og tunnelmotoren, warrenguard, under AGPL-3.0."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren is een fork van de Mullvad VPN-app, copyright Mullvad VPN AB. De app valt onder de GPL-3.0-licentie, en de tunnelengine, warrenguard, onder de AGPL-3.0."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren to fork aplikacji Mullvad VPN, copyright Mullvad VPN AB. Aplikacja jest objęta licencją GPL-3.0, a jej silnik tunelu, warrenguard, licencją AGPL-3.0."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Warren é um fork da aplicação Mullvad VPN, copyright Mullvad VPN AB. A aplicação está licenciada sob GPL-3.0, e o seu motor de túnel, warrenguard, sob AGPL-3.0."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren este un fork al aplicației Mullvad VPN, copyright Mullvad VPN AB. Aplicația este licențiată sub GPL-3.0, iar motorul tunelului, warrenguard, sub AGPL-3.0."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren является форком приложения Mullvad VPN, copyright Mullvad VPN AB. Приложение распространяется под лицензией GPL-3.0, а его движок туннеля, warrenguard, под AGPL-3.0."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren är en fork av appen Mullvad VPN, copyright Mullvad VPN AB. Appen är licensierad under GPL-3.0, och dess tunnelmotor, warrenguard, under AGPL-3.0."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren เป็นฟอร์กของแอป Mullvad VPN ลิขสิทธิ์ของ Mullvad VPN AB แอปนี้ใช้สัญญาอนุญาต GPL-3.0 และเอนจินอุโมงค์ warrenguard ใช้ AGPL-3.0"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren, telif hakkı Mullvad VPN AB'ye ait olan Mullvad VPN uygulamasının bir çatalıdır. Uygulama GPL-3.0, tünel motoru warrenguard ise AGPL-3.0 ile lisanslanmıştır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren є форком застосунку Mullvad VPN, copyright Mullvad VPN AB. Застосунок поширюється за ліцензією GPL-3.0, а його рушій тунелю, warrenguard, за AGPL-3.0."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren 是 Mullvad VPN 应用的分支，版权归 Mullvad VPN AB 所有。本应用以 GPL-3.0 授权，其隧道引擎 warrenguard 以 AGPL-3.0 授权。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren 是 Mullvad VPN 應用程式的分支，版權屬於 Mullvad VPN AB。本應用程式以 GPL-3.0 授權，其通道引擎 warrenguard 以 AGPL-3.0 授權。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
