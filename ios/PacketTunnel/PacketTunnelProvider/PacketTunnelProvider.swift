@@ -407,14 +407,16 @@ extension PacketTunnelProvider: WarrenTunnelIPReassigning {
         let mask = Self.ipv4SubnetMask(prefixLength: prefixLength)
         let settings = tunnelNetworkSettings(ipv4Address: address, ipv4SubnetMask: mask)
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            // The address itself stays out of the log: the exit keeps it
+            // stable per wallet, so it would tie a shared log to the account.
             setTunnelNetworkSettings(settings) { error in
                 if let error {
                     self.providerLogger.error(
-                        "Failed to re-apply tunnel settings for exit IP \(address)/\(prefixLength): \(error)"
+                        "Failed to re-apply tunnel settings for the exit-allocated /\(prefixLength): \((error as NSError).code)"
                     )
                 } else {
                     self.providerLogger.debug(
-                        "Re-applied tunnel network settings with exit-allocated IP \(address)/\(prefixLength)"
+                        "Re-applied tunnel network settings with the exit-allocated /\(prefixLength)"
                     )
                 }
                 continuation.resume()
