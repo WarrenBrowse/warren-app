@@ -987,6 +987,12 @@ pub enum Error {
     #[error("Warren tun setup failed: {0}")]
     TunSetup(String),
 
+    /// The routes that send traffic into the tunnel could not be installed.
+    /// The session is up but carries nothing, so the tunnel must never report
+    /// itself connected: the state machine blocks with this cause instead.
+    #[error("Warren tunnel routes not installed: {0}")]
+    RouteSetup(String),
+
     /// Transient backend error that the state machine should retry:
     /// TUN I/O error, temporary network disruption, or a session
     /// closed by the peer without an explicit rejection code. The
@@ -1194,6 +1200,24 @@ fn reject_error(reason: RejectionReason) -> Error {
             )),
         }),
     }
+}
+
+/// The split-default guard `install` puts in place for a tunnel whose relay
+/// is `relay`, or the error that keeps the tunnel from reporting itself up
+/// without a default route.
+fn require_default_route<G>(
+    relay: IpAddr,
+    install: impl FnOnce(std::net::Ipv4Addr) -> anyhow::Result<G>,
+) -> Result<G, Error> {
+    let IpAddr::V4(relay_v4) = relay else {
+        // The macOS split keys its cleanup on the relay's IPv4 host address,
+        // so a placeholder there could delete an unrelated host route.
+        return Err(Error::RouteSetup(
+            "the relay is reached over IPv6, which the default route split does not support"
+                .to_owned(),
+        ));
+    };
+    install(relay_v4).map_err(|e| Error::RouteSetup(format!("default route split: {e:#}")))
 }
 
 /// Token the app reads to tell the user the device clock is wrong, never an
@@ -2081,28 +2105,23 @@ impl WarrenTunnelMonitor {
             start_t.elapsed().as_millis()
         );
         let metadata_iface_for_log = metadata.interface.clone();
-        runtime.block_on(async move {
+        let routes_installed = runtime.block_on(async move {
             #[cfg(target_os = "macos")]
-            match route_manager
+            route_manager
                 .add_routes(macos_bypass_routes.into_iter().collect())
                 .await
-            {
-                Ok(()) => log::info!("Warren multi-hop relay bypass route installed"),
-                Err(e) => log::warn!(
-                    "Failed to install Warren multi-hop relay bypass route: {e}. \
-                     Relay traffic may transiently self-nest through the tun."
-                ),
-            }
-            match route_manager.add_routes(routes.into_iter().collect()).await {
-                Ok(()) => log::info!(
-                    "Warren multi-hop tunnel routes installed (tun={metadata_iface_for_log})"
-                ),
-                Err(e) => log::warn!(
-                    "Failed to install Warren multi-hop tunnel routes: {e}. \
-                     Tunnel up but no traffic forwarding."
-                ),
-            }
+                .map_err(|e| format!("relay bypass route: {e}"))?;
+            route_manager
+                .add_routes(routes.into_iter().collect())
+                .await
+                .map_err(|e| format!("tunnel routes: {e}"))?;
+            log::info!("Warren multi-hop tunnel routes installed (tun={metadata_iface_for_log})");
+            Ok::<(), String>(())
         });
+        if let Err(reason) = routes_installed {
+            supervisor_handle.abort();
+            return Err(Error::RouteSetup(reason));
+        }
         log::debug!(
             "{TRACE_PREFIX} T6={}ms phase=routes_added elapsed_routes={}ms (multi-hop)",
             start_t.elapsed().as_millis(),
@@ -2127,33 +2146,20 @@ impl WarrenTunnelMonitor {
         let tunnel_resolvers_v6 = params.tunnel_resolvers.clone();
         #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
         let default_route_guard = {
-            let relay_ip_v4 = match relay_endpoint.ip() {
-                IpAddr::V4(v4) => Some(v4),
-                IpAddr::V6(_) => None,
-            };
-            if let Some(v4) = relay_ip_v4 {
-                let tun_name_for_split = metadata.interface.clone();
-                runtime
-                    .block_on(async move {
-                        default_route_split::install_v4(
-                            v4,
-                            &tun_name_for_split,
-                            include_only,
-                            &tunnel_resolvers,
-                        )
-                        .await
-                    })
-                    .map(Some)
-                    .unwrap_or_else(|e| {
-                        log::warn!(
-                            "Warren multi-hop: failed to install default-route split: {e}. \
-                             Internet traffic will NOT route via tunnel."
-                        );
-                        None
-                    })
-            } else {
-                log::warn!("Warren multi-hop: no IPv4 relay endpoint, skip default-route split.");
-                None
+            let tun_name_for_split = metadata.interface.clone();
+            match require_default_route(relay_endpoint.ip(), |v4| {
+                runtime.block_on(default_route_split::install_v4(
+                    v4,
+                    &tun_name_for_split,
+                    include_only,
+                    &tunnel_resolvers,
+                ))
+            }) {
+                Ok(guard) => Some(guard),
+                Err(e) => {
+                    supervisor_handle.abort();
+                    return Err(e);
+                }
             }
         };
         #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
@@ -5527,6 +5533,31 @@ mod tests {
             "BackendFatal must NOT be recoverable - the state machine must enter \
              ErrorState rather than looping on a guaranteed-to-fail reconnect"
         );
+    }
+
+    #[test]
+    fn a_tunnel_with_no_default_route_never_reports_itself_up() {
+        let relay_v4: IpAddr = "192.0.2.10".parse().unwrap();
+        let installed = require_default_route(relay_v4, |_| Ok::<_, anyhow::Error>("guard"));
+        assert_eq!(installed.unwrap(), "guard");
+
+        let failed = require_default_route(relay_v4, |_| {
+            Err::<&str, _>(anyhow::anyhow!("route socket refused"))
+        });
+        assert!(
+            matches!(&failed, Err(Error::RouteSetup(m)) if m.contains("route socket refused")),
+            "{failed:?}"
+        );
+        assert!(!failed.unwrap_err().is_recoverable());
+
+        let relay_v6: IpAddr = "2001:db8::10".parse().unwrap();
+        let mut called = false;
+        let v6 = require_default_route(relay_v6, |_| {
+            called = true;
+            Ok::<_, anyhow::Error>("guard")
+        });
+        assert!(matches!(v6, Err(Error::RouteSetup(_))), "{v6:?}");
+        assert!(!called, "an IPv6 relay must not reach the IPv4 split");
     }
 
     #[test]
