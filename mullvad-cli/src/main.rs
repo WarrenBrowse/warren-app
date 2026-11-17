@@ -87,15 +87,15 @@ enum Cli {
     /// the new access method. Otherwise it will re-try using yet another access
     /// method.
     ///
-    /// The Warren API is used for logging in, accessing the relay list,
-    /// rotating Wireguard keys and more.
+    /// The Warren API is used for logging in, accessing the relay list and
+    /// more.
     #[clap(subcommand)]
     ApiAccess(api_access::ApiAccess),
 
-    /// Manage use of anti censorship methods for WireGuard.
-    /// Can make WireGuard traffic look like something else on the network.
-    /// Helps circumvent censorship and to establish a tunnel when on restricted networks
-    #[clap(subcommand)]
+    /// Inherited obfuscation settings (udp2tcp, Shadowsocks, LWO). The Warren
+    /// tunnel always runs over QUIC on port 443 and does not read them, so the
+    /// command is kept for existing scripts and hidden from help.
+    #[clap(subcommand, hide = true)]
     AntiCensorship(anti_censorship::AntiCensorship),
 
     #[clap(subcommand)]
@@ -331,5 +331,53 @@ mod tests {
         let error = anyhow::Error::from(Error::from(Status::unavailable("daemon is down")));
 
         assert_eq!(daemon_refusal(&error), None);
+    }
+}
+
+#[cfg(test)]
+mod help_text_tests {
+    use super::Cli;
+    use clap::CommandFactory;
+
+    /// Every description a user can read in `--help`, from the visible
+    /// commands and their arguments, with the usage line of each command.
+    fn visible_help(command: &mut clap::Command, out: &mut Vec<(String, String)>) {
+        let name = command.get_name().to_owned();
+        for text in [command.get_about(), command.get_long_about()]
+            .into_iter()
+            .flatten()
+        {
+            out.push((name.clone(), text.to_string()));
+        }
+        for arg in command.get_arguments().filter(|arg| !arg.is_hide_set()) {
+            for text in [arg.get_help(), arg.get_long_help()].into_iter().flatten() {
+                out.push((name.clone(), text.to_string()));
+            }
+        }
+        out.push((name.clone(), command.render_usage().to_string()));
+        for sub in command
+            .get_subcommands_mut()
+            .filter(|sub| !sub.is_hide_set())
+        {
+            visible_help(sub, out);
+        }
+    }
+
+    /// The CLI drives the Warren QUIC tunnel. Help that describes WireGuard
+    /// or names the upstream product describes software this is not.
+    #[test]
+    fn help_describes_this_product_only() {
+        let mut texts = Vec::new();
+        visible_help(&mut Cli::command(), &mut texts);
+
+        let offending: Vec<_> = texts
+            .iter()
+            .filter(|(_, text)| {
+                let text = text.to_lowercase();
+                text.contains("mullvad") || text.contains("wireguard")
+            })
+            .collect();
+
+        assert!(offending.is_empty(), "{offending:#?}");
     }
 }

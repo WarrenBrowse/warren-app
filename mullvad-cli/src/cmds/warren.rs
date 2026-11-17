@@ -73,7 +73,8 @@ pub enum WarrenApiUrl {
         url: String,
     },
 
-    /// Unset the warren-api URL (restart daemon to apply, fallback Mullvad upstream)
+    /// Unset the warren-api URL (restart daemon to apply, falls back to the API of this build's
+    /// channel)
     Unset,
 }
 

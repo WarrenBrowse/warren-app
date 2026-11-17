@@ -46,26 +46,26 @@ pub enum Relay {
 #[derive(Subcommand, Debug, Clone)]
 pub enum SetCommands {
     /// Select a relay using country, city or hostname.
-    /// The 'mullvad relay list' command shows the available relays and their
+    /// The 'relay list' command shows the available relays and their
     /// geographical location.
     #[command(
         override_usage = "warren relay set location <COUNTRY> [CITY] [HOSTNAME] | <HOSTNAME>
 
   Select relay using a country:
 
-\tmullvad relay set location se
+\twarren relay set location fi
 
   Select relay using a country and city:
 
-\tmullvad relay set location se got
+\twarren relay set location fi hel
 
-  Select relay using a country, city and hostname:
+  Select relay using a country, city and a hostname from 'relay list':
 
-\tmullvad relay set location se got se-got-wg-004
+\twarren relay set location fi hel <HOSTNAME>
 
   Select relay using only its hostname:
 
-\tmullvad relay set location se-got-wg-004"
+\twarren relay set location <HOSTNAME>"
     )]
     Location(LocationArgs),
 
@@ -107,7 +107,9 @@ pub enum SetCommands {
     #[clap(subcommand)]
     Entry(EntryArgs),
 
-    /// Set a custom WireGuard relay
+    /// Inherited custom WireGuard endpoint. The Warren tunnel does not connect
+    /// to it, so the command is kept for existing scripts and hidden from help.
+    #[command(hide = true)]
     Custom {
         /// Hostname or IP
         host: String,
@@ -133,23 +135,23 @@ pub enum EntryArgs {
     /// Location of entry relay. This can be 'any' or any location that is valid with 'set
     /// location', such as 'se got'.
     #[command(
-        override_usage = "warren relay set tunnel wireguard entry-location <COUNTRY> [CITY] [HOSTNAME] | <HOSTNAME>
+        override_usage = "warren relay set entry location <COUNTRY> [CITY] [HOSTNAME] | <HOSTNAME>
 
   Select entry location using a country:
 
-\tmullvad relay set tunnel wireguard entry-location se
+\twarren relay set entry location fi
 
   Select entry location using a country and city:
 
-\tmullvad relay set tunnel wireguard entry-location se got
+\twarren relay set entry location fi hel
 
-  Select entry location using a country, city and hostname:
+  Select entry location using a country, city and a hostname from 'relay list':
 
-\tmullvad relay set tunnel wireguard entry-location se got se-got-wg-004
+\twarren relay set entry location fi hel <HOSTNAME>
 
   Select entry location using only its hostname:
 
-\tmullvad relay set tunnel wireguard entry-location se-got-wg-004"
+\twarren relay set entry location <HOSTNAME>"
     )]
     Location(LocationArgs),
     /// Name of custom list to use to pick entry endpoint.

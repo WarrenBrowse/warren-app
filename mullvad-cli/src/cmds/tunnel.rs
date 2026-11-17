@@ -34,6 +34,9 @@ pub enum TunnelOptions {
     /// Configure whether to enable DAITA direct only
     DaitaDirectOnly { state: BooleanOption },
 
+    /// Inherited WireGuard allowed IPs, which the Warren tunnel does not read: kept for existing
+    /// scripts and hidden from help.
+    ///
     /// Specify custom allowed IPs for WireGuard tunnels. Use comma-separated values of IPs and IP ranges in CIDR notation.
     /// A empty string resets to the default value, where all traffic is allowed, i.e. (0.0.0.0/0,::/0).
     /// For CIDR ranges, host bits must be zero (e.g., "10.0.0.0/24" is valid, "10.0.0.1/24" is not).
@@ -41,13 +44,16 @@ pub enum TunnelOptions {
     /// Example: "10.0.0.0/24,192.168.1.1,fd00::/8"
     ///
     /// WARNING: Setting this value incorrectly may cause internet access to be blocked or the app to not work properly.
+    #[command(hide = true)]
     AllowedIps { allowed_ips: String },
 
     /// Enable or disable IPv6 in the tunnel
     #[clap(arg_required_else_help = true)]
     Ipv6 { state: BooleanOption },
 
-    /// Use userspace WireGuard.
+    /// Inherited userspace WireGuard switch, which the Warren tunnel does not read: kept for
+    /// existing scripts and hidden from help.
+    #[command(hide = true)]
     Userspace { state: BooleanOption },
 }
 
