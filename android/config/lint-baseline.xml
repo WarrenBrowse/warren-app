@@ -2,355 +2,1173 @@
 <issues format="6" by="lint 9.1.1" type="baseline" client="gradle" dependencies="true" name="AGP (9.1.1)" variant="all" version="9.1.1">
 
     <issue
+        id="ApplySharedPref"
+        message="Consider using `apply()` instead; `commit` writes its data to persistent storage immediately, whereas `apply` will handle it in the background"
+        errorLine1="        prefs.edit().remove(name).commit()"
+        errorLine2="                                  ~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/lib/repository/PendingVoucherStore.kt"
+            line="205"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="PrivateApi"
+        message="Accessing internal APIs via reflection is not supported and may not work on all devices or in the future"
+        errorLine1="            val cls = Class.forName(&quot;android.os.SystemProperties&quot;)"
+        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/forum/ForumPlatformReads.kt"
+            line="166"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="IntentFilterUniqueDataAttributes"
+        message="Consider splitting data tag into multiple tags with individual attributes to avoid confusion"
+        errorLine1="                &lt;data android:scheme=&quot;${warrenDeepLinkScheme}&quot; android:host=&quot;forum-login&quot; />"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="90"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="IntentFilterUniqueDataAttributes"
+        message="Consider splitting data tag into multiple tags with individual attributes to avoid confusion"
+        errorLine1="                &lt;data android:scheme=&quot;${warrenDeepLinkScheme}&quot; android:host=&quot;attach-logs&quot; />"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="91"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`encodeToString` is defined both as a member in class `kotlinx.serialization.json.Json` and an extension in package `kotlinx.serialization`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="            Json.encodeToString(relays.map { it.toRelayInfo() })"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/connect/JniExitPinResolver.kt"
+            line="124"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`cancel` is defined both as a member in class `kotlinx.coroutines.Job` and an extension in package `kotlinx.coroutines`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="        job?.cancel()"
+        errorLine2="        ~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/tile/WarrenTileService.kt"
+            line="90"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`cancel` is defined both as a member in class `kotlinx.coroutines.Job` and an extension in package `kotlinx.coroutines`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="        job?.cancel()"
+        errorLine2="        ~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/tile/WarrenTileService.kt"
+            line="95"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`encodeToString` is defined both as a member in class `kotlinx.serialization.json.Json` and an extension in package `kotlinx.serialization`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="fun WarrenTunnelConfig.toWireJson(): String = Json.encodeToString(this)"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/service/WarrenTunnelConfig.kt"
+            line="161"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`encodeToString` is defined both as a member in class `kotlinx.serialization.json.Json` and an extension in package `kotlinx.serialization`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="fun appExitsWireJson(exits: Map&lt;String, AppExit>): String = Json.encodeToString(appExitsWire(exits))"
+        errorLine2="                                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/service/WarrenTunnelConfig.kt"
+            line="182"
+            column="61"/>
+    </issue>
+
+    <issue
+        id="RememberInComposition"
+        message="Calling a @RememberInComposition annotated declaration inside composition without using `remember`"
+        errorLine1="                    contentFocusRequester = FocusRequester(),"
+        errorLine2="                                            ~~~~~~~~~~~~~~">
+        <location
+            file="src/androidTest/kotlin/com/warrenbrowse/vpn/feature/managedevices/impl/ManageDevicesScreenTest.kt"
+            line="162"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="RememberInComposition"
+        message="Calling a @RememberInComposition annotated declaration inside composition without using `remember`"
+        errorLine1="                    contentFocusRequester = FocusRequester(),"
+        errorLine2="                                            ~~~~~~~~~~~~~~">
+        <location
+            file="../lib/feature/managedevices/impl/src/androidTest/kotlin/com/warrenbrowse/vpn/feature/managedevices/impl/ManageDevicesScreenTest.kt"
+            line="162"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="VectorRaster"
+        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        errorLine1="        android:width=&quot;320dp&quot;"
+        errorLine2="                       ~~~~~">
+        <location
+            file="src/main/res/drawable/ic_banner_foreground.xml"
+            line="4"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="ContextCastToActivity"
+        message="LocalContext should not be cast to Activity, use LocalActivity instead"
+        errorLine1="    val activity = LocalContext.current as FragmentActivity"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/feature/managedevices/impl/ManageDevicesScreen.kt"
+            line="175"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="ContextCastToActivity"
+        message="LocalContext should not be cast to Activity, use LocalActivity instead"
+        errorLine1="    val activity = LocalContext.current as FragmentActivity"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/feature/login/impl/WarrenRestoreMnemonicScreen.kt"
+            line="52"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="ContextCastToActivity"
+        message="LocalContext should not be cast to Activity, use LocalActivity instead"
+        errorLine1="    val activity = LocalContext.current as FragmentActivity"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/feature/login/impl/WarrenWalletLoginScreen.kt"
+            line="95"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="ContextCastToActivity"
+        message="LocalContext should not be cast to Activity, use LocalActivity instead"
+        errorLine1="    val activity = LocalContext.current as FragmentActivity"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/feature/settings/impl/WarrenWalletSettingsScreen.kt"
+            line="109"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                    context.getString(R.string.onboarding_subscription_check_failed)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/screen/onboarding/OnboardingSubscriptionScreen.kt"
+            line="120"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                else -> context.getString(R.string.onboarding_subscription_none_found)"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/screen/onboarding/OnboardingSubscriptionScreen.kt"
+            line="122"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                    message = context.getString(R.string.location_added_to_list, listName),"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/feature/settings/impl/WarrenLocationPickerScreen.kt"
+            line="302"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current"
+        errorLine1="                    message = context.getString(R.string.location_removed_from_named_list, listName),"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/feature/settings/impl/WarrenLocationPickerScreen.kt"
+            line="308"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="StateFlowValueCalledInComposition"
+        message="StateFlow.value should not be called within composition"
+        errorLine1="    val pubkey = when (val s = walletRepository.state.value) {"
+        errorLine2="                                                      ~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/screen/outoftime/OutOfTimeScreen.kt"
+            line="102"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="StateFlowValueCalledInComposition"
+        message="StateFlow.value should not be called within composition"
+        errorLine1="                initialValue = transitionInFlight(tunnelStateProvider.connectedInfo.value)"
+        errorLine2="                                                                                    ~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/feature/settings/impl/WarrenLocationPickerScreen.kt"
+            line="137"
+            column="85"/>
+    </issue>
+
+    <issue
+        id="UnusedBoxWithConstraintsScope"
+        message="BoxWithConstraints scope is not used"
+        errorLine1="            ) {"
+        errorLine2="              ^">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/feature/home/impl/connect/ConnectScreen.kt"
+            line="1003"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="UnusedMaterial3ScaffoldPaddingParameter"
+        message="Content padding parameter it is not used"
+        errorLine1="        ) {"
+        errorLine2="          ^">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/feature/home/impl/connect/ConnectScreen.kt"
+            line="851"
+            column="11"/>
+    </issue>
+
+    <issue
         id="MissingQuantity"
         message="For locale &quot;es&quot; (Spanish) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;days&quot;>"
+        errorLine1="    &lt;plurals name=&quot;vpn_only_for_apps&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-es/plurals.xml"
-            line="3"
+            file="src/main/res/values-es/strings.xml"
+            line="105"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;fr&quot; (French) the following quantity should also be defined: `many` (e.g. &quot;1000000 de jours&quot;)"
-        errorLine1="    &lt;plurals name=&quot;days&quot;>"
+        errorLine1="    &lt;plurals name=&quot;vpn_only_for_apps&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-fr/plurals.xml"
-            line="3"
+            file="src/main/res/values-fr/strings.xml"
+            line="105"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;days&quot;>"
+        errorLine1="    &lt;plurals name=&quot;vpn_only_for_apps&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-it/plurals.xml"
-            line="3"
+            file="src/main/res/values-it/strings.xml"
+            line="105"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;days&quot;>"
+        errorLine1="    &lt;plurals name=&quot;vpn_only_for_apps&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-pt/plurals.xml"
-            line="3"
+            file="src/main/res/values-pt/strings.xml"
+            line="105"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;es&quot; (Spanish) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;number_of_locations&quot;>"
+        errorLine1="    &lt;plurals name=&quot;account_remaining_days&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-es/plurals.xml"
-            line="7"
+            file="src/main/res/values-es/strings.xml"
+            line="464"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;fr&quot; (French) the following quantity should also be defined: `many` (e.g. &quot;1000000 de jours&quot;)"
-        errorLine1="    &lt;plurals name=&quot;number_of_locations&quot;>"
+        errorLine1="    &lt;plurals name=&quot;account_remaining_days&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-fr/plurals.xml"
-            line="7"
+            file="src/main/res/values-fr/strings.xml"
+            line="464"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;number_of_locations&quot;>"
+        errorLine1="    &lt;plurals name=&quot;account_remaining_days&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-it/plurals.xml"
-            line="7"
+            file="src/main/res/values-it/strings.xml"
+            line="464"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;number_of_locations&quot;>"
+        errorLine1="    &lt;plurals name=&quot;account_remaining_days&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-pt/plurals.xml"
-            line="7"
+            file="src/main/res/values-pt/strings.xml"
+            line="464"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;es&quot; (Spanish) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;months&quot;>"
+        errorLine1="    &lt;plurals name=&quot;account_remaining_months&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-es/plurals.xml"
-            line="11"
+            file="src/main/res/values-es/strings.xml"
+            line="468"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;fr&quot; (French) the following quantity should also be defined: `many` (e.g. &quot;1000000 de jours&quot;)"
-        errorLine1="    &lt;plurals name=&quot;months&quot;>"
+        errorLine1="    &lt;plurals name=&quot;account_remaining_months&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-fr/plurals.xml"
-            line="11"
+            file="src/main/res/values-fr/strings.xml"
+            line="468"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;months&quot;>"
+        errorLine1="    &lt;plurals name=&quot;account_remaining_months&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-it/plurals.xml"
-            line="11"
+            file="src/main/res/values-it/strings.xml"
+            line="468"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;months&quot;>"
+        errorLine1="    &lt;plurals name=&quot;account_remaining_months&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-pt/plurals.xml"
-            line="11"
+            file="src/main/res/values-pt/strings.xml"
+            line="468"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;es&quot; (Spanish) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;days_left&quot;>"
+        errorLine1="    &lt;plurals name=&quot;account_remaining_years&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-es/plurals.xml"
-            line="15"
+            file="src/main/res/values-es/strings.xml"
+            line="472"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;fr&quot; (French) the following quantity should also be defined: `many` (e.g. &quot;1000000 de jours&quot;)"
-        errorLine1="    &lt;plurals name=&quot;days_left&quot;>"
+        errorLine1="    &lt;plurals name=&quot;account_remaining_years&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-fr/plurals.xml"
-            line="15"
+            file="src/main/res/values-fr/strings.xml"
+            line="472"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;days_left&quot;>"
+        errorLine1="    &lt;plurals name=&quot;account_remaining_years&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-it/plurals.xml"
-            line="15"
+            file="src/main/res/values-it/strings.xml"
+            line="472"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;days_left&quot;>"
+        errorLine1="    &lt;plurals name=&quot;account_remaining_years&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-pt/plurals.xml"
-            line="15"
+            file="src/main/res/values-pt/strings.xml"
+            line="472"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;es&quot; (Spanish) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;years_left&quot;>"
+        errorLine1="    &lt;plurals name=&quot;forum_activity_notification_several&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-es/plurals.xml"
-            line="19"
+            file="src/main/res/values-es/strings.xml"
+            line="695"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;fr&quot; (French) the following quantity should also be defined: `many` (e.g. &quot;1000000 de jours&quot;)"
-        errorLine1="    &lt;plurals name=&quot;years_left&quot;>"
+        errorLine1="    &lt;plurals name=&quot;forum_activity_notification_several&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-fr/plurals.xml"
-            line="19"
+            file="src/main/res/values-fr/strings.xml"
+            line="695"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;years_left&quot;>"
+        errorLine1="    &lt;plurals name=&quot;forum_activity_notification_several&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-it/plurals.xml"
-            line="19"
+            file="src/main/res/values-it/strings.xml"
+            line="695"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;years_left&quot;>"
+        errorLine1="    &lt;plurals name=&quot;forum_activity_notification_several&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-pt/plurals.xml"
-            line="19"
+            file="src/main/res/values-pt/strings.xml"
+            line="695"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;es&quot; (Spanish) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;account_credit_expires_in_days&quot;>"
+        errorLine1="    &lt;plurals name=&quot;home_days_left&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-es/plurals.xml"
-            line="23"
+            file="src/main/res/values-es/strings.xml"
+            line="779"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;fr&quot; (French) the following quantity should also be defined: `many` (e.g. &quot;1000000 de jours&quot;)"
-        errorLine1="    &lt;plurals name=&quot;account_credit_expires_in_days&quot;>"
+        errorLine1="    &lt;plurals name=&quot;home_days_left&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-fr/plurals.xml"
-            line="23"
+            file="src/main/res/values-fr/strings.xml"
+            line="779"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;account_credit_expires_in_days&quot;>"
+        errorLine1="    &lt;plurals name=&quot;home_days_left&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-it/plurals.xml"
-            line="23"
+            file="src/main/res/values-it/strings.xml"
+            line="779"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;account_credit_expires_in_days&quot;>"
+        errorLine1="    &lt;plurals name=&quot;home_days_left&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-pt/plurals.xml"
-            line="23"
+            file="src/main/res/values-pt/strings.xml"
+            line="779"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;es&quot; (Spanish) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;account_credit_expires_in_hours&quot;>"
+        errorLine1="    &lt;plurals name=&quot;home_months_left&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-es/plurals.xml"
-            line="27"
+            file="src/main/res/values-es/strings.xml"
+            line="783"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;fr&quot; (French) the following quantity should also be defined: `many` (e.g. &quot;1000000 de jours&quot;)"
-        errorLine1="    &lt;plurals name=&quot;account_credit_expires_in_hours&quot;>"
+        errorLine1="    &lt;plurals name=&quot;home_months_left&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-fr/plurals.xml"
-            line="27"
+            file="src/main/res/values-fr/strings.xml"
+            line="783"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;account_credit_expires_in_hours&quot;>"
+        errorLine1="    &lt;plurals name=&quot;home_months_left&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-it/plurals.xml"
-            line="27"
+            file="src/main/res/values-it/strings.xml"
+            line="783"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;account_credit_expires_in_hours&quot;>"
+        errorLine1="    &lt;plurals name=&quot;home_months_left&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-pt/plurals.xml"
-            line="27"
+            file="src/main/res/values-pt/strings.xml"
+            line="783"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;es&quot; (Spanish) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;delete_account_days_left_warning&quot;>"
+        errorLine1="    &lt;plurals name=&quot;home_years_left&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-es/plurals.xml"
-            line="31"
+            file="src/main/res/values-es/strings.xml"
+            line="787"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;fr&quot; (French) the following quantity should also be defined: `many` (e.g. &quot;1000000 de jours&quot;)"
-        errorLine1="    &lt;plurals name=&quot;delete_account_days_left_warning&quot;>"
+        errorLine1="    &lt;plurals name=&quot;home_years_left&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-fr/plurals.xml"
-            line="31"
+            file="src/main/res/values-fr/strings.xml"
+            line="787"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;delete_account_days_left_warning&quot;>"
+        errorLine1="    &lt;plurals name=&quot;home_years_left&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-it/plurals.xml"
-            line="31"
+            file="src/main/res/values-it/strings.xml"
+            line="787"
             column="5"/>
     </issue>
 
     <issue
         id="MissingQuantity"
         message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;delete_account_days_left_warning&quot;>"
+        errorLine1="    &lt;plurals name=&quot;home_years_left&quot;>"
         errorLine2="    ^">
         <location
-            file="src/main/res/values-pt/plurals.xml"
-            line="31"
+            file="src/main/res/values-pt/strings.xml"
+            line="787"
             column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;words&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;wallet_import_word_count&quot;>%1$d / %2$d words&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="253"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;pinned&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;tunnel_reset_pinned_keys_done_body&quot;>Dropped %1$d pinned exit key entries.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="336"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;and&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;tunnel_preferred_port_invalid&quot;>Enter a port between %1$d and %2$d, or leave empty to let the exit choose.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="355"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;and&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;tunnel_mtu_invalid&quot;>Enter a value between %1$d and %2$d, or leave empty for the default.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="388"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;and&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;max_bandwidth_invalid&quot;>Enter a value between %1$d and %2$d, or leave empty for no limit.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="389"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;day&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>%1$d day left. Buy more credit.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;days&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_days&quot;>%1$d days left. Buy more credit.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="466"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;characters&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;report_problem_chars&quot;>%1$d characters (at least %2$d)&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="663"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;characters&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;report_problem_chars_optional&quot;>%1$d characters&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="664"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;new&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;forum_activity_notification_more_than&quot;>More than %1$d new notifications on the forum&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="712"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;was&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;account_strike_warning&quot;>Warning %1$d of %2$d: port %3$d was closed on %4$s after an abuse report (%5$s).&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="752"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;was&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;account_strike_warning_no_threshold&quot;>Warning %1$d: port %2$d was closed on %3$s after an abuse report (%4$s).&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="753"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>1 dag tilbage. Køb mere kredit.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-da/strings.xml"
+            line="454"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>1 Tag übrig. Mehr Guthaben erwerben.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="454"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>1 روز باقی‌مانده. اعتبار بیشتری بخرید.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fa/strings.xml"
+            line="454"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>1 päivä jäljellä. Osta lisää käyttöaikaa.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fi/strings.xml"
+            line="454"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>1 dag igjen. Kjøp mer kreditt.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nb/strings.xml"
+            line="454"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>1 dag resterend. Koop meer krediet.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-nl/strings.xml"
+            line="454"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>1 dag kvar. Köp mer kredit.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-sv/strings.xml"
+            line="454"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>1 gün kaldı. Daha fazla kredi satın alın.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-tr/strings.xml"
+            line="454"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>Queda 1 día. Compre más crédito.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="457"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>1 jour restant. Achetez plus de crédits.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="457"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>1 giorno rimanente. Acquista altro credito.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="457"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>1 dia restante. Comprar mais crédito.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="457"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>Pozostał 1 dzień. Doładuj konto.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="462"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `connect_subscription_expires_in_day`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;connect_subscription_expires_in_day&quot;>Mai este o zi. Cumpărați mai mult credit.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ro/strings.xml"
+            line="462"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1="    var retryNonce by remember { mutableStateOf(0) }"
+        errorLine2="                                 ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/screen/onboarding/OnboardingBetaAccessScreen.kt"
+            line="57"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1="    var refreshTick by rememberSaveable { mutableStateOf(0) }"
+        errorLine2="                                          ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/feature/settings/impl/WarrenLocationPickerScreen.kt"
+            line="192"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.mtu_x` appears to be unused"
+        errorLine1="    &lt;string name=&quot;mtu_x&quot;>Value: %s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~">
+        <location
+            file="../lib/ui/resource/src/main/res/values/strings.xml"
+            line="32"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.hint_default` appears to be unused"
+        errorLine1="    &lt;string name=&quot;hint_default&quot;>Default&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="../lib/ui/resource/src/main/res/values/strings.xml"
+            line="33"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.confirm_local_dns` appears to be unused"
+        errorLine1="    &lt;string name=&quot;confirm_local_dns&quot;>The local DNS server will not work unless you enable \&quot;Local Network Sharing\&quot; under VPN settings.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="../lib/ui/resource/src/main/res/values/strings.xml"
+            line="151"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.clear_input` appears to be unused"
+        errorLine1="    &lt;string name=&quot;clear_input&quot;>Clear input&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="../lib/ui/resource/src/main/res/values/strings.xml"
+            line="213"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.search` appears to be unused"
+        errorLine1="    &lt;string name=&quot;search&quot;>Search&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~">
+        <location
+            file="../lib/ui/resource/src/main/res/values/strings.xml"
+            line="216"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.confirm_ipv6_dns` appears to be unused"
+        errorLine1="    &lt;string name=&quot;confirm_ipv6_dns&quot;>The IPv6 DNS server will not work unless you enable \&quot;IPv6\&quot; under VPN settings.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="../lib/ui/resource/src/main/res/values/strings.xml"
+            line="218"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="SyntheticAccessor"
+        message="Access to `private` method `settingWord` of class `ForumDiagnosticsKt` requires synthetic accessor"
+        errorLine1="            &quot;auto_time=${auto.settingWord()} auto_time_zone=${zone.settingWord()}&quot;"
+        errorLine2="                         ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/forum/ForumDiagnostics.kt"
+            line="84"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="SyntheticAccessor"
+        message="Access to `private` method `settingWord` of class `ForumDiagnosticsKt` requires synthetic accessor"
+        errorLine1="            &quot;auto_time=${auto.settingWord()} auto_time_zone=${zone.settingWord()}&quot;"
+        errorLine2="                                                              ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/forum/ForumDiagnostics.kt"
+            line="84"
+            column="63"/>
+    </issue>
+
+    <issue
+        id="SyntheticAccessor"
+        message="Access to `private` method `settingWord` of class `ForumDiagnosticsKt` requires synthetic accessor"
+        errorLine1="            &quot;app=$word lockdown=${lockdown.settingWord()}&quot;"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/forum/ForumDiagnostics.kt"
+            line="137"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="SyntheticAccessor"
+        message="Access to `private` method `settingWord` of class `ForumDiagnosticsKt` requires synthetic accessor"
+        errorLine1="        put(&quot;airplane-mode&quot;) { reads.globalSettingInt(Settings.Global.AIRPLANE_MODE_ON).settingWord() }"
+        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/forum/ForumDiagnostics.kt"
+            line="145"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="SyntheticAccessor"
+        message="Access to `private` method `notifyMigrationWatchdog` of class `WarrenQuinnAdapter` requires synthetic accessor"
+        errorLine1="                if (!baseline) notifyMigrationWatchdog(&quot;underlying network changed&quot;)"
+        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/service/WarrenQuinnAdapter.kt"
+            line="1160"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="SyntheticAccessor"
+        message="Access to `private` method `notifyMigrationWatchdog` of class `WarrenQuinnAdapter` requires synthetic accessor"
+        errorLine1="                notifyMigrationWatchdog(&quot;underlying network lost&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/service/WarrenQuinnAdapter.kt"
+            line="1170"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="            Intent(Intent.ACTION_VIEW, Uri.parse(url))"
+        errorLine2="                                       ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/forum/ForumLoginPromptHost.kt"
+            line="298"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="        pm.resolveActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)), PackageManager.MATCH_DEFAULT_ONLY)"
+        errorLine2="                                                      ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/forum/ForumPlatformReads.kt"
+            line="214"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="        Intent(Intent.ACTION_VIEW, Uri.parse(link)).addCategory(Intent.CATEGORY_BROWSABLE)"
+        errorLine2="                                   ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/app/forum/ForumPlatformReads.kt"
+            line="260"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `Bitmap.scale` instead?"
+        errorLine1="    return Bitmap.createScaledBitmap("
+        errorLine2="           ^">
+        <location
+            file="src/main/kotlin/com/warrenbrowse/vpn/feature/home/impl/connect/SceneryHero.kt"
+            line="268"
+            column="12"/>
     </issue>
 
 </issues>

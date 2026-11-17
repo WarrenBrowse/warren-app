@@ -28,8 +28,9 @@ looking at the wrong repository.
 
 ## Android CI: what is gated, and what cannot be
 
-`.github/workflows/android-checks.yml` runs the JVM unit tests on push/PR
-touching `android/**` or `warren-jni/**`, and lints warren-jni for
+`.github/workflows/android-checks.yml` runs on push/PR touching `android/**` or
+`warren-jni/**`: `ktfmtCheck`, `detekt`, `:app:lintProdDebug` and every JVM
+unit test (`:test:arch` included), and it lints warren-jni for
 `aarch64-linux-android` with warnings denied (the desktop clippy never
 compiles its Android-only code). Before it existed (2026-08-02) an
 android-only change triggered **nothing**: the inherited `android-*.yml`
@@ -37,24 +38,30 @@ workflows are all dispatch-only in this fork and `warren-checks.yml` is
 paths-filtered to the daemon/desktop tree. That is how a blocking HTTPS call on
 the UI thread reached main.
 
-Two suites are excluded on purpose, so do not "fix" the workflow by adding them:
-`:test:arch` enforces inherited Mullvad test-naming conventions this fork never
-adopted (205 of 330 existing names violate them), and `detekt` reports a pile of
-pre-existing findings against an empty baseline (163 weighted issues on
-2026-09-03; the count moves with every lot). Gating either today paints main
-red for reasons unrelated to the change under review. To check you introduced no
-detekt regression, run `./gradlew detekt --rerun-tasks` once before your change
-and once after, and compare the two weighted counts; a plain `detekt` prints
-nothing when up-to-date, which reads as a false clean.
+detekt and lint run against baselines of the findings that predate the gate:
+`android/config/detekt-baseline.xml` (185 entries on 2026-11-17) and
+`android/config/lint-baseline.xml` (98). A new finding fails the job; fix it,
+never add it to a baseline. When you fix an old one, regenerate the file
+(`./gradlew detektBaseline`, `./gradlew :app:updateLintBaseline`) and check that
+the diff only removes entries. A renamed function re-keys its detekt entry,
+which is the one legitimate addition. A plain `detekt` prints nothing when
+up-to-date, which reads as a false clean: pass `--rerun-tasks` to see the
+findings.
+
+`:test:arch` keeps the architecture rules (view model and use case shape,
+lifecycle-aware collection, no `android.util.Log`, immutable data classes) and
+none of the inherited Mullvad naming conventions: a test is named after the
+behaviour it pins, in whatever form reads best.
 
 Instrumented tests (`./gradlew :app:connectedBetaDebugAndroidTest`, the
 `androidTest` source sets, among them `ExitPinJniTest` which replays the shared
 exit-pick vector through the real `libwarren_jni.so`) end with AGP uninstalling
 the app APK along with the test APK, and that wipes the app's data on the
 device: the wallet on the Pixel_10 emulator was lost that way on 2026-09-03
-and had to be restored by hand. Always pass
-`-Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true`, which
-installs over the running app instead (the process restarts, the data stays),
+and had to be restored by hand. `android/gradle.properties` now sets
+`android.injected.androidTest.leaveApksInstalledAfterRun=true`, which
+installs over the running app instead (the process restarts, the data stays);
+pass it with `-P` too when you run from another checkout or an older commit,
 and filter to one class with
 `-Pandroid.testInstrumentationRunnerArguments.class=<fqcn>` when only one is
 needed. Their fixture asset dir is the `../../warren-contract` sibling checkout,

@@ -7,18 +7,15 @@
 # Android-only change therefore triggered nothing at all, which is how a
 # blocking network call on the UI thread reached main unnoticed.
 #
-# Scope is the Rust cross-compile plus the JVM unit tests: the fast, hermetic
-# signal (no emulator, no device). The instrumented and e2e suites need a
-# device runner and stay on the dispatch-only workflows.
+# Scope is the Rust cross-compile, the static analysis (ktfmt, detekt, lint)
+# and the JVM unit tests, `:test:arch` included: the fast, hermetic signal (no
+# emulator, no device). The instrumented and e2e suites need a device runner
+# and stay on the dispatch-only workflows.
 #
-# `:test:arch` is excluded on purpose: it enforces inherited Mullvad naming
-# conventions (every test name carrying "ensure"/"should") that this fork
-# never adopted, so it fails on 205 of the 330 existing test names. Gating on
-# it today would paint main red for reasons unrelated to any change under
-# review. Adopting or dropping those conventions is its own cleanup; until
-# then a green gate that runs the real tests beats a red one nobody can act
-# on. Same reasoning for `detekt`, which currently reports 174 pre-existing
-# findings.
+# detekt runs against `android/config/detekt-baseline.xml`, which lists the
+# findings that predate the gate: a new finding fails the job, and an old one
+# leaves the baseline when its code is fixed. Regenerate the file with
+# `./gradlew detektBaseline` only to remove entries, never to admit new ones.
 
 name: Android checks
 
@@ -57,7 +54,7 @@ jobs:
     # this job.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, macOS, ARM64]
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
@@ -124,7 +121,15 @@ jobs:
           cargo clippy --locked --target aarch64-linux-android -p warren-jni --all-targets -- -D warnings
           cargo clippy --locked --target aarch64-linux-android -p warren-jni --all-features --all-targets -- -D warnings
 
+      - name: Kotlin format
+        run: android/gradlew -p android --no-daemon --stacktrace ktfmtCheck
+
+      - name: Detekt
+        run: android/gradlew -p android --no-daemon --stacktrace detekt
+
+      - name: Lint
+        run: android/gradlew -p android --no-daemon --stacktrace :app:lintProdDebug
+
       - name: Unit tests
         run: |
-          android/gradlew -p android --no-daemon --stacktrace \
-            testAllUnitTests -x :test:arch:testDebugUnitTest
+          android/gradlew -p android --no-daemon --stacktrace testAllUnitTests

@@ -1,162 +1,63 @@
 # Test Suite Overview
 
-This document provides an overview of the Warren VPN Android application test suite, including architecture tests, end-to-end tests, and various testing utilities.
+This document describes the test suites of the Warren VPN Android app and how to run them.
 
-## Test Structure
+## What runs on every push
 
-The test suite is composed of the following test types:
+`.github/workflows/android-checks.yml` runs on every push and pull request touching `android/**`
+or `warren-jni/**`:
 
-### 1. Compose UI tests (`app/androidTest`)
+- `ktfmtCheck`: Kotlin formatting.
+- `detekt`: static analysis against `config/detekt.yml`. Findings that predate the gate are listed
+  in `config/detekt-baseline.xml`; a new finding fails the job.
+- `:app:lintProdDebug`: Android lint against `config/lint.xml` and `config/lint-baseline.xml`.
+- `testAllUnitTests`: every JVM unit test (the `prodDebug` variant for the modules that have
+  flavors), `:test:arch` and `:test:detekt` included.
 
-Contains Compose UI tests that test specific UI screens, dialog and components.
-These tests invoke composables directly with a given input, so they do not use repositories,
-use-cases and viewmodels.
+## Test types
 
-### 2. Unit tests (`app/test`, `service/test`, `lib/billing/test`, `lib/daemon-grpc/test`, `lib/repository/test`)
+### 1. Unit tests (`src/test` of each module)
 
-Contains unit tests that test specific use-cases, viewmodels and repositories, etc.
+JVM tests of the use cases, view models, repositories, the tunnel adapter and the planners.
+`StringResourceCoverageTest` (`app/src/test`) holds every locale to the English keys.
 
-### 3. End-to-End Tests (`test/e2e/`)
+### 2. Instrumented tests (`src/androidTest`)
 
-Various tests that simulate a user interacting with the app using the Android UI automation framework.
-The e2e tests require a real API backend and real relays that the tests can connect to. The tests
-target the `prod` environment (the `warrenbrowse.com` infrastructure).
+Compose UI tests and the tests that go through the real `libwarren_jni.so`, such as
+`ExitPinJniTest` and `ProductAnchorsJniTest`. They need a device or an emulator and no workflow
+runs them. A connected run ends with AGP uninstalling the app under test, which erases its data:
+`gradle.properties` sets `android.injected.androidTest.leaveApksInstalledAfterRun=true` so the run
+installs over the app instead. Run them against a device whose wallet you can re-provision.
 
-#### Example of E2E tests include:
-- Testing that the user can successfully login.
-- Testing that the user can connect to a relay.
-- Testing that the user can still connect when plain UDP QUIC is blocked at the network level
-  (TCP carrier fallback).
+### 3. Architecture tests (`test/arch/`)
 
-#### E2E tests setup:
-In order to run the e2e tests a few properties must be set in your `~/.gradle/properties.gradle` file:
+[Konsist](https://docs.konsist.lemonappdev.com/) rules on the code base, for example:
 
-```bash
-# For running the e2e tests on the production backend
-warren.test.e2e.prod.accountNumber.valid=INSERT_VALID_ACCOUNT_NUMBER_HERE
-warren.test.e2e.prod.accountNumber.invalid=1111222233334444
+- view models carry the `ViewModel` suffix, and their tests install `TestCoroutineRule`;
+- Compose previews are private and start with `Preview`;
+- data classes hold only immutable properties;
+- no `collectAsState()` (the lifecycle-aware collector is used instead), no `android.util.Log`
+  outside the frame-timing logcat line.
 
-# For running e2e tests that require the RAAS router
-# (see: ci/ios/test-router)
-warren.test.e2e.config.raas.host=INSERT_RAAS_HOST_HERE
-warren.test.e2e.config.raas.enable=true
-```
+### 4. Detekt rules (`test/detekt/`)
 
-### 4. Mock API Tests (`test/mockapi/`)
+Custom detekt rules. The only one today checks that `Screen` and `Dialog` composables are called
+with named arguments.
 
-The mock-api tests are also E2E tests, with the difference being that the API responses are mocked to return pre-defined responses.
-The main benefit of this is to speed up the tests as much as a possible as the normal E2E tests can be slow, and to test things
-that are difficult to test with the real API, such as account expiry notifications being shown.
+### 5. Baseline profile generation (`test/baselineprofile/`)
 
-#### Example of mock-api tests include:
-- Testing that the out-of-time notification is shown.
-- Testing that the too many devices screen/flow works as expected.
-
-### 5. Architecture Tests (`test/arch/`)
-
-These tests ensure that the codebase follows architectural rules and conventions using the `Konsist` library.
-
-#### Example of things being tested
-- ViewModels must have `ViewModel` suffix
-- All Compose previews are private functions and must start with `Preview`
-- Ensures data classes only use immutable properties (`val` not `var`)
-
-### 6. Detekt static analysis (`test/detekt/`)
-
-Detekt is used for static analysis using the configuration in `config/detekt.yml` and `config/detekt-baseline.xml`.
-The `test/detekt` directory contains custom detekt rules. Currently the only custom rule
-checks that `Screen` and `Dialog` composable functions only use named arguments.
-
-### 7. Android Lint static analysis
-
-Android Lint is enabled for static analysis using the configuration in `config/lint.yml` and
-`config/lint-baseline.xml`.`
-
-### Other modules in the `test` directory
-
-#### Baseline Profile Generation (`test/baselineprofile/`)
-
-The baseline profile generation code is only used to generate baseline profiles and not to test the app, but the code lives
-in the `test` directory because it needs to use the Android UI automation framework to interact with the app when generating
-the baseline profile.
-
-#### Common Test Utilities (`test/common/`)
-
-This module contains various helpers and abstractions that make navigating and testing the app using
-the Android UI automation framework easier.
-
-It is used by the `e2e`, `mockapi` and `baselineprofile` modules.
-
-It contains utilities such as:
-
-- `findObjectByCaseInsensitiveText()`: Case-insensitive text search
-- `findObjectWithTimeout()`: Robust element location with timeout
-- `clickObjectAwaitCondition()`: Click and wait for condition
-- `acceptVpnPermissionDialog()`: Handles the system VPN permission dialog
-
-This module also has the `Page` class which is used as an abstraction to make it easier to create UI automator tests.
-The following is an example of using `Page` in test:
-```kotlin
-@Test
-fun testConnect() {
-    // Given
-    app.launchAndLogIn(accountTestRule.validAccountNumber)
-
-    on<ConnectPage> { clickConnect() }
-
-    device.acceptVpnPermissionDialog()
-
-    on<ConnectPage> { waitForConnectedLabel() }
-}
-```
-
-The `on` function asserts that page given in the generic argument is displayed (each page class implements an abstract method that checks if the page is displayed)
-and then invokes the lambda that can call methods on the page.
+Not a test suite: it drives the app through the UI tags to generate the ART baseline profile, see
+`BuildInstructions.md`, "Baseline profile".
 
 ## Running tests
 
-### Unit tests
 ```bash
-./gradlew testOssProdDebugUnitTest
+./gradlew testAllUnitTests            # JVM unit tests, test:arch included
+./gradlew ktfmtCheck detekt           # format and static analysis
+./gradlew :app:lintProdDebug          # Android lint
+./gradlew :app:connectedBetaDebugAndroidTest \
+    -Pandroid.testInstrumentationRunnerArguments.class=<fully.qualified.TestClass>
 ```
 
-### Compose UI tests
-```bash
-./gradlew :app:connectedOssDebugAndroidTest
-```
-
-### E2E tests
-```bash
-./gradlew :test:e2e:connectedProdDebugAndroidTest
-```
-
-### Mock API tests
-```bash
-./gradlew :test:mockapi:connectedOssDebugAndroidTest
-```
-
-### Detekt
-```bash
-./gradlew detekt
-```
-
-### Android lint
-```bash
-./gradlew lint
-```
-
-### Architecture tests (Konsist)
-```bash
-./gradlew :test:arch:test --rerun-tasks
-```
-
-## Continuous Integration
-
-Our CI runs via Github actions. The unit, arch, detekt, lint and Compose UI tests must all pass before
-a pull request can be merged to `main`.
-
-The end-to-end tests are not run for each pull request because they take too long to complete, but
-are run multiple times every night in a separate Github action.
-
-Some E2E tests are sometimes flaky, but we aim to always have a fully working test suite, so a flaky E2E test
-is considered a bug that should be fixed.
+To check that a change adds no detekt finding, run `./gradlew detekt --rerun-tasks`: a plain
+`detekt` prints nothing when it is up to date.
