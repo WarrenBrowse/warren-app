@@ -282,7 +282,7 @@ final class SettingsViewControllerFactory {
     }
 
     /// About Warren (Settings → About). Marketing + privacy + ToS
-    /// + AGPL source code links + version banner.
+    /// + licences screen + version banner.
     private func makeWarrenAboutViewController() -> MakeChildResult {
         let appVersion = Bundle.main.shortVersion
         let build = Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String ?? "?"

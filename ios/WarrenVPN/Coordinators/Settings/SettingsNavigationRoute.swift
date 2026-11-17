@@ -54,7 +54,7 @@ enum SettingsNavigationRoute: Equatable {
     /// in a screenshot-friendly support-ticket payload).
     case warrenDiagnosticInfo
 
-    /// About Warren (marketing site + privacy + ToS + AGPL source links).
+    /// About Warren (marketing site + privacy + ToS + licences).
     case warrenAbout
 
     /// Forum sign-in finished with the code the approval page shows.

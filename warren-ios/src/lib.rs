@@ -90,6 +90,8 @@ mod warren_devices_ffi;
 mod warren_forum_ffi;
 // The signed pubkey-mismatch report the exit key-change alert files.
 mod warren_incidents_ffi;
+// The licence text and the source revisions of the licences screen.
+mod warren_licenses_ffi;
 #[cfg(target_os = "ios")]
 mod warren_multihop_ffi;
 // The public environment descriptor the beta badge reads.

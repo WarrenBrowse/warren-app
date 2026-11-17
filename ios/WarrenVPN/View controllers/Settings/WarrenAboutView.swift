@@ -6,10 +6,8 @@
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
 //  Settings → "About Warren". Single-screen pointer-board with the
-//  marketing site link + privacy policy + AGPL-3.0 license note + a
-//  short version banner. Designed for legal compliance (App Store
-//  privacy disclosure + AGPL source-availability link) and first-time
-//  user education ("what makes Warren different from Mullvad ?").
+//  marketing site link, the privacy policy, the licences screen and a
+//  short version banner.
 //
 
 import SwiftUI
@@ -20,6 +18,8 @@ public struct WarrenAboutView: View {
     public let buildNumber: String
     /// The product row this build was compiled for.
     public let anchors: WarrenProductAnchors
+
+    @State private var showsLicenses = false
 
     public init(
         appVersion: String,
@@ -90,28 +90,41 @@ public struct WarrenAboutView: View {
                 url: "https://warren.ro/cgu",
                 icon: "doc.text"
             )
-            linkRow(
-                label: String(localized: "Source code (GPL-3.0)", table: "Settings", comment: "Repo link"),
-                url: "https://github.com/WarrenBrowse/warren-app",
-                icon: "chevron.left.forwardslash.chevron.right"
-            )
+            Button(action: { showsLicenses = true }) {
+                rowLabel(
+                    label: WarrenLicensesView.title,
+                    icon: "chevron.left.forwardslash.chevron.right",
+                    trailingIcon: "chevron.right"
+                )
+            }
             linkRow(
                 label: String(localized: "Send feedback", table: "Settings", comment: "Opens mail composer to support@"),
                 url: "mailto:support@warrenbrowse.com?subject=Warren%20iOS%20feedback",
                 icon: "envelope"
             )
         }
+        .sheet(isPresented: $showsLicenses) {
+            WarrenLicensesView(onClose: { showsLicenses = false })
+        }
+    }
 
-        Text(
-            String(
-                localized: "Warren is a fork of the Mullvad VPN app, copyright Mullvad VPN AB. The app is licensed under GPL-3.0, and its tunnel engine, warrenguard, under AGPL-3.0.",
-                table: "Settings",
-                comment: "Bottom legal credit explaining the Mullvad fork relationship + license"
-            )
+    private func rowLabel(label: String, icon: String, trailingIcon: String) -> some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(.Warren.yellow)
+            Text(label)
+                .font(.warrenSmallSemiBold)
+                .foregroundColor(.white)
+            Spacer()
+            Image(systemName: trailingIcon)
+                .foregroundColor(.white.opacity(0.4))
+                .font(.caption)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.Warren.surface)
         )
-        .font(.warrenMicro)
-        .foregroundColor(.white.opacity(0.5))
-        .padding(.top, 12)
     }
 
     @ViewBuilder
@@ -147,5 +160,109 @@ public struct WarrenAboutView: View {
     private static func openURL(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
         UIApplication.shared.open(url)
+    }
+}
+
+/// The licences of the app and its parts: the GPL the app is distributed
+/// under, in full, the credit to the project it derives from, the licence of
+/// the tunnel engine, and the source of the code this build was made from.
+struct WarrenLicensesView: View {
+    let onClose: () -> Void
+
+    static var title: String {
+        String(localized: "Licenses", table: "Settings", comment: "Title of the view listing the licences of the app and its parts")
+    }
+
+    static var paragraphs: [String] {
+        [
+            String(
+                localized: "This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below.",
+                table: "Settings",
+                comment: "First paragraph of the licences view"
+            ),
+            String(
+                localized: "It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license.",
+                table: "Settings",
+                comment: "Credit to the project the app is derived from"
+            ),
+            String(
+                localized: "The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3.",
+                table: "Settings",
+                comment: "Licence of the separate tunnel engine the app runs"
+            ),
+        ]
+    }
+
+    static var sourceLinks: [(label: String, url: String)] {
+        [
+            (
+                String(
+                    localized: "Source code of this version",
+                    table: "Settings",
+                    comment: "Link to the source code of the exact version that is installed"
+                ),
+                WarrenSourceLicense.appSourceURL
+            ),
+            (
+                String(
+                    localized: "Source code of the tunnel engine",
+                    table: "Settings",
+                    comment: "Link to the source code of the tunnel engine of this version"
+                ),
+                WarrenSourceLicense.engineSourceURL
+            ),
+        ]
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text(Self.title)
+                        .font(.warrenBig)
+                        .foregroundColor(.white)
+                    Spacer()
+                    Button(NSLocalizedString("Close", comment: ""), action: onClose)
+                        .foregroundColor(.Warren.yellow)
+                }
+
+                ForEach(Self.paragraphs, id: \.self) { paragraph in
+                    Text(paragraph)
+                        .font(.instrumentSans(.body))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+
+                ForEach(Self.sourceLinks, id: \.url) { link in
+                    Button(action: {
+                        if let url = URL(string: link.url) {
+                            UIApplication.shared.open(url)
+                        }
+                    }) {
+                        HStack {
+                            Text(link.label)
+                                .font(.warrenSmallSemiBold)
+                                .foregroundColor(.white)
+                            Spacer()
+                            Image(systemName: "arrow.up.right")
+                                .foregroundColor(.white.opacity(0.4))
+                                .font(.caption)
+                        }
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.Warren.surface)
+                        )
+                    }
+                }
+
+                Text(WarrenSourceLicense.licenseText)
+                    .font(.system(size: 12))
+                    .foregroundColor(.white.opacity(0.6))
+                    .textSelection(.enabled)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .background(Color.Warren.navy)
     }
 }

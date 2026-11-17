@@ -33,9 +33,9 @@ distinct module).
 
 ## License
 
-swift-log is Apache 2.0. Warren is AGPL-3.0. The vendored copy
+swift-log is Apache 2.0. The Warren VPN app is GPL-3.0-or-later. The vendored copy
 retains the Apache 2.0 header comments verbatim per the LICENSE
-requirements. No source modifications were made — these are
+requirements. No source modifications were made: these are
 verbatim copies of swift-log 1.8.0 `Sources/Logging/`.
 
 ## Update procedure

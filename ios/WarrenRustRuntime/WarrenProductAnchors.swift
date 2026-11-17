@@ -126,3 +126,30 @@ public struct WarrenProductAnchors: Equatable, Sendable {
         return decodeAll(String(cString: raw)) ?? []
     }
 }
+
+/// What the licences screen shows: the licence text and the revisions of the
+/// source links, baked into the Rust library when it is built, so the text
+/// ships inside the binary and the links name the code it was built from.
+public enum WarrenSourceLicense {
+    public static let appRepositoryURL = "https://github.com/WarrenBrowse/warren-app"
+    public static let engineRepositoryURL = "https://github.com/WarrenBrowse/warrenguard"
+
+    /// The GNU General Public License, version 3, the app is distributed under.
+    public static var licenseText: String { String(cString: warren_license_text()) }
+
+    /// The source of the exact commit this build comes from, or the
+    /// repository when the build did not record one.
+    public static var appSourceURL: String {
+        treeURL(appRepositoryURL, revision: String(cString: warren_source_commit()))
+    }
+
+    /// The source of the tunnel engine commit this build pins.
+    public static var engineSourceURL: String {
+        treeURL(engineRepositoryURL, revision: String(cString: warren_engine_commit()))
+    }
+
+    static func treeURL(_ repository: String, revision: String) -> String {
+        let isCommit = revision.count == 40 && revision.allSatisfy { $0.isHexDigit && !$0.isUppercase }
+        return isCommit ? "\(repository)/tree/\(revision)" : repository
+    }
+}

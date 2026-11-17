@@ -105,3 +105,31 @@ final class WarrenProductAnchorsTests: XCTestCase {
         XCTAssertNil(WarrenProductAnchors.decode("not json"))
     }
 }
+
+/// The licences screen ships the licence text inside the binary and links the
+/// source of the very code the binary was built from.
+final class WarrenSourceLicenseTests: XCTestCase {
+    func testTheShippedLicenceIsTheGPLVersion3() {
+        let text = WarrenSourceLicense.licenseText
+
+        XCTAssertTrue(text.contains("GNU GENERAL PUBLIC LICENSE"))
+        XCTAssertTrue(text.contains("Version 3, 29 June 2007"))
+    }
+
+    func testTheEngineLinkNamesThePinnedCommit() {
+        let prefix = WarrenSourceLicense.engineRepositoryURL + "/tree/"
+        let url = WarrenSourceLicense.engineSourceURL
+
+        XCTAssertTrue(url.hasPrefix(prefix), url)
+        XCTAssertEqual(url.dropFirst(prefix.count).count, 40)
+    }
+
+    func testACommitLinksItsTreeAndAnythingElseTheRepository() {
+        let repository = "https://example.invalid/repo"
+        let commit = "0123456789abcdef0123456789abcdef01234567"
+
+        XCTAssertEqual(WarrenSourceLicense.treeURL(repository, revision: commit), "\(repository)/tree/\(commit)")
+        XCTAssertEqual(WarrenSourceLicense.treeURL(repository, revision: ""), repository)
+        XCTAssertEqual(WarrenSourceLicense.treeURL(repository, revision: "main"), repository)
+    }
+}

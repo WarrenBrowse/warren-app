@@ -71,3 +71,26 @@ final class WarrenAboutViewTests: XCTestCase {
         }
     }
 }
+
+/// The app is distributed under the GPL, version 3 or later; only its tunnel
+/// engine is under the AGPL. The About screen used to call the app's own
+/// source AGPL-3.0.
+final class WarrenLicensesViewTests: XCTestCase {
+    func test_theAppIsPresentedUnderTheGPLAndOnlyTheEngineUnderTheAGPL() {
+        let paragraphs = WarrenLicensesView.paragraphs
+
+        XCTAssertTrue(paragraphs[0].contains("GNU General Public License, version 3 or any later version"))
+        XCTAssertTrue(paragraphs[1].contains("Mullvad VPN AB"))
+        XCTAssertTrue(paragraphs[2].contains("warrenguard"))
+        XCTAssertTrue(paragraphs[2].contains("Affero"))
+        XCTAssertFalse(paragraphs[0].contains("Affero"))
+    }
+
+    func test_theSourceLinksNameThisBuildsCodeAndItsEngine() {
+        let urls = WarrenLicensesView.sourceLinks.map(\.url)
+
+        XCTAssertEqual(urls, [WarrenSourceLicense.appSourceURL, WarrenSourceLicense.engineSourceURL])
+        XCTAssertTrue(urls[0].hasPrefix(WarrenSourceLicense.appRepositoryURL))
+        XCTAssertTrue(urls[1].hasPrefix(WarrenSourceLicense.engineRepositoryURL + "/tree/"))
+    }
+}

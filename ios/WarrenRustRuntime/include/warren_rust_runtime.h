@@ -1345,6 +1345,26 @@ char *warren_report_pubkey_mismatch(const uint8_t *seed,
                                     const char *city);
 
 /**
+ * The GNU General Public License, version 3, as the repository ships it.
+ * A static NUL-terminated UTF-8 string: never freed.
+ */
+const char *warren_license_text(void);
+
+/**
+ * The commit of this repository the library was built from: 40 lowercase hex
+ * characters, or empty when the build had no git checkout. A static
+ * NUL-terminated string: never freed.
+ */
+const char *warren_source_commit(void);
+
+/**
+ * The tunnel engine commit this build pins (`.warrenguard-version`), or
+ * empty when the pin file was missing. A static NUL-terminated string: never
+ * freed.
+ */
+const char *warren_engine_commit(void);
+
+/**
  * Fetches the environment descriptor.
  *
  * Returns `{"ok":true,"environment":..,"degraded":..,"default_rate_bps":..,

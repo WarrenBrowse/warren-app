@@ -20208,298 +20208,890 @@
         }
       }
     },
-    "Source code (GPL-3.0)": {
+    "Licenses": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الشيفرة المصدرية (GPL-3.0)"
+            "value": "التراخيص"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kildekode (GPL-3.0)"
+            "value": "Licenser"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quellcode (GPL-3.0)"
+            "value": "Lizenzen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Source code (GPL-3.0)"
+            "value": "Licenses"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Código fuente (GPL-3.0)"
+            "value": "Licencias"
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "کد منبع (GPL-3.0)"
+            "value": "مجوزها"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lähdekoodi (GPL-3.0)"
+            "value": "Lisenssit"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Code source (GPL-3.0)"
+            "value": "Licences"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Codice sorgente (GPL-3.0)"
+            "value": "Licenze"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ソースコード (GPL-3.0)"
+            "value": "ライセンス"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "소스 코드 (GPL-3.0)"
+            "value": "라이선스"
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "ရင်းမြစ်ကုဒ် (GPL-3.0)"
+            "value": "လိုင်စင်များ"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kildekode (GPL-3.0)"
+            "value": "Lisenser"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Broncode (GPL-3.0)"
+            "value": "Licenties"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kod źródłowy (GPL-3.0)"
+            "value": "Licencje"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Código-fonte (GPL-3.0)"
+            "value": "Licenças"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cod sursă (GPL-3.0)"
+            "value": "Licențe"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Исходный код (GPL-3.0)"
+            "value": "Лицензии"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Källkod (GPL-3.0)"
+            "value": "Licenser"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ซอร์สโค้ด (GPL-3.0)"
+            "value": "สัญญาอนุญาต"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kaynak kodu (GPL-3.0)"
+            "value": "Lisanslar"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вихідний код (GPL-3.0)"
+            "value": "Ліцензії"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "源代码 (GPL-3.0)"
+            "value": "许可证"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "原始碼 (GPL-3.0)"
+            "value": "授權條款"
           }
         }
       }
     },
-    "Warren is a fork of the Mullvad VPN app, copyright Mullvad VPN AB. The app is licensed under GPL-3.0, and its tunnel engine, warrenguard, under AGPL-3.0.": {
+    "This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren نسخة متفرعة من تطبيق Mullvad VPN، حقوق النشر لشركة Mullvad VPN AB. التطبيق مرخّص بموجب GPL-3.0، ومحرك النفق warrenguard بموجب AGPL-3.0."
+            "value": "هذا التطبيق برنامج حر: يمكنك مشاركته وتعديله وفق شروط رخصة GNU General Public License، الإصدار 3 أو أي إصدار لاحق. النص الكامل أدناه."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren er en fork af Mullvad VPN-appen, copyright Mullvad VPN AB. Appen er licenseret under GPL-3.0, og dens tunnelmotor, warrenguard, under AGPL-3.0."
+            "value": "Denne app er fri software: du må dele og ændre den under betingelserne i GNU General Public License, version 3 eller enhver senere version. Den fulde tekst står nedenfor."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren ist ein Fork der Mullvad VPN App, Copyright Mullvad VPN AB. Die App steht unter der GPL-3.0, ihre Tunnel-Engine warrenguard unter der AGPL-3.0."
+            "value": "Diese App ist freie Software: Sie können sie unter den Bedingungen der GNU General Public License, Version 3 oder einer späteren Version, weitergeben und verändern. Der vollständige Text steht unten."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren is a fork of the Mullvad VPN app, copyright Mullvad VPN AB. The app is licensed under GPL-3.0, and its tunnel engine, warrenguard, under AGPL-3.0."
+            "value": "This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren es una bifurcación de la aplicación Mullvad VPN, copyright Mullvad VPN AB. La aplicación tiene licencia GPL-3.0, y su motor de túnel, warrenguard, licencia AGPL-3.0."
+            "value": "Esta aplicación es software libre: puede compartirla y modificarla según los términos de la GNU General Public License, versión 3 o cualquier versión posterior. El texto completo figura a continuación."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren انشعابی از برنامه Mullvad VPN با حق نشر Mullvad VPN AB است. این برنامه تحت مجوز GPL-3.0 و موتور تونل آن، warrenguard، تحت مجوز AGPL-3.0 است."
+            "value": "این برنامه نرم‌افزار آزاد است: می‌توانید آن را تحت شرایط مجوز GNU General Public License، نسخه ۳ یا هر نسخه بعدی، به اشتراک بگذارید و تغییر دهید. متن کامل در زیر آمده است."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren on haara Mullvad VPN -sovelluksesta, tekijänoikeus Mullvad VPN AB. Sovelluksen lisenssi on GPL-3.0 ja sen tunnelimoottorin warrenguardin AGPL-3.0."
+            "value": "Tämä sovellus on vapaa ohjelmisto: voit jakaa ja muokata sitä GNU General Public Licensen version 3 tai minkä tahansa myöhemmän version ehtojen mukaisesti. Koko teksti on alla."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren est un fork de l'application Mullvad VPN, copyright Mullvad VPN AB. L'application est sous licence GPL-3.0, et son moteur de tunnel, warrenguard, sous AGPL-3.0."
+            "value": "Cette application est un logiciel libre : vous pouvez la partager et la modifier selon les termes de la GNU General Public License, version 3 ou toute version ultérieure. Le texte complet figure ci-dessous."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren è un fork dell'app Mullvad VPN, copyright Mullvad VPN AB. L'app è distribuita con licenza GPL-3.0, e il suo motore del tunnel, warrenguard, con licenza AGPL-3.0."
+            "value": "Questa app è software libero: può essere condivisa e modificata secondo i termini della GNU General Public License, versione 3 o qualsiasi versione successiva. Il testo completo è riportato qui sotto."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren は Mullvad VPN AB が著作権を持つ Mullvad VPN アプリのフォークです。アプリは GPL-3.0、トンネルエンジン warrenguard は AGPL-3.0 でライセンスされています。"
+            "value": "このアプリはフリーソフトウェアです。GNU General Public License バージョン 3 またはそれ以降のバージョンの条件に従って、共有や改変ができます。全文は以下のとおりです。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren은 Mullvad VPN AB가 저작권을 가진 Mullvad VPN 앱의 포크입니다. 앱은 GPL-3.0, 터널 엔진 warrenguard는 AGPL-3.0 라이선스를 따릅니다."
+            "value": "이 앱은 자유 소프트웨어입니다. GNU General Public License 버전 3 또는 그 이후 버전의 조건에 따라 공유하고 수정할 수 있습니다. 전문은 아래에 있습니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren သည် Mullvad VPN AB မူပိုင်ဖြစ်သော Mullvad VPN အက်ပ်မှ ခွဲထွက်လာသော ဗားရှင်းဖြစ်သည်။ အက်ပ်ကို GPL-3.0 ဖြင့်၊ ၎င်း၏ တန်နယ်အင်ဂျင် warrenguard ကို AGPL-3.0 ဖြင့် လိုင်စင်ပေးထားသည်။"
+            "value": "ဤအက်ပ်သည် အခမဲ့ဆော့ဖ်ဝဲ ဖြစ်သည်။ GNU General Public License ဗားရှင်း 3 သို့မဟုတ် နောက်ပိုင်းဗားရှင်းတစ်ခုခု၏ စည်းကမ်းချက်များအတိုင်း မျှဝေခြင်းနှင့် ပြင်ဆင်ခြင်း ပြုလုပ်နိုင်သည်။ စာသားအပြည့်အစုံကို အောက်တွင် ဖော်ပြထားသည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren er en fork av Mullvad VPN-appen, copyright Mullvad VPN AB. Appen er lisensiert under GPL-3.0, og tunnelmotoren, warrenguard, under AGPL-3.0."
+            "value": "Denne appen er fri programvare: du kan dele og endre den på vilkårene i GNU General Public License, versjon 3 eller en senere versjon. Hele teksten står nedenfor."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren is een fork van de Mullvad VPN-app, copyright Mullvad VPN AB. De app valt onder de GPL-3.0-licentie, en de tunnelengine, warrenguard, onder de AGPL-3.0."
+            "value": "Deze app is vrije software: u mag hem delen en wijzigen onder de voorwaarden van de GNU General Public License, versie 3 of een latere versie. De volledige tekst staat hieronder."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren to fork aplikacji Mullvad VPN, copyright Mullvad VPN AB. Aplikacja jest objęta licencją GPL-3.0, a jej silnik tunelu, warrenguard, licencją AGPL-3.0."
+            "value": "Ta aplikacja jest wolnym oprogramowaniem: możesz ją udostępniać i zmieniać na warunkach GNU General Public License w wersji 3 lub dowolnej późniejszej. Pełny tekst znajduje się poniżej."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Warren é um fork da aplicação Mullvad VPN, copyright Mullvad VPN AB. A aplicação está licenciada sob GPL-3.0, e o seu motor de túnel, warrenguard, sob AGPL-3.0."
+            "value": "Esta aplicação é software livre: pode ser partilhada e alterada nos termos da GNU General Public License, versão 3 ou qualquer versão posterior. O texto completo encontra-se abaixo."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren este un fork al aplicației Mullvad VPN, copyright Mullvad VPN AB. Aplicația este licențiată sub GPL-3.0, iar motorul tunelului, warrenguard, sub AGPL-3.0."
+            "value": "Această aplicație este software liber: o puteți distribui și modifica în condițiile GNU General Public License, versiunea 3 sau orice versiune ulterioară. Textul complet se află mai jos."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren является форком приложения Mullvad VPN, copyright Mullvad VPN AB. Приложение распространяется под лицензией GPL-3.0, а его движок туннеля, warrenguard, под AGPL-3.0."
+            "value": "Это приложение является свободным программным обеспечением: вы можете распространять и изменять его на условиях GNU General Public License версии 3 или любой более поздней версии. Полный текст приведён ниже."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren är en fork av appen Mullvad VPN, copyright Mullvad VPN AB. Appen är licensierad under GPL-3.0, och dess tunnelmotor, warrenguard, under AGPL-3.0."
+            "value": "Den här appen är fri programvara: du får dela och ändra den enligt villkoren i GNU General Public License, version 3 eller senare. Hela texten finns nedan."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren เป็นฟอร์กของแอป Mullvad VPN ลิขสิทธิ์ของ Mullvad VPN AB แอปนี้ใช้สัญญาอนุญาต GPL-3.0 และเอนจินอุโมงค์ warrenguard ใช้ AGPL-3.0"
+            "value": "แอปนี้เป็นซอฟต์แวร์เสรี คุณสามารถแบ่งปันและแก้ไขได้ตามเงื่อนไขของ GNU General Public License รุ่น 3 หรือรุ่นใดก็ได้ที่ใหม่กว่า ข้อความฉบับเต็มอยู่ด้านล่าง"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren, telif hakkı Mullvad VPN AB'ye ait olan Mullvad VPN uygulamasının bir çatalıdır. Uygulama GPL-3.0, tünel motoru warrenguard ise AGPL-3.0 ile lisanslanmıştır."
+            "value": "Bu uygulama özgür yazılımdır: GNU General Public License sürüm 3 veya daha sonraki herhangi bir sürümün koşulları altında paylaşabilir ve değiştirebilirsiniz. Tam metin aşağıdadır."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren є форком застосунку Mullvad VPN, copyright Mullvad VPN AB. Застосунок поширюється за ліцензією GPL-3.0, а його рушій тунелю, warrenguard, за AGPL-3.0."
+            "value": "Цей застосунок є вільним програмним забезпеченням: ви можете поширювати та змінювати його на умовах GNU General Public License версії 3 або будь-якої пізнішої версії. Повний текст наведено нижче."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren 是 Mullvad VPN 应用的分支，版权归 Mullvad VPN AB 所有。本应用以 GPL-3.0 授权，其隧道引擎 warrenguard 以 AGPL-3.0 授权。"
+            "value": "本应用是自由软件：您可以依据 GNU General Public License 第 3 版或任何更高版本的条款分享和修改它。完整文本见下方。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Warren 是 Mullvad VPN 應用程式的分支，版權屬於 Mullvad VPN AB。本應用程式以 GPL-3.0 授權，其通道引擎 warrenguard 以 AGPL-3.0 授權。"
+            "value": "本應用程式為自由軟體：您可依據 GNU General Public License 第 3 版或任何更新版本的條款分享及修改。完整條文如下。"
+          }
+        }
+      }
+    },
+    "It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يستند إلى تطبيق Mullvad VPN، حقوق النشر لشركة Mullvad VPN AB، والمنشور بموجب الرخصة نفسها."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den er baseret på Mullvad VPN-appen, copyright Mullvad VPN AB, udgivet under samme licens."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie basiert auf der Mullvad VPN App, Copyright Mullvad VPN AB, veröffentlicht unter derselben Lizenz."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Está basada en la aplicación Mullvad VPN, copyright Mullvad VPN AB, publicada bajo la misma licencia."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این برنامه بر پایه برنامه Mullvad VPN با حق نشر Mullvad VPN AB ساخته شده و تحت همین مجوز منتشر شده است."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se perustuu Mullvad VPN -sovellukseen, tekijänoikeus Mullvad VPN AB, ja se on julkaistu samalla lisenssillä."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elle est basée sur l'application Mullvad VPN, copyright Mullvad VPN AB, publiée sous la même licence."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si basa sull'app Mullvad VPN, copyright Mullvad VPN AB, pubblicata con la stessa licenza."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このアプリは Mullvad VPN AB が著作権を持つ Mullvad VPN アプリをもとにしており、同じライセンスで公開されています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 앱은 Mullvad VPN AB가 저작권을 가진 Mullvad VPN 앱을 기반으로 하며, 같은 라이선스로 배포됩니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤအက်ပ်သည် Mullvad VPN AB မူပိုင်ဖြစ်သော Mullvad VPN အက်ပ်ကို အခြေခံထားပြီး တူညီသော လိုင်စင်ဖြင့် ထုတ်ဝေထားသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den bygger på Mullvad VPN-appen, copyright Mullvad VPN AB, utgitt under samme lisens."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hij is gebaseerd op de Mullvad VPN-app, copyright Mullvad VPN AB, uitgebracht onder dezelfde licentie."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opiera się na aplikacji Mullvad VPN, copyright Mullvad VPN AB, wydanej na tej samej licencji."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baseia-se na aplicação Mullvad VPN, copyright Mullvad VPN AB, publicada sob a mesma licença."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se bazează pe aplicația Mullvad VPN, copyright Mullvad VPN AB, publicată sub aceeași licență."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оно основано на приложении Mullvad VPN, copyright Mullvad VPN AB, выпущенном под той же лицензией."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den bygger på appen Mullvad VPN, copyright Mullvad VPN AB, utgiven under samma licens."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แอปนี้พัฒนาต่อยอดจากแอป Mullvad VPN ลิขสิทธิ์ของ Mullvad VPN AB ซึ่งเผยแพร่ภายใต้สัญญาอนุญาตเดียวกัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telif hakkı Mullvad VPN AB'ye ait olan ve aynı lisansla yayımlanan Mullvad VPN uygulamasını temel alır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Він заснований на застосунку Mullvad VPN, copyright Mullvad VPN AB, випущеному під тією ж ліцензією."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本应用基于 Mullvad VPN 应用，版权归 Mullvad VPN AB 所有，以相同许可证发布。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本應用程式以 Mullvad VPN 應用程式為基礎，版權屬於 Mullvad VPN AB，並以相同授權條款發布。"
+          }
+        }
+      }
+    },
+    "The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محرك النفق warrenguard منشور بموجب رخصة GNU Affero General Public License، الإصدار 3."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnelmotoren, warrenguard, er udgivet under GNU Affero General Public License, version 3."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Tunnel-Engine warrenguard ist unter der GNU Affero General Public License, Version 3, veröffentlicht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El motor del túnel, warrenguard, se publica bajo la GNU Affero General Public License, versión 3."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موتور تونل، warrenguard، تحت مجوز GNU Affero General Public License، نسخه ۳، منتشر شده است."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnelimoottori warrenguard on julkaistu GNU Affero General Public Licensen version 3 ehdoilla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le moteur du tunnel, warrenguard, est publié sous la GNU Affero General Public License, version 3."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il motore del tunnel, warrenguard, è pubblicato con la GNU Affero General Public License, versione 3."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トンネルエンジン warrenguard は GNU Affero General Public License バージョン 3 で公開されています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "터널 엔진인 warrenguard는 GNU Affero General Public License 버전 3으로 배포됩니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "တန်နယ်အင်ဂျင် warrenguard ကို GNU Affero General Public License ဗားရှင်း 3 ဖြင့် ထုတ်ဝေထားသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnelmotoren, warrenguard, er utgitt under GNU Affero General Public License, versjon 3."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De tunnelengine, warrenguard, is uitgebracht onder de GNU Affero General Public License, versie 3."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silnik tunelu, warrenguard, jest wydany na licencji GNU Affero General Public License w wersji 3."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O motor do túnel, warrenguard, é publicado sob a GNU Affero General Public License, versão 3."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motorul tunelului, warrenguard, este publicat sub GNU Affero General Public License, versiunea 3."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Движок туннеля, warrenguard, выпущен под лицензией GNU Affero General Public License версии 3."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnelmotorn, warrenguard, ges ut under GNU Affero General Public License, version 3."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เอนจินอุโมงค์ warrenguard เผยแพร่ภายใต้ GNU Affero General Public License รุ่น 3"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tünel motoru warrenguard, GNU Affero General Public License sürüm 3 ile yayımlanmıştır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рушій тунелю, warrenguard, випущено під ліцензією GNU Affero General Public License версії 3."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隧道引擎 warrenguard 以 GNU Affero General Public License 第 3 版发布。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通道引擎 warrenguard 以 GNU Affero General Public License 第 3 版發布。"
+          }
+        }
+      }
+    },
+    "Source code of this version": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الشيفرة المصدرية لهذا الإصدار"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kildekode til denne version"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quellcode dieser Version"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source code of this version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código fuente de esta versión"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کد منبع این نسخه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tämän version lähdekoodi"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code source de cette version"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice sorgente di questa versione"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このバージョンのソースコード"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 버전의 소스 코드"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤဗားရှင်း၏ ရင်းမြစ်ကုဒ်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kildekode for denne versjonen"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Broncode van deze versie"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kod źródłowy tej wersji"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código-fonte desta versão"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codul sursă al acestei versiuni"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Исходный код этой версии"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Källkod för den här versionen"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ซอร์สโค้ดของเวอร์ชันนี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu sürümün kaynak kodu"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихідний код цієї версії"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此版本的源代码"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此版本的原始碼"
+          }
+        }
+      }
+    },
+    "Source code of the tunnel engine": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الشيفرة المصدرية لمحرك النفق"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kildekode til tunnelmotoren"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quellcode der Tunnel-Engine"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source code of the tunnel engine"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código fuente del motor del túnel"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کد منبع موتور تونل"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnelimoottorin lähdekoodi"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code source du moteur du tunnel"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice sorgente del motore del tunnel"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トンネルエンジンのソースコード"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "터널 엔진의 소스 코드"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "တန်နယ်အင်ဂျင်၏ ရင်းမြစ်ကုဒ်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kildekode for tunnelmotoren"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Broncode van de tunnelengine"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kod źródłowy silnika tunelu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código-fonte do motor do túnel"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codul sursă al motorului tunelului"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Исходный код движка туннеля"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Källkod för tunnelmotorn"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ซอร์สโค้ดของเอนจินอุโมงค์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tünel motorunun kaynak kodu"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихідний код рушія тунелю"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隧道引擎的源代码"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通道引擎的原始碼"
           }
         }
       }
