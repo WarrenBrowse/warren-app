@@ -142,7 +142,7 @@ import {
   IpcInput,
   OLD_LOG_FILES,
 } from './logging';
-import { clearMnemonicFromClipboard } from './mnemonic-clipboard';
+import { MnemonicClipboardGuard } from './mnemonic-clipboard';
 import NotificationController, {
   NotificationControllerDelegate,
   NotificationSender,
@@ -326,6 +326,7 @@ class ApplicationMain
     this.userInterface?.setContentProtection(protect),
   );
   private forumIdentityStore = new SafeStorageForumIdentityStore();
+  private mnemonicClipboardGuard = new MnemonicClipboardGuard(clipboard);
   private forumActivityMonitor = new ForumActivityMonitor(this);
   // Last count the monitor published, replayed in the initial state: the
   // renderer boots after the first digest has already been matched.
@@ -865,6 +866,7 @@ class ApplicationMain
     this.userInterface?.dispose();
     this.notificationController.dispose();
     this.banWatch.dispose();
+    void this.mnemonicClipboardGuard.flush();
 
     // Unsubscribe the event handler
     try {
@@ -1903,9 +1905,10 @@ class ApplicationMain
         }),
       ),
     );
-    IpcMainEventChannel.app.handleClearMnemonicFromClipboard((mnemonic) =>
-      clearMnemonicFromClipboard(clipboard, mnemonic),
-    );
+    IpcMainEventChannel.app.handleArmMnemonicClipboardClear((mnemonic) => {
+      this.mnemonicClipboardGuard.arm(mnemonic);
+      return Promise.resolve();
+    });
 
     IpcMainEventChannel.navigation.handleSetHistory((history) => {
       this.navigationHistory = history;

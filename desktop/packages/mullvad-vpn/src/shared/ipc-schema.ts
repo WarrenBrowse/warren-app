@@ -346,13 +346,13 @@ export const ipcSchema = {
     getPathBaseName: invoke<string, string>(),
     // The GPL text packaged with the app, for the licences screen.
     getLicenseText: invoke<void, string>(),
-    // Clears the system clipboard, but only if it still holds the
-    // provided value (the just-copied mnemonic). Runs in the main
-    // process where Electron's `clipboard` module bypasses the
-    // renderer permission handler, which only grants
-    // `clipboard-sanitized-write` and so rejects a renderer-side
-    // `readText()`. Returns whether the clipboard was actually cleared.
-    clearMnemonicFromClipboard: invoke<string, boolean>(),
+    // Arms the wipe of the just-copied mnemonic from the system
+    // clipboard: a minute later, or when the app quits, main clears the
+    // clipboard if it still holds that value. Runs in the main process
+    // where Electron's `clipboard` module bypasses the renderer
+    // permission handler, which only grants `clipboard-sanitized-write`
+    // and so rejects a renderer-side `readText()`.
+    armMnemonicClipboardClear: invoke<string, void>(),
     upgrade: send<void>(),
     upgradeAbort: send<void>(),
     upgradeEvent: notifyRenderer<AppUpgradeEvent>(),
