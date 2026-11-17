@@ -202,8 +202,9 @@ pub(crate) async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Chann
 /// Crate-private on purpose: the only paths outside this crate that make sense
 /// belong to ANOTHER product environment, and those go through
 /// [`grpc_transport_channel_to`], which cannot be handed an unvouched one. The
-/// socket lives in a directory only root can create entries in, so the path
-/// itself vouches for the daemon.
+/// socket lives in a directory only root can create entries in (on macOS,
+/// `/var/run` is also writable by the `daemon` group, whose only member is
+/// root), so the path itself vouches for the daemon.
 #[cfg(all(unix, not(target_os = "android")))]
 pub(crate) async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Channel, Error> {
     use futures::TryFutureExt;
