@@ -24,9 +24,6 @@ thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "process", "rt-multi-thread"] }
 
 [dev-dependencies]
-# Test fixtures for `BackendParams::Warren` use deterministic Ed25519
-# seeds + warrenguard-wire newtypes (WarrenPubkey / WarrenExitAddr).
-ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std"] }
 insta = { workspace = true }
 test-log = "0.2.17"
 tokio = { workspace = true, features = ["io-util", "test-util", "time"] }
@@ -76,7 +73,6 @@ talpid-windows = { path = "../talpid-windows" }
 widestring = { workspace = true }
 windows = "0.58.0"
 windows-service = "0.6.0"
-winreg = { workspace = true, features = ["transactions"] }
 wmi = { workspace = true }
 
 [target.'cfg(windows)'.dependencies.windows-sys]

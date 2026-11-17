@@ -68,7 +68,6 @@ warren-standing = { path = "../warren-standing" }
 [target.'cfg(target_os = "ios")'.dependencies]
 futures = { workspace = true }
 hyper = { version = "1.4.1", features = ["client", "http1"] }
-hyper-util = { workspace = true }
 libc = "0.2"
 log = { workspace = true }
 mockito = { workspace = true, optional = true }
@@ -86,7 +85,6 @@ talpid-future = { path = "../talpid-future" }
 talpid-types = { path = "../talpid-types" }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tonic = { workspace = true }
-tower = { workspace = true }
 tracing-subscriber = { workspace = true }
 # Signed HTTP client for warren-api (`warren_account_ffi`), consumed with
 # the bundled reqwest transport. iOS-only: the module's only consumer is

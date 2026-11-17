@@ -13,7 +13,6 @@ crate-type = ["rlib", "staticlib"]
 [dependencies]
 anyhow = { workspace = true }
 async-trait = "0.1"
-chrono = { workspace = true }
 # Warren fork - Phase 2 auth wallet: Ed25519 signature on HTTP API
 # requests (see `mullvad-api/src/warren_auth.rs` and
 # `warren-core/docs/06-auth-wallet.md`).
@@ -41,7 +40,6 @@ http = "1.1.0"
 http-body-util = "0.1.2"
 hyper = { version = "1.8.1", features = ["client", "http1"] }
 hyper-util = { workspace = true }
-ipnetwork = { workspace = true }
 libc = "0.2"
 log = { workspace = true }
 mullvad-api-constants = { path = "./mullvad-api-constants" }
