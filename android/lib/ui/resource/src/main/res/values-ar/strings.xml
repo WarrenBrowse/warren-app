@@ -275,6 +275,10 @@
     <string name="wallet_backup_title">احفظ عبارة الاسترداد احتياطيًا</string>
     <string name="wallet_backup_warning">أي شخص يملك هذه الكلمات الـ12 يمكنه الوصول إلى حسابك. لا تشاركها أبدًا ولا تخزّنها على الإنترنت.</string>
     <string name="wallet_backup_confirm_cta">لقد كتبت عبارة الاسترداد في مكان آمن.</string>
+    <string name="wallet_backup_check_title">تحقّق من عبارة الاسترداد</string>
+    <string name="wallet_backup_check_body">للتأكد من أنك حفظتها، اكتب هذه الكلمات من عبارة الاسترداد.</string>
+    <string name="wallet_backup_check_word">الكلمة %1$d</string>
+    <string name="wallet_backup_check_mismatch">هذه الكلمات لا تطابق عبارة الاسترداد. راجع ما دوّنته.</string>
     <string name="wallet_import_entry_cta">لديّ حساب بالفعل</string>
     <string name="wallet_import_error_word_count">أدخل 12 (أو 24) كلمة بالضبط، مفصولة بمسافات.</string>
     <string name="wallet_create_error">تعذّر إنشاء محفظة على هذا الجهاز. حاول مرة أخرى.</string>

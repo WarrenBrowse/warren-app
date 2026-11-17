@@ -262,6 +262,10 @@
     <string name="wallet_backup_title">Sauvegardez votre phrase de restauration</string>
     <string name="wallet_backup_warning">Toute personne possédant ces 12 mots peut accéder à votre compte. Ne les partagez jamais et ne les stockez pas en ligne.</string>
     <string name="wallet_backup_confirm_cta">J\'ai noté ma phrase de restauration en lieu sûr.</string>
+    <string name="wallet_backup_check_title">Vérifiez votre phrase de restauration</string>
+    <string name="wallet_backup_check_body">Pour vous assurer de l\'avoir bien notée, saisissez ces mots de votre phrase de restauration.</string>
+    <string name="wallet_backup_check_word">Mot %1$d</string>
+    <string name="wallet_backup_check_mismatch">Ces mots ne correspondent pas à votre phrase de restauration. Vérifiez ce que vous avez noté.</string>
     <string name="wallet_import_entry_cta">J\'ai déjà un compte</string>
     <string name="wallet_import_error_word_count">Saisissez exactement 12 (ou 24) mots, séparés par des espaces.</string>
     <string name="wallet_create_error">Impossible de créer un portefeuille sur cet appareil. Réessayez.</string>

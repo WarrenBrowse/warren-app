@@ -259,6 +259,10 @@
     <string name="wallet_backup_title">Sikkerhetskopier gjenopprettingsfrasen din</string>
     <string name="wallet_backup_warning">Alle som har disse 12 ordene, kan få tilgang til kontoen din. Del dem aldri, og lagre dem aldri på nett.</string>
     <string name="wallet_backup_confirm_cta">Jeg har skrevet ned gjenopprettingsfrasen min på et trygt sted.</string>
+    <string name="wallet_backup_check_title">Kontroller gjenopprettingsfrasen din</string>
+    <string name="wallet_backup_check_body">Skriv inn disse ordene fra gjenopprettingsfrasen for å bekrefte at du har tatt vare på den.</string>
+    <string name="wallet_backup_check_word">Ord %1$d</string>
+    <string name="wallet_backup_check_mismatch">Disse ordene stemmer ikke med gjenopprettingsfrasen din. Sjekk det du skrev ned.</string>
     <string name="wallet_import_entry_cta">Jeg har allerede en konto</string>
     <string name="wallet_import_error_word_count">Skriv inn nøyaktig 12 (eller 24) ord atskilt med mellomrom.</string>
     <string name="wallet_create_error">Kunne ikke opprette en lommebok på denne enheten. Prøv igjen.</string>

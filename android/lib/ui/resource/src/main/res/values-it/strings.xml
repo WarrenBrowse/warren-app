@@ -262,6 +262,10 @@
     <string name="wallet_backup_title">Esegui il backup della tua frase di recupero</string>
     <string name="wallet_backup_warning">Chiunque possieda queste 12 parole può accedere al tuo account. Non condividerle mai e non conservarle online.</string>
     <string name="wallet_backup_confirm_cta">Ho annotato la mia frase di recupero in un luogo sicuro.</string>
+    <string name="wallet_backup_check_title">Verifica la tua frase di recupero</string>
+    <string name="wallet_backup_check_body">Per assicurarti di averla salvata, scrivi queste parole della tua frase di recupero.</string>
+    <string name="wallet_backup_check_word">Parola %1$d</string>
+    <string name="wallet_backup_check_mismatch">Queste parole non corrispondono alla tua frase di recupero. Controlla ciò che hai annotato.</string>
     <string name="wallet_import_entry_cta">Ho già un account</string>
     <string name="wallet_import_error_word_count">Inserisci esattamente 12 (o 24) parole separate da spazi.</string>
     <string name="wallet_create_error">Impossibile creare un wallet su questo dispositivo. Riprova.</string>

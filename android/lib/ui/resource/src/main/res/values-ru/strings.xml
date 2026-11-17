@@ -267,6 +267,10 @@
     <string name="wallet_backup_title">Сохраните свою фразу восстановления</string>
     <string name="wallet_backup_warning">Любой, у кого есть эти 12 слов, может получить доступ к вашему аккаунту. Никогда не делитесь ими и не храните их в интернете.</string>
     <string name="wallet_backup_confirm_cta">Я записал свою фразу восстановления в надёжном месте.</string>
+    <string name="wallet_backup_check_title">Проверьте фразу восстановления</string>
+    <string name="wallet_backup_check_body">Чтобы убедиться, что вы её сохранили, введите эти слова из фразы восстановления.</string>
+    <string name="wallet_backup_check_word">Слово %1$d</string>
+    <string name="wallet_backup_check_mismatch">Эти слова не совпадают с вашей фразой восстановления. Проверьте то, что вы записали.</string>
     <string name="wallet_import_entry_cta">У меня уже есть учётная запись</string>
     <string name="wallet_import_error_word_count">Введите ровно 12 (или 24) слова через пробел.</string>
     <string name="wallet_create_error">Не удалось создать кошелёк на этом устройстве. Попробуйте ещё раз.</string>

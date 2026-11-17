@@ -259,6 +259,10 @@
     <string name="wallet_backup_title">Säkerhetskopiera din återställningsfras</string>
     <string name="wallet_backup_warning">Alla med dessa 12 ord kan komma åt ditt konto. Dela dem aldrig och lagra dem aldrig online.</string>
     <string name="wallet_backup_confirm_cta">Jag har skrivit ner min återställningsfras på en säker plats.</string>
+    <string name="wallet_backup_check_title">Kontrollera din återställningsfras</string>
+    <string name="wallet_backup_check_body">Skriv in de här orden från din återställningsfras för att bekräfta att du har sparat den.</string>
+    <string name="wallet_backup_check_word">Ord %1$d</string>
+    <string name="wallet_backup_check_mismatch">Orden stämmer inte med din återställningsfras. Kontrollera det du skrev ner.</string>
     <string name="wallet_import_entry_cta">Jag har redan ett konto</string>
     <string name="wallet_import_error_word_count">Ange exakt 12 (eller 24) ord åtskilda med mellanslag.</string>
     <string name="wallet_create_error">Det gick inte att skapa en plånbok på den här enheten. Försök igen.</string>

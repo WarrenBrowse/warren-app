@@ -267,6 +267,10 @@
     <string name="wallet_backup_title">Збережіть свою фразу відновлення</string>
     <string name="wallet_backup_warning">Будь-хто, хто має ці 12 слів, може отримати доступ до вашого облікового запису. Ніколи не діліться ними та не зберігайте їх онлайн.</string>
     <string name="wallet_backup_confirm_cta">Я записав свою фразу відновлення в надійному місці.</string>
+    <string name="wallet_backup_check_title">Перевірте свою фразу відновлення</string>
+    <string name="wallet_backup_check_body">Щоб переконатися, що ви її зберегли, введіть ці слова з фрази відновлення.</string>
+    <string name="wallet_backup_check_word">Слово %1$d</string>
+    <string name="wallet_backup_check_mismatch">Ці слова не збігаються з вашою фразою відновлення. Перевірте те, що ви записали.</string>
     <string name="wallet_import_entry_cta">У мене вже є обліковий запис</string>
     <string name="wallet_import_error_word_count">Введіть рівно 12 (або 24) слова, розділені пробілами.</string>
     <string name="wallet_create_error">Не вдалося створити гаманець на цьому пристрої. Спробуйте ще раз.</string>

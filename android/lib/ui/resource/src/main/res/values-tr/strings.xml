@@ -259,6 +259,10 @@
     <string name="wallet_backup_title">Kurtarma ifadenizi yedekleyin</string>
     <string name="wallet_backup_warning">Bu 12 kelimeye sahip olan herkes hesabınıza erişebilir. Bunları asla paylaşmayın veya çevrimiçi saklamayın.</string>
     <string name="wallet_backup_confirm_cta">Kurtarma ifademi güvenli bir yere yazdım.</string>
+    <string name="wallet_backup_check_title">Kurtarma ifadenizi kontrol edin</string>
+    <string name="wallet_backup_check_body">Kaydettiğinizden emin olmak için kurtarma ifadenizdeki şu kelimeleri yazın.</string>
+    <string name="wallet_backup_check_word">%1$d. kelime</string>
+    <string name="wallet_backup_check_mismatch">Bu kelimeler kurtarma ifadenizle eşleşmiyor. Not ettiklerinizi kontrol edin.</string>
     <string name="wallet_import_entry_cta">Zaten bir hesabım var</string>
     <string name="wallet_import_error_word_count">Boşlukla ayrılmış tam olarak 12 (veya 24) kelime girin.</string>
     <string name="wallet_create_error">Bu cihazda cüzdan oluşturulamadı. Yeniden deneyin.</string>

@@ -259,6 +259,10 @@
     <string name="wallet_backup_title">Sichern Sie Ihre Wiederherstellungsphrase</string>
     <string name="wallet_backup_warning">Jeder, der diese 12 Wörter besitzt, kann auf dein Konto zugreifen. Teile sie niemals und speichere sie nicht online.</string>
     <string name="wallet_backup_confirm_cta">Ich habe meine Wiederherstellungsphrase an einem sicheren Ort notiert.</string>
+    <string name="wallet_backup_check_title">Prüfen Sie Ihre Wiederherstellungsphrase</string>
+    <string name="wallet_backup_check_body">Geben Sie diese Wörter aus Ihrer Wiederherstellungsphrase ein, um sicherzugehen, dass Sie sie gespeichert haben.</string>
+    <string name="wallet_backup_check_word">Wort %1$d</string>
+    <string name="wallet_backup_check_mismatch">Diese Wörter stimmen nicht mit Ihrer Wiederherstellungsphrase überein. Prüfen Sie, was Sie aufgeschrieben haben.</string>
     <string name="wallet_import_entry_cta">Ich habe bereits ein Konto</string>
     <string name="wallet_import_error_word_count">Gib genau 12 (oder 24) durch Leerzeichen getrennte Wörter ein.</string>
     <string name="wallet_create_error">Auf diesem Gerät konnte keine Wallet erstellt werden. Versuche es erneut.</string>

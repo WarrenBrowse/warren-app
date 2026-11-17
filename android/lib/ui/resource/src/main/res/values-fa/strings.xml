@@ -259,6 +259,10 @@
     <string name="wallet_backup_title">از عبارت بازیابی خود نسخه پشتیبان بگیرید</string>
     <string name="wallet_backup_warning">هرکسی که این ۱۲ کلمه را داشته باشد می‌تواند به حساب شما دسترسی پیدا کند. هرگز آن‌ها را به اشتراک نگذارید یا آنلاین ذخیره نکنید.</string>
     <string name="wallet_backup_confirm_cta">عبارت بازیابی خود را در جای امنی یادداشت کرده‌ام.</string>
+    <string name="wallet_backup_check_title">عبارت بازیابی خود را بررسی کنید</string>
+    <string name="wallet_backup_check_body">برای اطمینان از اینکه آن را ذخیره کرده‌اید، این کلمات را از عبارت بازیابی خود وارد کنید.</string>
+    <string name="wallet_backup_check_word">کلمه %1$d</string>
+    <string name="wallet_backup_check_mismatch">این کلمات با عبارت بازیابی شما مطابقت ندارند. آنچه را یادداشت کرده‌اید بررسی کنید.</string>
     <string name="wallet_import_entry_cta">از قبل حساب دارم</string>
     <string name="wallet_import_error_word_count">دقیقاً ۱۲ (یا ۲۴) کلمه را با فاصله وارد کنید.</string>
     <string name="wallet_create_error">ایجاد کیف پول روی این دستگاه ممکن نشد. دوباره تلاش کنید.</string>

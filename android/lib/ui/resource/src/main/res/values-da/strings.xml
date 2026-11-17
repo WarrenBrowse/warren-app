@@ -259,6 +259,10 @@
     <string name="wallet_backup_title">Sikkerhedskopiér din gendannelsessætning</string>
     <string name="wallet_backup_warning">Enhver med disse 12 ord kan få adgang til din konto. Del dem aldrig, og gem dem aldrig online.</string>
     <string name="wallet_backup_confirm_cta">Jeg har skrevet min gendannelsessætning ned et sikkert sted.</string>
+    <string name="wallet_backup_check_title">Tjek din gendannelsessætning</string>
+    <string name="wallet_backup_check_body">Skriv disse ord fra din gendannelsessætning for at sikre, at du har gemt den.</string>
+    <string name="wallet_backup_check_word">Ord %1$d</string>
+    <string name="wallet_backup_check_mismatch">Disse ord passer ikke til din gendannelsessætning. Tjek det, du har skrevet ned.</string>
     <string name="wallet_import_entry_cta">Jeg har allerede en konto</string>
     <string name="wallet_import_error_word_count">Indtast præcis 12 (eller 24) ord adskilt af mellemrum.</string>
     <string name="wallet_create_error">Kunne ikke oprette en tegnebog på denne enhed. Prøv igen.</string>

@@ -267,6 +267,10 @@
     <string name="wallet_backup_title">Salvează-ți fraza de recuperare</string>
     <string name="wallet_backup_warning">Oricine deține aceste 12 cuvinte vă poate accesa contul. Nu le partajați niciodată și nu le stocați online.</string>
     <string name="wallet_backup_confirm_cta">Mi-am notat fraza de recuperare într-un loc sigur.</string>
+    <string name="wallet_backup_check_title">Verifică-ți fraza de recuperare</string>
+    <string name="wallet_backup_check_body">Ca să fii sigur că ai salvat-o, scrie aceste cuvinte din fraza ta de recuperare.</string>
+    <string name="wallet_backup_check_word">Cuvântul %1$d</string>
+    <string name="wallet_backup_check_mismatch">Aceste cuvinte nu se potrivesc cu fraza ta de recuperare. Verifică ce ai notat.</string>
     <string name="wallet_import_entry_cta">Am deja un cont</string>
     <string name="wallet_import_error_word_count">Introduceți exact 12 (sau 24) de cuvinte, separate prin spații.</string>
     <string name="wallet_create_error">Nu s-a putut crea un portofel pe acest dispozitiv. Încercați din nou.</string>

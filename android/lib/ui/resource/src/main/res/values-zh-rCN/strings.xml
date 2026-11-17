@@ -255,6 +255,10 @@
     <string name="wallet_backup_title">备份您的恢复短语</string>
     <string name="wallet_backup_warning">任何掌握这 12 个单词的人都能访问你的账户。切勿分享或在线存储它们。</string>
     <string name="wallet_backup_confirm_cta">我已将恢复短语记录在安全的地方。</string>
+    <string name="wallet_backup_check_title">核对您的恢复短语</string>
+    <string name="wallet_backup_check_body">为确认您已保存，请输入恢复短语中的以下单词。</string>
+    <string name="wallet_backup_check_word">第 %1$d 个单词</string>
+    <string name="wallet_backup_check_mismatch">这些单词与您的恢复短语不符。请核对您记下的内容。</string>
     <string name="wallet_import_entry_cta">我已有账户</string>
     <string name="wallet_import_error_word_count">请输入正好 12 个（或 24 个）单词，以空格分隔。</string>
     <string name="wallet_create_error">无法在此设备上创建钱包。请重试。</string>

@@ -255,6 +255,10 @@
     <string name="wallet_backup_title">သင်၏ ပြန်လည်ရယူရေးစကားစုကို အရန်သိမ်းပါ</string>
     <string name="wallet_backup_warning">ဤ စကားလုံး ၁၂ လုံး ရှိသူ မည်သူမဆို သင့်အကောင့်ကို ဝင်ရောက်နိုင်သည်။ ၎င်းတို့ကို မည်သည့်အခါမျှ မမျှဝေပါနှင့်၊ အွန်လိုင်းတွင်လည်း မသိမ်းဆည်းပါနှင့်။</string>
     <string name="wallet_backup_confirm_cta">ကျွန်ုပ်၏ ပြန်လည်ရယူရေးစကားစုကို လုံခြုံသောနေရာတွင် ရေးမှတ်ထားပါသည်။</string>
+    <string name="wallet_backup_check_title">သင်၏ ပြန်လည်ရယူရေးစကားစုကို စစ်ဆေးပါ</string>
+    <string name="wallet_backup_check_body">သိမ်းထားကြောင်း သေချာစေရန် သင်၏ ပြန်လည်ရယူရေးစကားစုမှ ဤစကားလုံးများကို ရိုက်ထည့်ပါ။</string>
+    <string name="wallet_backup_check_word">စကားလုံး %1$d</string>
+    <string name="wallet_backup_check_mismatch">ဤစကားလုံးများသည် သင်၏ ပြန်လည်ရယူရေးစကားစုနှင့် မကိုက်ညီပါ။ သင်ရေးမှတ်ထားသည်ကို စစ်ဆေးပါ။</string>
     <string name="wallet_import_entry_cta">ကျွန်ုပ်တွင် အကောင့်ရှိပြီးသားဖြစ်သည်</string>
     <string name="wallet_import_error_word_count">နေရာလွတ်များဖြင့် ခွဲ၍ စကားလုံး ၁၂ လုံး (သို့မဟုတ် ၂၄ လုံး) အတိအကျ ထည့်ပါ။</string>
     <string name="wallet_create_error">ဤစက်ပစ္စည်းတွင် ပိုက်ဆံအိတ် ဖန်တီး၍ မရပါ။ ထပ်ကြိုးစားပါ။</string>

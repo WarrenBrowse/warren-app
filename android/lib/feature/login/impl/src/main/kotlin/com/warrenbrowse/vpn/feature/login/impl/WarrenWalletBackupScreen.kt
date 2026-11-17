@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +25,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import com.warrenbrowse.vpn.common.compose.MNEMONIC_CLIPBOARD_CLEAR_MS
 import com.warrenbrowse.vpn.common.compose.SecureScreenWhileInView
 import com.warrenbrowse.vpn.common.compose.createCopyToClipboardHandle
@@ -93,10 +97,19 @@ fun WarrenWalletBackupScreen(
             autoClearAfterMs = MNEMONIC_CLIPBOARD_CLEAR_MS,
         )
     var confirmed by remember { mutableStateOf(false) }
+    // The backup ends with the user typing back a few words of the phrase:
+    // `checkPositions` is set while that check is on screen.
+    var checkPositions by remember { mutableStateOf<List<Int>?>(null) }
+    var checkAnswers by remember { mutableStateOf(listOf<String>()) }
+    var checkMismatch by remember { mutableStateOf(false) }
 
     ScaffoldWithSmallTopBar(
         modifier = modifier,
-        appBarTitle = stringResource(R.string.wallet_backup_title),
+        appBarTitle =
+            stringResource(
+                if (checkPositions == null) R.string.wallet_backup_title
+                else R.string.wallet_backup_check_title
+            ),
         navigationIcon = { NavigateBackIconButton(onNavigateBack = { confirmLeave = true }) },
         snackbarHostState = snackbarHostState,
     ) { scaffoldModifier ->
@@ -114,47 +127,105 @@ fun WarrenWalletBackupScreen(
                 ),
             verticalArrangement = Arrangement.spacedBy(Dimens.mediumPadding),
         ) {
-            Text(
-                text = stringResource(R.string.wallet_backup_body),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-
-            Text(
-                text = stringResource(R.string.wallet_backup_warning),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-            )
-
-            MnemonicDisplay(phrase = mnemonic.phrase, alwaysRevealed = true)
-
-            PrimaryButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { copyToClipboard(mnemonic.phrase, null) },
-                text = stringResource(R.string.copy),
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { confirmed = !confirmed },
-                horizontalArrangement = Arrangement.spacedBy(Dimens.buttonSpacing),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Checkbox(checked = confirmed, onCheckedChange = { confirmed = it })
+            val positions = checkPositions
+            if (positions != null) {
                 Text(
-                    text = stringResource(R.string.wallet_backup_confirm_cta),
+                    text = stringResource(R.string.wallet_backup_check_body),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-            }
+                positions.forEachIndexed { index, position ->
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = checkAnswers[index],
+                        onValueChange = { value ->
+                            checkMismatch = false
+                            checkAnswers =
+                                checkAnswers.mapIndexed { i, answer -> if (i == index) value else answer }
+                        },
+                        label = { Text(stringResource(R.string.wallet_backup_check_word, position + 1)) },
+                        singleLine = true,
+                        isError = checkMismatch,
+                        keyboardOptions =
+                            KeyboardOptions(
+                                capitalization = KeyboardCapitalization.None,
+                                autoCorrectEnabled = false,
+                                keyboardType = KeyboardType.Password,
+                            ),
+                    )
+                }
+                if (checkMismatch) {
+                    Text(
+                        text = stringResource(R.string.wallet_backup_check_mismatch),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                VariantButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        if (backupCheckPasses(mnemonic.phrase, positions, checkAnswers)) {
+                            onConfirmed()
+                        } else {
+                            checkMismatch = true
+                        }
+                    },
+                    text = stringResource(R.string.cont),
+                    isEnabled = checkAnswers.all { it.isNotBlank() },
+                )
+                PrimaryButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { checkPositions = null },
+                    text = stringResource(R.string.back),
+                )
+            } else {
+                Text(
+                    text = stringResource(R.string.wallet_backup_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
 
-            VariantButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onConfirmed,
-                text = stringResource(R.string.cont),
-                isEnabled = confirmed,
-            )
+                Text(
+                    text = stringResource(R.string.wallet_backup_warning),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+
+                MnemonicDisplay(phrase = mnemonic.phrase, alwaysRevealed = true)
+
+                PrimaryButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { copyToClipboard(mnemonic.phrase, null) },
+                    text = stringResource(R.string.copy),
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { confirmed = !confirmed },
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.buttonSpacing),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(checked = confirmed, onCheckedChange = { confirmed = it })
+                    Text(
+                        text = stringResource(R.string.wallet_backup_confirm_cta),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+
+                VariantButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        val positions = pickBackupCheckPositions(mnemonic.phrase.trim().split(' ').size)
+                        checkPositions = positions
+                        checkAnswers = positions.map { "" }
+                        checkMismatch = false
+                    },
+                    text = stringResource(R.string.cont),
+                    isEnabled = confirmed,
+                )
+            }
         }
     }
 

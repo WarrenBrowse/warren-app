@@ -267,6 +267,10 @@
     <string name="wallet_backup_title">Utwórz kopię zapasową frazy odzyskiwania</string>
     <string name="wallet_backup_warning">Każdy, kto zna te 12 słów, może uzyskać dostęp do Twojego konta. Nigdy ich nie udostępniaj ani nie przechowuj online.</string>
     <string name="wallet_backup_confirm_cta">Zapisałem moją frazę odzyskiwania w bezpiecznym miejscu.</string>
+    <string name="wallet_backup_check_title">Sprawdź frazę odzyskiwania</string>
+    <string name="wallet_backup_check_body">Aby upewnić się, że ją zapisano, wpisz te słowa z frazy odzyskiwania.</string>
+    <string name="wallet_backup_check_word">Słowo %1$d</string>
+    <string name="wallet_backup_check_mismatch">Te słowa nie pasują do frazy odzyskiwania. Sprawdź, co zostało zapisane.</string>
     <string name="wallet_import_entry_cta">Mam już konto</string>
     <string name="wallet_import_error_word_count">Wpisz dokładnie 12 (lub 24) słowa oddzielone spacjami.</string>
     <string name="wallet_create_error">Nie udało się utworzyć portfela na tym urządzeniu. Spróbuj ponownie.</string>

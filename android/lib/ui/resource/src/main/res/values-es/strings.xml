@@ -262,6 +262,10 @@
     <string name="wallet_backup_title">Guarda tu frase de recuperación</string>
     <string name="wallet_backup_warning">Cualquiera que tenga estas 12 palabras puede acceder a tu cuenta. Nunca las compartas ni las guardes en línea.</string>
     <string name="wallet_backup_confirm_cta">He anotado mi frase de recuperación en un lugar seguro.</string>
+    <string name="wallet_backup_check_title">Comprueba tu frase de recuperación</string>
+    <string name="wallet_backup_check_body">Para asegurarte de que la guardaste, escribe estas palabras de tu frase de recuperación.</string>
+    <string name="wallet_backup_check_word">Palabra %1$d</string>
+    <string name="wallet_backup_check_mismatch">Estas palabras no coinciden con tu frase de recuperación. Revisa lo que anotaste.</string>
     <string name="wallet_import_entry_cta">Ya tengo una cuenta</string>
     <string name="wallet_import_error_word_count">Introduce exactamente 12 (o 24) palabras separadas por espacios.</string>
     <string name="wallet_create_error">No se ha podido crear un monedero en este dispositivo. Inténtalo de nuevo.</string>

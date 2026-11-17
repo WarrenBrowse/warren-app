@@ -259,6 +259,10 @@
     <string name="wallet_backup_title">Maak een back-up van je herstelzin</string>
     <string name="wallet_backup_warning">Iedereen met deze 12 woorden heeft toegang tot je account. Deel ze nooit en bewaar ze niet online.</string>
     <string name="wallet_backup_confirm_cta">Ik heb mijn herstelzin op een veilige plek opgeschreven.</string>
+    <string name="wallet_backup_check_title">Controleer je herstelzin</string>
+    <string name="wallet_backup_check_body">Typ deze woorden uit je herstelzin om zeker te weten dat je hem hebt bewaard.</string>
+    <string name="wallet_backup_check_word">Woord %1$d</string>
+    <string name="wallet_backup_check_mismatch">Deze woorden komen niet overeen met je herstelzin. Controleer wat je hebt opgeschreven.</string>
     <string name="wallet_import_entry_cta">Ik heb al een account</string>
     <string name="wallet_import_error_word_count">Voer precies 12 (of 24) woorden in, gescheiden door spaties.</string>
     <string name="wallet_create_error">Kan geen wallet maken op dit apparaat. Probeer het opnieuw.</string>

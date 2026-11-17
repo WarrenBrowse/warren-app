@@ -255,6 +255,10 @@
     <string name="wallet_backup_title">リカバリーフレーズをバックアップ</string>
     <string name="wallet_backup_warning">この 12 語を知っている人は誰でもあなたのアカウントにアクセスできます。決して共有したり、オンラインで保管したりしないでください。</string>
     <string name="wallet_backup_confirm_cta">リカバリーフレーズを安全な場所に書き留めました。</string>
+    <string name="wallet_backup_check_title">リカバリーフレーズを確認</string>
+    <string name="wallet_backup_check_body">保存できたことを確かめるため、リカバリーフレーズの次の単語を入力してください。</string>
+    <string name="wallet_backup_check_word">%1$d 番目の単語</string>
+    <string name="wallet_backup_check_mismatch">これらの単語はリカバリーフレーズと一致しません。書き留めた内容を確認してください。</string>
     <string name="wallet_import_entry_cta">すでにアカウントを持っています</string>
     <string name="wallet_import_error_word_count">スペース区切りでちょうど 12 語（または 24 語）を入力してください。</string>
     <string name="wallet_create_error">この端末でウォレットを作成できませんでした。もう一度お試しください。</string>

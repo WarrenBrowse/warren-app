@@ -255,6 +255,10 @@
     <string name="wallet_backup_title">สำรองวลีกู้คืนของคุณ</string>
     <string name="wallet_backup_warning">ใครก็ตามที่มี 12 คำนี้สามารถเข้าถึงบัญชีของคุณได้ อย่าแชร์หรือเก็บไว้ออนไลน์เด็ดขาด</string>
     <string name="wallet_backup_confirm_cta">ฉันได้จดวลีกู้คืนของฉันไว้ในที่ปลอดภัยแล้ว</string>
+    <string name="wallet_backup_check_title">ตรวจสอบวลีกู้คืนของคุณ</string>
+    <string name="wallet_backup_check_body">พิมพ์คำเหล่านี้จากวลีกู้คืนของคุณ เพื่อยืนยันว่าคุณบันทึกไว้แล้ว</string>
+    <string name="wallet_backup_check_word">คำที่ %1$d</string>
+    <string name="wallet_backup_check_mismatch">คำเหล่านี้ไม่ตรงกับวลีกู้คืนของคุณ โปรดตรวจสอบสิ่งที่คุณจดไว้</string>
     <string name="wallet_import_entry_cta">ฉันมีบัญชีอยู่แล้ว</string>
     <string name="wallet_import_error_word_count">ป้อนคำให้ครบ 12 คำ (หรือ 24 คำ) พอดี คั่นด้วยช่องว่าง</string>
     <string name="wallet_create_error">ไม่สามารถสร้างกระเป๋าเงินบนอุปกรณ์นี้ได้ ลองอีกครั้ง</string>

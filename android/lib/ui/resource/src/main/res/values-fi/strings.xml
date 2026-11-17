@@ -259,6 +259,10 @@
     <string name="wallet_backup_title">Varmuuskopioi palautuslauseesi</string>
     <string name="wallet_backup_warning">Kuka tahansa, jolla on nämä 12 sanaa, pääsee käsiksi tiliisi. Älä koskaan jaa niitä tai säilytä niitä verkossa.</string>
     <string name="wallet_backup_confirm_cta">Olen kirjoittanut palautuslauseeni muistiin turvalliseen paikkaan.</string>
+    <string name="wallet_backup_check_title">Tarkista palautuslauseesi</string>
+    <string name="wallet_backup_check_body">Varmista, että tallensit sen: kirjoita nämä sanat palautuslauseestasi.</string>
+    <string name="wallet_backup_check_word">Sana %1$d</string>
+    <string name="wallet_backup_check_mismatch">Nämä sanat eivät vastaa palautuslausettasi. Tarkista, mitä kirjoitit muistiin.</string>
     <string name="wallet_import_entry_cta">Minulla on jo tili</string>
     <string name="wallet_import_error_word_count">Syötä täsmälleen 12 (tai 24) sanaa välilyönnein eroteltuina.</string>
     <string name="wallet_create_error">Lompakon luominen tälle laitteelle epäonnistui. Yritä uudelleen.</string>
