@@ -30,21 +30,19 @@ jobs:
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
-      - name: Run cargo deny
-        uses: EmbarkStudios/cargo-deny-action@70f81531115945ba6eb6b941ec9d39d063438eb9  # v2.1.2
+      # The cargo-deny action runs in a container that sees only this
+      # checkout, not the sibling crates the workspace takes by path.
+      - name: Install cargo-deny
+        uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519  # v2.90.5
         with:
-          log-level: warn
-          rust-version: stable
-          command: check all
+          tool: cargo-deny
+
+      - name: Run cargo deny
+        run: cargo deny --locked --log-level warn check all
 
       # Run an additional license check for the iOS crate to catch GPL3 issues
       - name: Run cargo deny for iOS (GPL3 check)
-        uses: EmbarkStudios/cargo-deny-action@70f81531115945ba6eb6b941ec9d39d063438eb9  # v2.1.2
-        with:
-          manifest-path: warren-ios/Cargo.toml
-          log-level: error
-          rust-version: stable
-          command: check licenses
+        run: cargo deny --manifest-path warren-ios/Cargo.toml --log-level error check licenses
 
       - name: Open an issue when the daily scan finds something
         if: failure() && github.event_name == 'schedule'

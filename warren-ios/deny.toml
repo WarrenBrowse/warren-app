@@ -18,8 +18,26 @@ allow = [
   "Unicode-3.0",
   "CDLA-Permissive-2.0",
 ]
-# Allow GPL3 licensed crates with permission to relicense like Mullvads own.
+# Allow GPL3 licensed crates with permission to relicense like Mullvads own,
+# and the WarrenBrowse crates, GPL in this workspace and AGPL in the engine,
+# contract and SDK, of which Warren is the sole copyright holder. Whether the
+# Mullvad code itself may ship through the App Store is a separate legal
+# question, which this check does not answer.
 exceptions = [
+  { crate = "warren-api", allow = ["AGPL-3.0-or-later"] },
+  { crate = "warren-contract", allow = ["AGPL-3.0-or-later"] },
+  { crate = "warren-discovery-core", allow = ["AGPL-3.0-or-later"] },
+  { crate = "warren-identity", allow = ["AGPL-3.0-or-later"] },
+  { crate = "warrenguard-config", allow = ["AGPL-3.0-or-later"] },
+  { crate = "warrenguard-identity", allow = ["AGPL-3.0-or-later"] },
+  { crate = "warrenguard-multihop", allow = ["AGPL-3.0-or-later"] },
+  { crate = "warrenguard-token", allow = ["AGPL-3.0-or-later"] },
+  { crate = "warrenguard-wire", allow = ["AGPL-3.0-or-later"] },
+  { crate = "warren-forum", allow = ["GPL-3.0-or-later"] },
+  { crate = "warren-incidents", allow = ["GPL-3.0-or-later"] },
+  { crate = "warren-ios", allow = ["GPL-3.0-or-later"] },
+  { crate = "warren-product-env", allow = ["GPL-3.0-or-later"] },
+  { crate = "warren-standing", allow = ["GPL-3.0-or-later"] },
   { crate = "domain-fronting", allow = ["GPL-3.0-or-later"] },
   { crate = "intersection-derive", allow = ["GPL-3.0-or-later"] },
   { crate = "mullvad-api", allow = ["GPL-3.0-or-later"] },
