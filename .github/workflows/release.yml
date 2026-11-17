@@ -235,6 +235,8 @@ jobs:
 
   build-macos:
     name: Build macOS DMG/PKG
+    outputs:
+      sums: ${{ steps.sums.outputs.sums }}
     needs: [tag-guard, tests]
     runs-on: [self-hosted, macOS, ARM64]
     # The universal build compiles the Rust workspace twice (the native aarch64
@@ -314,6 +316,12 @@ jobs:
         if: always() && env.WARREN_CSC_LINK_MACOS != ''
         run: rm -f "$WARREN_CSC_LINK_MACOS" || true
 
+      # publish-release compares the draft with these hashes before it
+      # writes the checksum list (ci/release-asset-sums.sh).
+      - name: Record the hashes of what this job uploads
+        id: sums
+        run: bash ci/release-asset-sums.sh record release-assets
+
       # Upload installers directly as GitHub Release assets instead of Actions
       # artifacts: release assets live in separate storage that is NOT subject to
       # the Actions artifact storage quota (which the artifact path kept hitting).
@@ -326,6 +334,8 @@ jobs:
 
   build-linux:
     name: Build Linux .deb/.rpm/.pacman
+    outputs:
+      sums: ${{ steps.sums.outputs.sums }}
     needs: [tag-guard, tests]
     # GitHub-hosted, inside the Debian 11 job image (glibc 2.31): the floor of
     # every Linux binary shipped to users, which ubuntu-24.04 itself (2.39)
@@ -402,6 +412,12 @@ jobs:
         if: env.WARREN_CHANNEL == 'beta'
         run: bash ci/stage-release-assets.sh linux "$WARREN_VERSION" beta
 
+      # publish-release compares the draft with these hashes before it
+      # writes the checksum list (ci/release-asset-sums.sh).
+      - name: Record the hashes of what this job uploads
+        id: sums
+        run: bash ci/release-asset-sums.sh record release-assets
+
       # Publish straight to the GitHub Release (release-asset storage), which is
       # NOT subject to the Actions artifact storage quota that blocks
       # upload-artifact. Mirrors the macOS job; runs on every ref (draft keyed by
@@ -428,6 +444,8 @@ jobs:
   # would leave the aarch64 packages built by a path nothing else exercises.
   build-linux-arm64:
     name: Build Linux arm64 .deb/.rpm/.pacman
+    outputs:
+      sums: ${{ steps.sums.outputs.sums }}
     needs: [tag-guard, tests]
     # GitHub-hosted, inside the Debian 11 job image (glibc 2.31): the floor of
     # every Linux binary shipped to users, which ubuntu-24.04 itself (2.39)
@@ -488,6 +506,12 @@ jobs:
         if: env.WARREN_CHANNEL == 'beta'
         run: bash ci/stage-release-assets.sh linux "$WARREN_VERSION" beta
 
+      # publish-release compares the draft with these hashes before it
+      # writes the checksum list (ci/release-asset-sums.sh).
+      - name: Record the hashes of what this job uploads
+        id: sums
+        run: bash ci/release-asset-sums.sh record release-assets
+
       - name: Publish Linux arm64 installers to GitHub Release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3  # v3.0.4
         with:
@@ -516,6 +540,8 @@ jobs:
   # into, and a nix that the build runner has no root to install.
   build-linux-sysvinit:
     name: Build Linux .deb (sysvinit)
+    outputs:
+      sums: ${{ steps.sums.outputs.sums }}
     needs: [tag-guard, build-linux]
     runs-on: ubuntu-24.04
     timeout-minutes: 40
@@ -556,6 +582,12 @@ jobs:
             "release-assets/$WARREN_SYSVINIT_DEB" \
             "downloads/$WARREN_DEB"
 
+      # publish-release compares the draft with these hashes before it
+      # writes the checksum list (ci/release-asset-sums.sh).
+      - name: Record the hashes of what this job uploads
+        id: sums
+        run: bash ci/release-asset-sums.sh record release-assets
+
       - name: Publish it to the GitHub Release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3  # v3.0.4
         with:
@@ -565,6 +597,8 @@ jobs:
 
   build-nixos:
     name: Build NixOS flake
+    outputs:
+      sums: ${{ steps.sums.outputs.sums }}
     needs: [tag-guard, build-linux]
     runs-on: ubuntu-24.04
     # The first run on a fresh runner downloads the whole nixpkgs closure the
@@ -619,6 +653,12 @@ jobs:
           bash ci/build-nixos-flake.sh \
             nixos-stage "downloads/$WARREN_DEB" "release-assets/$WARREN_NIXOS_TARBALL"
 
+      # publish-release compares the draft with these hashes before it
+      # writes the checksum list (ci/release-asset-sums.sh).
+      - name: Record the hashes of what this job uploads
+        id: sums
+        run: bash ci/release-asset-sums.sh record release-assets
+
       - name: Publish it to the GitHub Release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3  # v3.0.4
         with:
@@ -628,6 +668,8 @@ jobs:
 
   build-windows:
     name: Build Windows MSI
+    outputs:
+      sums: ${{ steps.sums.outputs.sums }}
     needs: [tag-guard, tests]
     # Built natively on a GitHub-hosted Windows runner (free for a public
     # repo) by ci/codemagic/windows-release.sh, each phase under the step
@@ -658,6 +700,13 @@ jobs:
           script: ci/codemagic/windows-release.sh
           phases: prepare sources build stage
           out-dir: release-assets
+
+      # publish-release compares the draft with these hashes before it
+      # writes the checksum list (ci/release-asset-sums.sh).
+      - name: Record the hashes of what this job uploads
+        id: sums
+        shell: bash
+        run: bash ci/release-asset-sums.sh record release-assets
 
       # Release-asset storage is not subject to the Actions artifact quota (see
       # the Linux job). Publish the installer straight to the draft release.
@@ -879,6 +928,8 @@ jobs:
 
   build-android:
     name: Build Android APK/AAB + Play Store internal-test upload
+    outputs:
+      sums: ${{ steps.sums.outputs.sums }}
     # Android is a first-class release platform: it builds and publishes the APK
     # (attached to the GitHub Release by publish-release) on every version tag,
     # and it blocks the release like the desktop builds. Signing is opt-in: with
@@ -1037,6 +1088,12 @@ jobs:
         if: env.WARREN_CHANNEL == 'beta'
         run: bash ci/stage-release-assets.sh android "$WARREN_VERSION" beta
 
+      # publish-release compares the draft with these hashes before it
+      # writes the checksum list (ci/release-asset-sums.sh).
+      - name: Record the hashes of what this job uploads
+        id: sums
+        run: bash ci/release-asset-sums.sh record release-assets
+
       # Release-asset storage is not subject to the Actions artifact quota (see
       # the Linux job). Publish the APK/AAB straight to the draft release.
       - name: Publish Android installers to GitHub Release
@@ -1107,30 +1164,32 @@ jobs:
 
       # The per-platform build jobs already uploaded their installers straight to
       # the draft release via softprops (release-asset storage bypasses the
-      # Actions artifact quota). This job only FINALISES that draft: it pulls the
-      # assets back down, computes checksums, and sets the title/notes. It does
-      # NOT re-create the release (that would clash with the existing draft).
+      # Actions artifact quota). This job only FINALISES that draft: it checks
+      # the draft against the hashes each build job recorded, writes the
+      # checksum list from those hashes, and sets the title/notes. It does NOT
+      # re-create the release (that would clash with the existing draft).
       - name: Download release assets (assembled by the build jobs)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p release-files
-          gh release download "$TAG_NAME" --dir release-files --pattern '*' || true
-          ls -lh release-files/ || true
+          gh release download "$TAG_NAME" --dir release-files --pattern '*'
+          ls -lh release-files/
 
-      - name: Compute SHA-256 checksums
+      - name: The draft holds exactly what the builds produced
+        env:
+          SUMS_MACOS: ${{ needs.build-macos.outputs.sums }}
+          SUMS_LINUX: ${{ needs.build-linux.outputs.sums }}
+          SUMS_LINUX_ARM64: ${{ needs.build-linux-arm64.outputs.sums }}
+          SUMS_LINUX_SYSVINIT: ${{ needs.build-linux-sysvinit.outputs.sums }}
+          SUMS_NIXOS: ${{ needs.build-nixos.outputs.sums }}
+          SUMS_WINDOWS: ${{ needs.build-windows.outputs.sums }}
+          SUMS_ANDROID: ${{ needs.build-android.outputs.sums }}
         run: |
-          cd release-files
-          # Exclude a pre-existing checksum file from a re-run.
-          rm -f SHA256SUMS
-          shopt -s nullglob
-          files=(*)
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "::error::no release assets downloaded; build jobs did not publish installers"
-            exit 1
-          fi
-          sha256sum "${files[@]}" > SHA256SUMS
-          cat SHA256SUMS
+          set -euo pipefail
+          printf '%s\n' "$SUMS_MACOS" "$SUMS_LINUX" "$SUMS_LINUX_ARM64" "$SUMS_LINUX_SYSVINIT" \
+            "$SUMS_NIXOS" "$SUMS_WINDOWS" "$SUMS_ANDROID" > "$RUNNER_TEMP/expected-sums"
+          bash ci/release-asset-sums.sh check "$RUNNER_TEMP/expected-sums" release-files
 
       - name: Finalise and publish the release (checksums + title + notes)
         env:

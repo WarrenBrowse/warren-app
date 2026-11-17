@@ -530,6 +530,12 @@ jobs:
         shell: bash
         run: bash ci/test-resolve-release.sh
 
+      # The release's checksum list is the build jobs' hashes, never the draft's.
+      - name: Release checksum list
+        working-directory: .
+        shell: bash
+        run: bash ci/test-release-asset-sums.sh
+
       - name: Production signing identities guard
         working-directory: .
         shell: bash
