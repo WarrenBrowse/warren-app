@@ -111,12 +111,12 @@ mod tests {
     #[test]
     fn happy_path_returns_config_with_url_and_seed() {
         let cfg = resolve(
-            Some("https://api.warrenbrowse.com".to_owned()),
+            Some(DEFAULT_WARREN_API_URL.to_owned()),
             None,
             Some(fixed_seed()),
         );
         let cfg = cfg.expect("must produce a config");
-        assert_eq!(cfg.url, "https://api.warrenbrowse.com");
+        assert_eq!(cfg.url, DEFAULT_WARREN_API_URL);
         assert_eq!(*cfg.seed.read().unwrap(), Zeroizing::new([7u8; 32]));
     }
 

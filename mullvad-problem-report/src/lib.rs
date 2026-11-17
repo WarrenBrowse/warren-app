@@ -1152,7 +1152,8 @@ mod tests {
 
         assert_eq!(report.logs.len(), 1);
         let (label, content) = &report.logs[0];
-        assert_eq!(label, "/var/log/warren-vpn/daemon.log");
+        let expected_label = Path::new("/var/log/warren-vpn").join("daemon.log");
+        assert_eq!(label, &expected_label.display().to_string());
         assert_eq!(
             content,
             "[report] this log was truncated: showing the last 23 bytes of 100\n\
