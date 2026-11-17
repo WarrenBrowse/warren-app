@@ -1,8 +1,16 @@
 ---
 name: Desktop check gRPC bindings
 on:
-  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
-  # Kept runnable on-demand via the Actions tab.
+  # The desktop talks to the daemon through the committed bindings, so a .proto
+  # change that is not regenerated reaches main as a silent IPC mismatch.
+  push:
+    branches: [main]
+    paths: &grpc_paths
+      - "mullvad-management-interface/proto/**"
+      - "desktop/packages/management-interface/**"
+      - ".github/workflows/desktop-grpc-bindings.yml"
+  pull_request:
+    paths: *grpc_paths
   workflow_dispatch:
 
 # checkout needs contents:read to clone this PRIVATE fork; an empty permissions
@@ -18,11 +26,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
 
-      - uses: ./.github/actions/mullvad-build-env
-
+      # The generator runs in its container, so the job needs no toolchain.
       - name: Generate bindings
-        working-directory: desktop
-        run: npm run build -w management-interface
+        working-directory: desktop/packages/management-interface
+        run: bash scripts/container-run-generate-bindings.sh
 
       - name: Check working directory is clean
         run: git diff --exit-code HEAD
