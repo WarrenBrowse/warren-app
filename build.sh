@@ -3,7 +3,7 @@
 # This script is used to build, and optionally sign the app.
 # See `README.md` for further instructions.
 
-set -eu
+set -euo pipefail
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
@@ -532,8 +532,10 @@ fi
 log_info "Staging the daemon relay-list resources..."
 bash ci/stage-daemon-resources.sh
 
+# Every target gets both a .deb and an .rpm, or the build fails: a release
+# that came out without one of the two used to exit 0.
 function build_daemon_packages {
-    local pkg_success=0
+    local pkg_failures=0
 
     for specified_target in "${TARGETS[@]:-""}"; do
         local current_target=${specified_target:-"$HOST"}
@@ -573,13 +575,16 @@ function build_daemon_packages {
             log_info "Packaging Debian (*.deb) package for ${arch}..."
             if cargo deb "${pkg_args[@]}" \
                      --deb-version "${PRODUCT_VERSION}" --no-build \
-                     -o "${deb_file}" > /dev/null ; then
+                     -o "${deb_file}" ; then
                 log_info "Packaged $deb_file"
-                pkg_success=1
+            else
+                log_error "Failed to package $deb_file"
+                pkg_failures=$((pkg_failures + 1))
             fi
         else
             log_error "Unable to package Debian package."
             log_error "Please run \"cargo install cargo-deb\" to complete."
+            pkg_failures=$((pkg_failures + 1))
         fi
 
         if cargo generate-rpm --help &> /dev/null ; then
@@ -591,19 +596,18 @@ function build_daemon_packages {
                      -s "version = \"${rpm_version}\"" \
                      -o "${rpm_file}" ; then
                 log_info "Packaged $rpm_file"
-                pkg_success=1
+            else
+                log_error "Failed to package $rpm_file"
+                pkg_failures=$((pkg_failures + 1))
             fi
         else
             log_error "Unable to package Fedora package."
             log_error "Please run \"cargo install cargo-generate-rpm\" to complete."
+            pkg_failures=$((pkg_failures + 1))
         fi
     done
 
-    if [ $pkg_success -eq 0 ]; then
-        return 1
-    fi
-
-    return 0
+    [ "$pkg_failures" -eq 0 ]
 }
 
 if [[ "$DAEMON_ONLY" == "false" ]]; then

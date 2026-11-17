@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
+set -euo pipefail
 
 function usage {
     echo "usage: $0 [clean|build] [--prod|--beta|--staging] [--max-concurrent-processes <n>] [solution...]"
@@ -75,7 +75,9 @@ function clean_solution {
     local path="$1"
     # Clean all intermediate and output files
     echo "Removing ${path:?}..."
-    rm -r "${path:?}/bin/"* 2>/dev/null || true
+    # -f makes an already empty bin/ a no-op; a file that cannot be removed
+    # still fails the build rather than leave a stale output to be packaged.
+    rm -rf "${path:?}/bin/"*
 }
 
 # WFP object keys are machine-wide, so each product environment derives its own
