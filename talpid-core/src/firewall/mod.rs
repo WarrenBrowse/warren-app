@@ -381,6 +381,12 @@ impl Firewall {
         self.inner.apply_policy(policy)
     }
 
+    /// Applies the last policy again if pf lost it, and says whether it had to.
+    #[cfg(target_os = "macos")]
+    pub fn reassert_policy(&mut self) -> Result<bool, Error> {
+        self.inner.reassert_policy()
+    }
+
     /// Resets/removes any currently enforced `FirewallPolicy`. Returns the system to the same state
     /// it had before any policy was applied through this `Firewall` instance.
     pub fn reset_policy(&mut self) -> Result<(), Error> {
