@@ -51,12 +51,6 @@ ignore = [
   # timing observations of a private-key operation, which only the issuer runs.
   "RUSTSEC-2023-0071",
 
-  # quick-xml DoS advisories are reached only through translations-converter, a
-  # build-time developer tool that parses local translation files we author, never
-  # attacker-controlled input, and is never shipped in the daemon or app binary.
-  "RUSTSEC-2026-0194",
-  "RUSTSEC-2026-0195",
-
   # chrono is unmaintained (no known vulnerability). It formats and parses the
   # timestamps of the signed version metadata and of logs; no replacement is
   # wired yet, and the advisory is informational.

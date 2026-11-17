@@ -108,22 +108,6 @@ Reached only through warrenguard-tls, which parses local PEM certificate and key
 material at startup, never attacker-controlled bytes.
 """
 
-# quick-xml denial of service on crafted input.
-[[IgnoredVulns]]
-id = "RUSTSEC-2026-0194"
-ignoreUntil = 2027-02-17
-reason = """
-Reached only through translations-converter, a developer tool that parses the
-translation files we author. It is never shipped in the daemon or the app.
-"""
-
-[[IgnoredVulns]]
-id = "RUSTSEC-2026-0195"
-ignoreUntil = 2027-02-17
-reason = """
-Same as RUSTSEC-2026-0194: translations-converter only, never shipped.
-"""
-
 # chrono is unmaintained. No vulnerability.
 [[IgnoredVulns]]
 id = "RUSTSEC-2026-0543"
