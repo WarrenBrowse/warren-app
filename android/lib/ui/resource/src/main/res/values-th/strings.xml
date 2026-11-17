@@ -197,6 +197,12 @@
     <string name="copied">คัดลอกแล้ว</string>
     <string name="app_info">ข้อมูลแอป</string>
     <string name="changelog_title">มีอะไรใหม่</string>
+    <string name="licenses_title">สัญญาอนุญาต</string>
+    <string name="licenses_app">แอปนี้เป็นซอฟต์แวร์เสรี คุณสามารถแบ่งปันและแก้ไขได้ตามเงื่อนไขของ GNU General Public License รุ่น 3 หรือรุ่นใดก็ได้ที่ใหม่กว่า ข้อความฉบับเต็มอยู่ด้านล่าง</string>
+    <string name="licenses_upstream">แอปนี้พัฒนาต่อยอดจากแอป Mullvad VPN ลิขสิทธิ์ของ Mullvad VPN AB ซึ่งเผยแพร่ภายใต้สัญญาอนุญาตเดียวกัน</string>
+    <string name="licenses_engine">เอนจินอุโมงค์ warrenguard เผยแพร่ภายใต้ GNU Affero General Public License รุ่น 3</string>
+    <string name="licenses_app_source">ซอร์สโค้ดของเวอร์ชันนี้</string>
+    <string name="licenses_engine_source">ซอร์สโค้ดของเอนจินอุโมงค์</string>
     <string name="version">เวอร์ชัน</string>
     <string name="app_info_update_available">มีการอัปเดต: %1$s</string>
     <string name="app_info_up_to_date">คุณกำลังใช้เวอร์ชันล่าสุด</string>

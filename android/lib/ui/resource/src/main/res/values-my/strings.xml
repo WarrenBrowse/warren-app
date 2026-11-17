@@ -197,6 +197,12 @@
     <string name="copied">ကူးယူပြီးပါပြီ</string>
     <string name="app_info">အက်ပ်အချက်အလက်</string>
     <string name="changelog_title">အသစ်ပါလာသော အကြောင်းအရာများ</string>
+    <string name="licenses_title">လိုင်စင်များ</string>
+    <string name="licenses_app">ဤအက်ပ်သည် အခမဲ့ဆော့ဖ်ဝဲ ဖြစ်သည်။ GNU General Public License ဗားရှင်း 3 သို့မဟုတ် နောက်ပိုင်းဗားရှင်းတစ်ခုခု၏ စည်းကမ်းချက်များအတိုင်း မျှဝေခြင်းနှင့် ပြင်ဆင်ခြင်း ပြုလုပ်နိုင်သည်။ စာသားအပြည့်အစုံကို အောက်တွင် ဖော်ပြထားသည်။</string>
+    <string name="licenses_upstream">ဤအက်ပ်သည် Mullvad VPN AB မူပိုင်ဖြစ်သော Mullvad VPN အက်ပ်ကို အခြေခံထားပြီး တူညီသော လိုင်စင်ဖြင့် ထုတ်ဝေထားသည်။</string>
+    <string name="licenses_engine">တန်နယ်အင်ဂျင် warrenguard ကို GNU Affero General Public License ဗားရှင်း 3 ဖြင့် ထုတ်ဝေထားသည်။</string>
+    <string name="licenses_app_source">ဤဗားရှင်း၏ ရင်းမြစ်ကုဒ်</string>
+    <string name="licenses_engine_source">တန်နယ်အင်ဂျင်၏ ရင်းမြစ်ကုဒ်</string>
     <string name="version">ဗားရှင်း</string>
     <string name="app_info_update_available">အပ်ဒိတ် ရနိုင်သည်: %1$s</string>
     <string name="app_info_up_to_date">နောက်ဆုံးထွက် ဗားရှင်းကို အသုံးပြုလျက်ရှိသည်</string>

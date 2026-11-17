@@ -197,6 +197,12 @@
     <string name="copied">복사됨</string>
     <string name="app_info">앱 정보</string>
     <string name="changelog_title">새로운 기능</string>
+    <string name="licenses_title">라이선스</string>
+    <string name="licenses_app">이 앱은 자유 소프트웨어입니다. GNU General Public License 버전 3 또는 그 이후 버전의 조건에 따라 공유하고 수정할 수 있습니다. 전문은 아래에 있습니다.</string>
+    <string name="licenses_upstream">이 앱은 Mullvad VPN AB가 저작권을 가진 Mullvad VPN 앱을 기반으로 하며, 같은 라이선스로 배포됩니다.</string>
+    <string name="licenses_engine">터널 엔진인 warrenguard는 GNU Affero General Public License 버전 3으로 배포됩니다.</string>
+    <string name="licenses_app_source">이 버전의 소스 코드</string>
+    <string name="licenses_engine_source">터널 엔진의 소스 코드</string>
     <string name="version">버전</string>
     <string name="app_info_update_available">업데이트 사용 가능: %1$s</string>
     <string name="app_info_up_to_date">최신 버전을 사용 중입니다</string>

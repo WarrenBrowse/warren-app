@@ -201,6 +201,12 @@
     <string name="copied">کپی شد</string>
     <string name="app_info">اطلاعات اپلیکیشن</string>
     <string name="changelog_title">تازه‌ها</string>
+    <string name="licenses_title">مجوزها</string>
+    <string name="licenses_app">این برنامه نرم‌افزار آزاد است: می‌توانید آن را تحت شرایط مجوز GNU General Public License، نسخه ۳ یا هر نسخه بعدی، به اشتراک بگذارید و تغییر دهید. متن کامل در زیر آمده است.</string>
+    <string name="licenses_upstream">این برنامه بر پایه برنامه Mullvad VPN با حق نشر Mullvad VPN AB ساخته شده و تحت همین مجوز منتشر شده است.</string>
+    <string name="licenses_engine">موتور تونل، warrenguard، تحت مجوز GNU Affero General Public License، نسخه ۳، منتشر شده است.</string>
+    <string name="licenses_app_source">کد منبع این نسخه</string>
+    <string name="licenses_engine_source">کد منبع موتور تونل</string>
     <string name="version">نسخه</string>
     <string name="app_info_update_available">به‌روزرسانی موجود است: %1$s</string>
     <string name="app_info_up_to_date">شما از آخرین نسخه استفاده می‌کنید</string>

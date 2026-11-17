@@ -29,6 +29,7 @@ import com.warrenbrowse.vpn.common.compose.showSnackbarImmediately
 import com.warrenbrowse.vpn.common.compose.unlessIsDetail
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.appinfo.api.ChangelogNavKey
+import com.warrenbrowse.vpn.feature.appinfo.api.LicensesNavKey
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
@@ -56,6 +57,7 @@ private fun PreviewAppInfoScreen(
             snackbarHostState = SnackbarHostState(),
             onBackClick = {},
             navigateToChangelog = {},
+            navigateToLicenses = {},
             openAppListing = {},
         )
     }
@@ -85,6 +87,7 @@ fun AppInfo(navigator: Navigator) {
         snackbarHostState = snackbarHostState,
         onBackClick = dropUnlessResumed { navigator.goBack() },
         navigateToChangelog = dropUnlessResumed { navigator.navigate(ChangelogNavKey()) },
+        navigateToLicenses = { version -> navigator.navigate(LicensesNavKey(version)) },
         openAppListing = dropUnlessResumed { vm.openAppListing() },
     )
 }
@@ -96,6 +99,7 @@ fun AppInfo(
     snackbarHostState: SnackbarHostState,
     onBackClick: () -> Unit,
     navigateToChangelog: () -> Unit,
+    navigateToLicenses: (version: String) -> Unit,
     openAppListing: () -> Unit,
 ) {
     ScaffoldWithSmallTopBar(
@@ -124,6 +128,7 @@ fun AppInfo(
                     AppInfoContent(
                         state = state.value,
                         navigateToChangelog = navigateToChangelog,
+                        navigateToLicenses = navigateToLicenses,
                         openAppListing = openAppListing,
                     )
             }
@@ -135,12 +140,19 @@ fun AppInfo(
 private fun AppInfoContent(
     state: AppInfoUiState,
     navigateToChangelog: () -> Unit,
+    navigateToLicenses: (version: String) -> Unit,
     openAppListing: () -> Unit,
 ) {
     Column(modifier = Modifier.padding(bottom = Dimens.smallPadding).animateContentSize()) {
         ChangelogRow(navigateToChangelog)
         HorizontalDivider()
         AppVersionRow(state, openAppListing)
+        NavigationListItem(
+            title = stringResource(R.string.licenses_title),
+            onClick = { navigateToLicenses(state.version.currentVersion) },
+            position = Position.Single,
+            modifier = Modifier.padding(top = Dimens.mediumPadding),
+        )
     }
 }
 

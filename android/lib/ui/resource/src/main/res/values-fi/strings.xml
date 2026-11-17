@@ -201,6 +201,12 @@
     <string name="copied">Kopioitu</string>
     <string name="app_info">Sovelluksen tiedot</string>
     <string name="changelog_title">Uutta</string>
+    <string name="licenses_title">Lisenssit</string>
+    <string name="licenses_app">Tämä sovellus on vapaa ohjelmisto: voit jakaa ja muokata sitä GNU General Public Licensen version 3 tai minkä tahansa myöhemmän version ehtojen mukaisesti. Koko teksti on alla.</string>
+    <string name="licenses_upstream">Se perustuu Mullvad VPN -sovellukseen, tekijänoikeus Mullvad VPN AB, ja se on julkaistu samalla lisenssillä.</string>
+    <string name="licenses_engine">Tunnelimoottori warrenguard on julkaistu GNU Affero General Public Licensen version 3 ehdoilla.</string>
+    <string name="licenses_app_source">Tämän version lähdekoodi</string>
+    <string name="licenses_engine_source">Tunnelimoottorin lähdekoodi</string>
     <string name="version">Versio</string>
     <string name="app_info_update_available">Päivitys saatavilla: %1$s</string>
     <string name="app_info_up_to_date">Käytät uusinta versiota</string>

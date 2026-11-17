@@ -210,6 +210,12 @@
     <string name="copied">Copied</string>
     <string name="app_info">App info</string>
     <string name="changelog_title">What’s new</string>
+    <string name="licenses_title">Licenses</string>
+    <string name="licenses_app">This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below.</string>
+    <string name="licenses_upstream">It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license.</string>
+    <string name="licenses_engine">The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3.</string>
+    <string name="licenses_app_source">Source code of this version</string>
+    <string name="licenses_engine_source">Source code of the tunnel engine</string>
     <string name="version">Version</string>
     <string name="app_info_update_available">Update available: %1$s</string>
     <string name="app_info_up_to_date">You are using the latest version</string>

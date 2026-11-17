@@ -209,6 +209,12 @@
     <string name="copied">Скопійовано</string>
     <string name="app_info">Інформація про застосунок</string>
     <string name="changelog_title">Що нового</string>
+    <string name="licenses_title">Ліцензії</string>
+    <string name="licenses_app">Цей застосунок є вільним програмним забезпеченням: ви можете поширювати та змінювати його на умовах GNU General Public License версії 3 або будь-якої пізнішої версії. Повний текст наведено нижче.</string>
+    <string name="licenses_upstream">Він заснований на застосунку Mullvad VPN, copyright Mullvad VPN AB, випущеному під тією ж ліцензією.</string>
+    <string name="licenses_engine">Рушій тунелю, warrenguard, випущено під ліцензією GNU Affero General Public License версії 3.</string>
+    <string name="licenses_app_source">Вихідний код цієї версії</string>
+    <string name="licenses_engine_source">Вихідний код рушія тунелю</string>
     <string name="version">Версія</string>
     <string name="app_info_update_available">Доступне оновлення: %1$s</string>
     <string name="app_info_up_to_date">У вас остання версія</string>

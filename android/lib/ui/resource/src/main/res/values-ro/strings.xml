@@ -209,6 +209,12 @@
     <string name="copied">Copiat</string>
     <string name="app_info">Informații aplicație</string>
     <string name="changelog_title">Noutăți</string>
+    <string name="licenses_title">Licențe</string>
+    <string name="licenses_app">Această aplicație este software liber: o puteți distribui și modifica în condițiile GNU General Public License, versiunea 3 sau orice versiune ulterioară. Textul complet se află mai jos.</string>
+    <string name="licenses_upstream">Se bazează pe aplicația Mullvad VPN, copyright Mullvad VPN AB, publicată sub aceeași licență.</string>
+    <string name="licenses_engine">Motorul tunelului, warrenguard, este publicat sub GNU Affero General Public License, versiunea 3.</string>
+    <string name="licenses_app_source">Codul sursă al acestei versiuni</string>
+    <string name="licenses_engine_source">Codul sursă al motorului tunelului</string>
     <string name="version">Versiune</string>
     <string name="app_info_update_available">Actualizare disponibilă: %1$s</string>
     <string name="app_info_up_to_date">Folosiți cea mai recentă versiune</string>

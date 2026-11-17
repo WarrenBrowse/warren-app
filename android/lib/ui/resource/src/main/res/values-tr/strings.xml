@@ -201,6 +201,12 @@
     <string name="copied">Kopyalandı</string>
     <string name="app_info">Uygulama bilgileri</string>
     <string name="changelog_title">Yenilikler</string>
+    <string name="licenses_title">Lisanslar</string>
+    <string name="licenses_app">Bu uygulama özgür yazılımdır: GNU General Public License sürüm 3 veya daha sonraki herhangi bir sürümün koşulları altında paylaşabilir ve değiştirebilirsiniz. Tam metin aşağıdadır.</string>
+    <string name="licenses_upstream">Telif hakkı Mullvad VPN AB\'ye ait olan ve aynı lisansla yayımlanan Mullvad VPN uygulamasını temel alır.</string>
+    <string name="licenses_engine">Tünel motoru warrenguard, GNU Affero General Public License sürüm 3 ile yayımlanmıştır.</string>
+    <string name="licenses_app_source">Bu sürümün kaynak kodu</string>
+    <string name="licenses_engine_source">Tünel motorunun kaynak kodu</string>
     <string name="version">Sürüm</string>
     <string name="app_info_update_available">Güncelleme mevcut: %1$s</string>
     <string name="app_info_up_to_date">En yeni sürümü kullanıyorsunuz</string>

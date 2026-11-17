@@ -197,6 +197,12 @@
     <string name="copied">コピーしました</string>
     <string name="app_info">アプリ情報</string>
     <string name="changelog_title">新機能</string>
+    <string name="licenses_title">ライセンス</string>
+    <string name="licenses_app">このアプリはフリーソフトウェアです。GNU General Public License バージョン 3 またはそれ以降のバージョンの条件に従って、共有や改変ができます。全文は以下のとおりです。</string>
+    <string name="licenses_upstream">このアプリは Mullvad VPN AB が著作権を持つ Mullvad VPN アプリをもとにしており、同じライセンスで公開されています。</string>
+    <string name="licenses_engine">トンネルエンジン warrenguard は GNU Affero General Public License バージョン 3 で公開されています。</string>
+    <string name="licenses_app_source">このバージョンのソースコード</string>
+    <string name="licenses_engine_source">トンネルエンジンのソースコード</string>
     <string name="version">バージョン</string>
     <string name="app_info_update_available">更新が利用可能: %1$s</string>
     <string name="app_info_up_to_date">最新バージョンを使用しています</string>

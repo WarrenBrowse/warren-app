@@ -197,6 +197,12 @@
     <string name="copied">已複製</string>
     <string name="app_info">應用程式資訊</string>
     <string name="changelog_title">最新動態</string>
+    <string name="licenses_title">授權條款</string>
+    <string name="licenses_app">本應用程式為自由軟體：您可依據 GNU General Public License 第 3 版或任何更新版本的條款分享及修改。完整條文如下。</string>
+    <string name="licenses_upstream">本應用程式以 Mullvad VPN 應用程式為基礎，版權屬於 Mullvad VPN AB，並以相同授權條款發布。</string>
+    <string name="licenses_engine">通道引擎 warrenguard 以 GNU Affero General Public License 第 3 版發布。</string>
+    <string name="licenses_app_source">此版本的原始碼</string>
+    <string name="licenses_engine_source">通道引擎的原始碼</string>
     <string name="version">版本</string>
     <string name="app_info_update_available">有可用更新：%1$s</string>
     <string name="app_info_up_to_date">您正在使用最新版本</string>

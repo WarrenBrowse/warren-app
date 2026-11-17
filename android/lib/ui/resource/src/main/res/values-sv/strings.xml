@@ -201,6 +201,12 @@
     <string name="copied">Kopierat</string>
     <string name="app_info">Appinfo</string>
     <string name="changelog_title">Nyheter</string>
+    <string name="licenses_title">Licenser</string>
+    <string name="licenses_app">Den här appen är fri programvara: du får dela och ändra den enligt villkoren i GNU General Public License, version 3 eller senare. Hela texten finns nedan.</string>
+    <string name="licenses_upstream">Den bygger på appen Mullvad VPN, copyright Mullvad VPN AB, utgiven under samma licens.</string>
+    <string name="licenses_engine">Tunnelmotorn, warrenguard, ges ut under GNU Affero General Public License, version 3.</string>
+    <string name="licenses_app_source">Källkod för den här versionen</string>
+    <string name="licenses_engine_source">Källkod för tunnelmotorn</string>
     <string name="version">Version</string>
     <string name="app_info_update_available">Uppdatering tillgänglig: %1$s</string>
     <string name="app_info_up_to_date">Du använder den senaste versionen</string>

@@ -209,6 +209,12 @@
     <string name="copied">Скопировано</string>
     <string name="app_info">Информация о приложении</string>
     <string name="changelog_title">Что нового</string>
+    <string name="licenses_title">Лицензии</string>
+    <string name="licenses_app">Это приложение является свободным программным обеспечением: вы можете распространять и изменять его на условиях GNU General Public License версии 3 или любой более поздней версии. Полный текст приведён ниже.</string>
+    <string name="licenses_upstream">Оно основано на приложении Mullvad VPN, copyright Mullvad VPN AB, выпущенном под той же лицензией.</string>
+    <string name="licenses_engine">Движок туннеля, warrenguard, выпущен под лицензией GNU Affero General Public License версии 3.</string>
+    <string name="licenses_app_source">Исходный код этой версии</string>
+    <string name="licenses_engine_source">Исходный код движка туннеля</string>
     <string name="version">Версия</string>
     <string name="app_info_update_available">Доступно обновление: %1$s</string>
     <string name="app_info_up_to_date">Вы используете последнюю версию</string>

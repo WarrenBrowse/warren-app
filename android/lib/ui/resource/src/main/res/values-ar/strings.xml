@@ -217,6 +217,12 @@
     <string name="copied">تم النسخ</string>
     <string name="app_info">معلومات التطبيق</string>
     <string name="changelog_title">آخر المستجدات</string>
+    <string name="licenses_title">التراخيص</string>
+    <string name="licenses_app">هذا التطبيق برنامج حر: يمكنك مشاركته وتعديله وفق شروط رخصة GNU General Public License، الإصدار 3 أو أي إصدار لاحق. النص الكامل أدناه.</string>
+    <string name="licenses_upstream">يستند إلى تطبيق Mullvad VPN، حقوق النشر لشركة Mullvad VPN AB، والمنشور بموجب الرخصة نفسها.</string>
+    <string name="licenses_engine">محرك النفق warrenguard منشور بموجب رخصة GNU Affero General Public License، الإصدار 3.</string>
+    <string name="licenses_app_source">الشيفرة المصدرية لهذا الإصدار</string>
+    <string name="licenses_engine_source">الشيفرة المصدرية لمحرك النفق</string>
     <string name="version">الإصدار</string>
     <string name="app_info_update_available">تحديث متوفر: %1$s</string>
     <string name="app_info_up_to_date">أنت تستخدم أحدث إصدار</string>

@@ -197,6 +197,12 @@
     <string name="copied">已复制</string>
     <string name="app_info">应用信息</string>
     <string name="changelog_title">最新变化</string>
+    <string name="licenses_title">许可证</string>
+    <string name="licenses_app">本应用是自由软件：您可以依据 GNU General Public License 第 3 版或任何更高版本的条款分享和修改它。完整文本见下方。</string>
+    <string name="licenses_upstream">本应用基于 Mullvad VPN 应用，版权归 Mullvad VPN AB 所有，以相同许可证发布。</string>
+    <string name="licenses_engine">隧道引擎 warrenguard 以 GNU Affero General Public License 第 3 版发布。</string>
+    <string name="licenses_app_source">此版本的源代码</string>
+    <string name="licenses_engine_source">隧道引擎的源代码</string>
     <string name="version">版本</string>
     <string name="app_info_update_available">有可用更新：%1$s</string>
     <string name="app_info_up_to_date">您正在使用最新版本</string>

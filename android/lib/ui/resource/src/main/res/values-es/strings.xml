@@ -204,6 +204,12 @@
     <string name="copied">Copiado</string>
     <string name="app_info">Información de la aplicación</string>
     <string name="changelog_title">Novedades</string>
+    <string name="licenses_title">Licencias</string>
+    <string name="licenses_app">Esta aplicación es software libre: puede compartirla y modificarla según los términos de la GNU General Public License, versión 3 o cualquier versión posterior. El texto completo figura a continuación.</string>
+    <string name="licenses_upstream">Está basada en la aplicación Mullvad VPN, copyright Mullvad VPN AB, publicada bajo la misma licencia.</string>
+    <string name="licenses_engine">El motor del túnel, warrenguard, se publica bajo la GNU Affero General Public License, versión 3.</string>
+    <string name="licenses_app_source">Código fuente de esta versión</string>
+    <string name="licenses_engine_source">Código fuente del motor del túnel</string>
     <string name="version">Versión</string>
     <string name="app_info_update_available">Actualización disponible: %1$s</string>
     <string name="app_info_up_to_date">Está usando la última versión</string>
