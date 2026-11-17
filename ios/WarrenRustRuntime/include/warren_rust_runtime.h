@@ -129,7 +129,7 @@ typedef enum WarrenTunnelStateC {
    */
   Unauthorized = 5,
   /**
-   * The wallet is banned (warren-core doc 105): learned from the token
+   * The wallet is banned: learned from the token
    * issuer's refusal before any dial, or from the exit's CRL rejection.
    * Terminal like `Unauthorized`, and the event says why and until when.
    */
@@ -150,8 +150,8 @@ typedef enum WarrenTunnelStateC {
    */
   TokensRefused = 8,
   /**
-   * This device was revoked from another device of the account
-   * (warren-core doc 115): its token and entitlement refreshes stopped and
+   * This device was revoked from another device of the account:
+   * its token and entitlement refreshes stopped and
    * its device identity is forgotten. Terminal; the app shows its revoked
    * screen.
    */
@@ -1059,7 +1059,7 @@ char *warren_account_campaign_voucher(const uint8_t *seed, const char *campaign_
 char *warren_account_delete(const uint8_t *seed);
 
 /**
- * Signed `GET /v1/account/standing` (warren-core doc 105 §5.4): the wallet's
+ * Signed `GET /v1/account/standing`: the wallet's
  * live port-forward strikes with their case references, the ban with its
  * lapse, and the strikes this device has not warned about yet, each exactly
  * once. Which strikes were announced is remembered in a ledger of digests in
