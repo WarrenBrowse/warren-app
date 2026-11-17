@@ -51,6 +51,11 @@ ignore = [
   # attacker-controlled input, and is never shipped in the daemon or app binary.
   "RUSTSEC-2026-0194",
   "RUSTSEC-2026-0195",
+
+  # chrono is unmaintained (no known vulnerability). It formats and parses the
+  # timestamps of the signed version metadata and of logs; no replacement is
+  # wired yet, and the advisory is informational.
+  "RUSTSEC-2026-0543",
 ]
 
 # This section is considered when running `cargo deny check licenses`
@@ -96,9 +101,15 @@ exceptions = [
   { allow = ["AGPL-3.0-or-later"], name = "warrenguard-ratelimit" },
   { allow = ["AGPL-3.0-or-later"], name = "warrenguard-relay" },
   { allow = ["AGPL-3.0-or-later"], name = "warrenguard-route-split" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-socket-bypass" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-systool" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-tcp-carrier" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-tcp-fallback" },
   { allow = ["AGPL-3.0-or-later"], name = "warrenguard-tls" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-token" },
   { allow = ["AGPL-3.0-or-later"], name = "warrenguard-transport" },
   { allow = ["AGPL-3.0-or-later"], name = "warrenguard-transport-core" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-tun-core" },
   { allow = ["AGPL-3.0-or-later"], name = "warrenguard-winroute" },
   { allow = ["AGPL-3.0-or-later"], name = "warrenguard-wire" },
 ]
