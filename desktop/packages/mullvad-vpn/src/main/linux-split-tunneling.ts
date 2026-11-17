@@ -7,6 +7,7 @@ import {
   ILinuxSplitTunnelingApplication,
   ISplitTunnelingApplication,
 } from '../shared/application-types';
+import { productEnvironment } from '../shared/constants/product-env';
 import { messages } from '../shared/gettext';
 import { LaunchApplicationResult } from '../shared/ipc-schema';
 import { Scheduler } from '../shared/scheduler';
@@ -38,6 +39,14 @@ const PROBLEMATIC_APPLICATIONS = {
 // as one of the only programs inside it (include-only mode).
 export type LinuxLauncher = 'warren-exclude' | 'warren-include';
 
+// Each package installs its launchers under its environment's suffix, so a beta
+// and a production install coexist. Run by absolute path: a bare name fails
+// where only the beta is installed, or finds the other install's launcher.
+export function linuxLauncherPath(launcher: LinuxLauncher): string {
+  const suffix = productEnvironment === 'prod' ? '' : `-${productEnvironment}`;
+  return `/usr/bin/${launcher}${suffix}`;
+}
+
 // Launches an application. The application parameter could be a path the an executable or .desktop
 // file or an object representing an application
 export async function launchApplication(
@@ -56,8 +65,24 @@ export async function launchApplication(
 
   return new Promise((resolve, _reject) => {
     const scheduler = new Scheduler();
-    const proc = child_process.spawn(launcher, [...launcherOptions, ...excludeArguments], {
-      detached: true,
+    const proc = child_process.spawn(
+      linuxLauncherPath(launcher),
+      [...launcherOptions, ...excludeArguments],
+      { detached: true },
+    );
+
+    // A launcher that cannot be started (missing, not executable) emits `error`
+    // rather than `exit`; left unheard it would surface as an uncaught exception
+    // while the timer below reported a launch.
+    proc.once('error', () => {
+      scheduler.cancel();
+      proc.removeAllListeners();
+      resolve({
+        error: messages.pgettext(
+          'split-tunneling-view',
+          'Please try again or send a problem report.',
+        ),
+      });
     });
 
     // If the process exits within 200 milliseconds the user is notified that it failed to launch.
