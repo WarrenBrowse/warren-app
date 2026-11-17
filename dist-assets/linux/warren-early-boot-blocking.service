@@ -14,6 +14,20 @@ After=local-fs.target
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/warren-daemon -v --initialize-early-boot-firewall
+# The confinement of warren-daemon.service, which explains it.
+NoNewPrivileges=yes
+ProtectSystem=yes
+ProtectHome=read-only
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectClock=yes
+ProtectHostname=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
 
 [Install]
 WantedBy=warren-daemon.service

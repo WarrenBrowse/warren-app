@@ -31,6 +31,24 @@ let
 
   daemon = "warren-daemon${release.suffix}";
   earlyBoot = "warren-early-boot-blocking${release.suffix}";
+
+  # The confinement of dist-assets/linux/warren-daemon.service, which explains
+  # it: the daemon keeps root and its capabilities, the rest is closed.
+  hardening = {
+    NoNewPrivileges = true;
+    ProtectSystem = true;
+    ProtectHome = "read-only";
+    ProtectKernelModules = true;
+    ProtectKernelLogs = true;
+    ProtectClock = true;
+    ProtectHostname = true;
+    LockPersonality = true;
+    RestrictRealtime = true;
+    RestrictSUIDSGID = true;
+    RestrictNamespaces = true;
+    MemoryDenyWriteExecute = true;
+    SystemCallArchitectures = "native";
+  };
 in
 {
   options.services.${optionName} = {
@@ -128,7 +146,7 @@ in
           "${daemon}.service"
         ];
         unitConfig.DefaultDependencies = "no";
-        serviceConfig = {
+        serviceConfig = hardening // {
           Type = "oneshot";
           ExecStart = "${getExe' cfg.package daemon} -v --initialize-early-boot-firewall";
         };
@@ -153,7 +171,7 @@ in
         ]
         ++ optional config.networking.resolvconf.enable config.networking.resolvconf.package;
 
-        serviceConfig = {
+        serviceConfig = hardening // {
           ExecStart = "${getExe' cfg.package daemon} -v --disable-stdout-timestamps";
           Restart = "always";
           RestartSec = 1;

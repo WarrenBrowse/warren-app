@@ -22,5 +22,23 @@ Environment="WARREN_RESOURCE_DIR=/opt/Warren VPN/resources/"
 # the way an app update does, blocking, with the target state saved for the next start.
 RestartKillSignal=SIGUSR1
 
+# Confinement the daemon's job allows: it keeps root and its capabilities, since it drives the
+# firewall, routes, DNS, sysctls under /proc/sys and the split tunnel cgroups, and writes its
+# state under /etc, /var and /run. Each line was run against the daemon with its lockdown
+# firewall applied, and the early-boot blocker below carries the same set.
+NoNewPrivileges=yes
+ProtectSystem=yes
+ProtectHome=read-only
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectClock=yes
+ProtectHostname=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+
 [Install]
 WantedBy=multi-user.target
