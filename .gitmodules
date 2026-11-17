@@ -7,9 +7,6 @@
 [submodule "windows/windows-libraries"]
 	path = windows/windows-libraries
 	url = https://github.com/mullvad/windows-libraries
-[submodule "android/rust-android-gradle-plugin"]
-	path = android/rust-android-gradle-plugin
-	url = https://github.com/mullvad/rust-android-gradle.git
 [submodule "vectors"]
 	path = vectors
 	url = https://github.com/WarrenBrowse/warren-vectors.git

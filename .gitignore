@@ -6,10 +6,6 @@
 .idea/
 .DS_Store
 *.log
-/dist-assets/mullvad
-/dist-assets/mullvad.exe
-/dist-assets/mullvad-daemon
-/dist-assets/mullvad-daemon.exe
 /dist-assets/warren-exclude
 /dist-assets/warren-include
 /dist-assets/warren-setup
@@ -20,13 +16,7 @@
 /dist-assets/warren.exe
 /dist-assets/warren-daemon
 /dist-assets/warren-daemon.exe
-/dist-assets/libwg.dll
 /dist-assets/maybenot_ffi.dll
-/dist-assets/libtalpid_openvpn_plugin.dylib
-/dist-assets/libtalpid_openvpn_plugin.so
-/dist-assets/talpid_openvpn_plugin.dll
-/dist-assets/openvpn
-/dist-assets/openvpn.exe
 /dist-assets/aarch64-apple-darwin/
 /dist-assets/aarch64-pc-windows-msvc/
 /dist-assets/aarch64-unknown-linux-gnu/
@@ -40,8 +30,6 @@
 /android/local.properties
 /android/play-api-key.json
 /android/credentials/
-/wireguard/libwg/libwg.exp
-/wireguard/libwg/exports.def
 **/.vs/
 *.bak
 android/.idea
