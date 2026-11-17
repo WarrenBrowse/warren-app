@@ -66,8 +66,11 @@ public struct WarrenMnemonicInputView: View {
                 .accessibilityIdentifier(
                     AccessibilityIdentifier.walletMnemonicPhraseField.asString)
                 .accessibilityLabel(Text(String(localized: "Recovery phrase", table: "Wallet")))
-                // Keeps the typed phrase out of screenshots the system takes.
+                // Redacted where the system redacts private content (widgets,
+                // the lock screen); a recording or a shared screen is handled
+                // by the capture mask below.
                 .privacySensitive()
+                .modifier(WarrenHiddenWhileCaptured())
 
             Text("\(wordCount) / \(WarrenMnemonicText.target(for: phrase)) words")
                 .font(.warrenTinySemiBold)

@@ -138,6 +138,7 @@ public struct WarrenMnemonicGrid: View {
                 wordCell(index: idx, word: word)
             }
         }
+        .modifier(WarrenHiddenWhileCaptured())
     }
 
     @ViewBuilder
@@ -158,6 +159,32 @@ public struct WarrenMnemonicGrid: View {
                 )
                 .accessibilityLabel("\(index + 1). \(word)")
         }
+    }
+}
+
+/// Hides the recovery phrase while the screen is recorded, mirrored or
+/// shared, so it never ends up in a recording. A screenshot cannot be
+/// prevented on iOS; a capture in progress can.
+struct WarrenHiddenWhileCaptured: ViewModifier {
+    @State private var isCaptured = UIScreen.main.isCaptured
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(isCaptured ? 0 : 1)
+            .overlay {
+                if isCaptured {
+                    Text(String(
+                        localized: "Hidden while the screen is recorded or shared",
+                        table: "Wallet"
+                    ))
+                    .font(.warrenSmall)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
+                isCaptured = UIScreen.main.isCaptured
+            }
     }
 }
 

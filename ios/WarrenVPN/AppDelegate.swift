@@ -280,6 +280,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         didDiscardSceneSessions sceneSessions: Set<UISceneSession>
     ) {}
 
+    /// The recovery phrase is typed in this app, and a third-party keyboard
+    /// receives every key: only the system keyboard is offered.
+    func application(
+        _ application: UIApplication,
+        shouldAllowExtensionPointIdentifier extensionPointIdentifier: UIApplication.ExtensionPointIdentifier
+    ) -> Bool {
+        extensionPointIdentifier != .keyboard
+    }
+
     // MARK: - Notifications
 
     @objc private func didBecomeActive(_ notification: Notification) {
