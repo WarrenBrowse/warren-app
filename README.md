@@ -150,8 +150,8 @@ consumed via `[patch.crates-io]` in [`Cargo.toml`](Cargo.toml); warrenguard uses
 
 ## Building the app
 
-See the [build instructions](BuildInstructions.md) (three-sibling layout, Linux native deps,
-cross-compile via `Cross.toml`). Fork-specific notes in
+See the [build instructions](BuildInstructions.md) (three-sibling layout at the pinned commits,
+Linux native deps). Fork-specific notes in
 [`docs/warren-architecture.md`](docs/warren-architecture.md).
 
 ## Running the app from source (dev)
