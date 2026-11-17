@@ -12,8 +12,29 @@ use std::sync::Arc;
 
 /// Hands `builder` the daemon's TLS config, with or without SNI.
 pub(crate) fn configure(builder: reqwest::ClientBuilder, sni: bool) -> reqwest::ClientBuilder {
-    let roots = rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    builder.use_preconfigured_tls(client_config(roots, sni))
+    builder.use_preconfigured_tls(client_config(warren_roots(), sni))
+}
+
+/// The authority every Warren host gets its certificate from (Let's Encrypt), and no other.
+///
+/// The requests carry the wallet address and some answers are unsigned, so any other public
+/// authority, or a certificate obtained from one, must not be able to read or forge them. The
+/// legacy API client pins the same authority. Taken by organisation rather than by single
+/// root, so the next root of that authority is trusted as soon as the bundle carries it.
+fn warren_roots() -> rustls::RootCertStore {
+    const ISSUER: &[u8] = b"Internet Security Research Group";
+    rustls::RootCertStore::from_iter(
+        webpki_roots::TLS_SERVER_ROOTS
+            .iter()
+            .filter(|anchor| {
+                anchor
+                    .subject
+                    .as_ref()
+                    .windows(ISSUER.len())
+                    .any(|window| window == ISSUER)
+            })
+            .cloned(),
+    )
 }
 
 /// The ring provider and the protocol versions reqwest's rustls backend uses, HTTP/1.1 over
@@ -111,6 +132,34 @@ mod tests {
             handshakes.push(seen.recv().await.unwrap());
         }
         handshakes
+    }
+
+    fn subjects(roots: &rustls::RootCertStore) -> Vec<String> {
+        roots
+            .roots
+            .iter()
+            .map(|anchor| String::from_utf8_lossy(anchor.subject.as_ref()).into_owned())
+            .collect()
+    }
+
+    #[test]
+    fn the_warren_hosts_chain_is_trusted() {
+        let subjects = subjects(&warren_roots());
+
+        assert!(subjects.iter().any(|s| s.contains("ISRG Root X1")));
+        assert!(subjects.iter().any(|s| s.contains("ISRG Root X2")));
+    }
+
+    #[test]
+    fn no_other_authority_is_trusted() {
+        let subjects = subjects(&warren_roots());
+
+        assert!(
+            subjects
+                .iter()
+                .all(|s| s.contains("Internet Security Research Group")),
+            "{subjects:?}"
+        );
     }
 
     #[tokio::test]
