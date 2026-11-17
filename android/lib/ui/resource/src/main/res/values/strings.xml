@@ -452,7 +452,7 @@
     <string name="onboarding_get_started">Get started</string>
     <string name="onboarding_skip">Skip for now</string>
     <string name="onboarding_subscription_title">Your subscription</string>
-    <string name="onboarding_subscription_body">You don’t have an active subscription yet. Plans start at a few euros per month: no recurring billing, no account creation, pay as you go.</string>
+    <string name="onboarding_subscription_body">You don’t have an active subscription yet. You buy VPN time in advance, with no account to create. If you choose automatic monthly renewal, you can turn it off at any time, at no cost.</string>
     <string name="onboarding_subscription_active">You have an active subscription. You are all set.</string>
     <string name="onboarding_subscription_view_plans">View plans (opens in your browser)</string>
     <string name="onboarding_subscription_restore">I already have a subscription</string>

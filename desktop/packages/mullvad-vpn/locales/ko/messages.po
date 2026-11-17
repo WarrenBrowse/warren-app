@@ -4861,8 +4861,8 @@ msgid "Write down these 12 words in order and keep them somewhere safe. They are
 msgstr "이 12단어를 순서대로 적어 안전한 곳에 보관하세요. 이 기기에 접근할 수 없게 될 경우 구독을 복구할 수 있는 유일한 방법입니다."
 
 msgctxt "warren-onboarding"
-msgid "You don’t have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "아직 활성 구독이 없습니다. 요금제는 월 몇 유로부터 시작하며, 정기 결제도 계정 생성도 없이 사용한 만큼만 지불합니다."
+msgid "You don’t have an active subscription yet. You buy VPN time in advance, with no account to create. If you choose automatic monthly renewal, you can turn it off at any time, at no cost."
+msgstr "아직 활성 구독이 없습니다. VPN 이용 시간을 미리 구매하며, 계정을 만들 필요가 없습니다. 월간 자동 갱신을 선택한 경우 언제든지 무료로 끌 수 있습니다."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"

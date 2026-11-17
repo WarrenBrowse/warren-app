@@ -441,7 +441,7 @@
     <string name="onboarding_get_started">Aloita</string>
     <string name="onboarding_skip">Ohita toistaiseksi</string>
     <string name="onboarding_subscription_title">Tilauksesi</string>
-    <string name="onboarding_subscription_body">Sinulla ei ole vielä aktiivista tilausta. Hinnat alkavat muutamasta eurosta kuukaudessa: ei toistuvaa laskutusta, ei tilin luontia, maksat käytön mukaan.</string>
+    <string name="onboarding_subscription_body">Sinulla ei ole vielä aktiivista tilausta. Ostat VPN-aikaa etukäteen, eikä tiliä tarvitse luoda. Jos valitset automaattisen kuukausittaisen uusimisen, voit poistaa sen käytöstä milloin tahansa maksutta.</string>
     <string name="onboarding_subscription_active">Sinulla on aktiivinen tilaus. Kaikki on valmista.</string>
     <string name="onboarding_subscription_view_plans">Näytä tilaukset (avautuu selaimessa)</string>
     <string name="onboarding_subscription_restore">Minulla on jo tilaus</string>

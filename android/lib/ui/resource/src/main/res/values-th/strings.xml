@@ -437,7 +437,7 @@
     <string name="onboarding_get_started">เริ่มต้นใช้งาน</string>
     <string name="onboarding_skip">ข้ามไปก่อน</string>
     <string name="onboarding_subscription_title">การสมัครสมาชิกของคุณ</string>
-    <string name="onboarding_subscription_body">คุณยังไม่มีการสมัครใช้งานที่ใช้งานอยู่ แพ็กเกจเริ่มต้นที่ไม่กี่ยูโรต่อเดือน ไม่มีการเรียกเก็บเงินซ้ำ ไม่ต้องสร้างบัญชี จ่ายตามที่ใช้</string>
+    <string name="onboarding_subscription_body">คุณยังไม่มีการสมัครสมาชิกที่ใช้งานอยู่ คุณซื้อเวลา VPN ล่วงหน้าโดยไม่ต้องสร้างบัญชี หากคุณเลือกการต่ออายุอัตโนมัติรายเดือน คุณสามารถปิดได้ทุกเมื่อโดยไม่มีค่าใช้จ่าย</string>
     <string name="onboarding_subscription_active">คุณมีการสมัครใช้งานที่ใช้งานอยู่ พร้อมใช้งานแล้ว</string>
     <string name="onboarding_subscription_view_plans">ดูแพ็กเกจ (เปิดในเบราว์เซอร์ของคุณ)</string>
     <string name="onboarding_subscription_restore">ฉันมีการสมัครสมาชิกอยู่แล้ว</string>

@@ -444,7 +444,7 @@
     <string name="onboarding_get_started">Inizia</string>
     <string name="onboarding_skip">Salta per ora</string>
     <string name="onboarding_subscription_title">Il tuo abbonamento</string>
-    <string name="onboarding_subscription_body">Non hai ancora un abbonamento attivo. I piani partono da pochi euro al mese: nessun addebito ricorrente, nessuna registrazione, paghi in base all’uso.</string>
+    <string name="onboarding_subscription_body">Non hai ancora un abbonamento attivo. Acquisti tempo VPN in anticipo, senza creare un account. Se scegli il rinnovo mensile automatico, puoi disattivarlo in qualsiasi momento, senza costi.</string>
     <string name="onboarding_subscription_active">Hai un abbonamento attivo. È tutto pronto.</string>
     <string name="onboarding_subscription_view_plans">Visualizza piani (si apre nel browser)</string>
     <string name="onboarding_subscription_restore">Ho già un abbonamento</string>

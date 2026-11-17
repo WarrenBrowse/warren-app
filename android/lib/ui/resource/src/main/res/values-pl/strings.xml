@@ -449,7 +449,7 @@
     <string name="onboarding_get_started">Rozpocznij</string>
     <string name="onboarding_skip">Pomiń na razie</string>
     <string name="onboarding_subscription_title">Twoja subskrypcja</string>
-    <string name="onboarding_subscription_body">Nie masz jeszcze aktywnej subskrypcji. Plany zaczynają się od kilku euro miesięcznie: bez cyklicznych obciążeń, bez zakładania konta, płacisz za faktyczne użycie.</string>
+    <string name="onboarding_subscription_body">Nie masz jeszcze aktywnej subskrypcji. Kupujesz czas VPN z góry, bez zakładania konta. Jeśli wybierzesz automatyczne odnawianie co miesiąc, możesz je wyłączyć w dowolnym momencie, bez opłat.</string>
     <string name="onboarding_subscription_active">Masz aktywną subskrypcję. Wszystko gotowe.</string>
     <string name="onboarding_subscription_view_plans">Zobacz plany (otwiera się w przeglądarce)</string>
     <string name="onboarding_subscription_restore">Mam już subskrypcję</string>

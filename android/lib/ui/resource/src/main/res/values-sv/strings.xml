@@ -441,7 +441,7 @@
     <string name="onboarding_get_started">Kom igång</string>
     <string name="onboarding_skip">Hoppa över tills vidare</string>
     <string name="onboarding_subscription_title">Din prenumeration</string>
-    <string name="onboarding_subscription_body">Du har ännu inget aktivt abonnemang. Planerna börjar på några euro i månaden: ingen återkommande debitering, inget konto att skapa, du betalar efter hand.</string>
+    <string name="onboarding_subscription_body">Du har inget aktivt abonnemang än. Du köper VPN-tid i förväg, utan att skapa något konto. Om du väljer automatisk månatlig förnyelse kan du stänga av den när som helst, utan kostnad.</string>
     <string name="onboarding_subscription_active">Du har ett aktivt abonnemang. Allt är klart.</string>
     <string name="onboarding_subscription_view_plans">Visa planer (öppnas i webbläsaren)</string>
     <string name="onboarding_subscription_restore">Jag har redan en prenumeration</string>

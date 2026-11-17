@@ -444,7 +444,7 @@
     <string name="onboarding_get_started">Commencer</string>
     <string name="onboarding_skip">Ignorer pour le moment</string>
     <string name="onboarding_subscription_title">Votre abonnement</string>
-    <string name="onboarding_subscription_body">Vous n\'avez pas encore d\'abonnement actif. Les formules démarrent à quelques euros par mois : sans prélèvement récurrent, sans création de compte, vous payez au fur et à mesure.</string>
+    <string name="onboarding_subscription_body">Vous n\'avez pas encore d\'abonnement actif. Vous achetez du temps de VPN à l\'avance, sans créer de compte. Si vous choisissez le renouvellement mensuel automatique, vous pouvez le désactiver à tout moment, sans frais.</string>
     <string name="onboarding_subscription_active">Vous avez un abonnement actif. Tout est prêt.</string>
     <string name="onboarding_subscription_view_plans">Voir les offres (s\'ouvre dans votre navigateur)</string>
     <string name="onboarding_subscription_restore">J\'ai déjà un abonnement</string>

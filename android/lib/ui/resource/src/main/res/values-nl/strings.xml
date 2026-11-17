@@ -441,7 +441,7 @@
     <string name="onboarding_get_started">Aan de slag</string>
     <string name="onboarding_skip">Voorlopig overslaan</string>
     <string name="onboarding_subscription_title">Je abonnement</string>
-    <string name="onboarding_subscription_body">Je hebt nog geen actief abonnement. Plannen beginnen bij een paar euro per maand: geen terugkerende afschrijving, geen account aanmaken, je betaalt naar gebruik.</string>
+    <string name="onboarding_subscription_body">Je hebt nog geen actief abonnement. Je koopt VPN-tijd vooraf, zonder een account aan te maken. Kies je voor automatische maandelijkse verlenging, dan kun je die op elk moment kosteloos uitzetten.</string>
     <string name="onboarding_subscription_active">Je hebt een actief abonnement. Alles is klaar.</string>
     <string name="onboarding_subscription_view_plans">Abonnementen bekijken (opent in browser)</string>
     <string name="onboarding_subscription_restore">Ik heb al een abonnement</string>

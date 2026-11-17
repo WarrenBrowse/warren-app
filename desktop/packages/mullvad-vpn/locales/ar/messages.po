@@ -4946,8 +4946,8 @@ msgid "Write down these 12 words in order and keep them somewhere safe. They are
 msgstr "دوّن هذه الكلمات الـ12 بالترتيب واحتفظ بها في مكان آمن. فهي الطريقة الوحيدة لاستعادة اشتراكك إذا فقدت الوصول إلى هذا الجهاز."
 
 msgctxt "warren-onboarding"
-msgid "You don’t have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "ليس لديك اشتراك نشط بعد. تبدأ الباقات من بضعة يوروهات شهرياً، بلا فوترة متكررة، وبلا إنشاء حساب، وتدفع حسب الاستخدام."
+msgid "You don’t have an active subscription yet. You buy VPN time in advance, with no account to create. If you choose automatic monthly renewal, you can turn it off at any time, at no cost."
+msgstr "ليس لديك اشتراك نشط بعد. تشتري وقت VPN مسبقًا، دون إنشاء حساب. إذا اخترت التجديد الشهري التلقائي، يمكنك إيقافه في أي وقت دون أي تكلفة."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"

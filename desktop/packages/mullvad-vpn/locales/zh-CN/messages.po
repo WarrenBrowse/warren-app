@@ -4861,8 +4861,8 @@ msgid "Write down these 12 words in order and keep them somewhere safe. They are
 msgstr "请按顺序抄下这 12 个单词并妥善保管。如果您失去对此设备的访问权限，它们将是恢复您订阅的唯一途径。"
 
 msgctxt "warren-onboarding"
-msgid "You don’t have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "您还没有有效的订阅。套餐每月仅需几欧元起，无自动续费、无需创建账户、用多少付多少。"
+msgid "You don’t have an active subscription yet. You buy VPN time in advance, with no account to create. If you choose automatic monthly renewal, you can turn it off at any time, at no cost."
+msgstr "您还没有有效的订阅。您可预先购买 VPN 时长，无需创建账户。如果选择每月自动续订，您可以随时免费关闭。"
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"

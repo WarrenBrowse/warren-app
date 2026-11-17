@@ -457,7 +457,7 @@
     <string name="onboarding_get_started">ابدأ الآن</string>
     <string name="onboarding_skip">التخطي الآن</string>
     <string name="onboarding_subscription_title">اشتراكك</string>
-    <string name="onboarding_subscription_body">ليس لديك اشتراك نشط بعد. تبدأ الباقات من بضعة يورو شهرياً: بلا فوترة متكررة، وبلا إنشاء حساب، وتدفع حسب الاستخدام.</string>
+    <string name="onboarding_subscription_body">ليس لديك اشتراك نشط بعد. تشتري وقت VPN مسبقًا، دون إنشاء حساب. إذا اخترت التجديد الشهري التلقائي، يمكنك إيقافه في أي وقت دون أي تكلفة.</string>
     <string name="onboarding_subscription_active">لديك اشتراك نشط. كل شيء جاهز.</string>
     <string name="onboarding_subscription_view_plans">عرض الباقات (يُفتح في متصفحك)</string>
     <string name="onboarding_subscription_restore">لديّ اشتراك بالفعل</string>

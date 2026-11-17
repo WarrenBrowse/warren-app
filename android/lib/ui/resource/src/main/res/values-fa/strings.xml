@@ -441,7 +441,7 @@
     <string name="onboarding_get_started">شروع کنید</string>
     <string name="onboarding_skip">فعلاً رد شود</string>
     <string name="onboarding_subscription_title">اشتراک شما</string>
-    <string name="onboarding_subscription_body">هنوز اشتراک فعالی ندارید. طرح‌ها از چند یورو در ماه شروع می‌شوند: بدون صورتحساب دوره‌ای، بدون ساخت حساب، به‌اندازهٔ مصرف پرداخت می‌کنید.</string>
+    <string name="onboarding_subscription_body">هنوز اشتراک فعالی ندارید. زمان VPN را از پیش می‌خرید، بدون ساختن حساب. اگر تمدید خودکار ماهانه را انتخاب کنید، می‌توانید هر زمان و بدون هزینه آن را خاموش کنید.</string>
     <string name="onboarding_subscription_active">شما اشتراک فعال دارید. همه‌چیز آماده است.</string>
     <string name="onboarding_subscription_view_plans">مشاهده اشتراک‌ها (در مرورگر شما باز می‌شود)</string>
     <string name="onboarding_subscription_restore">من از قبل اشتراک دارم</string>

@@ -449,7 +449,7 @@
     <string name="onboarding_get_started">Începeți</string>
     <string name="onboarding_skip">Omiteți deocamdată</string>
     <string name="onboarding_subscription_title">Abonamentul dumneavoastră</string>
-    <string name="onboarding_subscription_body">Încă nu aveți un abonament activ. Planurile pornesc de la câțiva euro pe lună: fără facturare recurentă, fără creare de cont, plătiți pe măsură ce folosiți.</string>
+    <string name="onboarding_subscription_body">Încă nu aveți un abonament activ. Cumpărați timp VPN în avans, fără să creați un cont. Dacă alegeți reînnoirea lunară automată, o puteți opri oricând, fără costuri.</string>
     <string name="onboarding_subscription_active">Aveți un abonament activ. Totul este pregătit.</string>
     <string name="onboarding_subscription_view_plans">Vizualizați planurile (se deschide în browserul dvs.)</string>
     <string name="onboarding_subscription_restore">Am deja un abonament</string>

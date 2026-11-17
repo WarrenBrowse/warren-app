@@ -437,7 +437,7 @@
     <string name="onboarding_get_started">始める</string>
     <string name="onboarding_skip">今はスキップ</string>
     <string name="onboarding_subscription_title">あなたのサブスクリプション</string>
-    <string name="onboarding_subscription_body">まだ有効なサブスクリプションがありません。プランは月数ユーロから、定期課金なし、アカウント作成なし、使った分だけのお支払いです。</string>
+    <string name="onboarding_subscription_body">まだ有効なサブスクリプションがありません。VPN の利用時間は前払いで購入し、アカウントを作成する必要はありません。毎月の自動更新を選んだ場合も、いつでも無料でオフにできます。</string>
     <string name="onboarding_subscription_active">有効なサブスクリプションがあります。準備完了です。</string>
     <string name="onboarding_subscription_view_plans">プランを見る（ブラウザで開きます）</string>
     <string name="onboarding_subscription_restore">すでにサブスクリプションを持っている</string>

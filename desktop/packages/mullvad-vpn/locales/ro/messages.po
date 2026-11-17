@@ -3946,8 +3946,8 @@ msgid "Write down these 12 words in order and keep them somewhere safe. They are
 msgstr "Notați aceste 12 cuvinte în ordine și păstrați-le într-un loc sigur. Este singura modalitate de a vă restaura abonamentul dacă pierdeți accesul la acest dispozitiv."
 
 msgctxt "warren-onboarding"
-msgid "You don’t have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "Încă nu aveți un abonament activ. Tarifele încep de la câțiva euro pe lună, fără facturare recurentă, fără crearea unui cont, plătiți doar ce folosiți."
+msgid "You don’t have an active subscription yet. You buy VPN time in advance, with no account to create. If you choose automatic monthly renewal, you can turn it off at any time, at no cost."
+msgstr "Încă nu aveți un abonament activ. Cumpărați timp VPN în avans, fără să creați un cont. Dacă alegeți reînnoirea lunară automată, o puteți opri oricând, fără costuri."
 
 msgctxt "warren-onboarding"
 msgid "Your subscription"

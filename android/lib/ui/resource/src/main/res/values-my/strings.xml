@@ -437,7 +437,7 @@
     <string name="onboarding_get_started">စတင်ရန်</string>
     <string name="onboarding_skip">ယခုအတွက် ကျော်ရန်</string>
     <string name="onboarding_subscription_title">သင်၏ စာရင်းသွင်းမှု</string>
-    <string name="onboarding_subscription_body">သင့်တွင် အသုံးပြုနေသော စာရင်းသွင်းမှု မရှိသေးပါ။ အစီအစဉ်များသည် လစဉ် ယူရို အနည်းငယ်မှ စတင်သည်: ထပ်ခါထပ်ခါ ငွေဖြတ်ခြင်း မရှိ၊ အကောင့် ဖန်တီးရန် မလို၊ သုံးသလောက် ပေးရသည်။</string>
+    <string name="onboarding_subscription_body">သင့်တွင် အသက်ဝင်နေသော စာရင်းသွင်းမှု မရှိသေးပါ။ အကောင့်ဖန်တီးစရာမလိုဘဲ VPN အချိန်ကို ကြိုတင်ဝယ်ယူရပါသည်။ လစဉ် အလိုအလျောက် သက်တမ်းတိုးခြင်းကို ရွေးချယ်ပါက မည်သည့်အချိန်တွင်မဆို အခမဲ့ ပိတ်နိုင်ပါသည်။</string>
     <string name="onboarding_subscription_active">သင့်တွင် အသုံးပြုနေသော စာရင်းသွင်းမှု ရှိသည်။ အားလုံး အဆင်သင့်ဖြစ်ပါပြီ။</string>
     <string name="onboarding_subscription_view_plans">အစီအစဉ်များကို ကြည့်ရှုပါ (သင်၏ browser တွင် ပွင့်လာမည်)</string>
     <string name="onboarding_subscription_restore">ကျွန်ုပ်တွင် စာရင်းသွင်းမှု ရှိပြီးသားဖြစ်သည်</string>

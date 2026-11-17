@@ -444,7 +444,7 @@
     <string name="onboarding_get_started">Começar</string>
     <string name="onboarding_skip">Ignorar por agora</string>
     <string name="onboarding_subscription_title">A tua subscrição</string>
-    <string name="onboarding_subscription_body">Ainda não tem uma subscrição ativa. Os planos começam em poucos euros por mês: sem faturação recorrente, sem criação de conta, paga à medida que usa.</string>
+    <string name="onboarding_subscription_body">Ainda não tens uma subscrição ativa. Compras tempo de VPN antecipadamente, sem criar uma conta. Se escolheres a renovação mensal automática, podes desativá-la a qualquer momento, sem custos.</string>
     <string name="onboarding_subscription_active">Tem uma subscrição ativa. Está tudo pronto.</string>
     <string name="onboarding_subscription_view_plans">Ver planos (abre no navegador)</string>
     <string name="onboarding_subscription_restore">Já tenho uma subscrição</string>

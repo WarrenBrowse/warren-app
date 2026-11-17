@@ -449,7 +449,7 @@
     <string name="onboarding_get_started">Начать</string>
     <string name="onboarding_skip">Пока пропустить</string>
     <string name="onboarding_subscription_title">Ваша подписка</string>
-    <string name="onboarding_subscription_body">У вас пока нет активной подписки. Тарифы начинаются от нескольких евро в месяц: без регулярных списаний, без регистрации, вы платите по мере использования.</string>
+    <string name="onboarding_subscription_body">У вас пока нет активной подписки. Вы покупаете время VPN заранее, без создания аккаунта. Если вы выберете автоматическое ежемесячное продление, его можно отключить в любой момент бесплатно.</string>
     <string name="onboarding_subscription_active">У вас есть активная подписка. Всё готово.</string>
     <string name="onboarding_subscription_view_plans">Посмотреть тарифы (откроется в браузере)</string>
     <string name="onboarding_subscription_restore">У меня уже есть подписка</string>

@@ -437,7 +437,7 @@
     <string name="onboarding_get_started">開始使用</string>
     <string name="onboarding_skip">暫時略過</string>
     <string name="onboarding_subscription_title">您的訂閱</string>
-    <string name="onboarding_subscription_body">您還沒有有效的訂閱。方案每月僅需幾歐元起：不自動續訂、無須註冊帳戶、用多少付多少。</string>
+    <string name="onboarding_subscription_body">您還沒有有效的訂閱。您可預先購買 VPN 時數，無需建立帳戶。如果選擇每月自動續訂，您可以隨時免費關閉。</string>
     <string name="onboarding_subscription_active">您已有有效訂閱。一切就緒。</string>
     <string name="onboarding_subscription_view_plans">查看方案（將在您的瀏覽器中開啟）</string>
     <string name="onboarding_subscription_restore">我已經有訂閱</string>

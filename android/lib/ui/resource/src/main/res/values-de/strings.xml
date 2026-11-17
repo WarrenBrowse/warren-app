@@ -441,7 +441,7 @@
     <string name="onboarding_get_started">Loslegen</string>
     <string name="onboarding_skip">Vorerst überspringen</string>
     <string name="onboarding_subscription_title">Ihr Abonnement</string>
-    <string name="onboarding_subscription_body">Du hast noch kein aktives Abo. Die Tarife beginnen bei ein paar Euro im Monat: keine wiederkehrende Abrechnung, keine Kontoerstellung, du zahlst nach Verbrauch.</string>
+    <string name="onboarding_subscription_body">Sie haben noch kein aktives Abonnement. Sie kaufen VPN-Zeit im Voraus, ohne ein Konto anzulegen. Wenn Sie die automatische monatliche Verlängerung wählen, können Sie sie jederzeit kostenlos abschalten.</string>
     <string name="onboarding_subscription_active">Du hast ein aktives Abo. Alles bereit.</string>
     <string name="onboarding_subscription_view_plans">Tarife ansehen (öffnet im Browser)</string>
     <string name="onboarding_subscription_restore">Ich habe bereits ein Abonnement</string>

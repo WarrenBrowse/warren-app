@@ -151,7 +151,7 @@ struct OnboardingSubscriptionStepView: View {
         OnboardingStepLayout(
             title: String(localized: "Your subscription", table: "Onboarding"),
             description: String(
-                localized: "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go.",
+                localized: "You don't have an active subscription yet. You buy VPN time in advance, with no account to create. If you choose automatic monthly renewal, you can turn it off at any time, at no cost.",
                 table: "Onboarding"
             ),
             onSkip: onSkip

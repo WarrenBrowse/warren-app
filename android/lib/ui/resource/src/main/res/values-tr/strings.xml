@@ -441,7 +441,7 @@
     <string name="onboarding_get_started">Başla</string>
     <string name="onboarding_skip">Şimdilik atla</string>
     <string name="onboarding_subscription_title">Aboneliğin</string>
-    <string name="onboarding_subscription_body">Henüz etkin bir aboneliğiniz yok. Planlar ayda birkaç eurodan başlar: yinelenen tahsilat yok, hesap oluşturma yok, kullandıkça ödersiniz.</string>
+    <string name="onboarding_subscription_body">Henüz etkin bir aboneliğiniz yok. VPN süresini hesap oluşturmadan önceden satın alırsınız. Aylık otomatik yenilemeyi seçerseniz, istediğiniz zaman ücretsiz olarak kapatabilirsiniz.</string>
     <string name="onboarding_subscription_active">Etkin bir aboneliğiniz var. Her şey hazır.</string>
     <string name="onboarding_subscription_view_plans">Planları görüntüle (tarayıcında açılır)</string>
     <string name="onboarding_subscription_restore">Zaten bir aboneliğim var</string>

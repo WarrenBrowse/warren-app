@@ -441,7 +441,7 @@
     <string name="onboarding_get_started">Kom i gang</string>
     <string name="onboarding_skip">Spring over for nu</string>
     <string name="onboarding_subscription_title">Dit abonnement</string>
-    <string name="onboarding_subscription_body">Du har endnu ikke et aktivt abonnement. Priserne starter ved et par euro om måneden: ingen tilbagevendende betaling, ingen kontooprettelse, du betaler efterhånden.</string>
+    <string name="onboarding_subscription_body">Du har endnu ikke et aktivt abonnement. Du køber VPN-tid på forhånd, uden at oprette en konto. Hvis du vælger automatisk månedlig fornyelse, kan du slå den fra når som helst uden omkostninger.</string>
     <string name="onboarding_subscription_active">Du har et aktivt abonnement. Du er klar.</string>
     <string name="onboarding_subscription_view_plans">Se planer (åbnes i din browser)</string>
     <string name="onboarding_subscription_restore">Jeg har allerede et abonnement</string>

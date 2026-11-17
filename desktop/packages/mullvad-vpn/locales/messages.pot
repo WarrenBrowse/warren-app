@@ -5098,7 +5098,7 @@ msgid "Write down these 12 words in order and keep them somewhere safe. They are
 msgstr ""
 
 msgctxt "warren-onboarding"
-msgid "You don’t have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgid "You don’t have an active subscription yet. You buy VPN time in advance, with no account to create. If you choose automatic monthly renewal, you can turn it off at any time, at no cost."
 msgstr ""
 
 #. Title of the beta onboarding access step.

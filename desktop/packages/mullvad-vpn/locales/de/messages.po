@@ -4802,8 +4802,8 @@ msgid "Write down these 12 words in order and keep them somewhere safe. They are
 msgstr "Notieren Sie diese 12 Wörter in der richtigen Reihenfolge und bewahren Sie sie an einem sicheren Ort auf. Sie sind die einzige Möglichkeit, Ihr Abonnement wiederherzustellen, wenn Sie den Zugriff auf dieses Gerät verlieren."
 
 msgctxt "warren-onboarding"
-msgid "You don’t have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
-msgstr "Sie haben noch kein aktives Abonnement. Die Tarife beginnen bei wenigen Euro pro Monat, keine wiederkehrende Abrechnung, keine Kontoerstellung, Zahlung nach Verbrauch."
+msgid "You don’t have an active subscription yet. You buy VPN time in advance, with no account to create. If you choose automatic monthly renewal, you can turn it off at any time, at no cost."
+msgstr "Sie haben noch kein aktives Abonnement. Sie kaufen VPN-Zeit im Voraus, ohne ein Konto anzulegen. Wenn Sie die automatische monatliche Verlängerung wählen, können Sie sie jederzeit kostenlos abschalten."
 
 msgctxt "warren-onboarding"
 msgid "Your Warren wallet"

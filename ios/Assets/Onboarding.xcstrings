@@ -4293,150 +4293,150 @@
         }
       }
     },
-    "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go." : {
+    "You don't have an active subscription yet. You buy VPN time in advance, with no account to create. If you choose automatic monthly renewal, you can turn it off at any time, at no cost." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ليس لديك اشتراك نشط بعد. تبدأ الباقات من بضعة يوروهات شهرياً، بلا فوترة متكررة، وبلا إنشاء حساب، وتدفع حسب الاستخدام."
+            "value" : "ليس لديك اشتراك نشط بعد. تشتري وقت VPN مسبقًا، دون إنشاء حساب. إذا اخترت التجديد الشهري التلقائي، يمكنك إيقافه في أي وقت دون أي تكلفة."
           }
         },
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Du har endnu ikke et aktivt abonnement. Planerne starter ved et par euro om måneden, ingen tilbagevendende fakturering, ingen kontooprettelse, betal efter forbrug."
+            "value" : "Du har endnu ikke et aktivt abonnement. Du køber VPN-tid på forhånd, uden at oprette en konto. Hvis du vælger automatisk månedlig fornyelse, kan du slå den fra når som helst uden omkostninger."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sie haben noch kein aktives Abonnement. Die Tarife beginnen bei wenigen Euro pro Monat, keine wiederkehrende Abrechnung, keine Kontoerstellung, Zahlung nach Verbrauch."
+            "value" : "Sie haben noch kein aktives Abonnement. Sie kaufen VPN-Zeit im Voraus, ohne ein Konto anzulegen. Wenn Sie die automatische monatliche Verlängerung wählen, können Sie sie jederzeit kostenlos abschalten."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+            "value" : "You don't have an active subscription yet. You buy VPN time in advance, with no account to create. If you choose automatic monthly renewal, you can turn it off at any time, at no cost."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aún no tienes una suscripción activa. Los planes empiezan en unos pocos euros al mes: sin facturación recurrente, sin creación de cuenta, paga por uso."
+            "value" : "Aún no tienes una suscripción activa. Compras tiempo de VPN por adelantado, sin crear una cuenta. Si eliges la renovación mensual automática, puedes desactivarla en cualquier momento, sin coste."
           }
         },
         "fa" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "هنوز اشتراک فعالی ندارید. اشتراک‌ها از چند یورو در ماه شروع می‌شوند، بدون پرداخت دوره‌ای، بدون ساخت حساب کاربری، پرداخت به اندازه مصرف."
+            "value" : "هنوز اشتراک فعالی ندارید. زمان VPN را از پیش می‌خرید، بدون ساختن حساب. اگر تمدید خودکار ماهانه را انتخاب کنید، می‌توانید هر زمان و بدون هزینه آن را خاموش کنید."
           }
         },
         "fi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sinulla ei ole vielä aktiivista tilausta. Tilaukset alkavat muutamasta eurosta kuukaudessa, ei toistuvaa laskutusta, ei tilin luomista, maksat käytön mukaan."
+            "value" : "Sinulla ei ole vielä aktiivista tilausta. Ostat VPN-aikaa etukäteen, eikä tiliä tarvitse luoda. Jos valitset automaattisen kuukausittaisen uusimisen, voit poistaa sen käytöstä milloin tahansa maksutta."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vous n'avez pas encore d'abonnement actif. Les offres démarrent à quelques euros par mois, sans facturation récurrente, sans création de compte, à l'usage."
+            "value" : "Vous n'avez pas encore d'abonnement actif. Vous achetez du temps de VPN à l'avance, sans créer de compte. Si vous choisissez le renouvellement mensuel automatique, vous pouvez le désactiver à tout moment, sans frais."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Non hai ancora un abbonamento attivo. I piani partono da pochi euro al mese, nessuna fatturazione ricorrente, nessuna creazione di account, paghi quello che usi."
+            "value" : "Non hai ancora un abbonamento attivo. Acquisti tempo VPN in anticipo, senza creare un account. Se scegli il rinnovo mensile automatico, puoi disattivarlo in qualsiasi momento, senza costi."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "まだ有効なサブスクリプションがありません。プランは月額数ユーロから。継続課金なし、アカウント作成なし、使った分だけのお支払いです。"
+            "value" : "まだ有効なサブスクリプションがありません。VPN の利用時間は前払いで購入し、アカウントを作成する必要はありません。毎月の自動更新を選んだ場合も、いつでも無料でオフにできます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "아직 활성 구독이 없습니다. 요금제는 월 몇 유로부터 시작하며, 정기 결제도 계정 생성도 없이 사용한 만큼만 지불합니다."
+            "value" : "아직 활성 구독이 없습니다. VPN 이용 시간을 미리 구매하며, 계정을 만들 필요가 없습니다. 월간 자동 갱신을 선택한 경우 언제든지 무료로 끌 수 있습니다."
           }
         },
         "my" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "သင်တွင် အသက်ဝင်နေသော စာရင်းသွင်းမှု မရှိသေးပါ။ အစီအစဉ်များသည် တစ်လလျှင် ယူရို အနည်းငယ်မှ စတင်သည် - ထပ်ခါတလဲလဲ ငွေတောင်းခံမှု မရှိ၊ အကောင့်ဖွင့်ရန် မလို၊ သုံးသလောက် ပေးဆောင်ပါ။"
+            "value" : "သင့်တွင် အသက်ဝင်နေသော စာရင်းသွင်းမှု မရှိသေးပါ။ အကောင့်ဖန်တီးစရာမလိုဘဲ VPN အချိန်ကို ကြိုတင်ဝယ်ယူရပါသည်။ လစဉ် အလိုအလျောက် သက်တမ်းတိုးခြင်းကို ရွေးချယ်ပါက မည်သည့်အချိန်တွင်မဆို အခမဲ့ ပိတ်နိုင်ပါသည်။"
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Du har ennå ikke et aktivt abonnement. Planene starter på noen få euro per måned, ingen gjentakende fakturering, ingen kontoregistrering, betal etter bruk."
+            "value" : "Du har ikke et aktivt abonnement ennå. Du kjøper VPN-tid på forhånd, uten å opprette en konto. Hvis du velger automatisk månedlig fornyelse, kan du slå den av når som helst, uten kostnad."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Je hebt nog geen actief abonnement. Abonnementen beginnen vanaf enkele euro's per maand, geen terugkerende facturatie, geen accountaanmaak, betalen naar gebruik."
+            "value" : "Je hebt nog geen actief abonnement. Je koopt VPN-tijd vooraf, zonder een account aan te maken. Kies je voor automatische maandelijkse verlenging, dan kun je die op elk moment kosteloos uitzetten."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nie masz jeszcze aktywnej subskrypcji. Plany zaczynają się od kilku euro miesięcznie, bez cyklicznych płatności, bez zakładania konta, płacisz za użycie."
+            "value" : "Nie masz jeszcze aktywnej subskrypcji. Kupujesz czas VPN z góry, bez zakładania konta. Jeśli wybierzesz automatyczne odnawianie co miesiąc, możesz je wyłączyć w dowolnym momencie, bez opłat."
           }
         },
         "pt" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ainda não tens uma subscrição ativa. Os planos começam em alguns euros por mês, sem faturação recorrente, sem criação de conta, paga conforme usas."
+            "value" : "Ainda não tens uma subscrição ativa. Compras tempo de VPN antecipadamente, sem criar uma conta. Se escolheres a renovação mensal automática, podes desativá-la a qualquer momento, sem custos."
           }
         },
         "ro" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Încă nu aveți un abonament activ. Tarifele încep de la câțiva euro pe lună, fără facturare recurentă, fără crearea unui cont, plătiți doar ce folosiți."
+            "value" : "Încă nu aveți un abonament activ. Cumpărați timp VPN în avans, fără să creați un cont. Dacă alegeți reînnoirea lunară automată, o puteți opri oricând, fără costuri."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "У вас пока нет активной подписки. Тарифы начинаются от нескольких евро в месяц, никаких повторяющихся платежей, никакого создания аккаунта, оплата по факту использования."
+            "value" : "У вас пока нет активной подписки. Вы покупаете время VPN заранее, без создания аккаунта. Если вы выберете автоматическое ежемесячное продление, его можно отключить в любой момент бесплатно."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Du har ännu ingen aktiv prenumeration. Planerna börjar på några euro per månad, ingen återkommande fakturering, ingen kontoregistrering, betala efter användning."
+            "value" : "Du har inget aktivt abonnemang än. Du köper VPN-tid i förväg, utan att skapa något konto. Om du väljer automatisk månatlig förnyelse kan du stänga av den när som helst, utan kostnad."
           }
         },
         "th" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "คุณยังไม่มีการสมัครสมาชิกที่ใช้งานอยู่ แพ็กเกจเริ่มต้นเพียงไม่กี่ยูโรต่อเดือน ไม่มีการเรียกเก็บเงินอัตโนมัติ ไม่ต้องสร้างบัญชี จ่ายตามการใช้งาน"
+            "value" : "คุณยังไม่มีการสมัครสมาชิกที่ใช้งานอยู่ คุณซื้อเวลา VPN ล่วงหน้าโดยไม่ต้องสร้างบัญชี หากคุณเลือกการต่ออายุอัตโนมัติรายเดือน คุณสามารถปิดได้ทุกเมื่อโดยไม่มีค่าใช้จ่าย"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Henüz etkin bir aboneliğin yok. Planlar ayda birkaç eurodan başlıyor, tekrarlayan faturalandırma yok, hesap oluşturma yok, kullandıkça öde."
+            "value" : "Henüz etkin bir aboneliğiniz yok. VPN süresini hesap oluşturmadan önceden satın alırsınız. Aylık otomatik yenilemeyi seçerseniz, istediğiniz zaman ücretsiz olarak kapatabilirsiniz."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "У вас ще немає активної підписки. Тарифи починаються від кількох євро на місяць, без повторюваних платежів, без створення облікового запису, оплата за використання."
+            "value" : "У вас ще немає активної підписки. Ви купуєте час VPN наперед, без створення облікового запису. Якщо ви оберете автоматичне щомісячне продовження, його можна вимкнути будь-коли безкоштовно."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您还没有有效的订阅。套餐每月仅需几欧元起，无自动续费、无需创建账户、用多少付多少。"
+            "value" : "您还没有有效的订阅。您可预先购买 VPN 时长，无需创建账户。如果选择每月自动续订，您可以随时免费关闭。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "您目前尚無有效的訂閱。方案每月僅需數歐元起，不自動續費、不需建立帳號，用多少付多少。"
+            "value" : "您還沒有有效的訂閱。您可預先購買 VPN 時數，無需建立帳戶。如果選擇每月自動續訂，您可以隨時免費關閉。"
           }
         }
       }
