@@ -96,3 +96,47 @@ final class WarrenWalletInteractorTests: XCTestCase {
         XCTAssertEqual(short?.count, 13)
     }
 }
+
+/// Deleting the account asks for the end of the wallet address, which the
+/// account "number" holds: an SS58 address in base58, letters included, and
+/// not always a multiple of four characters long.
+@MainActor
+final class AccountDeletionViewModelTests: XCTestCase {
+    /// Real addresses of both lengths the check used to trip on: one whose
+    /// last four characters hold a letter, one whose length leaves a
+    /// partial group of four at the end.
+    private func realAddresses() throws -> [String] {
+        try [
+            "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+            "legal winner thank year wave sausage worth useful legal winner thank yellow",
+            "letter advice cage absurd amount doctor acoustic avoid letter advice cage above",
+            "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong",
+        ].map { phrase in
+            let wallet = try WarrenWallet.fromMnemonic(phrase)
+            defer { wallet.forgetSecret() }
+            return wallet.publicKeyAddress
+        }
+    }
+
+    func test_theLastFourCharactersOfTheAddressUnlockDeletion() throws {
+        for address in try realAddresses() {
+            let viewModel = AccountDeletionViewModel(
+                backEnd: MockAccountDeletionBackEnd(accountNumber: address)
+            )
+            viewModel.enteredAccountNumberSuffix = String(address.suffix(4))
+
+            XCTAssertTrue(viewModel.canDelete, "address of \(address.count) characters")
+            XCTAssertEqual(try viewModel.validate(input: String(address.suffix(4))).get(), address)
+        }
+    }
+
+    func test_otherCharactersDoNotUnlockDeletion() throws {
+        let address = try XCTUnwrap(realAddresses().first)
+        let viewModel = AccountDeletionViewModel(backEnd: MockAccountDeletionBackEnd(accountNumber: address))
+        let wrong = String(address.suffix(5).prefix(4))
+        viewModel.enteredAccountNumberSuffix = wrong
+
+        XCTAssertFalse(viewModel.canDelete)
+        XCTAssertThrowsError(try viewModel.validate(input: wrong).get())
+    }
+}

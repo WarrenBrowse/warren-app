@@ -30,7 +30,7 @@ struct AccountDeletionView: View {
                     """
                     This logs out all devices using this account and all \
                     VPN access will be denied even if there is time left on the account. \
-                    Enter the last 4 digits of the account number and hit "Delete account" \
+                    Enter the last 4 characters of the wallet address and hit "Delete account" \
                     if you really want to delete the account:
                     """
                 )
@@ -38,14 +38,17 @@ struct AccountDeletionView: View {
                 .foregroundStyle(Color.white)
                 .padding(.bottom, 8)
 
-                // accountTextField
+                // The address is base58: letters of both cases and digits, so
+                // a full keyboard, with nothing rewriting what is typed.
                 let placeholder = "XXXX"
                 MullvadPrimaryTextField(
-                    label: "Last 4 digits",
+                    label: "Last 4 characters",
                     placeholder: LocalizedStringKey(placeholder),
                     text: $viewModel.enteredAccountNumberSuffix,
-                    keyboardType: .numberPad
+                    keyboardType: .asciiCapable
                 )
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
                 .accessibilityIdentifier(.deleteAccountTextField)
                 .padding(.bottom, 4)
 

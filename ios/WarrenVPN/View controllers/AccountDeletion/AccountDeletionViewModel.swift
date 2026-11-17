@@ -67,7 +67,7 @@ class AccountDeletionViewModel: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .invalidInput:
-                return NSLocalizedString("Last four digits of the account number are incorrect", comment: "")
+                return NSLocalizedString("The last 4 characters of the wallet address are incorrect", comment: "")
             }
         }
     }
@@ -88,17 +88,25 @@ class AccountDeletionViewModel: ObservableObject {
         accountNumber.suffix(4)
     }
 
-    init(tunnelManager: TunnelManager, onConclusion: ((Bool) -> Void)? = nil) {
-        self.backEnd = TunnelManagerAccountDeletionBackEnd(tunnelManager: tunnelManager)
-        self.accountNumber = tunnelManager.deviceState.accountData?.number.formattedAccountNumber ?? ""
+    convenience init(tunnelManager: TunnelManager, onConclusion: ((Bool) -> Void)? = nil) {
+        self.init(
+            backEnd: TunnelManagerAccountDeletionBackEnd(tunnelManager: tunnelManager),
+            onConclusion: onConclusion
+        )
+    }
+
+    /// The account "number" is the wallet's SS58 address: base58, letters
+    /// included, 47 to 49 characters long. It is shown and matched as is,
+    /// never split into the groups of four of a numeric account number.
+    init(backEnd: AccountDeletionBackEnd, onConclusion: ((Bool) -> Void)? = nil) {
+        self.backEnd = backEnd
+        self.accountNumber = backEnd.accountNumber ?? ""
         self.onConclusion = onConclusion
     }
 
     // for SwiftUI previews
-    init(mockAccountNumber: String?) {
-        self.backEnd = MockAccountDeletionBackEnd(accountNumber: mockAccountNumber)
-        self.accountNumber = mockAccountNumber ?? ""
-        self.onConclusion = nil
+    convenience init(mockAccountNumber: String?) {
+        self.init(backEnd: MockAccountDeletionBackEnd(accountNumber: mockAccountNumber))
     }
 
     var messageText: LocalizedStringKey {
@@ -135,8 +143,8 @@ class AccountDeletionViewModel: ObservableObject {
 
     func validate(input: String) -> Result<String, Error> {
         if let deviceAccountNumber = backEnd.accountNumber,
-            let fourLastDigits = deviceAccountNumber.split(every: 4).last,
-            fourLastDigits == input
+            deviceAccountNumber.count >= 4,
+            deviceAccountNumber.suffix(4) == input
         {
             return .success(deviceAccountNumber)
         } else {

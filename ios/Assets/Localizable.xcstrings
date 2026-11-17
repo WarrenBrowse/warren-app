@@ -47952,286 +47952,286 @@
         }
       }
     },
-    "Last 4 digits": {
+    "Last 4 characters": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "آخر 4 أرقام"
+            "value": "آخر 4 أحرف"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sidste 4 cifre"
+            "value": "Sidste 4 tegn"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Letzte vier Zahlen"
+            "value": "Letzte vier Zeichen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Últimos 4 dígitos"
+            "value": "Últimos 4 caracteres"
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "۴ رقم آخر"
+            "value": "۴ نویسهٔ آخر"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Viimeiset neljä numeroa"
+            "value": "Viimeiset neljä merkkiä"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "4 derniers chiffres"
+            "value": "4 derniers caractères"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ultime 4 cifre"
+            "value": "Ultimi 4 caratteri"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "末尾4桁"
+            "value": "末尾4文字"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "마지막 4자리 숫자"
+            "value": "마지막 4자"
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "နောက်ဆုံးဂဏန်း 4 လုံး"
+            "value": "နောက်ဆုံး စာလုံး 4 လုံး"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "De siste fire sifrene"
+            "value": "De siste fire tegnene"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Laatste 4 cijfers"
+            "value": "Laatste 4 tekens"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ostatnie 4 cyfry"
+            "value": "Ostatnie 4 znaki"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Últimos 4 dígitos"
+            "value": "Últimos 4 caracteres"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ultimele 4 cifre"
+            "value": "Ultimele 4 caractere"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Последние 4 цифры"
+            "value": "Последние 4 символа"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "De sista 4 siffrorna"
+            "value": "De sista 4 tecknen"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "4 หลักสุดท้าย"
+            "value": "4 ตัวอักษรสุดท้าย"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Son 4 hane"
+            "value": "Son 4 karakter"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Останні 4 цифри"
+            "value": "Останні 4 символи"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "最后 4 位数字"
+            "value": "最后 4 个字符"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "末 4 碼"
+            "value": "最後 4 個字元"
           }
         }
       }
     },
-    "Last four digits of the account number are incorrect": {
+    "The last 4 characters of the wallet address are incorrect": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "آخر أربعة أرقام من رقم الحساب غير صحيحة"
+            "value": "آخر 4 أحرف من عنوان المحفظة غير صحيحة"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "De sidste fire cifre i kontonummeret er forkerte"
+            "value": "De sidste 4 tegn i tegnebogsadressen er forkerte"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die letzten vier Ziffern der Kontonummer sind falsch."
+            "value": "Die letzten vier Zeichen der Wallet-Adresse sind falsch"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los últimos cuatro dígitos del número de cuenta no son correctos"
+            "value": "Los últimos 4 caracteres de la dirección del monedero no son correctos"
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "چهار رقم آخر شمارهٔ حساب نادرست است"
+            "value": "۴ نویسهٔ آخر نشانی کیف پول نادرست است"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilin numeron neljä viimeistä numeroa ovat virheelliset"
+            "value": "Lompakon osoitteen neljä viimeistä merkkiä ovat virheelliset"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les quatre derniers chiffres du numéro de compte sont incorrects"
+            "value": "Les 4 derniers caractères de l'adresse du portefeuille sont incorrects"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le ultime quattro cifre del numero di account sono errate"
+            "value": "Gli ultimi 4 caratteri dell'indirizzo del portafoglio sono errati"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "アカウント番号の下4桁が正しくありません"
+            "value": "ウォレットアドレスの末尾4文字が正しくありません"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "계정 번호의 마지막 네 자리가 올바르지 않습니다"
+            "value": "지갑 주소의 마지막 4자가 올바르지 않습니다"
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "အကောင့်နံပါတ်၏ နောက်ဆုံးဂဏန်း လေးခု မမှန်ကန်ပါ"
+            "value": "ပိုက်ဆံအိတ် လိပ်စာ၏ နောက်ဆုံး စာလုံး 4 လုံး မမှန်ကန်ပါ"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "De fire siste sifrene i kontonummeret er feil"
+            "value": "De fire siste tegnene i lommebokadressen er feil"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De laatste vier cijfers van het accountnummer zijn onjuist"
+            "value": "De laatste 4 tekens van het portemonnee-adres zijn onjuist"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cztery ostatnie cyfry numeru konta są nieprawidłowe"
+            "value": "Ostatnie 4 znaki adresu portfela są nieprawidłowe"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os últimos quatro dígitos do número de conta estão incorretos"
+            "value": "Os últimos 4 caracteres do endereço da carteira estão incorretos"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ultimele patru cifre ale numărului contului sunt incorecte"
+            "value": "Ultimele 4 caractere ale adresei portofelului sunt incorecte"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Последние четыре цифры номера учетной записи неверны"
+            "value": "Последние 4 символа адреса кошелька неверны"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "De sista fyra siffrorna i kontonumret är fel"
+            "value": "De sista 4 tecknen i plånboksadressen är fel"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "สี่หลักสุดท้ายของหมายเลขบัญชีไม่ถูกต้อง"
+            "value": "4 ตัวอักษรสุดท้ายของที่อยู่กระเป๋าเงินไม่ถูกต้อง"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hesap numarasının son dört hanesi yanlış"
+            "value": "Cüzdan adresinin son 4 karakteri yanlış"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Останні 4 цифри номера рахунку неправильні"
+            "value": "Останні 4 символи адреси гаманця неправильні"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "帐号的最后四位不正确"
+            "value": "钱包地址的最后 4 个字符不正确"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "帳號後四碼不正確"
+            "value": "錢包位址的最後 4 個字元不正確"
           }
         }
       }
@@ -86587,144 +86587,144 @@
         }
       }
     },
-    "This logs out all devices using this account and all VPN access will be denied even if there is time left on the account. Enter the last 4 digits of the account number and hit \"Delete account\" if you really want to delete the account:": {
+    "This logs out all devices using this account and all VPN access will be denied even if there is time left on the account. Enter the last 4 characters of the wallet address and hit \"Delete account\" if you really want to delete the account:": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "سيؤدي هذا إلى تسجيل خروج جميع الأجهزة التي تستخدم هذا الحساب وسيُمنع كل وصول إلى VPN حتى لو تبقّى وقت في الحساب. أدخل آخر 4 أرقام من رقم الحساب واضغط على «حذف الحساب» إذا كنت تريد فعلاً حذف الحساب:"
+            "value": "سيؤدي هذا إلى تسجيل خروج جميع الأجهزة التي تستخدم هذا الحساب وسيُمنع كل وصول إلى VPN حتى لو تبقّى وقت في الحساب. أدخل آخر 4 أحرف من عنوان المحفظة واضغط على «حذف الحساب» إذا كنت تريد فعلاً حذف الحساب:"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dette vil medføre, at alle enheder, der bruger denne konto, bliver logget af, og al VPN-adgang vil blive afvist, selv om der er tid tilbage på kontoen. Indtast de sidste 4 cifre i kontonummeret, og tryk på \"Slet konto\", hvis du virkelig ønsker at slette kontoen:"
+            "value": "Dette vil medføre, at alle enheder, der bruger denne konto, bliver logget af, og al VPN-adgang vil blive afvist, selv om der er tid tilbage på kontoen. Indtast de sidste 4 tegn i tegnebogsadressen, og tryk på \"Slet konto\", hvis du virkelig ønsker at slette kontoen:"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dadurch werden alle Geräte, die dieses Konto verwenden, abgemeldet und die gesamte VPN-Verwendung wird verwehrt, auch wenn noch Zeit auf dem Konto vorhanden ist. Geben Sie die letzten vier Ziffern der Kontonummer ein und klicken Sie auf die Schaltfläche „Konto löschen“, wenn Sie das Konto wirklich löschen möchten:"
+            "value": "Dadurch werden alle Geräte, die dieses Konto verwenden, abgemeldet und die gesamte VPN-Verwendung wird verwehrt, auch wenn noch Zeit auf dem Konto vorhanden ist. Geben Sie die letzten vier Zeichen der Wallet-Adresse ein und klicken Sie auf die Schaltfläche „Konto löschen“, wenn Sie das Konto wirklich löschen möchten:"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esto cierra la sesión en todos los dispositivos que usen esta cuenta y se denegará todo acceso a VPN aunque aún quede tiempo en la cuenta. Introduzca los últimos 4 dígitos del número de cuenta y toque «Eliminar cuenta» si de verdad desea eliminar la cuenta:"
+            "value": "Esto cierra la sesión en todos los dispositivos que usen esta cuenta y se denegará todo acceso a VPN aunque aún quede tiempo en la cuenta. Introduzca los últimos 4 caracteres de la dirección del monedero y toque «Eliminar cuenta» si de verdad desea eliminar la cuenta:"
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "این کار همهٔ دستگاه‌های استفاده‌کننده از این حساب را خارج می‌کند و همهٔ دسترسی‌های VPN مسدود می‌شود، حتی اگر زمانی روی حساب باقی مانده باشد. اگر واقعاً می‌خواهید حساب را حذف کنید، ۴ رقم آخر شمارهٔ حساب را وارد کنید و «حذف حساب» را بزنید:"
+            "value": "این کار همهٔ دستگاه‌های استفاده‌کننده از این حساب را خارج می‌کند و همهٔ دسترسی‌های VPN مسدود می‌شود، حتی اگر زمانی روی حساب باقی مانده باشد. اگر واقعاً می‌خواهید حساب را حذف کنید، ۴ نویسهٔ آخر نشانی کیف پول را وارد کنید و «حذف حساب» را بزنید:"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toiminto kirjaa kaikki tätä tiliä käyttävät laitteet ulos, ja kaikki VPN-käyttö estetään, vaikka tilillä olisi käyttöaikaa jäljellä. Anna tilin numeron neljä viimeistä numeroa ja paina Poista tili -painiketta, jos haluat varmasti poistaa tilin:"
+            "value": "Toiminto kirjaa kaikki tätä tiliä käyttävät laitteet ulos, ja kaikki VPN-käyttö estetään, vaikka tilillä olisi käyttöaikaa jäljellä. Anna lompakon osoitteen neljä viimeistä merkkiä ja paina Poista tili -painiketta, jos haluat varmasti poistaa tilin:"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ceci déconnectera tous les appareils qui utilisent ce compte et tous les accès VPN seront refusés même s'il reste du temps sur le compte. Saisissez les 4 derniers chiffres du numéro de compte et sélectionnez « Supprimer le compte » si vous souhaitez vraiment supprimer le compte :"
+            "value": "Ceci déconnectera tous les appareils qui utilisent ce compte et tous les accès VPN seront refusés même s'il reste du temps sur le compte. Saisissez les 4 derniers caractères de l'adresse du portefeuille et sélectionnez « Supprimer le compte » si vous souhaitez vraiment supprimer le compte :"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questa operazione disconnette tutti i dispositivi che utilizzano questo account e nega qualsiasi accesso alla VPN, anche se è ancora disponibile del tempo di utilizzo. Inserisci le ultime 4 cifre del numero di account e seleziona \"Elimina account\" se desideri davvero eliminare l'account:"
+            "value": "Questa operazione disconnette tutti i dispositivi che utilizzano questo account e nega qualsiasi accesso alla VPN, anche se è ancora disponibile del tempo di utilizzo. Inserisci gli ultimi 4 caratteri dell'indirizzo del portafoglio e seleziona \"Elimina account\" se desideri davvero eliminare l'account:"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "これにより、このアカウントを使用しているすべてのデバイスからログアウトされ、アカウントの残り時間の有無に関わらず、すべてのVPNアクセスが拒否されます。アカウントを本当に削除する場合は、アカウント番号の下4桁を入力し、[アカウントを削除する] をクリックしてください。"
+            "value": "これにより、このアカウントを使用しているすべてのデバイスからログアウトされ、アカウントの残り時間の有無に関わらず、すべてのVPNアクセスが拒否されます。アカウントを本当に削除する場合は、ウォレットアドレスの末尾4文字を入力し、[アカウントを削除する] をクリックしてください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 계정을 사용 중인 모든 장치가 로그아웃되고 계정에 충전한 시간이 남아 있더라도 모든 VPN 액세스가 거부됩니다. 계정을 정말로 삭제하려면 계정 번호의 마지막 4자리를 입력한 후 \"계정 삭제\"를 누르세요."
+            "value": "이 계정을 사용 중인 모든 장치가 로그아웃되고 계정에 충전한 시간이 남아 있더라도 모든 VPN 액세스가 거부됩니다. 계정을 정말로 삭제하려면 지갑 주소의 마지막 4자를 입력한 후 \"계정 삭제\"를 누르세요."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "ဤသို့ လုပ်ဆောင်ခြင်းဖြင့် ဤအကောင့်ကို သုံးနေသော စက်အားလုံးတွင် အကောင့် ထွက်သွားမည်ဖြစ်ပြီး အကောင့်တွင် အချိန်ကျန်သေးလျှင်ပင် VPN ရယူသုံးစွဲခွင့်အားလုံးကို ငြင်းပယ်သွားပါမည်။ ဤအကောင့်ကို အမှန်တကယ် ဖျက်လိုပါက အကောင့်နံပါတ်၏ နောက်ဆုံးဂဏန်း 4 လုံးကို ရိုက်ထည့်ပြီး \"အကောင့် ဖျက်ရန်\" ကို နှိပ်ပါ-"
+            "value": "ဤသို့ လုပ်ဆောင်ခြင်းဖြင့် ဤအကောင့်ကို သုံးနေသော စက်အားလုံးတွင် အကောင့် ထွက်သွားမည်ဖြစ်ပြီး အကောင့်တွင် အချိန်ကျန်သေးလျှင်ပင် VPN ရယူသုံးစွဲခွင့်အားလုံးကို ငြင်းပယ်သွားပါမည်။ ဤအကောင့်ကို အမှန်တကယ် ဖျက်လိုပါက ပိုက်ဆံအိတ် လိပ်စာ၏ နောက်ဆုံး စာလုံး 4 လုံးကို ရိုက်ထည့်ပြီး \"အကောင့် ဖျက်ရန်\" ကို နှိပ်ပါ-"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dette logger ut alle enheter som bruker denne kontoen, og all VPN-tilgang vil bli avvist selv om det er tid igjen på kontoen. Skriv inn de fire siste sifrene i kontonummeret og trykk på «Slett konto» hvis du virkelig ønsker å slette kontoen:"
+            "value": "Dette logger ut alle enheter som bruker denne kontoen, og all VPN-tilgang vil bli avvist selv om det er tid igjen på kontoen. Skriv inn de fire siste tegnene i lommebokadressen og trykk på «Slett konto» hvis du virkelig ønsker å slette kontoen:"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hiermee worden alle apparaten die dit account gebruiken afgemeld en alle toegang tot VPN wordt geweigerd, ook als er nog tijd over is in het account. Voer de laatste 4 cijfers van het accountnummer in en klik op \"Account verwijderen\" als u het account echt wilt verwijderen:"
+            "value": "Hiermee worden alle apparaten die dit account gebruiken afgemeld en alle toegang tot VPN wordt geweigerd, ook als er nog tijd over is in het account. Voer de laatste 4 tekens van het portemonnee-adres in en klik op \"Account verwijderen\" als u het account echt wilt verwijderen:"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Spowoduje to wylogowanie wszystkich urządzeń korzystających z tego konta, a dostęp do sieci VPN zostanie zablokowany, nawet jeśli na koncie pozostał jeszcze czas. Jeśli naprawdę chcesz usunąć konto, wprowadź 4 ostatnie cyfry numeru konta i kliknij opcję „Usuń konto”:"
+            "value": "Spowoduje to wylogowanie wszystkich urządzeń korzystających z tego konta, a dostęp do sieci VPN zostanie zablokowany, nawet jeśli na koncie pozostał jeszcze czas. Jeśli naprawdę chcesz usunąć konto, wprowadź 4 ostatnie znaki adresu portfela i kliknij opcję „Usuń konto”:"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Isto termina a sessão de todos os dispositivos que utilizam esta conta e o acesso à VPN será negado, mesmo que ainda exista tempo disponível na conta. Introduza os últimos 4 dígitos do número de conta e clique em \"Eliminar conta\" se realmente pretender eliminá-la:"
+            "value": "Isto termina a sessão de todos os dispositivos que utilizam esta conta e o acesso à VPN será negado, mesmo que ainda exista tempo disponível na conta. Introduza os últimos 4 caracteres do endereço da carteira e clique em \"Eliminar conta\" se realmente pretender eliminá-la:"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Această acțiune deconectează toate dispozitivele care folosesc acest cont, iar accesul la VPN va fi refuzat chiar dacă mai există timp rămas pe cont. Introduceți ultimele 4 cifre ale numărului de cont și apăsați „Șterge contul” dacă doriți cu adevărat să ștergeți contul:"
+            "value": "Această acțiune deconectează toate dispozitivele care folosesc acest cont, iar accesul la VPN va fi refuzat chiar dacă mai există timp rămas pe cont. Introduceți ultimele 4 caractere ale adresei portofelului și apăsați „Șterge contul” dacă doriți cu adevărat să ștergeți contul:"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Это приведет к выходу из этой учетной записи на всех устройствах. Доступ к VPN будет заблокирован, даже если на учетной записи еще осталось время. Введите последние 4 цифры номера учетной записи и нажмите «Удалить учетную запись», если вы действительно хотите ее удалить:"
+            "value": "Это приведет к выходу из этой учетной записи на всех устройствах. Доступ к VPN будет заблокирован, даже если на учетной записи еще осталось время. Введите последние 4 символа адреса кошелька и нажмите «Удалить учетную запись», если вы действительно хотите ее удалить:"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alla enheter som använder det här kontot loggas ut och all VPN-åtkomst nekas, även om det finns tid kvar på kontot. Ange de fyra sista siffrorna i kontonumret och tryck på \"Ta bort konto\" om du verkligen vill ta bort kontot:"
+            "value": "Alla enheter som använder det här kontot loggas ut och all VPN-åtkomst nekas, även om det finns tid kvar på kontot. Ange de fyra sista tecknen i plånboksadressen och tryck på \"Ta bort konto\" om du verkligen vill ta bort kontot:"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "การดำเนินการนี้จะออกจากระบบอุปกรณ์ทั้งหมดที่ใช้บัญชีนี้ และการเข้าถึง VPN ทั้งหมดจะถูกปฏิเสธแม้ว่าจะมีเวลาเหลืออยู่ในบัญชีก็ตาม กรอก 4 หลักสุดท้ายของหมายเลขบัญชีและคลิก \"ลบบัญชี\" หากคุณต้องการลบบัญชีจริงๆ:"
+            "value": "การดำเนินการนี้จะออกจากระบบอุปกรณ์ทั้งหมดที่ใช้บัญชีนี้ และการเข้าถึง VPN ทั้งหมดจะถูกปฏิเสธแม้ว่าจะมีเวลาเหลืออยู่ในบัญชีก็ตาม กรอก 4 ตัวอักษรสุดท้ายของที่อยู่กระเป๋าเงินและคลิก \"ลบบัญชี\" หากคุณต้องการลบบัญชีจริงๆ:"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu hesabı kullanan tüm cihazlardan çıkış yapılır ve hesapta kalan süre olsa bile tüm VPN erişimi engellenir. Hesabı gerçekten silmek istiyorsanız hesap numarasının son 4 hanesini girin ve \"Hesabı sil\"e tıklayın:"
+            "value": "Bu hesabı kullanan tüm cihazlardan çıkış yapılır ve hesapta kalan süre olsa bile tüm VPN erişimi engellenir. Hesabı gerçekten silmek istiyorsanız cüzdan adresinin son 4 karakterini girin ve \"Hesabı sil\"e tıklayın:"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Це призведе до виходу із цього облікового запису на всіх пристроях. У доступі до VPN буде відмовлено, навіть якщо на балансі облікового запису залишився час. Введіть останні 4 цифри номера облікового запису й натисніть «Видалити обліковий запис», якщо хочете видалити його:"
+            "value": "Це призведе до виходу із цього облікового запису на всіх пристроях. У доступі до VPN буде відмовлено, навіть якщо на балансі облікового запису залишився час. Введіть останні 4 символи адреси гаманця й натисніть «Видалити обліковий запис», якщо хочете видалити його:"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "这将使所有使用此帐户的设备退出登录，并且所有 VPN 访问都将被拒绝，即使帐户仍有剩余时间。如果您确定要删除此帐户，请输入帐号的最后 4 位，然后点击“删除帐户”："
+            "value": "这将使所有使用此帐户的设备退出登录，并且所有 VPN 访问都将被拒绝，即使帐户仍有剩余时间。如果您确定要删除此帐户，请输入钱包地址的最后 4 个字符，然后点击“删除帐户”："
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "這會登出所有使用此帳戶的裝置，而且所有 VPN 存取也會遭拒，即使帳戶還有剩餘的使用時間。如果您確定要刪除帳戶，請輸入帳號末四碼，然後輕點「刪除帳戶」。"
+            "value": "這會登出所有使用此帳戶的裝置，而且所有 VPN 存取也會遭拒，即使帳戶還有剩餘的使用時間。如果您確定要刪除帳戶，請輸入錢包位址的最後 4 個字元，然後輕點「刪除帳戶」。"
           }
         }
       }
