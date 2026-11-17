@@ -2215,8 +2215,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_revokeDevice<'loc
 
 /// Whether the registry revoked this device since Kotlin last forgot it: a
 /// token or entitlement refresh learned it, or this device revoked itself.
-/// The token and entitlement refreshes of the revoked device have stopped and
-/// its device identity is forgotten.
+/// The token and entitlement refreshes of the revoked device have stopped.
 #[cfg(feature = "tunnel")]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_deviceRevoked(
@@ -2224,6 +2223,18 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_deviceRevoked(
     _class: JClass<'_>,
 ) -> jboolean {
     jboolean::from(crate::devices::registry().revoked())
+}
+
+/// Whether that revocation was proven: the account wallet signed it for this
+/// device, or this device asked for it. Only then is the device identity
+/// forgotten, and only then may Kotlin forget the wallet.
+#[cfg(feature = "tunnel")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_deviceRevocationVerified(
+    _env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jboolean {
+    jboolean::from(crate::devices::registry().revocation_verified())
 }
 
 /// Kotlin took the revocation in (the user left the revoked screen, logged

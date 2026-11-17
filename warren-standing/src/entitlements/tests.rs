@@ -1101,8 +1101,8 @@ async fn a_revoked_device_is_reported_once_and_its_mint_stops_asking() {
     let sink = Arc::clone(&reported);
     let mint = EntitlementMint::new(now)
         .with_device(device)
-        .with_revocation_sink(Arc::new(move |wallet, id| {
-            sink.lock().unwrap().push((*wallet, id));
+        .with_revocation_sink(Arc::new(move |wallet, id, verified| {
+            sink.lock().unwrap().push((*wallet, id, verified));
         }));
 
     let source = mint.slot_source([1; 32], key(), || client(&issuer));
@@ -1113,7 +1113,11 @@ async fn a_revoked_device_is_reported_once_and_its_mint_stops_asking() {
         tokio::task::yield_now().await;
     }
 
-    assert_eq!(*reported.lock().unwrap(), vec![([1; 32], kept)]);
+    assert_eq!(
+        *reported.lock().unwrap(),
+        vec![([1; 32], kept, false)],
+        "an unsigned revocation is reported unverified"
+    );
     assert_eq!(
         issuer.requests(),
         rounds,
@@ -1133,7 +1137,7 @@ async fn a_device_registered_again_after_its_revocation_mints_under_its_new_iden
     let device = install_device(dir.path());
     let mint = EntitlementMint::new(now)
         .with_device(device.clone())
-        .with_revocation_sink(Arc::new(move |_, _| {
+        .with_revocation_sink(Arc::new(move |_, _, _| {
             sink.fetch_add(1, Ordering::SeqCst);
         }));
     let _revoked = mint.slot_source([1; 32], key(), || client(&issuer));

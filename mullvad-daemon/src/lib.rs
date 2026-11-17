@@ -1036,7 +1036,8 @@ pub(crate) enum InternalDaemonEvent {
     LogoutTeardownDeadline(u64),
     /// The account's device registry revoked this install (warren-core doc
     /// 115), as a session token or port-entitlement refresh learned it.
-    WarrenDeviceRevoked,
+    /// `verified` when the wallet key signed that revocation for this device.
+    WarrenDeviceRevoked { verified: bool },
     /// A token refresh round left this epoch's session tokens at hand.
     WarrenSessionTokensAtHand,
 }
@@ -1458,8 +1459,8 @@ impl Daemon {
 
         let (internal_event_tx, internal_event_rx) = daemon_command_channel.destructure();
         let revocation_tx = internal_event_tx.clone();
-        warren_token_provider::report_revocation_to(Box::new(move || {
-            let _ = revocation_tx.send(InternalDaemonEvent::WarrenDeviceRevoked);
+        warren_token_provider::report_revocation_to(Box::new(move |verified| {
+            let _ = revocation_tx.send(InternalDaemonEvent::WarrenDeviceRevoked { verified });
         }));
         let tokens_tx = internal_event_tx.clone();
         warren_token_provider::report_tokens_to(Box::new(move || {
@@ -2876,7 +2877,7 @@ impl Daemon {
             }
             AppRoutesPlanned => self.publish_app_routes_if_changed(),
             LogoutTeardownDeadline(generation) => self.on_logout_teardown_deadline(generation),
-            WarrenDeviceRevoked => self.on_warren_device_revoked().await,
+            WarrenDeviceRevoked { verified } => self.on_warren_device_revoked(verified).await,
             WarrenSessionTokensAtHand => self.on_warren_session_tokens_at_hand(),
         }
         should_stop
@@ -4816,8 +4817,8 @@ impl Daemon {
         let revoked_tx = self.tx.clone();
         tokio::spawn(async move {
             let result = warren_devices::list(&client, this).await;
-            if result == Err(warren_devices::DevicesError::Revoked) {
-                let _ = revoked_tx.send(InternalDaemonEvent::WarrenDeviceRevoked);
+            if let Err(warren_devices::DevicesError::Revoked { verified }) = result {
+                let _ = revoked_tx.send(InternalDaemonEvent::WarrenDeviceRevoked { verified });
             }
             Self::oneshot_send(tx, result, "list_devices response");
         });
@@ -4854,8 +4855,8 @@ impl Daemon {
                         DaemonCommand::LogoutAccount(logout_tx, true),
                     ));
                 }
-                Err(warren_devices::DevicesError::Revoked) => {
-                    let _ = daemon_tx.send(InternalDaemonEvent::WarrenDeviceRevoked);
+                Err(warren_devices::DevicesError::Revoked { verified }) => {
+                    let _ = daemon_tx.send(InternalDaemonEvent::WarrenDeviceRevoked { verified });
                 }
                 _ => {}
             }
@@ -4869,7 +4870,7 @@ impl Daemon {
         id: String,
         name: String,
     ) {
-        let Some((client, _)) = self.warren_devices_client().await else {
+        let Some((client, this)) = self.warren_devices_client().await else {
             Self::oneshot_send(
                 tx,
                 Err(warren_devices::DevicesError::NoWallet),
@@ -4879,9 +4880,9 @@ impl Daemon {
         };
         let daemon_tx = self.tx.clone();
         tokio::spawn(async move {
-            let result = warren_devices::rename(&client, &id, &name).await;
-            if result == Err(warren_devices::DevicesError::Revoked) {
-                let _ = daemon_tx.send(InternalDaemonEvent::WarrenDeviceRevoked);
+            let result = warren_devices::rename(&client, &id, &name, this).await;
+            if let Err(warren_devices::DevicesError::Revoked { verified }) = result {
+                let _ = daemon_tx.send(InternalDaemonEvent::WarrenDeviceRevoked { verified });
             }
             Self::oneshot_send(tx, result, "rename_device response");
         });
@@ -5095,7 +5096,17 @@ impl Daemon {
     /// login reads revoked, which the GUI shows with its revoked view, and the
     /// wallet identity and the device identity are forgotten, so coming back
     /// takes the recovery phrase and registers as a new device.
-    async fn on_warren_device_revoked(&mut self) {
+    ///
+    /// Only a `verified` revocation, one the wallet key signed for this
+    /// device, goes that far. Whoever answers for the API could otherwise make
+    /// every device erase its recovery phrase: an unverified one disconnects,
+    /// keeps the login and the identity, and raises the status banner that
+    /// says so.
+    async fn on_warren_device_revoked(&mut self, verified: bool) {
+        if !verified {
+            self.on_unverified_device_revocation().await;
+            return;
+        }
         if !self.warren_session.revoked_by_account() {
             return;
         }
@@ -5134,6 +5145,24 @@ impl Daemon {
         {
             log::error!("Failed to forget the revoked device identity: {error}");
         }
+    }
+
+    /// The API refused this device as revoked without the wallet's signature
+    /// over it: the tunnel comes down, since no credential will be issued to
+    /// it, and nothing else changes. Acted on once per daemon run.
+    async fn on_unverified_device_revocation(&mut self) {
+        if !self.warren_session.logged_in()
+            || !self
+                .warren_status_cache
+                .set_device_revocation_unconfirmed(true)
+        {
+            return;
+        }
+        log::warn!(
+            "The API refused this device as disconnected, but the wallet did not sign that: \
+             disconnecting and keeping the identity"
+        );
+        self.set_target_state(TargetState::Unsecured).await;
     }
 
     /// The tunnel did not come down within the bound: the logouts waiting on
@@ -7080,6 +7109,9 @@ impl Daemon {
     fn forget_warren_standing(&mut self) {
         self.warren_account_standing = None;
         self.warren_status_cache.set_account_standing(None);
+        // A refusal the wallet left unconfirmed concerned that wallet alone.
+        self.warren_status_cache
+            .set_device_revocation_unconfirmed(false);
         self.management_interface.notifier().forget_owner_backlog();
         if let Some(monitor) = &self.warren_standing_monitor {
             monitor.wallet_changed();

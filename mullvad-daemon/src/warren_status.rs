@@ -289,6 +289,10 @@ pub struct WarrenStatusSnapshot {
     /// up until the clock is fixed, so the UI names the cause instead of
     /// showing an endless connect.
     pub token_clock_skew: Option<TokenClockSkew>,
+    /// The API refused this device as revoked from another device of the
+    /// account, but the wallet did not sign that revocation: the daemon
+    /// disconnected and kept the identity, and the UI says so.
+    pub device_revocation_unconfirmed: bool,
 }
 
 /// A token refresh refused for this device's clock.
@@ -351,6 +355,7 @@ impl Default for WarrenStatusSnapshot {
             announcements: Vec::new(),
             account_standing: None,
             token_clock_skew: None,
+            device_revocation_unconfirmed: false,
         }
     }
 }
@@ -397,6 +402,7 @@ struct InternalState {
     announcements: Vec<crate::warren_announcements_updater::DisplayAnnouncement>,
     account_standing: Option<warren_standing::Standing>,
     token_clock_skew: Option<TokenClockSkew>,
+    device_revocation_unconfirmed: bool,
 }
 
 impl Default for InternalState {
@@ -423,6 +429,7 @@ impl Default for InternalState {
             announcements: Vec::new(),
             account_standing: None,
             token_clock_skew: None,
+            device_revocation_unconfirmed: false,
         }
     }
 }
@@ -498,6 +505,7 @@ impl WarrenStatusCache {
             announcements: inner.announcements.clone(),
             account_standing: inner.account_standing.clone(),
             token_clock_skew: inner.token_clock_skew,
+            device_revocation_unconfirmed: inner.device_revocation_unconfirmed,
         }
     }
 
@@ -814,6 +822,25 @@ impl WarrenStatusCache {
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send_replace(snapshot);
+    }
+
+    /// Record whether the API refused this device as revoked without the
+    /// wallet's signature over it. Answers whether the flag changed, so the
+    /// daemon acts on such a refusal once.
+    pub fn set_device_revocation_unconfirmed(&self, unconfirmed: bool) -> bool {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            if inner.device_revocation_unconfirmed == unconfirmed {
+                return false;
+            }
+            inner.device_revocation_unconfirmed = unconfirmed;
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send_replace(snapshot);
+        true
     }
 
     /// Record the offline monitor's verdict, pushed by the daemon on
@@ -1821,6 +1848,24 @@ mod tests {
     }
 
     // --- Token issuer clock refusal ---------------------------------
+
+    #[test]
+    fn an_unconfirmed_revocation_is_pushed_once_and_cleared() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        assert!(!rx.borrow_and_update().device_revocation_unconfirmed);
+
+        assert!(cache.set_device_revocation_unconfirmed(true));
+        assert!(rx.borrow_and_update().device_revocation_unconfirmed);
+        assert!(
+            !cache.set_device_revocation_unconfirmed(true),
+            "a second refusal changes nothing"
+        );
+        assert!(!rx.has_changed().unwrap());
+
+        assert!(cache.set_device_revocation_unconfirmed(false));
+        assert!(!rx.borrow_and_update().device_revocation_unconfirmed);
+    }
 
     #[test]
     fn default_snapshot_reports_no_token_clock_skew() {

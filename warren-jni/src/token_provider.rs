@@ -371,7 +371,7 @@ fn spawn_refresh<T: HttpTransport + 'static>(
                          account; its token refresh stops"
                     );
                     if let (Some(sink), Some(id)) = (&sinks.revocation, sinks.device_id) {
-                        sink(&wallet_pubkey, id);
+                        sink(&wallet_pubkey, id, manager.device_revocation_verified());
                     }
                     return Round::Over;
                 }
@@ -510,8 +510,8 @@ mod android {
                     crate::standing::store().on_refresh_error(wallet, error, now_unix_secs())
                 }))
                 .with_route_kem_trust(route_kem_trust());
-            let mint = mint.with_revocation_sink(Arc::new(|_, id| {
-                crate::devices::registry().on_revoked_device(id);
+            let mint = mint.with_revocation_sink(Arc::new(|_, id, verified| {
+                crate::devices::registry().on_revoked_device(id, verified);
             }));
             let mint = match crate::devices::registry().device() {
                 Some(device) => mint.with_device(device.clone()),
@@ -1239,7 +1239,9 @@ mod tests {
         let sink = Arc::clone(&reported);
         let mint = TokenMint::new(now_fixed(), None)
             .with_device(device)
-            .with_revocation_sink(Arc::new(move |wallet, id| sink.lock().push((*wallet, id))));
+            .with_revocation_sink(Arc::new(move |wallet, id, verified| {
+                sink.lock().push((*wallet, id, verified));
+            }));
 
         let source = source_a(&mint, &issuer);
         wait_for(|| !reported.lock().is_empty()).await;
@@ -1249,7 +1251,11 @@ mod tests {
             tokio::task::yield_now().await;
         }
 
-        assert_eq!(*reported.lock(), vec![([1; 32], kept)]);
+        assert_eq!(
+            *reported.lock(),
+            vec![([1; 32], kept, false)],
+            "an unsigned revocation is reported unverified"
+        );
         assert_eq!(
             issuer.0.requests.load(Ordering::SeqCst),
             requests,
@@ -1268,7 +1274,7 @@ mod tests {
         let device = install_device(dir.path());
         let mint = TokenMint::new(now_fixed(), None)
             .with_device(device.clone())
-            .with_revocation_sink(Arc::new(move |_, _| {
+            .with_revocation_sink(Arc::new(move |_, _, _| {
                 sink.fetch_add(1, Ordering::SeqCst);
             }));
         let _revoked = source_a(&mint, &issuer);

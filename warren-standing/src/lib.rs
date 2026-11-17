@@ -25,6 +25,8 @@
 
 pub mod device;
 pub mod device_registry;
+#[cfg(test)]
+mod device_revocation_vector_tests;
 pub mod entitlements;
 mod ledger;
 mod natpmp_slot;

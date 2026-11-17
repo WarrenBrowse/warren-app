@@ -11,6 +11,7 @@
 //! to a log.
 
 use std::sync::OnceLock;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use serde_json::json;
 use tokio::sync::watch;
@@ -22,6 +23,10 @@ use crate::device::InstallDevice;
 pub struct DeviceRegistry {
     device: OnceLock<InstallDevice>,
     revoked: watch::Sender<bool>,
+    /// Whether the revocation was proven: the wallet key signed it for this
+    /// device, or this device asked for it. Only a proven one forgets the
+    /// identity and lets the app forget the wallet.
+    verified: AtomicBool,
 }
 
 impl DeviceRegistry {
@@ -32,6 +37,7 @@ impl DeviceRegistry {
         let registry = Self {
             device: OnceLock::new(),
             revoked: watch::Sender::new(false),
+            verified: AtomicBool::new(false),
         };
         if let Some(device) = device {
             registry.install(device);
@@ -59,12 +65,19 @@ impl DeviceRegistry {
     }
 
     /// The registry revoked this device (from another device, or by its own
-    /// logout): the identity is forgotten, so the next login registers as a
-    /// new device, and [`Self::revoked`] reads `true` until the app forgets
-    /// it.
-    pub fn on_revoked(&self) {
+    /// logout): [`Self::revoked`] reads `true` until the app forgets it, and
+    /// the session ends on it. A `verified` revocation (the wallet key signed
+    /// it for this device, or this device asked for it) also forgets the
+    /// identity, so the next login registers as a new device. An unverified
+    /// one keeps it: nothing proves the account holder asked, and the app
+    /// keeps the wallet and tells the user.
+    pub fn on_revoked(&self, verified: bool) {
+        if verified {
+            self.verified.store(true, Ordering::SeqCst);
+        }
         self.revoked.send_replace(true);
-        if let Some(device) = self.device.get()
+        if verified
+            && let Some(device) = self.device.get()
             && let Err(error) = device.forget()
         {
             log::warn!(
@@ -78,14 +91,21 @@ impl DeviceRegistry {
     /// revocation when `id` is the device this install asks as now, nothing
     /// otherwise (another loop of a device already revoked and forgotten,
     /// possibly reporting after a new login).
-    pub fn on_revoked_device(&self, id: DeviceId) {
+    pub fn on_revoked_device(&self, id: DeviceId, verified: bool) {
         if self
             .device
             .get()
             .is_some_and(|device| device.is_current(id))
         {
-            self.on_revoked();
+            self.on_revoked(verified);
         }
+    }
+
+    /// Whether the revocation [`Self::revoked`] reports was proven, the only
+    /// case in which the app may forget the wallet.
+    #[must_use]
+    pub fn revocation_verified(&self) -> bool {
+        self.revoked() && self.verified.load(Ordering::SeqCst)
     }
 
     /// Whether the registry revoked this device since the app last forgot
@@ -98,6 +118,7 @@ impl DeviceRegistry {
     /// The app took the revocation in (the user left the revoked screen, or
     /// logged in again).
     pub fn forget_revocation(&self) {
+        self.verified.store(false, Ordering::SeqCst);
         self.revoked.send_replace(false);
     }
 
@@ -119,7 +140,7 @@ impl DeviceRegistry {
                 "older_client_seen_on": list.older_client_seen_on,
             })
             .to_string(),
-            Err(error) => self.refused(&error, "invalid_device"),
+            Err(error) => self.refused(client, &error, "invalid_device"),
         }
     }
 
@@ -142,7 +163,7 @@ impl DeviceRegistry {
                 }
                 json!({ "ok": true, "this_device": this_device }).to_string()
             }
-            Err(error) => self.refused(&error, "invalid_name"),
+            Err(error) => self.refused(client, &error, "invalid_name"),
         }
     }
 
@@ -160,21 +181,32 @@ impl DeviceRegistry {
             Ok(()) => {
                 let this_device = self.this() == Some(id);
                 if this_device {
-                    self.on_revoked();
+                    self.on_revoked(true);
                 }
                 json!({ "ok": true, "this_device": this_device }).to_string()
             }
-            Err(error) => self.refused(&error, "invalid_device"),
+            Err(error) => self.refused(client, &error, "invalid_device"),
         }
     }
 
     /// The envelope of a refused call. A 400 is the malformed field the call
     /// sent (`bad_request`); a `device_revoked` answer means this device was
-    /// revoked, which is recorded as such.
-    fn refused(&self, error: &ClientError, bad_request: &str) -> String {
+    /// revoked, which is recorded as such, verified when this wallet signed
+    /// it for this device.
+    fn refused<T: HttpTransport>(
+        &self,
+        client: &WarrenApiClient<T>,
+        error: &ClientError,
+        bad_request: &str,
+    ) -> String {
         match error {
-            ClientError::DeviceRevoked => {
-                self.on_revoked();
+            ClientError::DeviceRevoked { revocation } => {
+                let verified = self.this().is_some_and(|this| {
+                    client
+                        .verify_device_revocation(revocation.as_ref(), this)
+                        .is_ok()
+                });
+                self.on_revoked(verified);
                 failure("revoked")
             }
             ClientError::ServerStatus { status: 404, .. } => failure("not_found"),
@@ -217,6 +249,7 @@ mod tests {
         status: u16,
         body: String,
         seen: Arc<Mutex<Vec<(Method, String)>>>,
+        bodies: Arc<Mutex<Vec<Vec<u8>>>>,
     }
 
     impl Registry {
@@ -225,12 +258,14 @@ mod tests {
                 status,
                 body: body.to_owned(),
                 seen: Arc::new(Mutex::new(Vec::new())),
+                bodies: Arc::new(Mutex::new(Vec::new())),
             }
         }
     }
 
     impl HttpTransport for Registry {
         async fn execute(&self, request: HttpRequest) -> Result<HttpResponse, TransportError> {
+            self.bodies.lock().unwrap().push(request.body.clone());
             self.seen
                 .lock()
                 .unwrap()
@@ -270,7 +305,7 @@ mod tests {
         tokio::task::yield_now().await;
         assert!(!woken.is_finished());
 
-        devices.on_revoked();
+        devices.on_revoked(false);
 
         tokio::time::timeout(std::time::Duration::from_secs(5), woken)
             .await
@@ -340,7 +375,18 @@ mod tests {
 
         assert_eq!(answer, json!({ "ok": true, "this_device": true }));
         assert!(devices.revoked());
+        assert!(
+            devices.revocation_verified(),
+            "a logout asked for on this device needs no proof"
+        );
         assert_ne!(devices.this(), Some(this), "the identity is forgotten");
+        let body = registry.bodies.lock().unwrap()[0].clone();
+        let statement: warren_api::DeviceRevocation =
+            serde_json::from_slice(&body).expect("the revocation is signed");
+        assert_eq!(
+            client(&registry).verify_device_revocation(Some(&statement), this),
+            Ok(())
+        );
     }
 
     #[tokio::test]
@@ -400,13 +446,60 @@ mod tests {
 
     #[tokio::test]
     async fn a_caller_the_registry_revoked_records_its_revocation() {
-        let devices = DeviceRegistry::new(None);
+        let dir = tempfile::tempdir().expect("tempdir");
+        let devices = DeviceRegistry::new(Some(install_device_in(dir.path())));
+        let this = devices.this();
         let registry = Registry::answering(403, r#"{"error":"device_revoked"}"#);
 
         let answer = parsed(&devices.list_json(&client(&registry)).await);
 
         assert_eq!(answer, json!({ "ok": false, "error": "revoked" }));
         assert!(devices.revoked());
+        assert!(
+            !devices.revocation_verified(),
+            "an unsigned revocation proves nothing"
+        );
+        assert_eq!(devices.this(), this, "the identity is kept");
+    }
+
+    #[tokio::test]
+    async fn a_revocation_this_wallet_signed_for_this_device_forgets_it() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let devices = DeviceRegistry::new(Some(install_device_in(dir.path())));
+        let this = devices.this().expect("an install device");
+        let statement = warren_contract::device_revocation::sign(
+            &WarrenIdentity::from_seed(&[0x51; 32]).signing_key(),
+            &this,
+            1_794_960_000,
+        );
+        let body = json!({ "error": "device_revoked", "revocation": statement }).to_string();
+        let registry = Registry::answering(403, &body);
+
+        let answer = parsed(&devices.list_json(&client(&registry)).await);
+
+        assert_eq!(answer, json!({ "ok": false, "error": "revoked" }));
+        assert!(devices.revocation_verified());
+        assert_ne!(devices.this(), Some(this), "the identity is forgotten");
+    }
+
+    #[tokio::test]
+    async fn a_revocation_signed_by_another_wallet_keeps_the_identity() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let devices = DeviceRegistry::new(Some(install_device_in(dir.path())));
+        let this = devices.this().expect("an install device");
+        let statement = warren_contract::device_revocation::sign(
+            &WarrenIdentity::from_seed(&[0x52; 32]).signing_key(),
+            &this,
+            1_794_960_000,
+        );
+        let body = json!({ "error": "device_revoked", "revocation": statement }).to_string();
+        let registry = Registry::answering(403, &body);
+
+        parsed(&devices.list_json(&client(&registry)).await);
+
+        assert!(devices.revoked());
+        assert!(!devices.revocation_verified());
+        assert_eq!(devices.this(), Some(this), "the identity is kept");
     }
 
     #[test]
@@ -430,10 +523,24 @@ mod tests {
         let devices = DeviceRegistry::new(Some(install_device_in(dir.path())));
         let current = devices.this().expect("an install device");
 
-        devices.on_revoked_device(current);
+        devices.on_revoked_device(current, true);
 
         assert!(devices.revoked());
+        assert!(devices.revocation_verified());
         assert!(!dir.path().join(crate::device::DEVICE_FILE).exists());
+    }
+
+    #[test]
+    fn an_unverified_revocation_keeps_the_identity() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let devices = DeviceRegistry::new(Some(install_device_in(dir.path())));
+        let current = devices.this().expect("an install device");
+
+        devices.on_revoked_device(current, false);
+
+        assert!(devices.revoked());
+        assert!(!devices.revocation_verified());
+        assert!(dir.path().join(crate::device::DEVICE_FILE).exists());
     }
 
     #[test]
@@ -441,11 +548,11 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let devices = DeviceRegistry::new(Some(install_device_in(dir.path())));
         let revoked = devices.this().expect("an install device");
-        devices.on_revoked_device(revoked);
+        devices.on_revoked_device(revoked, true);
         devices.forget_revocation();
         let logged_in_again = devices.this().expect("a new identity");
 
-        devices.on_revoked_device(revoked);
+        devices.on_revoked_device(revoked, true);
 
         assert!(!devices.revoked());
         assert_eq!(devices.this(), Some(logged_in_again));
@@ -454,10 +561,11 @@ mod tests {
     #[test]
     fn a_revocation_kotlin_took_in_is_forgotten() {
         let devices = DeviceRegistry::new(None);
-        devices.on_revoked();
+        devices.on_revoked(true);
 
         devices.forget_revocation();
 
         assert!(!devices.revoked());
+        assert!(!devices.revocation_verified());
     }
 }

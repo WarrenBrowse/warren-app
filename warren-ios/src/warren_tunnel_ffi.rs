@@ -188,6 +188,10 @@ pub enum WarrenTunnelStateC {
     /// setup: the device clock is wrong and a redial meets the same refusal.
     /// Terminal; the app asks for automatic date and time.
     ClockSkew = 11,
+    /// The API refused this device as revoked, but the account wallet did not
+    /// sign that revocation: the session ended and the identity stays.
+    /// Terminal; the app keeps the wallet and says so.
+    DeviceRevocationUnconfirmed = 12,
 }
 
 /// Tunnel status snapshot.
@@ -261,6 +265,8 @@ pub enum WarrenTunnelEventTagC {
     EventNoSessionToken = 15,
     /// Terminal counterpart of `ClockSkew`.
     EventClockSkew = 16,
+    /// Terminal counterpart of `DeviceRevocationUnconfirmed`.
+    EventDeviceRevocationUnconfirmed = 17,
 }
 
 /// Tagged-union event payload.
@@ -469,6 +475,8 @@ enum TerminalVerdict {
     NoSessionToken,
     /// Two different exits refused this device's time.
     ClockSkew,
+    /// The API refused this device as revoked without the wallet's signature.
+    DeviceRevocationUnconfirmed,
     /// Everything else: the user disconnected, the tunnel was torn down, or
     /// the refusal was one iOS has nowhere to explain yet.
     Ordinary,
@@ -534,6 +542,18 @@ fn refusal_verdict(
     reason.into()
 }
 
+/// The verdict of a session the registry ended on a revocation: the revoked
+/// view, which leads to forgetting the wallet, only when the account wallet
+/// signed the revocation for this device.
+#[cfg(any(test, feature = "tunnel"))]
+fn revocation_verdict(verified: bool) -> TerminalVerdict {
+    if verified {
+        TerminalVerdict::DeviceRevoked
+    } else {
+        TerminalVerdict::DeviceRevocationUnconfirmed
+    }
+}
+
 /// How long a session whose watch closed waits for the supervisor's own
 /// verdict. The supervisor drops that watch as it returns, so its error
 /// follows the closure by a scheduling round, never by a dial.
@@ -594,6 +614,10 @@ fn terminal_for(verdict: TerminalVerdict) -> (WarrenTunnelStateC, WarrenTunnelEv
         TerminalVerdict::ClockSkew => (
             WarrenTunnelStateC::ClockSkew,
             WarrenTunnelEventTagC::EventClockSkew,
+        ),
+        TerminalVerdict::DeviceRevocationUnconfirmed => (
+            WarrenTunnelStateC::DeviceRevocationUnconfirmed,
+            WarrenTunnelEventTagC::EventDeviceRevocationUnconfirmed,
         ),
         TerminalVerdict::Ordinary => (
             WarrenTunnelStateC::Disconnected,
@@ -2001,7 +2025,7 @@ fn spawn_multi_hop(
         let verdict = if arc_for_task.recorded_ban().is_some() {
             TerminalVerdict::Banned
         } else if crate::warren_devices_ffi::registry().revoked() {
-            TerminalVerdict::DeviceRevoked
+            revocation_verdict(crate::warren_devices_ffi::registry().revocation_verified())
         } else if let Some(stopped_for) = stopped_for {
             stopped_for
         } else {
@@ -3356,6 +3380,36 @@ mod tests {
         assert_eq!(
             (state as i32, event as i32),
             (11, 16),
+            "WarrenQuinnAdapter reads these values from the generated header"
+        );
+    }
+
+    /// A revocation the account wallet did not sign ends on a state and an
+    /// event of its own, on which the app keeps the wallet; only a signed one
+    /// reaches the revoked view.
+    #[test]
+    fn only_a_signed_revocation_ends_on_the_revoked_state() {
+        assert_eq!(
+            super::revocation_verdict(true),
+            super::TerminalVerdict::DeviceRevoked
+        );
+        assert_eq!(
+            super::revocation_verdict(false),
+            super::TerminalVerdict::DeviceRevocationUnconfirmed
+        );
+        let (state, event) =
+            super::terminal_for(super::TerminalVerdict::DeviceRevocationUnconfirmed);
+        assert_eq!(
+            state,
+            super::WarrenTunnelStateC::DeviceRevocationUnconfirmed
+        );
+        assert_eq!(
+            event,
+            super::WarrenTunnelEventTagC::EventDeviceRevocationUnconfirmed
+        );
+        assert_eq!(
+            (state as i32, event as i32),
+            (12, 17),
             "WarrenQuinnAdapter reads these values from the generated header"
         );
     }

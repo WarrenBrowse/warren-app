@@ -76,7 +76,7 @@ fn spawn_refresh(
                     "Warren: a device of this install was revoked; its token refresh stops"
                 );
                 if let Some(id) = device_id {
-                    devices.on_revoked_device(id);
+                    devices.on_revoked_device(id, manager.device_revocation_verified());
                 }
                 return;
             }

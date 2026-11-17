@@ -214,6 +214,14 @@ mod ffi {
         crate::ffi_guard(false, || registry().revoked())
     }
 
+    /// Whether that revocation was proven: the account wallet signed it for
+    /// this device, or this device asked for it. Only then is the device
+    /// identity forgotten, and only then may the app forget the wallet.
+    #[unsafe(no_mangle)]
+    pub extern "C" fn warren_device_revocation_verified() -> bool {
+        crate::ffi_guard(false, || registry().revocation_verified())
+    }
+
     /// The revocation was taken in (the user left the revoked screen, or
     /// logged in again).
     #[unsafe(no_mangle)]

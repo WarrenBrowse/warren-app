@@ -132,8 +132,9 @@ pub(crate) fn install_device() -> Option<&'static InstallDevice> {
 }
 
 /// Told when the install's device was revoked from another device of the
-/// account: the daemon disconnects and forgets the identity.
-type RevocationSink = Box<dyn Fn() + Send + Sync>;
+/// account, and whether the wallet signed that revocation: the daemon
+/// disconnects, and forgets the identity only on a signed one.
+type RevocationSink = Box<dyn Fn(bool) + Send + Sync>;
 
 static REVOCATION: OnceLock<RevocationSink> = OnceLock::new();
 
@@ -146,12 +147,12 @@ pub(crate) fn report_revocation_to(sink: RevocationSink) {
 /// install asks as now. Both the session tokens and the port entitlements
 /// learn it, so the receiver takes it once; the loop of an identity already
 /// forgotten (it may resume only after a new login) concerns nobody.
-pub(crate) fn report_revocation(id: DeviceId) {
+pub(crate) fn report_revocation(id: DeviceId, verified: bool) {
     log::info!("Warren: a device of this install was revoked; its credential refresh stops");
     if DEVICE.get().is_some_and(|device| device.is_current(id))
         && let Some(sink) = REVOCATION.get()
     {
-        sink();
+        sink(verified);
     }
 }
 
@@ -247,7 +248,7 @@ fn spawn_refresh(
                 if settle_round(&manager, DEVICE.get()) {
                     announce_refresh(&credentials, &manager, now_unix_secs());
                     if let Some(id) = device_id {
-                        report_revocation(id);
+                        report_revocation(id, manager.device_revocation_verified());
                     }
                     return Round::Over;
                 }

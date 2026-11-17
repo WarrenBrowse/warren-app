@@ -382,6 +382,7 @@ fn warren_status_snapshot_to_proto(
             .map(|skew| types::WarrenTokenClockSkew {
                 offset_secs: skew.offset_secs,
             }),
+        device_revocation_unconfirmed: snap.device_revocation_unconfirmed,
     }
 }
 
@@ -3246,11 +3247,15 @@ fn map_devices_error(error: crate::warren_devices::DevicesError) -> Status {
         DevicesError::NotFound => Status::not_found(message),
         // The same signal as a connect refused on a revoked device, which the
         // GUI already reads as one.
-        DevicesError::Revoked => Status::with_details(
+        DevicesError::Revoked { verified: true } => Status::with_details(
             Code::Unauthenticated,
             message,
             mullvad_management_interface::DEVICE_REVOKED_DETAILS.into(),
         ),
+        // Nothing proves the account holder asked: the device keeps its
+        // identity, and the GUI shows the status banner rather than the
+        // revoked view.
+        DevicesError::Revoked { verified: false } => Status::permission_denied(message),
         DevicesError::Unavailable => Status::unavailable(message),
     }
 }
@@ -3499,12 +3504,17 @@ mod session_gate_status_tests {
             map_devices_error(DevicesError::Unavailable).code(),
             Code::Unavailable
         );
-        let revoked = map_devices_error(DevicesError::Revoked);
+        let revoked = map_devices_error(DevicesError::Revoked { verified: true });
         assert_eq!(revoked.code(), Code::Unauthenticated);
         assert_eq!(
             revoked.details(),
             mullvad_management_interface::DEVICE_REVOKED_DETAILS
         );
+        // Only a revocation the wallet signed is the signal the GUI turns
+        // into its revoked view.
+        let unverified = map_devices_error(DevicesError::Revoked { verified: false });
+        assert_eq!(unverified.code(), Code::PermissionDenied);
+        assert!(unverified.details().is_empty());
     }
 
     #[test]
@@ -3778,6 +3788,21 @@ mod tests {
         );
         let steady = super::warren_status_snapshot_to_proto(Default::default());
         assert_eq!(steady.token_clock_skew, None);
+    }
+
+    /// A revocation the wallet did not sign reaches the UI, which then says
+    /// the device was disconnected and kept its identity.
+    #[test]
+    fn an_unconfirmed_revocation_reaches_the_status() {
+        let snapshot = crate::warren_status::WarrenStatusSnapshot {
+            device_revocation_unconfirmed: true,
+            ..Default::default()
+        };
+        assert!(super::warren_status_snapshot_to_proto(snapshot).device_revocation_unconfirmed);
+        assert!(
+            !super::warren_status_snapshot_to_proto(Default::default())
+                .device_revocation_unconfirmed
+        );
     }
 
     fn a_strike() -> types::WarrenAccountStrike {

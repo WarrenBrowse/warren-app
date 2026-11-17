@@ -52,8 +52,8 @@ mod android {
                 .with_ban_sink(Arc::new(|wallet, error| {
                     crate::standing::store().on_refresh_error(wallet, error, now_unix_secs())
                 }))
-                .with_revocation_sink(Arc::new(|_, id| {
-                    crate::devices::registry().on_revoked_device(id);
+                .with_revocation_sink(Arc::new(|_, id, verified| {
+                    crate::devices::registry().on_revoked_device(id, verified);
                 }));
             match crate::devices::registry().device() {
                 Some(device) => mint.with_device(device.clone()),

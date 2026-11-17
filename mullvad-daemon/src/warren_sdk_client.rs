@@ -171,6 +171,16 @@ impl SharedWarrenApiClient {
         self.client().revoke_device(id).await
     }
 
+    /// Whether the wallet backing this client signed `revocation` for
+    /// `device` ([`WarrenApiClient::verify_device_revocation`]).
+    pub fn verify_device_revocation(
+        &self,
+        revocation: Option<&warren_api::DeviceRevocation>,
+        device: warren_api::DeviceId,
+    ) -> Result<(), warren_api::DeviceRevocationError> {
+        self.client().verify_device_revocation(revocation, device)
+    }
+
     /// Signed `DELETE /v1/account`.
     pub async fn delete_account(&self) -> Result<(), ClientError> {
         self.client().delete_account().await

@@ -27,18 +27,35 @@ pub enum DevicesError {
     #[error("the account has no such device")]
     NotFound,
     /// This device was revoked from another device of the account.
+    /// `verified` when the wallet key signed that revocation for this device,
+    /// the only case in which the daemon forgets the identity.
     #[error("this device was revoked")]
-    Revoked,
+    Revoked {
+        /// Whether the wallet key signed the revocation of this device.
+        verified: bool,
+    },
     /// The API could not be reached or answered otherwise; a retry can work.
     #[error("the device registry could not be reached, retry later")]
     Unavailable,
 }
 
 /// Maps the SDK error of a device route to the verdict the GUI shows. Only
-/// the status and the typed refusal are read: a body is never logged.
-pub fn classify(error: &ClientError) -> DevicesError {
+/// the status and the typed refusal are read: a body is never logged. A
+/// revocation is verified against the wallet of `client` and this device,
+/// `this`.
+pub fn classify(
+    client: &SharedWarrenApiClient,
+    this: Option<DeviceId>,
+    error: &ClientError,
+) -> DevicesError {
     match error {
-        ClientError::DeviceRevoked => DevicesError::Revoked,
+        ClientError::DeviceRevoked { revocation } => DevicesError::Revoked {
+            verified: this.is_some_and(|this| {
+                client
+                    .verify_device_revocation(revocation.as_ref(), this)
+                    .is_ok()
+            }),
+        },
         ClientError::ServerStatus { status: 404, .. } => DevicesError::NotFound,
         ClientError::ServerStatus { status: 400, .. } => DevicesError::InvalidDevice,
         _ => DevicesError::Unavailable,
@@ -91,7 +108,7 @@ pub async fn list(
     client
         .list_devices(this)
         .await
-        .map_err(|error| classify(&error))
+        .map_err(|error| classify(client, this, &error))
 }
 
 /// The device `id` names, or why it names none.
@@ -113,7 +130,7 @@ pub async fn revoke(
     client
         .revoke_device(id)
         .await
-        .map_err(|error| classify(&error))?;
+        .map_err(|error| classify(client, this, &error))?;
     Ok(this == Some(id))
 }
 
@@ -136,6 +153,7 @@ pub async fn rename(
     client: &SharedWarrenApiClient,
     id: &str,
     name: &str,
+    this: Option<DeviceId>,
 ) -> Result<(), DevicesError> {
     if client.wallet().is_none() {
         return Err(DevicesError::NoWallet);
@@ -145,7 +163,7 @@ pub async fn rename(
     client
         .rename_device(id, &name)
         .await
-        .map_err(|error| classify(&error))
+        .map_err(|error| classify(client, this, &error))
 }
 
 #[cfg(test)]
@@ -173,26 +191,69 @@ mod tests {
         }
     }
 
+    /// A client of the wallet seeded `0x51`, as [`client_of`] builds,
+    /// against an API it never reaches.
+    fn offline_client() -> SharedWarrenApiClient {
+        SharedWarrenApiClient::new(
+            "https://api.example.test".to_owned(),
+            std::sync::Arc::new(std::sync::RwLock::new(zeroize::Zeroizing::new([0x51; 32]))),
+        )
+    }
+
+    fn plain(error: &ClientError) -> DevicesError {
+        classify(&offline_client(), Some(id(7)), error)
+    }
+
     #[test]
     fn a_device_the_account_does_not_have_is_not_found() {
-        assert_eq!(classify(&status(404)), DevicesError::NotFound);
+        assert_eq!(plain(&status(404)), DevicesError::NotFound);
     }
 
     #[test]
     fn a_malformed_device_id_is_invalid() {
-        assert_eq!(classify(&status(400)), DevicesError::InvalidDevice);
+        assert_eq!(plain(&status(400)), DevicesError::InvalidDevice);
         assert_eq!(device_id("not a device"), Err(DevicesError::InvalidDevice));
     }
 
     #[test]
-    fn a_revoked_caller_is_told_so() {
-        assert_eq!(classify(&ClientError::DeviceRevoked), DevicesError::Revoked);
+    fn an_unsigned_revocation_is_told_but_not_verified() {
+        assert_eq!(
+            plain(&ClientError::DeviceRevoked { revocation: None }),
+            DevicesError::Revoked { verified: false }
+        );
+    }
+
+    #[test]
+    fn a_revocation_this_wallet_signed_for_this_device_is_verified() {
+        let wallet = warren_identity::WarrenIdentity::from_seed(&[0x51; 32]).signing_key();
+        let signed = |device: DeviceId| ClientError::DeviceRevoked {
+            revocation: Some(warren_contract::device_revocation::sign(
+                &wallet,
+                &device,
+                1_794_960_000,
+            )),
+        };
+
+        assert_eq!(
+            plain(&signed(id(7))),
+            DevicesError::Revoked { verified: true }
+        );
+        assert_eq!(
+            plain(&signed(id(8))),
+            DevicesError::Revoked { verified: false },
+            "a sibling device's revocation proves nothing about this one"
+        );
+        assert_eq!(
+            classify(&offline_client(), None, &signed(id(7))),
+            DevicesError::Revoked { verified: false },
+            "without a device there is nothing to verify against"
+        );
     }
 
     #[test]
     fn any_other_failure_is_worth_a_retry() {
-        assert_eq!(classify(&status(503)), DevicesError::Unavailable);
-        assert_eq!(classify(&status(403)), DevicesError::Unavailable);
+        assert_eq!(plain(&status(503)), DevicesError::Unavailable);
+        assert_eq!(plain(&status(403)), DevicesError::Unavailable);
     }
 
     #[test]
@@ -360,7 +421,13 @@ mod tests {
             .create();
 
         assert_eq!(
-            rename(&client_of(&server), &String::from(id(4)), "  Blue fox ").await,
+            rename(
+                &client_of(&server),
+                &String::from(id(4)),
+                "  Blue fox ",
+                None
+            )
+            .await,
             Ok(())
         );
         renamed.assert();
@@ -378,7 +445,7 @@ mod tests {
 
         for name in ["", "   ", &"x".repeat(41), "tab\there", "bell\u{7}"] {
             assert_eq!(
-                rename(&client, &device, name).await,
+                rename(&client, &device, name, None).await,
                 Err(DevicesError::InvalidName),
                 "{name:?}"
             );
@@ -400,7 +467,7 @@ mod tests {
             .create();
 
         assert_eq!(
-            rename(&client_of(&server), &String::from(id(6)), "Blue fox").await,
+            rename(&client_of(&server), &String::from(id(6)), "Blue fox", None).await,
             Err(DevicesError::NotFound)
         );
     }
@@ -420,7 +487,7 @@ mod tests {
         );
 
         assert_eq!(
-            rename(&logged_out, &String::from(id(7)), "Blue fox").await,
+            rename(&logged_out, &String::from(id(7)), "Blue fox", None).await,
             Err(DevicesError::NoWallet)
         );
         never.assert();

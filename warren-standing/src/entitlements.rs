@@ -55,7 +55,7 @@ pub type BanSink = Arc<dyn Fn(&[u8; 32], &TokenClientError) -> bool + Send + Syn
 /// the device is the one the install asks as now
 /// ([`InstallDevice::is_current`]): another loop of a device already revoked
 /// and forgotten reports it too, possibly after a new login.
-pub type RevocationSink = Arc<dyn Fn(&[u8; 32], DeviceId) + Send + Sync>;
+pub type RevocationSink = Arc<dyn Fn(&[u8; 32], DeviceId, bool) + Send + Sync>;
 
 /// What one rule presents on a NAT-PMP cycle, or `None` for a bare request.
 /// Structurally the engine's `warrenguard_natpmp_client::CredentialProvider`,
@@ -416,7 +416,7 @@ async fn refresh_forever<T: HttpTransport + 'static>(
                  another device of the account"
             );
             if let (Some(sink), Some(id)) = (&sinks.revocation, sinks.device_id) {
-                sink(&wallet_pubkey, id);
+                sink(&wallet_pubkey, id, manager.device_revocation_verified());
             }
             return;
         }

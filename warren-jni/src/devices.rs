@@ -63,7 +63,7 @@ mod tests {
             "a device still registered keeps its session"
         );
 
-        registry.on_revoked();
+        registry.on_revoked(false);
         ended.await;
 
         assert_eq!(

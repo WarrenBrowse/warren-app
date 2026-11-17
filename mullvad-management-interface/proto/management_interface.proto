@@ -1096,6 +1096,10 @@ message WarrenStatus {
   // cannot come up, so the UI tells the user to set the clock right. Absent
   // once a refresh succeeds.
   WarrenTokenClockSkew token_clock_skew = 20;
+  // The API refused this device as disconnected from another device of the
+  // account, but the account wallet did not sign that: the daemon
+  // disconnected and kept the identity, and the UI says so.
+  bool device_revocation_unconfirmed = 21;
 }
 
 // A token refresh refused for this device's clock.
