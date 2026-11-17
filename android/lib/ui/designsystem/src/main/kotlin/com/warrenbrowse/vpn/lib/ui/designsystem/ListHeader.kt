@@ -22,6 +22,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.ui.designsystem.preview.PreviewColumn
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 
 private val LIST_HEADER_MIN_HEIGHT = 48.dp
 
@@ -60,6 +62,9 @@ fun ListHeader(
             modifier =
                 Modifier.defaultMinSize(minHeight = LIST_HEADER_MIN_HEIGHT)
                     .height(IntrinsicSize.Min)
+                    // A section title: TalkBack users move between sections by
+                    // headings.
+                    .semantics { heading() }
                     .then(modifier),
             verticalAlignment = Alignment.CenterVertically,
         ) {
