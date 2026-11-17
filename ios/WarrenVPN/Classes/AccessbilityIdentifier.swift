@@ -65,6 +65,8 @@ public enum AccessibilityIdentifier: Equatable {
     case walletMnemonicPhraseField
     case walletMnemonicRestoreSubmitButton
     case walletBackupAcknowledgeToggle
+    case walletBackupCheckWordField
+    case walletBackupCheckContinueButton
     // Onboarding wizard (post-login, desktop parity).
     case onboardingWelcomeNextButton
     case onboardingWalletContinueButton

@@ -40,14 +40,50 @@ class WalletMnemonicDisplayPage: Page {
 
     @discardableResult func tapConfirmWrittenDownButton() -> Self {
         // The creation flow gates the confirm button behind the explicit
-        // acknowledgement row; tick it first when it is present so
-        // callers do not have to care about the gate.
+        // acknowledgement row, then asks for three words of the phrase; both
+        // are answered here so callers do not have to care about the gate.
+        let words = displayedWords()
         let toggle = app.buttons[AccessibilityIdentifier.walletBackupAcknowledgeToggle]
-        if toggle.exists, toggle.value as? String == "0" {
+        let gated = toggle.exists
+        if gated, toggle.value as? String == "0" {
             toggle.tap()
         }
         app.buttons[AccessibilityIdentifier.walletMnemonicConfirmButton].tap()
+        if gated {
+            answerBackupCheck(words: words)
+        }
         return self
+    }
+
+    /// The phrase as the grid shows it, by one-based position: each word cell
+    /// reads "<position>. <word>" to VoiceOver.
+    private func displayedWords() -> [Int: String] {
+        var words: [Int: String] = [:]
+        let cells = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", "^[0-9]+\\. [a-z]+$"))
+        for cell in cells.allElementsBoundByIndex {
+            let parts = cell.label.split(separator: " ")
+            if let position = Int(parts[0].dropLast()) {
+                words[position] = String(parts[1])
+            }
+        }
+        return words
+    }
+
+    /// Types back the words the check asks for, each field labelled with its
+    /// one-based position, and continues.
+    private func answerBackupCheck(words: [Int: String]) {
+        let fields = app.textFields.matching(identifier: AccessibilityIdentifier.walletBackupCheckWordField.asString)
+        XCTAssertTrue(fields.firstMatch.waitForExistence(timeout: 5))
+        for field in fields.allElementsBoundByIndex {
+            let digits = field.label.filter(\.isNumber)
+            guard let position = Int(digits), let word = words[position] else {
+                XCTFail("backup check field without a known position: \(field.label)")
+                return
+            }
+            field.tap()
+            field.typeText(word)
+        }
+        app.buttons[AccessibilityIdentifier.walletBackupCheckContinueButton].tap()
     }
 }
 

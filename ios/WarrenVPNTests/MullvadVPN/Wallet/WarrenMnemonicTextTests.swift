@@ -58,3 +58,44 @@ final class WarrenMnemonicTextTests: XCTestCase {
         XCTAssertEqual(WarrenMnemonicText.target(for: twentyFour), 24)
     }
 }
+
+/// Ticking "I have written it down" proves nothing: before a new account is
+/// used, the backup check asks for words only someone holding the phrase can
+/// give. Same rule and same cases as the desktop and Android apps.
+final class WarrenBackupCheckTests: XCTestCase {
+    private let phrase = "legal winner thank year wave sausage worth useful legal winner thank yellow"
+
+    private func sequence(_ values: Double...) -> () -> Double {
+        var index = 0
+        return {
+            defer { index += 1 }
+            return values[index % values.count]
+        }
+    }
+
+    func testAsksForThreeDistinctPositionsOfThePhraseInOrder() {
+        // 0.99 twice draws the last position twice: the duplicate is redrawn.
+        XCTAssertEqual(
+            WarrenMnemonicText.backupCheckPositions(wordCount: 12, random: sequence(0.99, 0.99, 0.0, 0.5)),
+            [0, 6, 11]
+        )
+    }
+
+    func testPassesWhenEveryAskedWordIsGivenWhateverTheCaseAndSpacing() {
+        XCTAssertTrue(WarrenMnemonicText.backupCheckPasses(
+            mnemonic: phrase, positions: [0, 6, 11], answers: ["Legal ", " worth", "YELLOW"]
+        ))
+    }
+
+    func testFailsWhenAWordIsWrong() {
+        XCTAssertFalse(WarrenMnemonicText.backupCheckPasses(
+            mnemonic: phrase, positions: [0, 6, 11], answers: ["legal", "worth", "year"]
+        ))
+    }
+
+    func testFailsWhenAWordIsMissing() {
+        XCTAssertFalse(WarrenMnemonicText.backupCheckPasses(
+            mnemonic: phrase, positions: [0, 6, 11], answers: ["legal", "", "yellow"]
+        ))
+    }
+}

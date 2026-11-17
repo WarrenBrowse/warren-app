@@ -42,4 +42,34 @@ enum WarrenMnemonicText {
             .map { $0.lowercased() }
             .joined(separator: " ")
     }
+
+    /// How many words of a freshly shown recovery phrase the user types back
+    /// before the account is used. Three out of twelve is what a person who
+    /// wrote the phrase down answers in seconds and someone who only ticked a
+    /// box cannot. The desktop and Android twins are `backup-check.ts` and
+    /// `BackupCheck.kt`.
+    static let backupCheckWordCount = 3
+
+    /// Draws the zero-based positions of the words to ask for, distinct and in
+    /// phrase order.
+    static func backupCheckPositions(
+        wordCount: Int,
+        random: () -> Double = { Double.random(in: 0 ..< 1) }
+    ) -> [Int] {
+        let wanted = min(backupCheckWordCount, wordCount)
+        var positions = Set<Int>()
+        while positions.count < wanted {
+            positions.insert(min(wordCount - 1, Int(random() * Double(wordCount))))
+        }
+        return positions.sorted()
+    }
+
+    static func backupCheckPasses(mnemonic: String, positions: [Int], answers: [String]) -> Bool {
+        let words = normalize(mnemonic).split(separator: " ").map(String.init)
+        guard !positions.isEmpty, positions.count == answers.count else { return false }
+        return zip(positions, answers).allSatisfy { position, answer in
+            let given = answer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            return !given.isEmpty && words.indices.contains(position) && given == words[position]
+        }
+    }
 }

@@ -20,7 +20,8 @@ import UIKit
 ///
 /// With `requiresAcknowledgement` (the wallet-creation backup gate) the
 /// confirm button stays disabled until the user explicitly checks the
-/// "I have written it down" row, matching the desktop login backup step.
+/// "I have written it down" row, and then asks for three words of the phrase
+/// before `onConfirmed` runs, matching the desktop login backup step.
 ///
 /// Accessibility: VoiceOver reads each word as `index. word` (e.g. "1. wisdom").
 public struct WarrenMnemonicDisplayView: View {
@@ -35,6 +36,12 @@ public struct WarrenMnemonicDisplayView: View {
 
     @State private var acknowledged = false
 
+    // The wallet-creation gate ends with the user typing back a few words of
+    // the phrase: `checkPositions` is set while that check is on screen.
+    @State private var checkPositions: [Int]?
+    @State private var checkAnswers: [String] = []
+    @State private var checkMismatch = false
+
     public init(mnemonic: String, requiresAcknowledgement: Bool = false, onConfirmed: @escaping () -> Void) {
         self.mnemonic = mnemonic
         self.requiresAcknowledgement = requiresAcknowledgement
@@ -43,26 +50,19 @@ public struct WarrenMnemonicDisplayView: View {
 
     public var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text(String(localized: "Your 12 recovery words", table: "Wallet"))
-                    .font(.warrenLarge)
-                    .foregroundColor(.white)
-                WarrenMnemonicWarningCallout()
-                WarrenMnemonicGrid(mnemonic: mnemonic)
-                WarrenMnemonicCopyButton(mnemonic: mnemonic)
-                if requiresAcknowledgement {
-                    WarrenAcknowledgeRow(
-                        isOn: $acknowledged,
-                        label: String(
-                            localized: "I have written down my recovery phrase in a safe place.",
-                            table: "Wallet"
-                        ),
-                        identifier: .walletBackupAcknowledgeToggle
-                    )
-                }
-                confirmButton
+            if let positions = checkPositions {
+                WarrenBackupCheckView(
+                    positions: positions,
+                    answers: $checkAnswers,
+                    mismatch: $checkMismatch,
+                    onContinue: { confirmBackupCheck(positions: positions) },
+                    onBack: { checkPositions = nil }
+                )
+                .padding()
+            } else {
+                phraseContent
+                    .padding()
             }
-            .padding()
         }
         .background(Color.Warren.navy)
         // No container identifier: it would propagate to and clobber the
@@ -70,12 +70,55 @@ public struct WarrenMnemonicDisplayView: View {
         // the confirm button.
     }
 
+    private var phraseContent: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text(String(localized: "Your 12 recovery words", table: "Wallet"))
+                .font(.warrenLarge)
+                .foregroundColor(.white)
+            WarrenMnemonicWarningCallout()
+            WarrenMnemonicGrid(mnemonic: mnemonic)
+            WarrenMnemonicCopyButton(mnemonic: mnemonic)
+            if requiresAcknowledgement {
+                WarrenAcknowledgeRow(
+                    isOn: $acknowledged,
+                    label: String(
+                        localized: "I have written down my recovery phrase in a safe place.",
+                        table: "Wallet"
+                    ),
+                    identifier: .walletBackupAcknowledgeToggle
+                )
+            }
+            confirmButton
+        }
+    }
+
     private var isConfirmEnabled: Bool {
         !requiresAcknowledgement || acknowledged
     }
 
+    private func confirm() {
+        guard requiresAcknowledgement else {
+            onConfirmed()
+            return
+        }
+        let positions = WarrenMnemonicText.backupCheckPositions(
+            wordCount: WarrenMnemonicText.wordCount(mnemonic)
+        )
+        checkAnswers = Array(repeating: "", count: positions.count)
+        checkMismatch = false
+        checkPositions = positions
+    }
+
+    private func confirmBackupCheck(positions: [Int]) {
+        if WarrenMnemonicText.backupCheckPasses(mnemonic: mnemonic, positions: positions, answers: checkAnswers) {
+            onConfirmed()
+        } else {
+            checkMismatch = true
+        }
+    }
+
     private var confirmButton: some View {
-        Button(action: onConfirmed) {
+        Button(action: confirm) {
             Text(
                 requiresAcknowledgement
                     ? String(localized: "Continue", table: "Wallet")
@@ -90,6 +133,101 @@ public struct WarrenMnemonicDisplayView: View {
         }
         .disabled(!isConfirmEnabled)
         .accessibilityIdentifier(AccessibilityIdentifier.walletMnemonicConfirmButton.asString)
+    }
+}
+
+/// The last step of the wallet-creation backup: a few words of the phrase,
+/// typed back, before the account is used. Ticking "I have written it down"
+/// proves nothing; these words only someone holding the phrase can give. Same
+/// rule as the desktop `BackupCheckStep` and the Android backup screen.
+struct WarrenBackupCheckView: View {
+    /// Zero-based positions of the asked words, in phrase order.
+    let positions: [Int]
+    @Binding var answers: [String]
+    @Binding var mismatch: Bool
+    let onContinue: () -> Void
+    let onBack: () -> Void
+
+    private var isComplete: Bool {
+        answers.allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text(String(localized: "Check your recovery phrase", table: "Wallet"))
+                .font(.warrenLarge)
+                .foregroundColor(.white)
+            Text(String(
+                localized: "To make sure you saved it, type these words from your recovery phrase.",
+                table: "Wallet"
+            ))
+            .font(.warrenSmall)
+            .foregroundColor(.white.opacity(0.8))
+            .fixedSize(horizontal: false, vertical: true)
+
+            ForEach(Array(positions.enumerated()), id: \.element) { index, position in
+                wordField(index: index, position: position)
+            }
+
+            if mismatch {
+                Text(String(
+                    localized: "These words do not match your recovery phrase. Check what you wrote down.",
+                    table: "Wallet"
+                ))
+                .font(.warrenSmall)
+                .foregroundColor(.Warren.error)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Button(action: onContinue) {
+                Text(String(localized: "Continue", table: "Wallet"))
+                    .font(.warrenSmallSemiBold)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.Warren.success.opacity(isComplete ? 1 : 0.4))
+                    .foregroundColor(.white.opacity(isComplete ? 1 : 0.6))
+                    .cornerRadius(10)
+            }
+            .disabled(!isComplete)
+            .accessibilityIdentifier(AccessibilityIdentifier.walletBackupCheckContinueButton.asString)
+
+            Button(action: onBack) {
+                Text(String(localized: "Back", table: "Wallet"))
+                    .font(.warrenSmall)
+                    .foregroundColor(.Warren.yellow)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+
+    private func wordField(index: Int, position: Int) -> some View {
+        let label = String(format: String(localized: "Word %d", table: "Wallet"), position + 1)
+        return VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.instrumentSans(.caption2))
+                .foregroundColor(.white.opacity(0.6))
+            TextField("", text: Binding(
+                get: { answers[index] },
+                set: { value in
+                    mismatch = false
+                    answers[index] = value
+                }
+            ))
+            .font(.jetBrainsMono(.body))
+            .foregroundColor(.white)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .keyboardType(.asciiCapable)
+            .privacySensitive()
+            .padding(.vertical, 8)
+            .padding(.horizontal, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(mismatch ? Color.Warren.error : Color.Warren.yellow.opacity(0.4), lineWidth: 1)
+            )
+            .accessibilityLabel(label)
+            .accessibilityIdentifier(AccessibilityIdentifier.walletBackupCheckWordField.asString)
+        }
     }
 }
 
