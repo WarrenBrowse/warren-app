@@ -241,11 +241,7 @@ This is supported on Linux (x86_64) as well as macOS (x86_64 and aarch64).
    ```
    or
    ```bash
-   ./gradlew debug
-   ```
-   or
-   ```bash
-   ./gradlew assembleOssProdDebug
+   ./gradlew assembleProdDebug
    ```
 
 ## Configure signing key
@@ -366,43 +362,9 @@ path or the main screens change substantially; the `betaNonMinifiedRelease` and
 
 ## Reproducible builds
 
-Reproducible builds are a way to verify that the app was built from the exact source code it claims to be built from. When a build is reproducible, compiling the same source code with the same tools will always produce bit-for-bit identical output.
-
-The Warren Android app is by default reproducible when built using our build container, as the container ensures a consistent build environment with fixed versions of all tools and dependencies.
-
-When building without the container on Linux systems, reproducibility depends on having the exact same versions of system tools (compilers, build tools, etc) installed. Small differences in tool versions or configurations can lead to different build outputs even when using the same source code.
-
-> **Make sure that any `gradle.properties` has not changed or been overridden it will affect the reproducibility of the build such as changing `warren.app.build.cargo.targets` and `warren.app.config.inAppVersionNotifications.enable`.**
-
-To maximize reproducibility when building without the container:
-
-- Build the app on a **Linux system or virtual machine**.
-- Use the exact same versions of all build dependencies as specified in the [root Dockerfile](../building/Dockerfile)
-  and [Android Dockerfile](docker/Dockerfile). This includes for example Android SDK and NDK versions.
-
-### How to verify reproducible builds across environments
-
-A simple way to check that a build is reproducible across environments is to build the release version of the app with and without the container and comparing the checksums of the produced APKs.
-
-1. Build the app with the container: `../building/containerized-build.sh android assembleOssProdRelease`
-1. Copy the resulting APK to a different folder as it will be overwritten in the following step: `app/build/outputs/apk/ossProd/release/app-oss-prod-release-unsigned.apk release-container.apk`
-1. Build the app locally without the container: `./gradlew assembleOssProdRelease`
-1. Compare the checksums of the two APKs: `sha256sum release-container.apk app/build/outputs/apk/ossProd/release/app-oss-prod-release-unsigned.apk`
-
-## Verifying that an official release is reproducible
-
-1. Obtain the release APK from [GitHub releases](https://github.com/WarrenBrowse/warren-app/releases)
-1. Checkout the release tag: `git checkout android/<version>`
-1. Build a release build using our [build instructions](#release-build)
-1. Delete the signatures from the two APKs by running `zip -d app-oss-prod-release.apk "META-INF/*"` and `zip -d WarrenVPN-<version>.apk "META-INF/*"`
-1. Compare the checksums of the two APKs: `sha256sum app-oss-prod-release.apk WarrenVPN-<version>.apk`. If the checksums are equal the build is reproducible.
-
-### Troubleshooting reproducibility
-
-If two APKs built from the same commit have different checksums the build is not reproducible. This could be because of either:
-
-1. A build dependency on the local system has the wrong version.
-1. There is a bug that breaks the build reproducibility.
-1. The APK built is a version prior to `2025.2-beta1`, which is the first version that supports reproducible builds.
-
-If you suspect that a bug is causing the build to not be reproducible, please open a Github issue.
+No job verifies today that the published APK can be rebuilt bit for bit. The
+inherited verification (an F-Droid recipe and a workflow comparing a container
+build with an fdroidserver build) targeted build variants this fork removed and
+was deleted with them. A verification for this fork compares two independent
+`assembleBetaRelease` builds of the same tag, signatures stripped
+(`zip -d <apk> "META-INF/*"`), by checksum.

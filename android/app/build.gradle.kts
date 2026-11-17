@@ -552,18 +552,6 @@ tasks.register("printVersion") {
     }
 }
 
-tasks.register("debug") { dependsOn("assembleOssProdDebug") }
-
-tasks.register("debugPlay") { dependsOn("assemblePlayProdDebug") }
-
-registerReleaseTask(
-    "fdroidRelease",
-    appVersion,
-    listOf("createOssProdReleaseDistApk"),
-    skipClean = true,
-    skipDirtyCheck = true,
-)
-
 registerReleaseTask("fullRelease", appVersion, fullReleaseTasks(appVersion))
 
 play {
