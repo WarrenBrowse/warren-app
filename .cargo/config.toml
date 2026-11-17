@@ -2,11 +2,14 @@
 # /Brepro replaces the PE TimeDateStamp (normally the link time) with a hash of the
 # inputs, and /PDBALTPATH:%_PDB% embeds only the PDB file name, not its absolute path,
 # in the PE debug directory. Both are required for reproducible builds.
+# -Ccontrol-flow-guard: rustc leaves Control Flow Guard off by default, and the
+# daemon runs as SYSTEM. ci/check-pe-hardening.sh checks the shipped binaries.
 [target.x86_64-pc-windows-msvc]
 rustflags = [
   "-Ctarget-feature=+crt-static",
   "-Clink-arg=/Brepro",
   "-Clink-arg=/PDBALTPATH:%_PDB%",
+  "-Ccontrol-flow-guard",
 ]
 
 [target.i686-pc-windows-msvc]
@@ -14,6 +17,7 @@ rustflags = [
   "-Ctarget-feature=+crt-static",
   "-Clink-arg=/Brepro",
   "-Clink-arg=/PDBALTPATH:%_PDB%",
+  "-Ccontrol-flow-guard",
 ]
 
 [target.aarch64-pc-windows-msvc]
@@ -21,6 +25,7 @@ rustflags = [
   "-Ctarget-feature=+crt-static",
   "-Clink-arg=/Brepro",
   "-Clink-arg=/PDBALTPATH:%_PDB%",
+  "-Ccontrol-flow-guard",
 ]
 
 [target.x86_64-unknown-linux-gnu.mnl]

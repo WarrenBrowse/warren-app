@@ -59,6 +59,10 @@ case "${1:?usage: windows-release.sh <prepare|sources|build|stage>}" in
         [ "$WARREN_CHANNEL" = beta ] && export WARREN_PRODUCT_ENV=beta
         timed ./build.sh --optimize "${sign[@]}"
         bash ci/check-nsis-stub.sh dist/*.exe
+        bash ci/check-pe-hardening.sh dist-assets/warren-daemon.exe dist-assets/warren.exe \
+            dist-assets/warren-problem-report.exe dist-assets/warren-setup.exe \
+            windows/winfw/bin/x64-Release/winfw.dll \
+            dist-assets/binaries/x86_64-pc-windows-msvc/wintun/wintun.dll
         ;;
     stage)
         stage_env=prod

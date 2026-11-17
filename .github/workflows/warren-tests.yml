@@ -114,6 +114,11 @@ jobs:
       - name: NSIS stub age check (shell tests)
         run: bash ci/test-check-nsis-stub.sh
 
+      # The Windows release refuses a binary built without ASLR, DEP or
+      # Control Flow Guard.
+      - name: Windows binary hardening check (shell tests)
+        run: bash ci/test-check-pe-hardening.sh
+
       # The installers extract the headless bundles as root, which restores
       # the owner each entry records.
       - name: Headless bundle archive (shell tests)
