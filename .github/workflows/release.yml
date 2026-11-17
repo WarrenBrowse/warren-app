@@ -76,7 +76,7 @@
 #     `cargo run -p mullvad-release -- generate-key`. NEVER reuse the
 #     relay/admin signing key. When unset, update metadata is not published.
 #
-#   WARREN_UPDATES_SSH_KEY / _HOST / _USER / _PATH  (publish-update-metadata)
+#   WARREN_UPDATES_SSH_KEY / _HOST / _USER  (publish-update-metadata)
 #     SSH private key + target for streaming the signed `*.json` manifests to
 #     the Caddy host that serves them (Let's Encrypt cert, matching the
 #     client pin) at https://api.warrenbrowse.com/updates/desktop/. Values:
@@ -1176,7 +1176,6 @@ jobs:
       WARREN_UPDATES_SSH_KEY: ${{ secrets.WARREN_UPDATES_SSH_KEY }}
       WARREN_UPDATES_SSH_HOST: ${{ secrets.WARREN_UPDATES_SSH_HOST }}
       WARREN_UPDATES_SSH_USER: ${{ secrets.WARREN_UPDATES_SSH_USER }}
-      WARREN_UPDATES_SSH_PATH: ${{ secrets.WARREN_UPDATES_SSH_PATH }}
       WARREN_UPDATE_METADATA_BASE: https://api.warrenbrowse.com/updates/desktop
       # Beta channel: same layout under the beta API host. The update host
       # serves it from the beta/ subdirectory of the upload path (the beta
@@ -1352,111 +1351,15 @@ jobs:
 
       - name: Upload installers + metadata to the update host
         if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY != ''
+        # The installers ship BESIDE the manifests, because the manifests
+        # point at this host. A prod run and a beta run each write their own
+        # directory, through the host's receiver (ci/publish-to-update-host.sh).
         run: |
-          key="$RUNNER_TEMP/updates_ssh_key"
-          install -m 600 /dev/null "$key"
-          printf '%s\n' "$WARREN_UPDATES_SSH_KEY" > "$key"
-          # Beta manifests live in the beta/ subdirectory of the same upload
-          # path; the beta API vhost serves that dir as /updates/desktop. The
-          # prod directory is untouched by a beta run, and the reverse.
-          dest="${WARREN_UPDATES_SSH_PATH}"
           prefix=WarrenVPN
           if [ "$WARREN_CHANNEL" = beta ]; then
-            dest="${WARREN_UPDATES_SSH_PATH}/beta"
             prefix=WarrenVPN-Beta
           fi
-          # IdentitiesOnly: the runner's ssh-agent keys are offered before -i
-          # identities, and dropbear on the update host caps auth attempts at
-          # 3, so agent keys can exhaust the limit before ours is ever tried.
-          ssh="ssh -i $key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
-          target="${WARREN_UPDATES_SSH_USER}@${WARREN_UPDATES_SSH_HOST}"
-          # Public half of the deploy key, for comparing with the host's
-          # authorized_keys when auth fails. Never the private half.
-          ssh-keygen -y -f "$key"
-          $ssh "$target" "mkdir -p '${dest}'"
-          # The installers ship BESIDE the manifests, because the manifests
-          # point at this host: the repo is private, so a GitHub release asset
-          # answers 404 without a token and no user could download anything.
-          # Version-anchored glob, so a prod run never sweeps up the beta
-          # artifacts sharing the same release.
-          # Streamed as tar through the ssh exec channel: the hardened update
-          # host runs dropbear with no sftp-server and no server-side scp, so
-          # scp cannot land files there in either protocol mode.
-          # File-granular resume: stream only the installers whose (size, name)
-          # is absent on the host, so an interrupted upload only re-pays its
-          # unfinished file (a truncated file has a short size and is re-sent).
-          # Integrity is carried by SHA256SUMS and the signed manifests, both
-          # re-sent every run.
-          # The R8 mapping stays a GitHub Release asset: the host mirrors what
-          # the download page serves, and the prune below does not know the
-          # mapping's extension, so one copy per version would pile up there.
-          (cd release-files && ls -ln "${prefix}-${WARREN_VERSION}"-* \
-            | grep -v -- '-android-mapping.txt.gz' \
-            | awk '{print $5, $NF}' | sort) > "$RUNNER_TEMP/local.list"
-          $ssh "$target" "ls -ln '$dest' 2>/dev/null" \
-            | awk 'NF>=5 {print $5, $NF}' | sort > "$RUNNER_TEMP/remote.list"
-          missing=$(comm -23 "$RUNNER_TEMP/local.list" "$RUNNER_TEMP/remote.list" | awk '{print $2}')
-          echo "files to stream: ${missing:-none (all present)}"
-          # One ssh channel PER FILE, all at once. A single stream is capped at
-          # window/RTT, and this runner shares a Mac with the Windows build VM
-          # and macOS background scans: under that load its RTT to the update
-          # host inflates from 51 ms to several hundred (LAN ping to its own
-          # router reached 696 ms), which took one release's upload from 2 min
-          # to 32 for the same 800 MB. N channels multiply the ceiling by N, so
-          # the step stops depending on how busy the machine happens to be.
-          # pipefail inside each subshell so a failing tar is not hidden by a
-          # succeeding ssh; `wait` per pid because macOS ships bash 3.2, which
-          # has no `wait -n`.
-          # Four at a time, never more: dropbear caps concurrent PRE-AUTH
-          # connections per source IP (MAX_UNAUTH_PER_IP, 5 by default) and
-          # silently refuses the rest. Measured against this host: 5 concurrent
-          # all connect, 7 lose 2. Four keeps a margin.
-          rc=0
-          batch=""
-          flush_batch() {
-            for p in $batch; do wait "$p" || rc=1; done
-            batch=""
-          }
-          n=0
-          for f in $missing SHA256SUMS SHA256SUMS.sshsig install.sh; do
-            (
-              set -o pipefail
-              cd release-files
-              sz=$(wc -c < "$f" | tr -d ' ')
-              t0=$(date +%s)
-              # Per-file timing, because this step used to print nothing at all:
-              # one release spent 32 minutes here and left no way to tell which
-              # file, or which rate, or whether it was stalled or merely slow.
-              if tar --format=ustar -cf - "$f" | $ssh "$target" "tar -xf - -C '$dest'"; then
-                d=$(( $(date +%s) - t0 )); [ "$d" -gt 0 ] || d=1
-                echo "  streamed $f: $((sz / 1048576)) MB in ${d}s ($((sz / d / 1024)) KB/s)"
-              else
-                echo "  FAILED to stream $f"
-                exit 1
-              fi
-            ) &
-            batch="$batch $!"
-            n=$((n + 1))
-            if [ "$n" -ge 4 ]; then flush_batch; n=0; fi
-          done
-          flush_batch
-          if [ "$rc" -ne 0 ]; then
-            echo "::error::at least one file failed to stream to the update host"
-            exit 1
-          fi
-          # Manifests last: until they land, the previous version stays served
-          # and coherent with the files already on the host.
-          (cd signed && tar --format=ustar -cf - -- *.json) \
-            | $ssh "$target" "tar -xf - -C '$dest'"
-          # Bound the disk: only the version the manifests offer for download
-          # needs its installers mirrored. Scoped to installer names so no
-          # manifest can be caught by it.
-          $ssh "$target" "cd '$dest' && ls -1 \
-            | grep -E '^WarrenVPN.*\.(pkg|exe|deb|rpm|pacman|apk|aab|dmg|tar\.gz|torrent)\$' \
-            | grep -v -F '${prefix}-${WARREN_VERSION}-' \
-            | xargs -r rm -f --"
-          $ssh "$target" "ls -lh '$dest'"
-          rm -f "$key"
+          bash ci/publish-to-update-host.sh release-files signed "$prefix" "$WARREN_VERSION"
 
       # A magnet link into an empty swarm looks exactly like a healthy one on
       # the download page, and every job here would still be green. The only

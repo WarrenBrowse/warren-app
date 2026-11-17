@@ -404,6 +404,14 @@ jobs:
         shell: bash
         run: bash ci/test-git-auth-env.sh
 
+      # What every client installs reaches the update host through this
+      # script: the receiver's verbs, the pinned host key, manifests only after
+      # every installer, and no prune after a failed upload.
+      - name: Update host publication
+        working-directory: .
+        shell: bash
+        run: bash ci/test-publish-to-update-host.sh
+
       # `ci/git-config-global.sh` fronts the build-env action's remaining
       # `git config --global` writes (`safe.directory`), on every OS. A
       # regression in its retry loop, its lock grep or its stale-lock removal

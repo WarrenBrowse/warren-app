@@ -82,7 +82,6 @@ jobs:
       WARREN_UPDATES_SSH_KEY: ${{ secrets.WARREN_UPDATES_SSH_KEY }}
       WARREN_UPDATES_SSH_HOST: ${{ secrets.WARREN_UPDATES_SSH_HOST }}
       WARREN_UPDATES_SSH_USER: ${{ secrets.WARREN_UPDATES_SSH_USER }}
-      WARREN_UPDATES_SSH_PATH: ${{ secrets.WARREN_UPDATES_SSH_PATH }}
       WARREN_UPDATE_METADATA_BASE: https://api.warrenbrowse.com/updates/desktop
       WARREN_UPDATE_METADATA_BASE_BETA: https://api.beta.warrenbrowse.com/updates/desktop
       WARREN_UPDATE_MIN_VERSION: ${{ vars.WARREN_UPDATE_MIN_VERSION }}
@@ -288,93 +287,8 @@ jobs:
         if: env.WARREN_CHANNEL_LIVE == 'true' && env.WARREN_UPDATES_SSH_KEY != ''
         env:
           VERSION: ${{ steps.tag.outputs.version }}
-        run: |
-          key="$RUNNER_TEMP/updates_ssh_key"
-          install -m 600 /dev/null "$key"
-          printf '%s\n' "$WARREN_UPDATES_SSH_KEY" > "$key"
-          # Beta manifests live in the beta/ subdirectory of the same upload
-          # path; the beta API vhost serves that dir as /updates/desktop.
-          dest="${WARREN_UPDATES_SSH_PATH}"
-          if [ "$WARREN_CHANNEL" = beta ]; then
-            dest="${WARREN_UPDATES_SSH_PATH}/beta"
-          fi
-          # IdentitiesOnly: the runner's ssh-agent keys are offered before -i
-          # identities, and dropbear on the update host caps auth attempts at
-          # 3, so agent keys can exhaust the limit before ours is ever tried.
-          ssh="ssh -i $key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
-          target="${WARREN_UPDATES_SSH_USER}@${WARREN_UPDATES_SSH_HOST}"
-          # Public half of the deploy key, for comparing with the host's
-          # authorized_keys when auth fails. Never the private half.
-          ssh-keygen -y -f "$key"
-          # The installers ship BESIDE the manifests, because the manifests now
-          # point at this host: the repo is private, so a GitHub release asset
-          # answers 404 without a token and no user could download anything.
-          # Version-anchored glob, so a prod run never sweeps up the beta
-          # artifacts sharing the same release.
-          # Streamed as tar through the ssh exec channel: the hardened update
-          # host runs dropbear with no sftp-server and no server-side scp, so
-          # scp cannot land files there in either protocol mode.
-          # File-granular resume: stream only the installers whose (size, name)
-          # is absent on the host, so an interrupted upload only re-pays its
-          # unfinished file (a truncated file has a short size and is re-sent).
-          # Integrity is carried by SHA256SUMS and the signed manifests, both
-          # re-sent every run.
-          (cd release-files && ls -ln "${WARREN_ARTIFACT_PREFIX}-${VERSION}"-* \
-            | awk '{print $5, $NF}' | sort) > "$RUNNER_TEMP/local.list"
-          $ssh "$target" "ls -ln '$dest' 2>/dev/null" \
-            | awk 'NF>=5 {print $5, $NF}' | sort > "$RUNNER_TEMP/remote.list"
-          missing=$(comm -23 "$RUNNER_TEMP/local.list" "$RUNNER_TEMP/remote.list" | awk '{print $2}')
-          echo "files to stream: ${missing:-none (all present)}"
-          # One ssh channel PER FILE, all at once: a single stream is capped at
-          # window/RTT, and this runner's RTT to the update host inflates into
-          # the hundreds of ms whenever the shared Mac is busy. See the same
-          # block in release.yml.
-          # Four at a time: dropbear refuses beyond 5 concurrent pre-auth
-          # connections from one IP. See the same block in release.yml.
-          rc=0
-          batch=""
-          flush_batch() {
-            for p in $batch; do wait "$p" || rc=1; done
-            batch=""
-          }
-          n=0
-          for f in $missing SHA256SUMS SHA256SUMS.sshsig install.sh; do
-            (
-              set -o pipefail
-              cd release-files
-              sz=$(wc -c < "$f" | tr -d ' ')
-              t0=$(date +%s)
-              if tar --format=ustar -cf - "$f" | $ssh "$target" "tar -xf - -C '$dest'"; then
-                d=$(( $(date +%s) - t0 )); [ "$d" -gt 0 ] || d=1
-                echo "  streamed $f: $((sz / 1048576)) MB in ${d}s ($((sz / d / 1024)) KB/s)"
-              else
-                echo "  FAILED to stream $f"
-                exit 1
-              fi
-            ) &
-            batch="$batch $!"
-            n=$((n + 1))
-            if [ "$n" -ge 4 ]; then flush_batch; n=0; fi
-          done
-          flush_batch
-          if [ "$rc" -ne 0 ]; then
-            echo "::error::at least one file failed to stream to the update host"
-            exit 1
-          fi
-          # Manifests last: until they land, the previous version stays served
-          # and coherent with the files already on the host.
-          (cd signed && tar --format=ustar -cf - -- *.json) \
-            | $ssh "$target" "tar -xf - -C '$dest'"
-          # Bound the disk: only the version the manifests offer for download
-          # needs its installers mirrored. Older entries keep their historical
-          # URLs and clients only ever fetch the newest. Scoped to installer
-          # names so no manifest can be caught by it.
-          $ssh "$target" "cd '$dest' && ls -1 \
-            | grep -E '^WarrenVPN.*\.(pkg|exe|deb|rpm|pacman|apk|aab|dmg|tar\.gz|torrent)\$' \
-            | grep -v -F '${WARREN_ARTIFACT_PREFIX}-${VERSION}-' \
-            | xargs -r rm -f --"
-          $ssh "$target" "ls -lh '$dest'"
-          rm -f "$key"
+        # Same publication as release.yml, through the host's receiver.
+        run: bash ci/publish-to-update-host.sh release-files signed "$WARREN_ARTIFACT_PREFIX" "$VERSION"
 
       - name: Warn when upload is skipped
         if: env.WARREN_CHANNEL_LIVE == 'true' && env.WARREN_UPDATES_SSH_KEY == ''

@@ -267,8 +267,12 @@ publishes it non-draft once they are all green). It:
    (`package_format`: `deb`, `deb-sysvinit`, `rpm`, `pacman`).
 4. Signs each `{platform}.json` with `WARREN_UPDATE_SIGNING_KEY`, which the
    signer reads from its environment and refuses on its command line.
-5. `scp`s the signed JSON to the host (and always uploads them as a run
-   artifact for audit / manual fallback).
+5. hands the installers and the signed JSON to the host's receiver
+   (`ci/publish-to-update-host.sh`): the deploy key can only `list`, `put`
+   a ustar stream into `desktop` or `desktop/beta`, and `prune` the
+   installers of other versions, and the host key is pinned in
+   `ci/update-host.known_hosts`. The JSON is always uploaded as a run
+   artifact too, for audit and manual fallback.
 
 The whole job is a graceful no-op when `WARREN_UPDATE_SIGNING_KEY` is unset
 (same opt-in philosophy as the build signing).
@@ -282,8 +286,7 @@ GitHub repo **secrets**
 | --- | --- |
 | `WARREN_UPDATE_SIGNING_KEY` | the dedicated ed25519 secret (hex) |
 | `WARREN_UPDATES_SSH_USER` | `warren-deploy` |
-| `WARREN_UPDATES_SSH_HOST` | `204.168.244.76` (the API VPS IP; `api.warrenbrowse.com` resolves to it, the IP avoids any future DNS/proxy surprise) |
-| `WARREN_UPDATES_SSH_PATH` | `/srv/warren-updates/desktop` |
+| `WARREN_UPDATES_SSH_HOST` | the host that runs the update receiver (`185.146.232.126`, the beta host, since 2026-11-17) |
 | `WARREN_UPDATES_SSH_KEY` | the CI deploy private key (the `warren-deploy` key) |
 
 GitHub repo **variable**

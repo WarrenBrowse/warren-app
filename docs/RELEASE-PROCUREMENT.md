@@ -236,8 +236,9 @@ Powers in-app updates and the forced-update screen. Full setup and rationale in
     - `WARREN_UPDATE_SIGNING_KEY`: the ed25519 **secret** (hex)
     - `WARREN_UPDATES_SSH_KEY`: CI deploy private key for `warren-deploy@<host>`
     - `WARREN_UPDATES_SSH_USER`: `warren-deploy`
-    - `WARREN_UPDATES_SSH_HOST`: `api.warrenbrowse.com` (or the VPS IP)
-    - `WARREN_UPDATES_SSH_PATH`: `/srv/warren-updates/desktop`
+    - `WARREN_UPDATES_SSH_HOST`: the host that runs the update receiver
+      (`warren-updates-receive`, warren-stack); its host key is pinned in
+      `ci/update-host.known_hosts`, so a new host means a new pin
 4. Optional repo **variable** (not a secret): `WARREN_UPDATE_MIN_VERSION` to
    hard-block clients below a version.
 
