@@ -27,6 +27,20 @@ export class LoginRouteObjectModel {
     await this.selectors.backupContinueButton().click();
   }
 
+  // Types back the words the check asks for, read from each field's label
+  // ("Word 7"), taken from `phrase`; `wrong` replaces the last one.
+  async answerBackupCheck(phrase: string, wrong = false) {
+    const words = phrase.split(' ');
+    for (let index = 0; index < 3; index++) {
+      const field = this.selectors.backupCheckWord(index);
+      const label = (await field.getAttribute('aria-label')) ?? '';
+      const position = Number(/(\d+)/.exec(label)?.[1]);
+      const answer = wrong && index === 2 ? 'zoo' : words[position - 1];
+      await field.fill(answer);
+    }
+    await this.selectors.backupCheckContinueButton().click();
+  }
+
   async discardNewAccount() {
     await this.selectors.backupBackButton().click();
     await this.selectors.backupDiscardConfirmButton().click();

@@ -94,9 +94,16 @@ test.describe('Login view', () => {
     // Proceeding is gated behind the explicit "I saved it" confirmation.
     await expect(routes.login.selectors.backupContinueButton()).toBeDisabled();
 
-    // After confirming, the brand-new (no-subscription) account routes
-    // to the expired / buy-plan screen.
+    // Then the phrase has to be typed back, three words of it: a wrong word
+    // keeps the user on the check.
     await routes.login.confirmBackup();
+    await expect(routes.login.selectors.header()).toHaveText('Check your recovery phrase');
+    await routes.login.answerBackupCheck(RECOVERY_PHRASE, true);
+    await expect(routes.login.selectors.backupCheckMismatch()).toBeVisible();
+
+    // The right words finish the backup, and the brand-new (no-subscription)
+    // account routes to the expired / buy-plan screen.
+    await routes.login.answerBackupCheck(RECOVERY_PHRASE);
     await page.clock.fastForward(1000);
     await routes.expired.waitForRoute();
   });

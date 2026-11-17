@@ -14,6 +14,11 @@ export const createSelectors = (page: Page) => ({
   backupBackButton: () => page.getByTestId('login-backup-back'),
   backupDiscardConfirmButton: () => page.getByTestId('login-backup-discard-confirm'),
 
+  // Backup check (words of the phrase typed back).
+  backupCheckWord: (index: number) => page.getByTestId(`login-backup-check-word-${index}`),
+  backupCheckContinueButton: () => page.getByTestId('login-backup-check-continue'),
+  backupCheckMismatch: () => page.getByRole('alert'),
+
   // Restore step.
   restoreInput: () => page.getByTestId('login-restore-input'),
   restoreSubmitButton: () => page.getByTestId('login-restore-submit'),
