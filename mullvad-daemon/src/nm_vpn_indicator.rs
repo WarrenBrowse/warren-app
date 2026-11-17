@@ -285,7 +285,6 @@ mod tests {
             obfuscation: None,
             entry_endpoint: entry.map(endpoint),
             tunnel_interface: interface.map(str::to_owned),
-            #[cfg(daita)]
             daita: false,
             effective_mtu: None,
             legs_bonded: 0,

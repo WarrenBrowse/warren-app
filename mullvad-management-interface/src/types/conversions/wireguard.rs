@@ -35,7 +35,6 @@ impl TryFrom<proto::QuantumResistantState> for mullvad_types::wireguard::Quantum
     }
 }
 
-#[cfg(daita)]
 impl From<mullvad_types::wireguard::DaitaSettings> for proto::DaitaSettings {
     fn from(settings: mullvad_types::wireguard::DaitaSettings) -> Self {
         proto::DaitaSettings {
@@ -45,7 +44,6 @@ impl From<mullvad_types::wireguard::DaitaSettings> for proto::DaitaSettings {
     }
 }
 
-#[cfg(daita)]
 impl From<proto::DaitaSettings> for mullvad_types::wireguard::DaitaSettings {
     fn from(settings: proto::DaitaSettings) -> Self {
         mullvad_types::wireguard::DaitaSettings {

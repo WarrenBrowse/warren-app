@@ -317,10 +317,7 @@ impl From<&mullvad_types::settings::TunnelOptions> for proto::TunnelOptions {
             quantum_resistant: Some(proto::QuantumResistantState::from(
                 options.wireguard.quantum_resistant,
             )),
-            #[cfg(daita)]
             daita: Some(proto::DaitaSettings::from(options.wireguard.daita.clone())),
-            #[cfg(not(daita))]
-            daita: None,
             enable_ipv6: options.generic.enable_ipv6,
             dns_options: Some(proto::DnsOptions::from(&options.dns_options)),
             userspace: options.wireguard.userspace,
@@ -499,7 +496,6 @@ impl TryFrom<proto::TunnelOptions> for mullvad_types::settings::TunnelOptions {
                     .ok_or(FromProtobufTypeError::invalid_argument(
                         "missing quantum resistant state",
                     ))??,
-                #[cfg(daita)]
                 daita: options
                     .daita
                     .map(mullvad_types::wireguard::DaitaSettings::from)

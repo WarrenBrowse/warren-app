@@ -56,7 +56,6 @@ impl FromStr for QuantumResistantState {
 #[error("Not a valid state")]
 pub struct QuantumResistantStateParseError;
 
-#[cfg(daita)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct DaitaSettings {
     pub enabled: bool,
@@ -67,7 +66,6 @@ pub struct DaitaSettings {
     pub use_multihop_if_necessary: bool,
 }
 
-#[cfg(daita)]
 impl DaitaSettings {
     /// This setting should be enabled by default.
     const fn default_use_multihop_if_necessary() -> bool {
@@ -75,7 +73,6 @@ impl DaitaSettings {
     }
 }
 
-#[cfg(daita)]
 impl Default for DaitaSettings {
     fn default() -> Self {
         Self {
@@ -93,7 +90,6 @@ pub struct TunnelOptions {
     /// Obtain a PSK using the relay config client.
     pub quantum_resistant: QuantumResistantState,
     /// Configure DAITA
-    #[cfg(daita)]
     pub daita: DaitaSettings,
     /// Use userspace WireGuard.
     pub userspace: bool,
@@ -105,7 +101,6 @@ impl Default for TunnelOptions {
         TunnelOptions {
             mtu: None,
             quantum_resistant: QuantumResistantState::default(),
-            #[cfg(daita)]
             daita: DaitaSettings::default(),
             userspace: false,
         }
@@ -117,7 +112,6 @@ impl TunnelOptions {
         wireguard::TunnelOptions {
             mtu: self.mtu,
             quantum_resistant: self.quantum_resistant.enabled(),
-            #[cfg(daita)]
             daita: self.daita.enabled,
             userspace: self.userspace,
         }

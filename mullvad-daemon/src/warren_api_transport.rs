@@ -489,7 +489,6 @@ mod tests {
             obfuscation: None,
             entry_endpoint: None,
             tunnel_interface: None,
-            #[cfg(daita)]
             daita: false,
             effective_mtu: None,
             legs_bonded: 0,

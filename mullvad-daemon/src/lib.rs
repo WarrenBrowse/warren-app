@@ -173,7 +173,6 @@ use mullvad_types::account::{PlayExternalObfuscatedAccountId, PlayPurchase};
 use mullvad_types::app_routing::{
     AppId, AppRouteStatus, AppRoutingError, AppRoutingSettings, ExitChoice, SplitMode,
 };
-#[cfg(daita)]
 use mullvad_types::wireguard::DaitaSettings;
 use mullvad_types::{
     access_method::{AccessMethod, AccessMethodSetting},
@@ -800,11 +799,8 @@ pub enum DaemonCommand {
     /// Set whether to enable PQ PSK exchange in the tunnel
     SetQuantumResistantTunnel(ResponseTx<(), settings::Error>, QuantumResistantState),
     /// Set DAITA settings for the tunnel
-    #[cfg(daita)]
     SetEnableDaita(ResponseTx<(), settings::Error>, bool),
-    #[cfg(daita)]
     SetDaitaUseMultihopIfNecessary(ResponseTx<(), settings::Error>, bool),
-    #[cfg(daita)]
     SetDaitaSettings(ResponseTx<(), settings::Error>, DaitaSettings),
     /// Set DNS options or servers to use
     SetDnsOptions(ResponseTx<(), settings::Error>, DnsOptions),
@@ -1876,7 +1872,6 @@ impl Daemon {
         // tunnel connect after a daemon restart would always go out
         // DAITA-off even when the user had previously toggled it on.
         // Subsequent toggles flow through `on_set_daita_*` handlers.
-        #[cfg(daita)]
         {
             let initial_daita = settings.tunnel_options.wireguard.daita.enabled;
             let pg_for_daita_boot = parameters_generator.clone();
@@ -3574,13 +3569,10 @@ impl Daemon {
                 self.on_set_quantum_resistant_tunnel(tx, quantum_resistant_state)
                     .await
             }
-            #[cfg(daita)]
             SetEnableDaita(tx, value) => self.on_set_daita_enabled(tx, value).await,
-            #[cfg(daita)]
             SetDaitaUseMultihopIfNecessary(tx, value) => {
                 self.on_set_daita_use_multihop_if_necessary(tx, value).await
             }
-            #[cfg(daita)]
             SetDaitaSettings(tx, daita_settings) => {
                 self.on_set_daita_settings(tx, daita_settings).await
             }
@@ -6068,7 +6060,6 @@ impl Daemon {
         }
     }
 
-    #[cfg(daita)]
     async fn on_set_daita_enabled(&mut self, tx: ResponseTx<(), settings::Error>, value: bool) {
         let result = self
             .settings
@@ -6103,7 +6094,6 @@ impl Daemon {
         }
     }
 
-    #[cfg(daita)]
     async fn on_set_daita_use_multihop_if_necessary(
         &mut self,
         tx: ResponseTx<(), settings::Error>,
@@ -6141,7 +6131,6 @@ impl Daemon {
         }
     }
 
-    #[cfg(daita)]
     async fn on_set_daita_settings(
         &mut self,
         tx: ResponseTx<(), settings::Error>,

@@ -230,7 +230,6 @@ pub fn compute_feature_indicators(
         multihop =
             endpoint.entry_endpoint.is_some() && constraints.wireguard_constraints.use_multihop;
 
-        #[cfg(daita)]
         {
             // Detect whether we're using multihop, but it is not explicitly enabled.
             daita_multihop = endpoint.daita
@@ -240,14 +239,12 @@ pub fn compute_feature_indicators(
     };
 
     // Daita is mutually exclusive with DaitaMultihop
-    #[cfg(daita)]
     let daita = endpoint.daita && !daita_multihop;
 
     // The endpoint carries the NEGOTIATED truth (filled from the tunnel
     // monitor once connected), while the setting is only the request: a
     // requested-but-inactive defense must be surfaced, never silently
     // rendered as protection.
-    #[cfg(daita)]
     let daita_unavailable = settings.tunnel_options.wireguard.daita.enabled && !endpoint.daita;
 
     // Runtime truth from the tunnel monitor: only present when the live
@@ -282,10 +279,8 @@ pub fn compute_feature_indicators(
         (quic, FeatureIndicator::Quic),
         (lwo, FeatureIndicator::Lwo),
         (mtu, FeatureIndicator::CustomMtu),
-        #[cfg(daita)]
         (daita, FeatureIndicator::Daita),
         (daita_multihop, FeatureIndicator::DaitaMultihop),
-        #[cfg(daita)]
         (daita_unavailable, FeatureIndicator::DaitaUnavailable),
         (reduced_mtu, FeatureIndicator::ReducedMtu),
         (degraded_bond, FeatureIndicator::DegradedBond),
@@ -451,7 +446,6 @@ mod tests {
             expected_indicators
         );
 
-        #[cfg(daita)]
         {
             endpoint.daita = true;
             expected_indicators.0.insert(FeatureIndicator::Daita);
@@ -590,7 +584,6 @@ mod tests {
         );
     }
 
-    #[cfg(daita)]
     fn plain_endpoint(daita: bool) -> TunnelEndpoint {
         TunnelEndpoint {
             endpoint: Endpoint {
@@ -722,7 +715,6 @@ mod tests {
     /// The endpoint is the negotiated truth: when the user asked for DAITA but
     /// the tunnel reports it is not running, the UI must show the dedicated
     /// "unavailable" indicator, never the regular DAITA pill.
-    #[cfg(daita)]
     #[test]
     fn daita_unavailable_when_requested_but_endpoint_inactive() {
         let mut settings = Settings::default();
@@ -744,7 +736,6 @@ mod tests {
         );
     }
 
-    #[cfg(daita)]
     #[test]
     fn daita_active_endpoint_yields_daita_not_unavailable() {
         let mut settings = Settings::default();
@@ -766,7 +757,6 @@ mod tests {
         );
     }
 
-    #[cfg(daita)]
     #[test]
     fn no_daita_indicators_when_not_requested() {
         let settings = Settings::default();

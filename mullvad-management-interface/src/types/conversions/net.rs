@@ -11,10 +11,7 @@ impl From<talpid_types::net::TunnelEndpoint> for proto::TunnelEndpoint {
             tunnel_metadata: endpoint
                 .tunnel_interface
                 .map(|tunnel_interface| proto::TunnelMetadata { tunnel_interface }),
-            #[cfg(daita)]
             daita: endpoint.daita,
-            #[cfg(not(daita))]
-            daita: false,
             tunnel_type: i32::from(match endpoint.tunnel_type {
                 talpid_types::net::TunnelType::WireGuard => proto::TunnelType::Wireguard,
                 talpid_types::net::TunnelType::Warren => proto::TunnelType::Warren,
@@ -186,7 +183,6 @@ impl TryFrom<proto::TunnelEndpoint> for talpid_types::net::TunnelEndpoint {
             tunnel_interface: endpoint
                 .tunnel_metadata
                 .map(|tunnel_metadata| tunnel_metadata.tunnel_interface),
-            #[cfg(daita)]
             daita: endpoint.daita,
             effective_mtu: endpoint
                 .effective_mtu
@@ -447,7 +443,6 @@ mod tests {
             obfuscation: None,
             entry_endpoint: None,
             tunnel_interface: None,
-            #[cfg(daita)]
             daita: false,
             effective_mtu: None,
             legs_bonded,

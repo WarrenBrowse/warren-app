@@ -47,7 +47,6 @@ impl TunnelParameters {
                 .get_exit_endpoint()
                 .map(|_| self.connection.get_endpoint()),
             tunnel_interface: None,
-            #[cfg(daita)]
             daita: self.options.daita,
             tunnel_type: crate::net::TunnelType::WireGuard,
         }
@@ -116,7 +115,6 @@ pub struct PeerConfig {
     #[serde(skip)]
     pub psk: Option<PresharedKey>,
     /// Enable constant packet sizes for `entry_peer``
-    #[cfg(daita)]
     #[serde(skip)]
     pub constant_packet_size: bool,
 }
@@ -136,7 +134,6 @@ pub struct TunnelOptions {
     /// Perform PQ-safe PSK exchange when connecting
     pub quantum_resistant: bool,
     /// Enable DAITA during tunnel config
-    #[cfg(daita)]
     pub daita: bool,
     /// Use userspace WireGuard.
     pub userspace: bool,

@@ -53,7 +53,6 @@ pub struct TunnelEndpoint {
     pub obfuscation: Option<ObfuscationInfo>,
     pub entry_endpoint: Option<Endpoint>,
     pub tunnel_interface: Option<String>,
-    #[cfg(daita)]
     pub daita: bool,
     /// Largest inner packet the live tunnel can carry in one datagram, set
     /// only when it is below the TUN MTU (reduced-MTU underlay). Runtime
@@ -615,7 +614,6 @@ mod tests {
             obfuscation: None,
             entry_endpoint: None,
             tunnel_interface: None,
-            #[cfg(daita)]
             daita: false,
             effective_mtu: None,
             legs_bonded: 0,

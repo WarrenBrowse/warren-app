@@ -1566,7 +1566,6 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    #[cfg(daita)]
     async fn set_enable_daita(&self, request: Request<bool>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
         let daita_enabled = request.into_inner();
@@ -1577,7 +1576,6 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    #[cfg(daita)]
     async fn set_daita_direct_only(&self, request: Request<bool>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
         let direct_only_enabled = request.into_inner();
@@ -1591,7 +1589,6 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    #[cfg(daita)]
     async fn set_daita_settings(
         &self,
         request: Request<types::DaitaSettings>,
@@ -1603,21 +1600,6 @@ impl ManagementService for ManagementServiceImpl {
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(&call, DaemonCommand::SetDaitaSettings(tx, state))?;
         self.wait_for_result(rx).await?.map(Response::new)?;
-        Ok(Response::new(()))
-    }
-
-    #[cfg(not(daita))]
-    async fn set_enable_daita(&self, _: Request<bool>) -> ServiceResult<()> {
-        Ok(Response::new(()))
-    }
-
-    #[cfg(not(daita))]
-    async fn set_daita_direct_only(&self, _: Request<bool>) -> ServiceResult<()> {
-        Ok(Response::new(()))
-    }
-
-    #[cfg(not(daita))]
-    async fn set_daita_settings(&self, _: Request<types::DaitaSettings>) -> ServiceResult<()> {
         Ok(Response::new(()))
     }
 

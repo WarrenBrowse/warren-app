@@ -30,10 +30,6 @@ fn main() {
         res.compile().expect("Unable to generate windows resources");
     }
 
-    // Enable DAITA by default on desktop and android
-    println!("cargo::rustc-check-cfg=cfg(daita)");
-    println!(r#"cargo::rustc-cfg=daita"#);
-
     // Enable in-app upgrades on the desktop platforms. On Linux the daemon
     // installs the package itself (version::linux_upgrade).
     println!("cargo::rustc-check-cfg=cfg(in_app_upgrade)");
