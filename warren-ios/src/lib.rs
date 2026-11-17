@@ -129,10 +129,26 @@ pub struct ProxyHandle {
 #[cfg(target_os = "ios")]
 static RUNTIME: OnceLock<Result<Runtime, String>> = OnceLock::new();
 
+#[cfg(all(test, target_os = "ios"))]
+mod runtime_tests {
+    /// The packet tunnel extension runs under a memory ceiling and already
+    /// has the tunnel's own runtime; a worker per core here would add one
+    /// thread per core of the device for API calls that are rare.
+    #[test]
+    fn the_shared_runtime_runs_two_workers() {
+        let handle = super::warren_ios_runtime().expect("runtime");
+        assert_eq!(handle.metrics().num_workers(), 2);
+    }
+}
+
 #[cfg(target_os = "ios")]
 fn warren_ios_runtime() -> Result<Handle, String> {
     match RUNTIME.get_or_init(|| {
+        // Two workers, not one per core: the API calls it serves are rare, and
+        // the packet tunnel extension runs it beside the tunnel's own runtime
+        // under a memory ceiling.
         Builder::new_multi_thread()
+            .worker_threads(2)
             .enable_all()
             .build()
             .map_err(|error| ToString::to_string(&error))
