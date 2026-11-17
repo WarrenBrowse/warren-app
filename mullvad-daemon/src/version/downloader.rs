@@ -156,8 +156,11 @@ where
     Ok(bin_path)
 }
 
+/// Directory of the cache directory that holds downloaded installers.
+pub const DOWNLOAD_DIR_NAME: &str = "mullvad-update";
+
 async fn create_download_dir() -> Result<PathBuf> {
-    let download_dir = mullvad_paths::cache_dir()?.join("mullvad-update");
+    let download_dir = mullvad_paths::cache_dir()?.join(DOWNLOAD_DIR_NAME);
     log::trace!("Download directory: {download_dir:?}");
     fs::create_dir_all(&download_dir)
         .await
@@ -165,9 +168,9 @@ async fn create_download_dir() -> Result<PathBuf> {
     Ok(download_dir)
 }
 
-/// Remove the download directory
-pub async fn clear_download_dir() -> Result<PathBuf> {
-    let download_dir = mullvad_paths::get_cache_dir()?.join("mullvad-update");
+/// Remove the download directory under `cache_dir`, with any installer an earlier run left there.
+pub async fn clear_download_dir(cache_dir: &std::path::Path) -> Result<PathBuf> {
+    let download_dir = cache_dir.join(DOWNLOAD_DIR_NAME);
     log::info!("Cleaning up download directory: {}", download_dir.display());
     match fs::remove_dir_all(&download_dir).await {
         Ok(()) => Ok(download_dir),

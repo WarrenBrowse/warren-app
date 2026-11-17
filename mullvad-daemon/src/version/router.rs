@@ -310,6 +310,13 @@ where
 {
     async fn run(mut self) {
         log::debug!("Version router started");
+        #[cfg(in_app_upgrade)]
+        if let Err(error) = downloader::clear_download_dir(&self.cache_dir).await {
+            log::error!(
+                "{}",
+                error.display_chain_with_msg("Failed to clean up the download directory")
+            );
+        }
         // Loop until the router is closed
         while self.run_step().await.is_continue() {}
         log::debug!("Version router closed");
@@ -1197,6 +1204,32 @@ mod test {
                 version_event_receiver,
             },
         )
+    }
+
+    /// Installers downloaded by an earlier daemon run are deleted when the router starts, so
+    /// each upgrade does not leave its installer behind in the cache directory for good.
+    #[tokio::test]
+    async fn starting_the_router_purges_installers_left_by_an_earlier_run() {
+        let cache = tempfile::tempdir().unwrap();
+        let download_dir = cache.path().join(downloader::DOWNLOAD_DIR_NAME);
+        std::fs::create_dir_all(&download_dir).unwrap();
+        std::fs::write(download_dir.join("stale-installer.pkg"), b"old").unwrap();
+        let unrelated = cache.path().join("version-metadata-floor");
+        std::fs::write(&unrelated, b"7").unwrap();
+
+        let (mut router, _channels) = make_version_router::<SuccessfulAppDownloader>();
+        router.cache_dir = cache.path().to_owned();
+        // The router runs until the daemon stops; the purge is the first thing it does.
+        let _ = tokio::time::timeout(std::time::Duration::from_secs(2), router.run()).await;
+
+        assert!(
+            !download_dir.exists(),
+            "the stale download directory was kept"
+        );
+        assert!(
+            unrelated.exists(),
+            "the purge reached outside the download directory"
+        );
     }
 
     /// Create a version cache with a stable version that is newer than the current version
