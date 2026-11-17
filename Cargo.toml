@@ -15,7 +15,6 @@ members = [
   "mullvad-paths",
   "mullvad-problem-report",
   "mullvad-relay-selector",
-  "mullvad-release-android",
   "mullvad-setup",
   "mullvad-types",
   "mullvad-types/intersection-derive",

@@ -61,7 +61,6 @@ on:
       - "mullvad-logging/**"
       - "mullvad-version/**"
       - "mullvad-relay-selector/**"
-      - "mullvad-release-android/**"
       - "mullvad-nsis/**"
       - "warren-incidents/**"
       - "warren-nm-vpn-service/**"
