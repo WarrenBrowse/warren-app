@@ -666,3 +666,15 @@ jobs:
           bash ci/codemagic/watchdog.sh cargo nextest run --locked --profile warren-ci \
             --no-fail-fast $WINDOWS_CRATES --run-ignored only \
             -E '(package(talpid-core) & test(/winfw_tests::/)) | (package(mullvad-setup) & binary(reset_firewall))'
+
+      # The universal installer's build script embeds the two per-architecture
+      # installers, so its own tests build against a stand-in for both. Kept
+      # out of WINDOWS_CRATES so the shared package set does not need them.
+      - name: windows-installer tests
+        timeout-minutes: 15
+        run: |
+          stand_in="$(cygpath -m "$RUNNER_TEMP")/installer-stand-in.exe"
+          printf 'stand-in' > "$stand_in"
+          WIN_X64_INSTALLER="$stand_in" WIN_ARM64_INSTALLER="$stand_in" \
+            bash ci/codemagic/watchdog.sh cargo nextest run --locked --profile warren-ci \
+            -p windows-installer

@@ -14,6 +14,14 @@ OPTIMIZE="false"
 
 source scripts/utils/log
 
+# The wrapper's file name, icon and version resources are production's
+# (windows-installer/Cargo.toml and build.rs), so a beta or staging build would
+# hand users an installer that names and draws itself as the production app.
+if [[ "${WARREN_PRODUCT_ENV:-prod}" != "prod" ]]; then
+    log_error "The universal Windows installer carries the production identity; refusing a ${WARREN_PRODUCT_ENV} build"
+    exit 1
+fi
+
 echo "Computing build version..."
 PRODUCT_VERSION=$(cargo run -q --bin mullvad-version)
 log_header "Building universal Windows installer for Warren VPN $PRODUCT_VERSION"

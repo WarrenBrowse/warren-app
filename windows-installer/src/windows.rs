@@ -8,14 +8,19 @@
 use anyhow::{Context, bail};
 use std::{
     ffi::OsStr,
-    io::{self, Write},
+    fs::{File, OpenOptions},
+    io::{self, Read, Write},
     num::NonZero,
+    os::windows::fs::OpenOptionsExt,
     process::{Command, ExitStatus},
     ptr::NonNull,
 };
 use tempfile::TempPath;
 use windows_sys::{
-    Win32::System::LibraryLoader::{FindResourceW, LoadResource, LockResource, SizeofResource},
+    Win32::{
+        Storage::FileSystem::FILE_SHARE_READ,
+        System::LibraryLoader::{FindResourceW, LoadResource, LockResource, SizeofResource},
+    },
     w,
 };
 
@@ -28,10 +33,12 @@ mod resource {
 pub fn main() -> anyhow::Result<()> {
     let architecture = get_native_arch()?;
     let exe_data = find_binary_data(architecture)?;
-    let path = write_file_to_temp(exe_data)?;
+    let (path, held) = write_file_to_temp(exe_data)?;
 
     let status = run_with_forwarded_args(&path).context("Failed to run unpacked installer")?;
 
+    // The held handle denies deletion too, so it goes first.
+    drop(held);
     // We cannot rely on drop here since we need to `exit`, so remove explicitly
     if let Err(error) = std::fs::remove_file(path) {
         eprintln!("Failed to remove unpacked installer: {error}");
@@ -48,12 +55,33 @@ fn run_with_forwarded_args(path: impl AsRef<OsStr>) -> io::Result<ExitStatus> {
     command.args(args).status()
 }
 
-/// Write file to a temporary file and return its path
-fn write_file_to_temp(data: &[u8]) -> anyhow::Result<TempPath> {
+/// Write `data` to a temporary file, and return its path with a handle that
+/// keeps anyone from changing it until the handle is dropped.
+///
+/// The temporary directory belongs to the user, and the installer runs it
+/// elevated, so any process of that user could swap the file between the write
+/// and the launch. The file is reopened read-only, sharing read access alone:
+/// no handle may write, rename or delete it while that one is held, and the
+/// reopen itself fails if a writer is still attached. The bytes read back
+/// through it are then the bytes the process is created from.
+fn write_file_to_temp(data: &[u8]) -> anyhow::Result<(TempPath, File)> {
     let mut file = tempfile::NamedTempFile::new().context("Failed to create tempfile")?;
     file.write_all(data)
         .context("Failed to extract temporary installer")?;
-    Ok(file.into_temp_path())
+    let path = file.into_temp_path();
+
+    let mut held = OpenOptions::new()
+        .read(true)
+        .share_mode(FILE_SHARE_READ)
+        .open(&path)
+        .context("Failed to lock the temporary installer")?;
+    let mut written = Vec::with_capacity(data.len());
+    held.read_to_end(&mut written)
+        .context("Failed to read back the temporary installer")?;
+    if written != data {
+        bail!("The temporary installer was modified before it could be run");
+    }
+    Ok((path, held))
 }
 
 /// Return a slice of data for the given resource
@@ -129,5 +157,31 @@ fn get_native_arch() -> anyhow::Result<Architecture> {
     match arch {
         talpid_platform_metadata::Architecture::X86 => Ok(Architecture::X64),
         talpid_platform_metadata::Architecture::Arm64 => Ok(Architecture::Arm64),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const ERROR_SHARING_VIOLATION: i32 = 32;
+
+    #[test]
+    fn the_unpacked_installer_cannot_be_rewritten_while_it_is_held() {
+        let data = b"installer bytes";
+
+        let (path, held) = write_file_to_temp(data).expect("unpack");
+
+        assert_eq!(std::fs::read(&path).expect("read back"), data);
+        let writer = OpenOptions::new().write(true).open(&path);
+        assert_eq!(
+            writer.expect_err("a writer got in").raw_os_error(),
+            Some(ERROR_SHARING_VIOLATION)
+        );
+        drop(held);
+        OpenOptions::new()
+            .write(true)
+            .open(&path)
+            .expect("the file is writable again once released");
     }
 }

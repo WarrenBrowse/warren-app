@@ -62,6 +62,7 @@ on:
       - "talpid-routing/**"
       - "talpid-tunnel/**"
       - "talpid-platform-metadata/**"
+      - "windows-installer/**"
       - "mullvad-paths/**"
       - "mullvad-setup/**"
       - "mullvad-problem-report/**"
