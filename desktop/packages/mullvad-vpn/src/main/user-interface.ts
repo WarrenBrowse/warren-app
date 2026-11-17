@@ -18,6 +18,7 @@ import {
   unsetIpcWebContents,
 } from './ipc-event-channel';
 import { WebContentsConsoleInput } from './logging';
+import { openDialogOptions } from './open-dialog-options';
 import { isMacOs11OrNewer } from './platform-version';
 import { resolveBin } from './proc';
 import { createTray } from './tray';
@@ -123,10 +124,7 @@ export default class UserInterface implements WindowControllerDelegate {
 
     IpcMainEventChannel.app.handleShowOpenDialog(async (options) => {
       this.browsingFiles = true;
-      const response = await dialog.showOpenDialog({
-        defaultPath: app.getPath('home'),
-        ...options,
-      });
+      const response = await dialog.showOpenDialog(openDialogOptions(options, app.getPath('home')));
       this.browsingFiles = false;
       this.showWindow();
       return response;
