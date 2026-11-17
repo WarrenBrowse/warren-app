@@ -268,10 +268,7 @@ pub(crate) fn route_supervisor_config(
         socket_bypass: config.socket_bypass,
         enable_daita: config.enable_daita,
         idle_cover: config.idle_cover,
-        backoff: Backoff {
-            base: Duration::from_millis(300),
-            max: Duration::from_secs(2),
-        },
+        backoff: Backoff::CLIENT_REDIAL,
         on_reconnect: None,
         ip_assign_channel: Some(ip_assign),
         wants_ipv6: config.wants_ipv6,
@@ -279,6 +276,7 @@ pub(crate) fn route_supervisor_config(
         // every bonded leg is one more relay connection holding the token.
         n_connections: 1,
         setup_clock: config.setup_clock.clone(),
+        require_pq: false,
         pre_swap_check: None,
         on_overlap_swapped: None,
         on_dial_refused: None,

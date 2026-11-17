@@ -579,10 +579,7 @@ async fn run_multi_hop_session(
             // Same low ceiling as the desktop daemon and iOS: the default
             // 15 s HANDSHAKE cap overshoots a mobile network-change recovery,
             // parking a redial well past the moment the link returns.
-            backoff: warrenguard_backoff::Backoff {
-                base: std::time::Duration::from_millis(300),
-                max: std::time::Duration::from_secs(2),
-            },
+            backoff: warrenguard_backoff::Backoff::CLIENT_REDIAL,
             on_reconnect: Some(crate::android_jni::auto_recovery_observer()),
             ip_assign_channel: Some(ip_assign_channel.clone()),
             wants_ipv6: config.enable_ipv6.unwrap_or(false),
@@ -602,6 +599,7 @@ async fn run_multi_hop_session(
             on_path_rtt: None,
             session_token_provider: token_provider.clone(),
             setup_clock: Some(warren_standing::server_clock::setup_clock()),
+            require_pq: false,
         };
 
         let (supervisor, sessions) = MultiHopSupervisor::new(supervisor_config);

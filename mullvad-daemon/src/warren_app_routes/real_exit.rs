@@ -1392,10 +1392,7 @@ fn main_supervisor_config(
         socket_bypass: None,
         enable_daita: false,
         idle_cover: false,
-        backoff: Backoff {
-            base: Duration::from_millis(300),
-            max: Duration::from_secs(2),
-        },
+        backoff: Backoff::CLIENT_REDIAL,
         on_reconnect: None,
         ip_assign_channel: Some(ip_assign),
         wants_ipv6: false,
@@ -1406,5 +1403,6 @@ fn main_supervisor_config(
         on_path_rtt: None,
         session_token_provider: Some(tokens),
         setup_clock: None,
+        require_pq: false,
     }
 }

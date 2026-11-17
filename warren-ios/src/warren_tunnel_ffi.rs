@@ -1631,10 +1631,7 @@ fn spawn_multi_hop(
             // `Backoff::HANDSHAKE` 15 s ceiling overshoots a network-change
             // recovery: a re-dial parked in a 15 s backoff misses the window
             // when the link returns, stretching a Wi-Fi/cellular handover.
-            backoff: warrenguard_backoff::Backoff {
-                base: std::time::Duration::from_millis(300),
-                max: std::time::Duration::from_secs(2),
-            },
+            backoff: warrenguard_backoff::Backoff::CLIENT_REDIAL,
             on_reconnect: None,
             // No pre-swap gate and no swap observer on iOS: the overlap
             // migration is invisible to the UI by design (live -> live, no
@@ -1656,6 +1653,7 @@ fn spawn_multi_hop(
             // and cellular paths rarely benefit from multi-flow bonding.
             n_connections: 1,
             setup_clock: Some(warren_standing::server_clock::setup_clock()),
+            require_pq: false,
         };
         let (supervisor, watch) = MultiHopSupervisor::new(cfg);
         // Tokens only: the wallet-signed v6 request tells the exit which account

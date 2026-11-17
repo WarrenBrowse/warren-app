@@ -1494,7 +1494,7 @@ impl WarrenTunnelMonitor {
         args: TunnelArgs<'_>,
         _log_path: Option<&Path>,
     ) -> Result<Self, Error> {
-        use std::{sync::Arc, time::Duration};
+        use std::sync::Arc;
         use warrenguard_backoff::Backoff;
         use warrenguard_transport::{
             supervised_pump::{
@@ -1678,10 +1678,7 @@ impl WarrenTunnelMonitor {
             // A 2 s ceiling re-dials within ~2 s of the link returning, so a
             // Wi-Fi <-> ethernet switch reconnects promptly. Cold start is
             // unaffected (the relay is normally reachable on the first try).
-            backoff: Backoff {
-                base: Duration::from_millis(300),
-                max: Duration::from_secs(2),
-            },
+            backoff: Backoff::CLIENT_REDIAL,
             on_reconnect: params.on_reconnect.clone(),
             on_path_rtt: params.on_path_rtt.clone(),
             ip_assign_channel: Some(ip_assign_channel.clone()),
@@ -1705,6 +1702,7 @@ impl WarrenTunnelMonitor {
             // hash.
             n_connections: usize::from(params.n_connections).max(1),
             setup_clock: params.setup_clock.clone(),
+            require_pq: false,
             // docs/59 Lot 3: the pre-swap NAT-PMP reservation and the
             // post-swap re-map observer are wired by the daemon from its
             // live port-forward config (next step); the transport carries
