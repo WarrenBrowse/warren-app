@@ -38,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -311,8 +312,14 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
             }
         }
     }
-    val actions = PickerActions(
-        onApplyPin = applyPin,
+    // Built once: the rows take it as a parameter, and a new instance on every keystroke, menu
+    // or scroll edge would recompose every visible row. The lambdas read the latest pick and
+    // toggle handlers and the latest lists through updated state.
+    val currentApplyPin by rememberUpdatedState(applyPin)
+    val currentToggleList by rememberUpdatedState(toggleList)
+    val currentCustomLists by rememberUpdatedState(customLists)
+    val actions = remember { PickerActions(
+        onApplyPin = { pin -> currentApplyPin(pin) },
         onEntryPick = { country ->
             pickerScope = applyEntryPick(country, settings::setEntryCountry)
         },
@@ -336,10 +343,10 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
             },
         ),
         lists = ListActions(
-            memberships = { location -> listMemberships(location, customLists) },
+            memberships = { location -> listMemberships(location, currentCustomLists) },
             onToggleMembership = { listName, location ->
                 rowMenuFor = null
-                toggleList(listName, location)
+                currentToggleList(listName, location)
             },
             onNewList = { location ->
                 rowMenuFor = null
@@ -348,7 +355,7 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
             onRenameList = { renameListFor = it },
             onDeleteList = { deleteListFor = it },
         ),
-    )
+    ) }
 
     val catalogueState = when {
         relays.isNotEmpty() -> CatalogueState.Content
@@ -448,7 +455,11 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
                                     verticalArrangement =
                                         Arrangement.spacedBy(Dimens.listItemDivider),
                                 ) {
-                                    itemsIndexed(rows, key = { _, row -> row.key }) { _, row ->
+                                    itemsIndexed(
+                                        rows,
+                                        key = { _, row -> row.key },
+                                        contentType = { _, row -> row::class },
+                                    ) { _, row ->
                                         PickerRowContent(
                                             row = row,
                                             inFlight = inFlight,
