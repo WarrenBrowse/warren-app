@@ -97,3 +97,25 @@ final class WarrenAppGroupKeyTests: XCTestCase {
         XCTAssertEqual(rawValues.count, uniqueRawValues.count, "Duplicate raw values found in WarrenAppGroupKey")
     }
 }
+
+/// Neither process opts out of App Transport Security: every request either
+/// makes goes over HTTPS through URLSession, or through the Rust clients,
+/// which ATS does not govern. An opt-out would only remove the system's
+/// refusal of a plain-HTTP URL introduced by mistake.
+final class AppTransportSecurityTests: XCTestCase {
+    func test_theAppKeepsAppTransportSecurity() throws {
+        let info = try XCTUnwrap(Bundle.main.infoDictionary)
+
+        XCTAssertNil(info["NSAppTransportSecurity"])
+    }
+
+    func test_thePacketTunnelKeepsAppTransportSecurity() throws {
+        let plugIns = try XCTUnwrap(Bundle.main.builtInPlugInsURL)
+        let tunnel = try XCTUnwrap(Bundle(url: plugIns.appendingPathComponent("PacketTunnel.appex")))
+        let info = try XCTUnwrap(tunnel.infoDictionary)
+        let extensionInfo = try XCTUnwrap(info["NSExtension"] as? [String: Any])
+
+        XCTAssertNil(info["NSAppTransportSecurity"])
+        XCTAssertNil(extensionInfo["NSAppTransportSecurity"])
+    }
+}
