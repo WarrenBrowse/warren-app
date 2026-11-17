@@ -135,8 +135,6 @@ pub struct Firewall {
     /// in the tunnel, everything else leaves outside it. Exclusion is off
     /// meanwhile, so the two modes never shape the same policy.
     include_only: bool,
-    /// Cleared when the state machine decides the kill switch must outlive the daemon.
-    reset_on_drop: bool,
 }
 
 impl Firewall {
@@ -170,13 +168,7 @@ impl Firewall {
             net_cls,
             included_cgroup2: None,
             include_only: false,
-            reset_on_drop: true,
         })
-    }
-
-    /// Leave the applied policy in place when this instance is dropped.
-    pub fn keep_policy_on_drop(&mut self) {
-        self.reset_on_drop = false;
     }
 
     /// Chooses between the full tunnel (with launch-based exclusion) and
@@ -368,17 +360,6 @@ impl Firewall {
             return Err(Error::NetfilterTableStillPresentError);
         }
         Ok(())
-    }
-}
-
-impl Drop for Firewall {
-    fn drop(&mut self) {
-        if !self.reset_on_drop {
-            return;
-        }
-        if let Err(err) = self.reset_policy() {
-            log::error!("Failed to reset firewall policy on drop: {err}");
-        }
     }
 }
 
@@ -2121,24 +2102,14 @@ mod drop_tests {
             .contains(table_name())
     }
 
+    /// Dropping the firewall is never a decision to lift the kill switch:
+    /// only an explicit reset does that, at the places that decide it.
     #[test]
     #[ignore = "needs CAP_NET_ADMIN"]
-    fn a_dropped_firewall_removes_its_policy() {
+    fn a_dropped_firewall_keeps_its_policy() {
         let mut firewall = Firewall::new(0, None, None).unwrap();
         firewall.apply_policy(blocked()).unwrap();
 
-        drop(firewall);
-
-        assert!(!table_present());
-    }
-
-    #[test]
-    #[ignore = "needs CAP_NET_ADMIN"]
-    fn a_policy_kept_on_drop_outlives_the_firewall() {
-        let mut firewall = Firewall::new(0, None, None).unwrap();
-        firewall.apply_policy(blocked()).unwrap();
-
-        firewall.keep_policy_on_drop();
         drop(firewall);
 
         let kept = table_present();
@@ -2147,6 +2118,17 @@ mod drop_tests {
             .reset_policy()
             .unwrap();
         assert!(kept);
+    }
+
+    #[test]
+    #[ignore = "needs CAP_NET_ADMIN"]
+    fn an_explicit_reset_removes_the_policy() {
+        let mut firewall = Firewall::new(0, None, None).unwrap();
+        firewall.apply_policy(blocked()).unwrap();
+
+        firewall.reset_policy().unwrap();
+
+        assert!(!table_present());
     }
 }
 

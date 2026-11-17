@@ -822,12 +822,10 @@ impl TunnelStateMachine {
                     "Lockdown is armed (setting or app-update restart lock); leaving the \
                      kill-switch firewall in place on shutdown"
                 );
-                // The firewall resets itself when dropped, which would lift this block a moment
-                // after the line above claims to keep it. An uninstall disarms first, so what it
-                // stops keeps nothing (`disarm_for_uninstall` in mullvad-daemon on macOS, the
-                // packages' `reset-firewall` on Linux).
-                #[cfg(any(target_os = "linux", target_os = "macos"))]
-                self.shared_values.firewall.keep_policy_on_drop();
+                // Dropping the firewall keeps its policy: only the explicit reset below lifts
+                // it. An uninstall disarms first, so what it stops keeps nothing
+                // (`disarm_for_uninstall` in mullvad-daemon on macOS, the packages'
+                // `reset-firewall` on Linux).
             } else if let Err(error) = self.shared_values.firewall.reset_policy() {
                 log::error!("Failed to reset firewall during shutdown: {error}");
             }

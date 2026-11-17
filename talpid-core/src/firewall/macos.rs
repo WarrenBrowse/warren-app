@@ -56,8 +56,6 @@ pub struct Firewall {
     pf_was_enabled: Option<bool>,
     rule_logging: RuleLogging,
     last_policy: Option<FirewallPolicy>,
-    /// Cleared when the state machine decides the kill switch must outlive the daemon.
-    reset_on_drop: bool,
 }
 
 impl Firewall {
@@ -82,13 +80,7 @@ impl Firewall {
             pf_was_enabled: None,
             rule_logging,
             last_policy: None,
-            reset_on_drop: true,
         })
-    }
-
-    /// Leave the applied policy in place when this instance is dropped.
-    pub fn keep_policy_on_drop(&mut self) {
-        self.reset_on_drop = false;
     }
 
     pub fn apply_policy(&mut self, policy: FirewallPolicy) -> Result<()> {
@@ -1044,17 +1036,6 @@ impl Firewall {
         self.pf
             .try_remove_anchor(anchor, pfctl::AnchorKind::Filter)?;
         Ok(())
-    }
-}
-
-impl Drop for Firewall {
-    fn drop(&mut self) {
-        if !self.reset_on_drop {
-            return;
-        }
-        if let Err(err) = self.reset_policy() {
-            log::error!("Failed to reset firewall policy on drop: {err}");
-        }
     }
 }
 

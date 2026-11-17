@@ -29,9 +29,9 @@ pub async fn initialize_firewall() -> Result<(), Error> {
         allowed_endpoint: None,
     };
     log::info!("Applying firewall policy {policy}");
+    // This process exits right away and the block holds until the daemon replaces it: dropping
+    // the firewall never lifts its policy.
     firewall.apply_policy(policy)?;
-    // This process exits right away and the block has to hold until the daemon replaces it.
-    firewall.keep_policy_on_drop();
     Ok(())
 }
 
