@@ -15,11 +15,10 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.14.5",
     "@noble/hashes": "^1.8.0",
-    "@polkadot/util": "^14.0.3",
     "argv-split": "^2.0.1",
     "gettext-parser": "^6.0.0",
-    "history": "^4.10.1",
     "google-protobuf": "^3.21.0",
+    "history": "^4.10.1",
     "management-interface": "0.0.0",
     "motion": "^12.23.22",
     "node-gettext": "^3.0.0",
