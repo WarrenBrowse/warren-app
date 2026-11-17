@@ -244,9 +244,11 @@ lto = true
 
 # Selectively optimize packages where we know it makes a difference
 [profile.release.package]
-quinn.opt-level = 3
-quinn-proto.opt-level = 3
-quinn-udp.opt-level = 3
+# The quinn fork is published under its own package names (the lib names stay
+# `quinn*`), and a profile override matches the package name.
+warren-quinn.opt-level = 3
+warren-quinn-proto.opt-level = 3
+warren-quinn-udp.opt-level = 3
 ring.opt-level = 3
 # Warren data plane: these crates move every packet, so build them at opt-level
 # 3 even though the workspace default is size-first ("s").
