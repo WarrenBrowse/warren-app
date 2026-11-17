@@ -286,10 +286,10 @@
     <string name="tunnel_launch_on_startup_title">设备启动时启动应用</string>
     <string name="tunnel_launch_on_startup_subtitle">设备启动时自动连接 VPN。</string>
     <string name="tunnel_kill_switch_title">终止开关</string>
-    <string name="tunnel_kill_switch_subtitle">如果隧道断开，则阻断所有流量，而不是回退到不受保护的网络。</string>
+    <string name="tunnel_kill_switch_subtitle">在隧道重新连接期间阻止流量。如果连接反复中断或您的账户被拒绝，除非开启了锁定模式，否则流量会回到您的常规网络。</string>
     <string name="tunnel_kill_switch_info_1">如果你的网络突然中断或隧道失败，此内置功能可防止流量泄漏到 VPN 隧道之外：它会阻止流量，直到连接恢复。</string>
     <string name="tunnel_kill_switch_info_2">终止开关可在隧道自动重连期间防止泄漏。锁定模式还会在连接反复中断或您的账户被拒绝时保持流量被阻止。两者在您手动断开连接后都不会阻止流量：如需如此，请在 Android 的 VPN 设置中开启“屏蔽未使用 VPN 的所有连接”。</string>
-    <string name="tunnel_kill_switch_info_3">如果连接在短时间内多次中断，Warren 会停止重试，你的流量会回到常规网络，不再经过 VPN。开启锁定模式即可改为保持拦截。</string>
+    <string name="tunnel_kill_switch_info_3">当连接在短时间内连续多次中断，或您的账户被拒绝（订阅结束、设备数量上限、暂停）时，Warren 会停止重试，您的流量会回到 VPN 之外的常规网络。开启锁定模式可让流量保持被阻止。</string>
     <string name="tunnel_ipv6_title">隧道内 IPv6</string>
     <string name="tunnel_ipv6_subtitle">通过隧道路由 IPv6。关闭时，IPv6 将被阻断以防止泄露。</string>
     <string name="tunnel_ipv6_info_1">启用此功能后，IPv6 可以在 VPN 隧道中与 IPv4 一起使用来通过互联网服务通信。</string>

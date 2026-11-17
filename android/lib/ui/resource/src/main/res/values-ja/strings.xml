@@ -286,10 +286,10 @@
     <string name="tunnel_launch_on_startup_title">システム起動時にアプリを起動</string>
     <string name="tunnel_launch_on_startup_subtitle">デバイスの起動時に自動的にVPNへ接続します。</string>
     <string name="tunnel_kill_switch_title">キルスイッチ</string>
-    <string name="tunnel_kill_switch_subtitle">トンネルが切断された場合、保護されていないネットワークにフォールバックせず、すべての通信をブロックします。</string>
+    <string name="tunnel_kill_switch_subtitle">トンネルの再接続中はトラフィックをブロックします。接続が何度も切れる場合やアカウントが拒否された場合は、ロックダウンモードがオンでない限り、トラフィックは通常のネットワークに戻ります。</string>
     <string name="tunnel_kill_switch_info_1">この組み込み機能は、ネットワークが突然停止したりトンネルが失敗したりした場合に、通信が VPN トンネルの外へ漏れるのを防ぎます。接続が回復するまで通信をブロックします。</string>
     <string name="tunnel_kill_switch_info_2">キルスイッチは、トンネルの自動再接続中の漏洩を防ぎます。ロックダウンモードは、接続が何度も切れる場合やアカウントが拒否された場合にも、トラフィックをブロックしたままにします。どちらも手動で切断した後はブロックしません。そのためには、Android の VPN 設定で [VPNを使用していない接続をブロックする] をオンにしてください。</string>
-    <string name="tunnel_kill_switch_info_3">接続が短時間に何度も切れると、Warren は再試行を停止し、通信は VPN の外にある通常のネットワークに戻ります。代わりに通信を遮断したままにするには、ロックダウンモードをオンにしてください。</string>
+    <string name="tunnel_kill_switch_info_3">短時間に接続が何度も切れた場合や、アカウントが拒否された場合 (サブスクリプション終了、デバイス上限、停止) は、Warren は再試行をやめ、トラフィックは VPN の外の通常のネットワークに戻ります。ブロックしたままにするには、ロックダウンモードをオンにしてください。</string>
     <string name="tunnel_ipv6_title">トンネル内のIPv6</string>
     <string name="tunnel_ipv6_subtitle">IPv6 をトンネル経由でルーティングします。オフの場合、漏洩を防ぐため IPv6 はブロックされます。</string>
     <string name="tunnel_ipv6_info_1">この機能が有効である場合、VPNトンネルにIPv6とIPv4を併用してインターネットサービスと通信できます。</string>

@@ -293,10 +293,10 @@
     <string name="tunnel_launch_on_startup_title">Lancement de l\'application au démarrage</string>
     <string name="tunnel_launch_on_startup_subtitle">Connecte automatiquement le VPN au démarrage de l\'appareil.</string>
     <string name="tunnel_kill_switch_title">Coupe-circuit</string>
-    <string name="tunnel_kill_switch_subtitle">Bloque tout le trafic si le tunnel tombe, au lieu de basculer sur le réseau non protégé.</string>
+    <string name="tunnel_kill_switch_subtitle">Bloque le trafic pendant que le tunnel se reconnecte. Si la connexion tombe à répétition ou que votre compte est refusé, le trafic repasse par votre réseau habituel, sauf si le mode verrouillage est activé.</string>
     <string name="tunnel_kill_switch_info_1">Cette fonctionnalité intégrée empêche votre trafic de fuir hors du tunnel VPN si votre réseau s\'arrête brusquement ou si le tunnel échoue : elle bloque votre trafic jusqu\'au rétablissement de la connexion.</string>
     <string name="tunnel_kill_switch_info_2">Le coupe-circuit empêche les fuites pendant les reconnexions automatiques du tunnel. Le mode verrouillage garde en plus votre trafic bloqué quand la connexion tombe à répétition ou que votre compte est refusé. Aucun des deux ne bloque après une déconnexion manuelle : pour cela, activez « Bloquer les connexions sans VPN » dans les paramètres VPN d\'Android.</string>
-    <string name="tunnel_kill_switch_info_3">Si la connexion coupe plusieurs fois de suite en peu de temps, Warren cesse de réessayer et votre trafic repasse par votre réseau habituel, hors du VPN. Activez le Mode verrouillage pour qu\'il reste bloqué.</string>
+    <string name="tunnel_kill_switch_info_3">Si la connexion coupe plusieurs fois de suite en peu de temps, ou si votre compte est refusé (abonnement terminé, limite d\'appareils, suspension), Warren cesse de réessayer et votre trafic repasse par votre réseau habituel, hors du VPN. Activez le mode verrouillage pour qu\'il reste bloqué.</string>
     <string name="tunnel_ipv6_title">IPv6 en tunnel</string>
     <string name="tunnel_ipv6_subtitle">Achemine l\'IPv6 dans le tunnel. Désactivé, l\'IPv6 est bloqué pour éviter les fuites.</string>
     <string name="tunnel_ipv6_info_1">Lorsque cette fonctionnalité est activée, IPv6 peut être utilisé parallèlement à IPv4 dans le tunnel VPN pour communiquer avec les services internet.</string>

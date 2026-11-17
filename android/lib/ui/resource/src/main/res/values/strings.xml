@@ -300,10 +300,10 @@
     <string name="tunnel_launch_on_startup_title">Launch app on start-up</string>
     <string name="tunnel_launch_on_startup_subtitle">Automatically connect the VPN when your device starts up.</string>
     <string name="tunnel_kill_switch_title">Kill switch</string>
-    <string name="tunnel_kill_switch_subtitle">Block all traffic if the tunnel drops, instead of falling back to the unprotected network.</string>
+    <string name="tunnel_kill_switch_subtitle">Blocks traffic while the tunnel reconnects. If the connection keeps dropping or your account is refused, traffic goes back to your regular network unless Lockdown mode is on.</string>
     <string name="tunnel_kill_switch_info_1">This built-in feature prevents your traffic from leaking outside the VPN tunnel if your network suddenly stops working or if the tunnel fails: it blocks your traffic until the connection is reestablished.</string>
     <string name="tunnel_kill_switch_info_2">The kill switch prevents leaks during automatic tunnel reconnects. Lockdown mode also keeps your traffic blocked when the connection keeps dropping or your account is refused. Neither blocks after you disconnect manually: for that, turn on \"Block connections without VPN\" in the Android VPN settings.</string>
-    <string name="tunnel_kill_switch_info_3">When the connection keeps dropping in quick succession, Warren stops retrying and your traffic goes back to your regular network, outside the VPN. Turn on Lockdown mode to keep it blocked instead.</string>
+    <string name="tunnel_kill_switch_info_3">When the connection keeps dropping in quick succession, or your account is refused (subscription ended, device limit, suspension), Warren stops retrying and your traffic goes back to your regular network, outside the VPN. Turn on Lockdown mode to keep it blocked instead.</string>
     <string name="tunnel_ipv6_title">In-tunnel IPv6</string>
     <string name="tunnel_ipv6_subtitle">Route IPv6 through the tunnel. When off, IPv6 is blocked to prevent leaks.</string>
     <string name="tunnel_ipv6_info_1">When this feature is enabled, IPv6 can be used alongside IPv4 in the VPN tunnel to communicate with internet services.</string>

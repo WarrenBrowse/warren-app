@@ -298,10 +298,10 @@
     <string name="tunnel_launch_on_startup_title">Pornește aplicația la pornirea sistemului</string>
     <string name="tunnel_launch_on_startup_subtitle">Conectează automat VPN-ul la pornirea dispozitivului.</string>
     <string name="tunnel_kill_switch_title">Kill Switch de oprire de urgență</string>
-    <string name="tunnel_kill_switch_subtitle">Blochează tot traficul dacă tunelul cade, în loc să revină la rețeaua neprotejată.</string>
+    <string name="tunnel_kill_switch_subtitle">Blochează traficul cât timp tunelul se reconectează. Dacă conexiunea cade în mod repetat sau contul vă este refuzat, traficul revine pe rețeaua obișnuită, cu excepția cazului în care Modul Blocare este activat.</string>
     <string name="tunnel_kill_switch_info_1">Această funcție integrată împiedică scurgerea traficului în afara tunelului VPN dacă rețeaua se oprește brusc sau dacă tunelul cedează: blochează traficul până la restabilirea conexiunii.</string>
     <string name="tunnel_kill_switch_info_2">Kill Switch-ul previne scurgerile în timpul reconectărilor automate ale tunelului. Modul Blocare vă păstrează în plus traficul blocat atunci când conexiunea cade în mod repetat sau contul vă este refuzat. Niciunul nu blochează după o deconectare manuală: pentru asta, activați \"Blocați conexiunile fără VPN\" în setările VPN din Android.</string>
-    <string name="tunnel_kill_switch_info_3">Dacă conexiunea cade de mai multe ori la scurt timp, Warren nu mai reîncearcă, iar traficul revine pe rețeaua obișnuită, în afara VPN-ului. Activați Mod Blocare pentru ca traficul să rămână blocat.</string>
+    <string name="tunnel_kill_switch_info_3">Când conexiunea cade de mai multe ori la rând în scurt timp, sau contul vă este refuzat (abonament încheiat, limită de dispozitive, suspendare), Warren nu mai reîncearcă și traficul revine pe rețeaua obișnuită, în afara VPN-ului. Activați Modul Blocare ca să rămână blocat.</string>
     <string name="tunnel_ipv6_title">IPv6 în tunel</string>
     <string name="tunnel_ipv6_subtitle">Direcționează IPv6 prin tunel. Când este dezactivat, IPv6 este blocat pentru a preveni scurgerile de date.</string>
     <string name="tunnel_ipv6_info_1">Când această funcție este activată, IPv6 poate fi utilizat împreună cu IPv4 în tunelul VPN pentru a comunica cu serviciile de internet.</string>

@@ -286,10 +286,10 @@
     <string name="tunnel_launch_on_startup_title">啟動時啟動應用程式</string>
     <string name="tunnel_launch_on_startup_subtitle">裝置啟動時自動連線 VPN。</string>
     <string name="tunnel_kill_switch_title">終止開關</string>
-    <string name="tunnel_kill_switch_subtitle">當通道中斷時封鎖所有流量，而非退回至未受保護的網路。</string>
+    <string name="tunnel_kill_switch_subtitle">在通道重新連線期間封鎖流量。如果連線反覆中斷或您的帳戶遭拒，除非已啟用鎖定模式，否則流量會回到您的一般網路。</string>
     <string name="tunnel_kill_switch_info_1">若您的網路突然中斷或通道失敗，此內建功能可防止流量洩漏至 VPN 通道之外：它會封鎖流量，直到連線恢復。</string>
     <string name="tunnel_kill_switch_info_2">終止開關可在通道自動重新連線期間防止外洩。鎖定模式也會在連線反覆中斷或您的帳戶遭拒時，讓流量維持封鎖。兩者在您手動中斷連線後都不會封鎖流量：如需如此，請在 Android 的 VPN 設定中啟用「在沒有 VPN 的情況下封鎖連線」。</string>
-    <string name="tunnel_kill_switch_info_3">若連線在短時間內多次中斷，Warren 會停止重試，你的流量會回到一般網路，不再經過 VPN。開啟鎖定模式即可改為維持封鎖。</string>
+    <string name="tunnel_kill_switch_info_3">當連線在短時間內連續多次中斷，或您的帳戶遭拒（訂閱結束、裝置數量上限、停權）時，Warren 會停止重試，您的流量會回到 VPN 之外的一般網路。啟用鎖定模式可讓流量維持封鎖。</string>
     <string name="tunnel_ipv6_title">通道內 IPv6</string>
     <string name="tunnel_ipv6_subtitle">透過通道路由 IPv6。關閉時，IPv6 會被封鎖以防止洩漏。</string>
     <string name="tunnel_ipv6_info_1">啟用此功能後，即可在 VPN 通道中同時使用 IPv6 和 IPv4，以便與網際網路服務進行通訊。</string>

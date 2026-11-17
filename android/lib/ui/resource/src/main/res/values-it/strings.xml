@@ -293,10 +293,10 @@
     <string name="tunnel_launch_on_startup_title">Lancia app all\'avvio</string>
     <string name="tunnel_launch_on_startup_subtitle">Connette automaticamente la VPN all\'avvio del dispositivo.</string>
     <string name="tunnel_kill_switch_title">Kill switch</string>
-    <string name="tunnel_kill_switch_subtitle">Blocca tutto il traffico se il tunnel cade, invece di ripiegare sulla rete non protetta.</string>
+    <string name="tunnel_kill_switch_subtitle">Blocca il traffico mentre il tunnel si riconnette. Se la connessione cade ripetutamente o il tuo account viene rifiutato, il traffico torna sulla tua rete abituale, a meno che la Modalità Blocco sia attiva.</string>
     <string name="tunnel_kill_switch_info_1">Questa funzionalità integrata impedisce al traffico di uscire dal tunnel VPN se la rete smette improvvisamente di funzionare o se il tunnel cade: blocca il traffico finché la connessione non viene ristabilita.</string>
     <string name="tunnel_kill_switch_info_2">Il kill switch evita le perdite durante le riconnessioni automatiche del tunnel. La Modalità Blocco mantiene inoltre bloccato il tuo traffico quando la connessione cade ripetutamente o il tuo account viene rifiutato. Nessuno dei due blocca dopo una disconnessione manuale: per questo, attiva \"Blocca connessioni senza VPN\" nelle impostazioni VPN di Android.</string>
-    <string name="tunnel_kill_switch_info_3">Se la connessione cade più volte in rapida successione, Warren smette di riprovare e il traffico torna sulla rete abituale, fuori dalla VPN. Con la Modalità Blocco attiva, il traffico resta invece bloccato.</string>
+    <string name="tunnel_kill_switch_info_3">Quando la connessione cade più volte di seguito in poco tempo, o il tuo account viene rifiutato (abbonamento scaduto, limite di dispositivi, sospensione), Warren smette di riprovare e il tuo traffico torna sulla tua rete abituale, fuori dalla VPN. Attiva la Modalità Blocco per tenerlo bloccato.</string>
     <string name="tunnel_ipv6_title">In-tunnel IPv6</string>
     <string name="tunnel_ipv6_subtitle">Instrada l\'IPv6 attraverso il tunnel. Quando è disattivato, l\'IPv6 viene bloccato per evitare fughe di dati.</string>
     <string name="tunnel_ipv6_info_1">Quando questa funzione è abilitata, IPv6 può essere utilizzato insieme a IPv4 nel tunnel VPN per comunicare con i servizi Internet.</string>

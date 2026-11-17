@@ -298,10 +298,10 @@
     <string name="tunnel_launch_on_startup_title">Uruchom aplikację na starcie</string>
     <string name="tunnel_launch_on_startup_subtitle">Automatycznie łączy z VPN po uruchomieniu urządzenia.</string>
     <string name="tunnel_kill_switch_title">Kill switch</string>
-    <string name="tunnel_kill_switch_subtitle">Blokuj cały ruch, gdy tunel się rozłączy, zamiast przełączać się na niechronioną sieć.</string>
+    <string name="tunnel_kill_switch_subtitle">Blokuje ruch, gdy tunel łączy się ponownie. Jeśli połączenie raz po raz się zrywa lub Twoje konto zostaje odrzucone, ruch wraca do zwykłej sieci, chyba że włączony jest Tryb Lockdown.</string>
     <string name="tunnel_kill_switch_info_1">Ta wbudowana funkcja zapobiega wyciekowi ruchu poza tunel VPN, gdy sieć nagle przestanie działać lub tunel zawiedzie: blokuje ruch do czasu przywrócenia połączenia.</string>
     <string name="tunnel_kill_switch_info_2">Kill switch zapobiega wyciekom podczas automatycznych ponownych połączeń tunelu. Tryb Lockdown dodatkowo blokuje ruch, gdy połączenie raz po raz się zrywa lub Twoje konto zostaje odrzucone. Żaden z nich nie blokuje po ręcznym rozłączeniu: w tym celu włącz opcję „Blokuj połączenia bez pośrednictwa sieci VPN” w ustawieniach VPN Androida.</string>
-    <string name="tunnel_kill_switch_info_3">Jeśli połączenie zerwie się kilka razy w krótkim czasie, Warren przestaje ponawiać próby, a ruch wraca do zwykłej sieci, poza VPN. Włącz Tryb Lockdown, aby zamiast tego pozostał zablokowany.</string>
+    <string name="tunnel_kill_switch_info_3">Gdy połączenie zrywa się kilka razy z rzędu w krótkim czasie lub Twoje konto zostaje odrzucone (koniec subskrypcji, limit urządzeń, zawieszenie), Warren przestaje ponawiać próby, a ruch wraca do zwykłej sieci, poza VPN. Włącz Tryb Lockdown, aby pozostał zablokowany.</string>
     <string name="tunnel_ipv6_title">Protokół IPv6 w tunelu</string>
     <string name="tunnel_ipv6_subtitle">Kieruj ruch IPv6 przez tunel. Gdy opcja jest wyłączona, IPv6 jest blokowane, aby zapobiec wyciekom.</string>
     <string name="tunnel_ipv6_info_1">Gdy ta funkcja jest włączona, protokołu IPv6 można używać wraz z protokołem IPv4 w tunelu VPN do komunikacji z usługami internetowymi.</string>

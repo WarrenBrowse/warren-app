@@ -290,10 +290,10 @@
     <string name="tunnel_launch_on_startup_title">App beim Hochfahren starten</string>
     <string name="tunnel_launch_on_startup_subtitle">Stellt beim Start des Geräts automatisch eine VPN-Verbindung her.</string>
     <string name="tunnel_kill_switch_title">Killswitch</string>
-    <string name="tunnel_kill_switch_subtitle">Blockiere den gesamten Datenverkehr, wenn der Tunnel abbricht, anstatt auf das ungeschützte Netzwerk zurückzufallen.</string>
+    <string name="tunnel_kill_switch_subtitle">Blockiert den Datenverkehr, während sich der Tunnel neu verbindet. Bricht die Verbindung wiederholt ab oder wird dein Konto abgelehnt, läuft der Datenverkehr wieder über dein normales Netzwerk, außer der Sperrmodus ist aktiviert.</string>
     <string name="tunnel_kill_switch_info_1">Diese eingebaute Funktion verhindert, dass dein Datenverkehr aus dem VPN-Tunnel austritt, wenn dein Netzwerk plötzlich ausfällt oder der Tunnel abbricht: Sie blockiert den Verkehr, bis die Verbindung wiederhergestellt ist.</string>
     <string name="tunnel_kill_switch_info_2">Der Killswitch verhindert Lecks bei automatischen Neuverbindungen des Tunnels. Der Sperrmodus hält Ihren Datenverkehr zusätzlich blockiert, wenn die Verbindung wiederholt abbricht oder Ihr Konto abgelehnt wird. Keiner von beiden blockiert nach einer manuellen Trennung: Aktivieren Sie dafür „Verbindungen ohne VPN blockieren“ in den VPN-Einstellungen von Android.</string>
-    <string name="tunnel_kill_switch_info_3">Bricht die Verbindung mehrmals kurz hintereinander ab, hört Warren auf, es erneut zu versuchen, und dein Datenverkehr läuft wieder über dein normales Netzwerk, außerhalb des VPN. Aktiviere den Sperrmodus, damit er stattdessen blockiert bleibt.</string>
+    <string name="tunnel_kill_switch_info_3">Bricht die Verbindung mehrmals kurz hintereinander ab oder wird dein Konto abgelehnt (Abonnement abgelaufen, Gerätelimit, Sperrung), hört Warren auf, es erneut zu versuchen, und dein Datenverkehr läuft wieder über dein normales Netzwerk, außerhalb des VPN. Aktiviere den Sperrmodus, damit er stattdessen blockiert bleibt.</string>
     <string name="tunnel_ipv6_title">In-Tunnel-IPv6</string>
     <string name="tunnel_ipv6_subtitle">Leite IPv6 durch den Tunnel. Wenn deaktiviert, wird IPv6 blockiert, um Lecks zu verhindern.</string>
     <string name="tunnel_ipv6_info_1">Wenn diese Funktion aktiviert ist, kann IPv6 neben IPv4 im VPN-Tunnel für die Kommunikation mit Internetdiensten verwendet werden.</string>

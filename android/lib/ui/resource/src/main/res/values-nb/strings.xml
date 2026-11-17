@@ -290,10 +290,10 @@
     <string name="tunnel_launch_on_startup_title">Kjør app ved oppstart</string>
     <string name="tunnel_launch_on_startup_subtitle">Kobler til VPN automatisk når enheten starter opp.</string>
     <string name="tunnel_kill_switch_title">Avbruddsbryter</string>
-    <string name="tunnel_kill_switch_subtitle">Blokker all trafikk hvis tunnelen faller bort, i stedet for å falle tilbake til det ubeskyttede nettverket.</string>
+    <string name="tunnel_kill_switch_subtitle">Blokkerer trafikken mens tunnelen kobler seg til igjen. Hvis tilkoblingen faller ut gang på gang eller kontoen din blir avvist, går trafikken tilbake over det vanlige nettverket ditt, med mindre låsemodus er på.</string>
     <string name="tunnel_kill_switch_info_1">Denne innebygde funksjonen hindrer at trafikken din lekker ut av VPN-tunnelen hvis nettverket plutselig slutter å virke eller tunnelen svikter: den blokkerer trafikken til forbindelsen er gjenopprettet.</string>
     <string name="tunnel_kill_switch_info_2">Avbruddsbryteren hindrer lekkasjer under tunnelens automatiske gjenoppkoblinger. Låsemodus holder i tillegg trafikken din blokkert når tilkoblingen faller ut gang på gang eller kontoen din blir avvist. Ingen av dem blokkerer etter at du har koblet fra manuelt: slå på «Blokker tilkoblinger uten VPN» i VPN-innstillingene i Android for det.</string>
-    <string name="tunnel_kill_switch_info_3">Hvis forbindelsen faller ut flere ganger i rask rekkefølge, slutter Warren å prøve på nytt, og trafikken din går tilbake til det vanlige nettverket ditt, utenfor VPN. Slå på Låsemodus for å holde den blokkert i stedet.</string>
+    <string name="tunnel_kill_switch_info_3">Når tilkoblingen faller ut flere ganger på kort tid, eller kontoen din blir avvist (abonnement utløpt, enhetsgrense, suspensjon), slutter Warren å prøve på nytt, og trafikken din går tilbake over det vanlige nettverket ditt, utenfor VPN. Slå på låsemodus for å holde den blokkert.</string>
     <string name="tunnel_ipv6_title">IPv6 i tunnel</string>
     <string name="tunnel_ipv6_subtitle">Rut IPv6 gjennom tunnelen. Når den er av, blokkeres IPv6 for å hindre lekkasjer.</string>
     <string name="tunnel_ipv6_info_1">Når denne funksjonen er aktivert, kan IPv6 brukes sammen med IPv4 i VPN-tunnelen til å kommunisere med internettjenester.</string>

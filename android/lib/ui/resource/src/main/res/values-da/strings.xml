@@ -290,10 +290,10 @@
     <string name="tunnel_launch_on_startup_title">Start app ved opstart</string>
     <string name="tunnel_launch_on_startup_subtitle">Opret automatisk forbindelse til VPN, når din enhed starter op.</string>
     <string name="tunnel_kill_switch_title">Kill-switch</string>
-    <string name="tunnel_kill_switch_subtitle">Bloker al trafik, hvis tunnelen falder ud, i stedet for at falde tilbage til det ubeskyttede netværk.</string>
+    <string name="tunnel_kill_switch_subtitle">Blokerer trafikken, mens tunnelen genopretter forbindelsen. Hvis forbindelsen falder ud igen og igen, eller din konto bliver afvist, går trafikken tilbage over dit almindelige netværk, medmindre Lockdown-tilstand er slået til.</string>
     <string name="tunnel_kill_switch_info_1">Denne indbyggede funktion forhindrer, at din trafik lækker uden for VPN-tunnelen, hvis dit netværk pludselig holder op med at virke, eller hvis tunnelen fejler: den blokerer trafikken, indtil forbindelsen er genetableret.</string>
     <string name="tunnel_kill_switch_info_2">Kill-switchen forhindrer læk under tunnelens automatiske genforbindelser. Lockdown-tilstand holder desuden din trafik blokeret, når forbindelsen falder ud igen og igen, eller din konto bliver afvist. Ingen af dem blokerer, efter du har afbrudt manuelt: slå i stedet \"Bloker forbindelser uden VPN\" til i Androids VPN-indstillinger.</string>
-    <string name="tunnel_kill_switch_info_3">Hvis forbindelsen falder ud flere gange i hurtig rækkefølge, holder Warren op med at prøve igen, og din trafik går tilbage til dit almindelige netværk uden om VPN. Slå Lockdown-tilstand til for at holde den blokeret i stedet.</string>
+    <string name="tunnel_kill_switch_info_3">Når forbindelsen falder ud flere gange i træk på kort tid, eller din konto bliver afvist (abonnement udløbet, enhedsgrænse, suspendering), holder Warren op med at prøve igen, og din trafik går tilbage over dit almindelige netværk, uden for VPN. Slå Lockdown-tilstand til for at holde den blokeret.</string>
     <string name="tunnel_ipv6_title">IPv6 i tunnel</string>
     <string name="tunnel_ipv6_subtitle">Send IPv6 gennem tunnelen. Når slået fra, blokeres IPv6 for at forhindre lækager.</string>
     <string name="tunnel_ipv6_info_1">Når denne funktion er aktiveret, kan IPv6 bruges sammen med IPv4 i VPN-tunnelen til at kommunikere med internettjenester.</string>

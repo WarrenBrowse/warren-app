@@ -286,10 +286,10 @@
     <string name="tunnel_launch_on_startup_title">시작 시 앱 실행</string>
     <string name="tunnel_launch_on_startup_subtitle">기기가 시작될 때 자동으로 VPN에 연결합니다.</string>
     <string name="tunnel_kill_switch_title">킬 스위치</string>
-    <string name="tunnel_kill_switch_subtitle">터널이 끊기면 보호되지 않는 네트워크로 전환하는 대신 모든 트래픽을 차단합니다.</string>
+    <string name="tunnel_kill_switch_subtitle">터널이 다시 연결되는 동안 트래픽을 차단합니다. 연결이 계속 끊기거나 계정이 거부되면 잠금 모드가 켜져 있지 않는 한 트래픽이 일반 네트워크로 돌아갑니다.</string>
     <string name="tunnel_kill_switch_info_1">이 내장 기능은 네트워크가 갑자기 끊기거나 터널이 실패할 때 트래픽이 VPN 터널 밖으로 새는 것을 막습니다. 연결이 복구될 때까지 트래픽을 차단합니다.</string>
     <string name="tunnel_kill_switch_info_2">킬 스위치는 터널이 자동으로 다시 연결되는 동안 유출을 막습니다. 잠금 모드는 연결이 계속 끊기거나 계정이 거부될 때도 트래픽을 차단된 상태로 유지합니다. 둘 다 수동으로 연결을 끊은 뒤에는 차단하지 않습니다. 이를 위해서는 Android VPN 설정에서 \"VPN 없이 연결 차단\"을 켜세요.</string>
-    <string name="tunnel_kill_switch_info_3">짧은 시간에 연결이 여러 번 끊기면 Warren은 재시도를 멈추고 트래픽은 VPN 밖의 일반 네트워크로 돌아갑니다. 대신 차단된 상태를 유지하려면 잠금 모드를 켜세요.</string>
+    <string name="tunnel_kill_switch_info_3">짧은 시간에 연결이 여러 번 연속으로 끊기거나 계정이 거부되면(구독 종료, 기기 한도, 정지) Warren은 재시도를 멈추고 트래픽은 VPN 밖의 일반 네트워크로 돌아갑니다. 계속 차단하려면 잠금 모드를 켜세요.</string>
     <string name="tunnel_ipv6_title">터널 내 IPv6</string>
     <string name="tunnel_ipv6_subtitle">IPv6를 터널을 통해 라우팅합니다. 꺼져 있으면 누출을 방지하기 위해 IPv6가 차단됩니다.</string>
     <string name="tunnel_ipv6_info_1">이 기능을 활성화하면 VPN 터널에서 IPv4와 함께 IPv6을 사용하여 인터넷 서비스와 통신할 수 있습니다.</string>

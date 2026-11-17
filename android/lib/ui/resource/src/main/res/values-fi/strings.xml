@@ -290,10 +290,10 @@
     <string name="tunnel_launch_on_startup_title">Käynnistä sovellus, kun järjestelmä käynnistyy</string>
     <string name="tunnel_launch_on_startup_subtitle">Yhdistää VPN:n automaattisesti, kun laite käynnistyy.</string>
     <string name="tunnel_kill_switch_title">Tappokytkin</string>
-    <string name="tunnel_kill_switch_subtitle">Estä kaikki liikenne, jos tunneli katkeaa, sen sijaan että palattaisiin suojaamattomaan verkkoon.</string>
+    <string name="tunnel_kill_switch_subtitle">Estää liikenteen, kun tunneli yhdistää uudelleen. Jos yhteys katkeaa toistuvasti tai tilisi hylätään, liikenne palaa tavalliseen verkkoosi, ellei lukitustila ole käytössä.</string>
     <string name="tunnel_kill_switch_info_1">Tämä sisäänrakennettu ominaisuus estää liikennettäsi vuotamasta VPN-tunnelin ulkopuolelle, jos verkkosi lakkaa yhtäkkiä toimimasta tai tunneli pettää: se estää liikenteen, kunnes yhteys on palautettu.</string>
     <string name="tunnel_kill_switch_info_2">Tappokytkin estää vuodot tunnelin automaattisten uudelleenyhdistysten aikana. Lukitustila pitää lisäksi liikenteesi estettynä, kun yhteys katkeaa toistuvasti tai tilisi hylätään. Kumpikaan ei estä liikennettä manuaalisen katkaisun jälkeen: ota sitä varten käyttöön \"Estä yhteydet ilman VPN:ää\" Androidin VPN-asetuksissa.</string>
-    <string name="tunnel_kill_switch_info_3">Jos yhteys katkeaa useita kertoja nopeasti peräkkäin, Warren lopettaa uudelleenyritykset ja liikenteesi palaa tavalliseen verkkoosi VPN:n ulkopuolelle. Ota Lukitustila käyttöön, jos haluat liikenteen pysyvän estettynä.</string>
+    <string name="tunnel_kill_switch_info_3">Kun yhteys katkeaa useita kertoja peräkkäin lyhyessä ajassa tai tilisi hylätään (tilaus päättynyt, laiteraja, jäädytys), Warren lopettaa yrittämisen ja liikenteesi palaa tavalliseen verkkoosi VPN:n ulkopuolelle. Ota lukitustila käyttöön, jos haluat sen pysyvän estettynä.</string>
     <string name="tunnel_ipv6_title">Tunnelin IPv6</string>
     <string name="tunnel_ipv6_subtitle">Reititä IPv6 tunnelin kautta. Kun pois käytöstä, IPv6 estetään vuotojen ehkäisemiseksi.</string>
     <string name="tunnel_ipv6_info_1">Kun tämä ominaisuus on käytössä, IPv6:ta voidaan käyttää IPv4:n rinnalla VPN-tunnelissa yhteydenpidossa internetpalveluiden kanssa.</string>

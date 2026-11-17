@@ -290,10 +290,10 @@
     <string name="tunnel_launch_on_startup_title">Starta appen vid uppstart</string>
     <string name="tunnel_launch_on_startup_subtitle">Ansluter automatiskt till VPN när enheten startar.</string>
     <string name="tunnel_kill_switch_title">Kill Switch</string>
-    <string name="tunnel_kill_switch_subtitle">Blockera all trafik om tunneln bryts, i stället för att falla tillbaka på det oskyddade nätverket.</string>
+    <string name="tunnel_kill_switch_subtitle">Blockerar trafiken medan tunneln återansluter. Om anslutningen bryts gång på gång eller ditt konto nekas går trafiken tillbaka över ditt vanliga nätverk, såvida inte låsningsläget är på.</string>
     <string name="tunnel_kill_switch_info_1">Den här inbyggda funktionen hindrar din trafik från att läcka utanför VPN-tunneln om nätverket plötsligt slutar fungera eller om tunneln fallerar: den blockerar trafiken tills anslutningen är återupprättad.</string>
     <string name="tunnel_kill_switch_info_2">Kill Switch förhindrar läckor när tunneln återansluter automatiskt. Låsningsläget håller dessutom din trafik blockerad när anslutningen bryts gång på gång eller ditt konto nekas. Ingen av dem blockerar efter att du kopplat från manuellt: aktivera i stället \"Blockera anslutningar utan VPN\" i Androids VPN-inställningar.</string>
-    <string name="tunnel_kill_switch_info_3">Om anslutningen bryts flera gånger i snabb följd slutar Warren försöka igen och din trafik går tillbaka till ditt vanliga nätverk, utanför VPN. Slå på Låsningsläge för att hålla den blockerad i stället.</string>
+    <string name="tunnel_kill_switch_info_3">När anslutningen bryts flera gånger i rad på kort tid, eller ditt konto nekas (prenumerationen har gått ut, enhetsgräns, avstängning), slutar Warren försöka igen och din trafik går tillbaka över ditt vanliga nätverk, utanför VPN. Aktivera låsningsläget för att hålla den blockerad.</string>
     <string name="tunnel_ipv6_title">IPv6 i tunnel</string>
     <string name="tunnel_ipv6_subtitle">Skicka IPv6 genom tunneln. När detta är av blockeras IPv6 för att förhindra läckor.</string>
     <string name="tunnel_ipv6_info_1">När funktionen är aktiverad kan IPv6 användas tillsammans med IPv4 i VPN-tunneln för att kommunicera med internettjänster.</string>

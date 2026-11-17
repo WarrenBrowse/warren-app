@@ -290,10 +290,10 @@
     <string name="tunnel_launch_on_startup_title">Lanceren bij opstarten</string>
     <string name="tunnel_launch_on_startup_subtitle">Maakt automatisch verbinding met de VPN wanneer je apparaat opstart.</string>
     <string name="tunnel_kill_switch_title">Killswitch</string>
-    <string name="tunnel_kill_switch_subtitle">Blokkeer al het verkeer als de tunnel wegvalt, in plaats van terug te vallen op het onbeschermde netwerk.</string>
+    <string name="tunnel_kill_switch_subtitle">Blokkeert verkeer terwijl de tunnel opnieuw verbindt. Valt de verbinding steeds weg of wordt je account geweigerd, dan gaat het verkeer terug over je gewone netwerk, tenzij lockdownmodus aan staat.</string>
     <string name="tunnel_kill_switch_info_1">Deze ingebouwde functie voorkomt dat je verkeer buiten de VPN-tunnel lekt als je netwerk plotseling uitvalt of de tunnel faalt: het verkeer wordt geblokkeerd tot de verbinding is hersteld.</string>
     <string name="tunnel_kill_switch_info_2">De killswitch voorkomt lekken tijdens automatische herverbindingen van de tunnel. Lockdownmodus houdt je verkeer daarnaast geblokkeerd wanneer de verbinding steeds wegvalt of je account wordt geweigerd. Geen van beide blokkeert na een handmatige verbreking: schakel daarvoor \"Verbindingen zonder VPN blokkeren\" in bij de VPN-instellingen van Android.</string>
-    <string name="tunnel_kill_switch_info_3">Als de verbinding meerdere keren kort na elkaar wegvalt, stopt Warren met opnieuw proberen en gaat je verkeer terug naar je gewone netwerk, buiten de VPN. Zet Lockdownmodus aan om het in plaats daarvan geblokkeerd te houden.</string>
+    <string name="tunnel_kill_switch_info_3">Valt de verbinding meerdere keren kort na elkaar weg, of wordt je account geweigerd (abonnement afgelopen, apparaatlimiet, schorsing), dan stopt Warren met opnieuw proberen en gaat je verkeer weer over je gewone netwerk, buiten de VPN. Zet lockdownmodus aan om het geblokkeerd te houden.</string>
     <string name="tunnel_ipv6_title">IPv6 in tunnel</string>
     <string name="tunnel_ipv6_subtitle">Stuur IPv6 door de tunnel. Wanneer uitgeschakeld wordt IPv6 geblokkeerd om lekken te voorkomen.</string>
     <string name="tunnel_ipv6_info_1">Als deze functie is ingeschakeld, kan IPv6 naast IPv4 worden gebruikt in de VPN-tunnel om te communiceren met internetdiensten.</string>

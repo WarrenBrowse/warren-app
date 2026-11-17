@@ -290,10 +290,10 @@
     <string name="tunnel_launch_on_startup_title">Uygulamayı başlangıçta aç</string>
     <string name="tunnel_launch_on_startup_subtitle">Cihazınız başladığında VPN\'e otomatik olarak bağlanır.</string>
     <string name="tunnel_kill_switch_title">Kill switch</string>
-    <string name="tunnel_kill_switch_subtitle">Tünel koparsa korumasız ağa geri dönmek yerine tüm trafiği engelle.</string>
+    <string name="tunnel_kill_switch_subtitle">Tünel yeniden bağlanırken trafiği engeller. Bağlantı tekrar tekrar koparsa veya hesabınız reddedilirse, Kilitleme modu açık değilse trafik normal ağınıza geri döner.</string>
     <string name="tunnel_kill_switch_info_1">Bu yerleşik özellik, ağınız aniden çalışmayı bırakırsa veya tünel başarısız olursa trafiğinizin VPN tünelinin dışına sızmasını önler: bağlantı yeniden kurulana kadar trafiği engeller.</string>
     <string name="tunnel_kill_switch_info_2">Kill switch, tünelin otomatik yeniden bağlanmaları sırasında sızıntıları önler. Kilitleme modu ayrıca bağlantı tekrar tekrar koptuğunda veya hesabınız reddedildiğinde trafiğinizi engelli tutar. İkisi de manuel bağlantı kesmeden sonra engellemez: bunun için Android VPN ayarlarında \"VPN üzerinden olmayan bağlantıları engelle\" seçeneğini açın.</string>
-    <string name="tunnel_kill_switch_info_3">Bağlantı kısa sürede art arda birkaç kez koparsa Warren yeniden denemeyi bırakır ve trafiğiniz VPN dışında, normal ağınıza geri döner. Bunun yerine engelli kalması için Kilitleme modunu açın.</string>
+    <string name="tunnel_kill_switch_info_3">Bağlantı kısa sürede art arda birkaç kez koptuğunda veya hesabınız reddedildiğinde (abonelik sona erdi, cihaz sınırı, askıya alma), Warren yeniden denemeyi bırakır ve trafiğiniz VPN dışında normal ağınıza geri döner. Engelli kalması için Kilitleme modunu açın.</string>
     <string name="tunnel_ipv6_title">Tünel içi IPv6</string>
     <string name="tunnel_ipv6_subtitle">IPv6\'yı tünel üzerinden yönlendir. Kapalıyken sızıntıları önlemek için IPv6 engellenir.</string>
     <string name="tunnel_ipv6_info_1">Bu özellik etkinleştirildiğinde IPv6, internet hizmetleriyle iletişim kurmak için VPN tünelinde IPv4 ile birlikte kullanılabilir.</string>
