@@ -11,7 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,7 +35,7 @@ import org.koin.compose.koinInject
 fun Licenses(navArgs: LicensesNavKey, navigator: Navigator) {
     val productFlags = koinInject<WarrenProductFlags>()
     val uriHandler = LocalUriHandler.current
-    val resources = LocalContext.current.resources
+    val resources = LocalResources.current
     val licenseText = remember {
         formatLicenseText(
             resources.openRawResource(R.raw.gpl_3_0).bufferedReader().use { it.readText() }

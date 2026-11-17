@@ -232,7 +232,6 @@ class SplitTunnelingViewModel(
         change(app) { it.planAppRoute(app.packageName.value, route) }
     }
 
-    /** Opens the countries of the app whose route is open, with the cities of its own shown. */
     /** "Never without the VPN": an app outside the VPN cannot be locked, so that asks nothing. */
     fun onSetLocked(locked: Boolean) {
         val app = (page.value as? PageKey.Route)?.app ?: return
@@ -243,6 +242,7 @@ class SplitTunnelingViewModel(
         }
     }
 
+    /** Opens the countries of the app whose route is open, with the cities of its own shown. */
     fun onOpenCountries() {
         if (!countryPerAppSupported) return
         val app = (page.value as? PageKey.Route)?.app ?: return

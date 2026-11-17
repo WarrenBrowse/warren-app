@@ -107,7 +107,7 @@ class DeviceRepository(
      * banner says the disconnection was not confirmed.
      */
     suspend fun showRevocationUnconfirmed() {
-        forgetNatively()
+        dropRevocation()
         _revocationUnconfirmed.value = true
     }
 
@@ -116,7 +116,7 @@ class DeviceRepository(
      * says why. The native flag is consumed, so the same revocation is acted on once.
      */
     suspend fun showRevoked() {
-        forgetNatively()
+        dropRevocation()
         _deviceState.value = DeviceState.Revoked
     }
 
@@ -126,18 +126,14 @@ class DeviceRepository(
     }
 
     /** Drops a revocation that concerns no wallet any more, without a screen. */
-    suspend fun dropRevocation() {
-        forgetNatively()
-    }
+    suspend fun dropRevocation() = withContext(io) { bridge?.forgetDeviceRevocation() }
 
     /** The user left the revoked screen: the next login starts from a clean state. */
     suspend fun acknowledgeRevocation() {
-        forgetNatively()
+        dropRevocation()
         _deviceState.value = null
         _revocationUnconfirmed.value = false
     }
-
-    private suspend fun forgetNatively() = withContext(io) { bridge?.forgetDeviceRevocation() }
 
     /** The account's devices, this one marked. */
     suspend fun listDevices(): Either<DeviceRegistryError, AccountDeviceList> =
@@ -209,27 +205,28 @@ class DeviceRepository(
             null
         }
 
-    private fun deviceOf(row: JsonObject): AccountDevice? {
-        val id = row.string("device_id") ?: return null
-        return AccountDevice(
-            id = id,
-            name = row.string("name").orEmpty(),
-            platform = row.string("platform").orEmpty(),
-            appVersion = row.string("app_version").orEmpty(),
-            lastSeenOn = dayOf(row.string("last_seen_on")),
-            thisDevice = row.bool("this_device") ?: false,
-        )
-    }
-
-    private fun dayOf(day: String?): LocalDate? =
-        day?.let {
-            try {
-                LocalDate.parse(it)
-            } catch (e: DateTimeParseException) {
-                null
-            }
-        }
 }
+
+private fun deviceOf(row: JsonObject): AccountDevice? {
+    val id = row.string("device_id") ?: return null
+    return AccountDevice(
+        id = id,
+        name = row.string("name").orEmpty(),
+        platform = row.string("platform").orEmpty(),
+        appVersion = row.string("app_version").orEmpty(),
+        lastSeenOn = dayOf(row.string("last_seen_on")),
+        thisDevice = row.bool("this_device") ?: false,
+    )
+}
+
+private fun dayOf(day: String?): LocalDate? =
+    day?.let {
+        try {
+            LocalDate.parse(it)
+        } catch (e: DateTimeParseException) {
+            null
+        }
+    }
 
 private fun JsonObject.string(key: String): String? = (this[key] as? JsonPrimitive)?.contentOrNull
 
