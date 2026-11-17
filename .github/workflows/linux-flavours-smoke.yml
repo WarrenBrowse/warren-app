@@ -38,7 +38,7 @@ jobs:
     # install test need a Docker daemon, so they run in the next job.
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee
+      image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee@sha256:51723886b8894945cab72fbf5c1d1becbbf755367c2cb1f3279108370f86ed70
       options: --user root
     # A container job's steps default to sh, which has no pipefail.
     defaults:

@@ -328,10 +328,13 @@ jobs:
     needs: [tag-guard, tests]
     # GitHub-hosted, inside the Debian 11 job image (glibc 2.31): the floor of
     # every Linux binary shipped to users, which ubuntu-24.04 itself (2.39)
-    # would raise. Image: workspace scripts/ci-runners/Dockerfile.job.
+    # would raise. Image: workspace scripts/ci-runners/Dockerfile.job. The
+    # digest after the tag is what docker pulls, so a tag pushed again cannot
+    # change the toolchain a release is built with; every workflow naming this
+    # image carries the same digest.
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee
+      image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee@sha256:51723886b8894945cab72fbf5c1d1becbbf755367c2cb1f3279108370f86ed70
       options: --user root
     # A container job's steps default to sh, which has no pipefail.
     defaults:
@@ -430,7 +433,7 @@ jobs:
     # would raise. Image: workspace scripts/ci-runners/Dockerfile.job.
     runs-on: ubuntu-24.04-arm
     container:
-      image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee
+      image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee@sha256:51723886b8894945cab72fbf5c1d1becbbf755367c2cb1f3279108370f86ed70
       options: --user root
     # A container job's steps default to sh, which has no pipefail.
     defaults:
