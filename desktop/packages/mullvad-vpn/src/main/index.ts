@@ -150,6 +150,7 @@ import { readSeenPorts, serializeSeenPorts, writeSeenPorts } from './port-forwar
 import { PortForwardingWatcher } from './port-forwarding-watcher';
 import * as problemReport from './problem-report';
 import { resolveBin } from './proc';
+import { installProcessErrorHandlers } from './process-error-handlers';
 import PurchaseFlow from './purchase-flow';
 import ReconnectionBackoff from './reconnection-backoff';
 import RenewalFlow, {
@@ -436,6 +437,8 @@ class ApplicationMain
   }
 
   public run() {
+    installProcessErrorHandlers(process, log);
+
     // Remove window animations to combat window flickering when opening window. Can be removed when
     // this issue has been resolved: https://github.com/electron/electron/issues/12130
     if (process.platform === 'win32') {
