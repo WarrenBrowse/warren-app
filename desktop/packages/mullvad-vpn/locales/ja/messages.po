@@ -6473,3 +6473,7 @@ msgstr "接続解除が確認されていません"
 msgctxt "in-app-notifications"
 msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
 msgstr "サーバーはこのデバイスがアカウントから接続解除されたと伝えていますが、アカウントはそれを確認していません。このデバイスからは何も消去されていません。"
+
+msgctxt "support-view"
+msgid "Privacy policy"
+msgstr "プライバシーポリシー"

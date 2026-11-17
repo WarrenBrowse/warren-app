@@ -33,6 +33,8 @@ export const urls = {
   // paid terms once a legal entity exists, so this one URL always resolves to
   // the contract the user is actually under.
   terms: `${website}/cgu`,
+  // Privacy policy, linked from the Support view as on Android and iOS.
+  privacyPolicy: `${website}/confidentialite`,
   // Cancellation page of the checkout: the way out every renewal notice names.
   cancelContract: `${checkout}/resiliation`,
   // Abuse-report and appeal policy. Addressed to rights holders, hosts and

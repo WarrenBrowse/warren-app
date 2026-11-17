@@ -6506,3 +6506,7 @@ msgstr "TRENNUNG NICHT BESTÄTIGT"
 msgctxt "in-app-notifications"
 msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
 msgstr "Der Server meldet, dass dieses Gerät von Ihrem Konto getrennt wurde, aber Ihr Konto hat dies nicht bestätigt. Auf diesem Gerät wurde nichts gelöscht."
+
+msgctxt "support-view"
+msgid "Privacy policy"
+msgstr "Datenschutzrichtlinie"

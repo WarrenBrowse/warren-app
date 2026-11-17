@@ -6506,3 +6506,7 @@ msgstr "YHTEYDEN KATKAISUA EI VAHVISTETTU"
 msgctxt "in-app-notifications"
 msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
 msgstr "Palvelimen mukaan tämän laitteen yhteys tiliisi katkaistiin, mutta tilisi ei vahvistanut sitä. Tästä laitteesta ei poistettu mitään."
+
+msgctxt "support-view"
+msgid "Privacy policy"
+msgstr "Tietosuojakäytäntö"

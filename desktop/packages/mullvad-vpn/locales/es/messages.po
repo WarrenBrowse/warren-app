@@ -6506,3 +6506,7 @@ msgstr "DESCONEXIÓN NO CONFIRMADA"
 msgctxt "in-app-notifications"
 msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
 msgstr "El servidor indica que este dispositivo se desconectó de tu cuenta, pero tu cuenta no lo ha confirmado. No se borró nada de este dispositivo."
+
+msgctxt "support-view"
+msgid "Privacy policy"
+msgstr "Política de privacidad"

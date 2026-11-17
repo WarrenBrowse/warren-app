@@ -4300,6 +4300,11 @@ msgctxt "support-view"
 msgid "FAQs & Guides"
 msgstr ""
 
+#. Link to the privacy policy webpage
+msgctxt "support-view"
+msgid "Privacy policy"
+msgstr ""
+
 #. Link to the refund policy webpage
 msgctxt "support-view"
 msgid "Refund policy"

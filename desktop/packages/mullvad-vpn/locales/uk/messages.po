@@ -6546,3 +6546,7 @@ msgstr "ВІДКЛЮЧЕННЯ НЕ ПІДТВЕРДЖЕНО"
 msgctxt "in-app-notifications"
 msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
 msgstr "Сервер повідомляє, що цей пристрій відключено від вашого облікового запису, але ваш обліковий запис цього не підтвердив. З цього пристрою нічого не видалено."
+
+msgctxt "support-view"
+msgid "Privacy policy"
+msgstr "Політика конфіденційності"

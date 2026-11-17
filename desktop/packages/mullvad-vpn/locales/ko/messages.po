@@ -6473,3 +6473,7 @@ msgstr "연결 해제가 확인되지 않음"
 msgctxt "in-app-notifications"
 msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
 msgstr "서버에서는 이 장치가 계정에서 연결 해제되었다고 하지만, 계정에서 이를 확인하지 않았습니다. 이 장치에서 삭제된 것은 없습니다."
+
+msgctxt "support-view"
+msgid "Privacy policy"
+msgstr "개인정보 보호정책"

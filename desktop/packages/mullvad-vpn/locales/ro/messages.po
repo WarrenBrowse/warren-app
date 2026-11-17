@@ -5642,3 +5642,7 @@ msgstr "DECONECTARE NECONFIRMATĂ"
 msgctxt "in-app-notifications"
 msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
 msgstr "Serverul spune că acest dispozitiv a fost deconectat de la contul tău, dar contul tău nu a confirmat acest lucru. Nimic nu a fost șters de pe acest dispozitiv."
+
+msgctxt "support-view"
+msgid "Privacy policy"
+msgstr "Politica de confidențialitate"

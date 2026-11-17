@@ -11,6 +11,7 @@ import {
   CommunityButton,
   FaqButton,
   ForumSignInCodeButton,
+  PrivacyPolicyButton,
   RefundPolicyButton,
   ReportProblemButton,
   TermsButton,
@@ -40,6 +41,7 @@ export function SupportView() {
                   <ReportProblemButton />
                   <FaqButton />
                   <TermsButton />
+                  <PrivacyPolicyButton />
                   <RefundPolicyButton />
                 </FlexColumn>
               </View.Container>

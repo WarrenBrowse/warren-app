@@ -6473,3 +6473,7 @@ msgstr "中斷連線未經確認"
 msgctxt "in-app-notifications"
 msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
 msgstr "伺服器表示此裝置已與您的帳戶中斷連線，但您的帳戶並未確認。此裝置上的任何內容均未被刪除。"
+
+msgctxt "support-view"
+msgid "Privacy policy"
+msgstr "隱私權政策"
