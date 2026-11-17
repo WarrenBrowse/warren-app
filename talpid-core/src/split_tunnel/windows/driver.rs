@@ -1,5 +1,3 @@
-#![allow(clippy::undocumented_unsafe_blocks)] // Remove me if you dare.
-
 use super::windows::{
     ProcessAccess, get_device_path, get_process_creation_time, get_process_device_path,
     open_process,
@@ -213,7 +211,12 @@ fn initialize_with(
     Ok(false)
 }
 
+// SAFETY: every field is already `Sync` on its own: a `File`, plain GUID data and an
+// `AtomicBool`. The driver handle may be used for I/O from several threads at once, and each
+// overlapped request carries its own `OVERLAPPED` and buffers.
 unsafe impl Sync for DeviceHandle {}
+// SAFETY: every field is already `Send` on its own (`File`, plain GUID data, `AtomicBool`), and a
+// file handle may be used and closed from any thread of the process.
 unsafe impl Send for DeviceHandle {}
 
 #[derive(thiserror::Error, Debug)]
@@ -349,8 +352,14 @@ impl DeviceHandle {
             internet_ipv4.is_some(),
             internet_ipv6.is_some()
         );
+        // SAFETY: `SplitTunnelAddresses` is a `repr(C)` struct of `IN_ADDR` and `IN6_ADDR`, unions
+        // of plain integers, for which all-zero bytes are a valid value (the unspecified address).
         let mut addresses: SplitTunnelAddresses = unsafe { mem::zeroed() };
 
+        // SAFETY: each copy writes the octets of an address into the field of the same family:
+        // 4 bytes into an `IN_ADDR` and 16 bytes into an `IN6_ADDR`, both exactly that size. The
+        // source is a local array and the destination a field of a local, so they do not overlap,
+        // and both are `u8`-aligned.
         unsafe {
             if let Some(tunnel_ipv4) = tunnel_ipv4 {
                 let tunnel_ipv4 = tunnel_ipv4.octets();
@@ -410,6 +419,8 @@ impl DeviceHandle {
         )?
         .unwrap();
 
+        // SAFETY: the slice is exactly `size_of::<u64>()` bytes (indexing panics on a shorter
+        // reply), and every bit pattern is a valid `u64`.
         let raw_state: u64 = unsafe { deserialize_buffer(&buffer[0..size_of::<u64>()]) };
 
         DriverState::try_from(raw_state).map_err(io::Error::other)
@@ -955,6 +966,13 @@ pub unsafe fn device_io_control_buffer_async(
     };
     let input_len = input.map(|input| input.len()).unwrap_or(0);
 
+    // SAFETY: the device handle is borrowed for the call. The input pointer and length come from
+    // the same slice (or are null and 0); `device_io_control_buffer` waits for completion while
+    // that slice is still borrowed, and the event loop, which does not wait, passes no input.
+    // The caller guarantees that `output_ptr` is null or valid for `output_len` bytes
+
+    // until the operation completes, and must keep `overlapped` (a raw pointer, so not covered by
+    // a borrow) alive and unused by another request for that same duration.
     let result = unsafe {
         DeviceIoControl(
             device.as_raw_handle(),
@@ -998,8 +1016,10 @@ pub fn get_overlapped_result(
     // SAFETY: This is a valid event object.
     unsafe { wait_for_single_object(event, None) }?;
 
-    // SAFETY: The handle and overlapped object are valid.
     let mut returned_bytes = 0u32;
+    // SAFETY: the device handle is borrowed for the call, `overlapped` is an exclusive borrow of
+    // the `OVERLAPPED` that started the operation, and the operation has completed (its event was
+    // signaled above), so Windows no longer writes to it. The byte count is a local `u32`.
     let result = unsafe {
         GetOverlappedResult(
             device.as_raw_handle(),
@@ -1029,6 +1049,8 @@ pub unsafe fn wait_for_single_object(
         })?,
         None => INFINITE,
     };
+    // SAFETY: the caller guarantees that `object` is a valid waitable handle, and the borrow keeps
+    // it open for the duration of the wait.
     let result = unsafe { WaitForSingleObject(object.as_raw_handle(), timeout) };
     match result {
         WAIT_OBJECT_0 => Ok(()),
@@ -1048,6 +1070,10 @@ pub unsafe fn wait_for_multiple_objects(
     objects: &[RawHandle],
     wait_all: bool,
 ) -> io::Result<RawHandle> {
+    // SAFETY: the caller guarantees that every handle in `objects` is a valid waitable handle.
+    // The pointer and count come from the same slice, which stays borrowed for the wait; a count
+    // above `MAXIMUM_WAIT_OBJECTS` makes the call fail with `WAIT_FAILED`, handled below. The
+    // returned index is checked against the count before it is used.
     unsafe {
         let objects_len = u32::try_from(objects.len())
             .map_err(|_error| io::Error::new(io::ErrorKind::InvalidInput, "too many objects"))?;
@@ -1081,6 +1107,10 @@ unsafe fn deserialize_buffer<T>(buffer: &[u8]) -> T {
     assert!(buffer.len() <= mem::size_of::<T>());
 
     let mut instance = MaybeUninit::zeroed();
+    // SAFETY: the assert above keeps the copy within the `size_of::<T>()` bytes of `instance`,
+    // the source is a borrowed slice that cannot overlap a fresh local, and both pointers are
+    // `u8`-aligned. The bytes not copied stay zeroed, and the caller guarantees that the result
+    // is a valid `T`.
     unsafe {
         ptr::copy_nonoverlapping(
             buffer.as_ptr(),
@@ -1094,7 +1124,11 @@ unsafe fn deserialize_buffer<T>(buffer: &[u8]) -> T {
 fn buffer_to_osstring(buffer: &[u8]) -> OsString {
     let mut out_buf = vec![0u16; (buffer.len() + 1) / mem::size_of::<u16>()];
 
-    // SAFETY: `out_buf` contains enough bytes to store all of `buffer`.
+    // SAFETY: the destination holds `out_buf.len()` `u16`s and is suitably aligned. The source
+    // is NOT checked: the copy reads `2 * out_buf.len()` bytes as `u16`, which is one byte past
+    // `buffer` when its length is odd, and requires `buffer` to be 2-byte aligned. Both hold for
+    // the driver's events (UTF-16 byte lengths at even offsets of the event buffer), but this
+    // safe function does not enforce them.
     unsafe {
         ptr::copy_nonoverlapping(
             buffer as *const _ as *const u16,
@@ -1123,6 +1157,9 @@ fn write_string_to_buffer(buffer: &mut [MaybeUninit<u8>], byte_offset: usize, st
 
 /// Casts a struct to a slice of possibly uninitialized bytes.
 pub fn as_uninit_byte_slice<T: Copy + Sized>(value: &T) -> &[mem::MaybeUninit<u8>] {
+    // SAFETY: `value` is a live reference to `size_of::<T>()` bytes, and the slice borrows it
+    // for the same lifetime. `MaybeUninit<u8>` has alignment 1 and may hold any byte, padding
+    // included, so viewing the bytes of `T` this way never reads an invalid value.
     unsafe { std::slice::from_raw_parts(value as *const _ as *const _, mem::size_of::<T>()) }
 }
 

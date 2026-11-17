@@ -1,5 +1,3 @@
-#![allow(clippy::undocumented_unsafe_blocks)]
-
 use mullvad_paths::log_dir;
 use std::{
     borrow::Cow,
@@ -33,6 +31,9 @@ const MINIDUMP_FILENAME: &str = "DAEMON.DMP";
 
 /// Enable logging of unhandled SEH exceptions.
 pub fn enable() {
+    // SAFETY: `logging_exception_filter` has the `system` ABI and the signature of a top-level
+    // exception filter, and it is a plain function, valid for the life of the process. The
+    // previous filter returned by the call is not needed.
     unsafe { SetUnhandledExceptionFilter(Some(logging_exception_filter)) };
 }
 
@@ -58,8 +59,12 @@ fn generate_minidump(
     let handle = handle_rs.as_raw_handle();
 
     // Generate minidump
+    // SAFETY: takes no argument and returns the current-process pseudo handle, which needs no
+    // closing.
     let process = unsafe { GetCurrentProcess() };
+    // SAFETY: takes no argument and only returns an integer.
     let process_id = unsafe { GetCurrentProcessId() };
+    // SAFETY: takes no argument and only returns an integer.
     let thread_id = unsafe { GetCurrentThreadId() };
 
     let exception_parameters = MINIDUMP_EXCEPTION_INFORMATION {
@@ -152,7 +157,11 @@ unsafe extern "system" fn logging_exception_filter(info_ptr: *const EXCEPTION_PO
     // SAFETY: We've explicitly checked for null pointer and
     // alignment. We assume that Windows gives us valid pointers, i.e. info points to valid data.
     let info: &EXCEPTION_POINTERS = unsafe { &*info_ptr };
+    // SAFETY: Windows fills both pointers of the `EXCEPTION_POINTERS` it hands to an unhandled
+    // exception filter, and the records they point to stay valid until the filter returns,
+    // which bounds every use of these references.
     let record: &EXCEPTION_RECORD = unsafe { &*info.ExceptionRecord };
+    // SAFETY: as above, `ContextRecord` is set by Windows and valid until the filter returns.
     let context: &CONTEXT = unsafe { &*info.ContextRecord };
 
     // Generate minidump
@@ -228,7 +237,10 @@ fn get_context_info(context: &CONTEXT) -> String {
              \tSp: {:#x?}\n \
              \tPc: {:#x?}\n \
              \tCpsr: {:#x?}",
+            // SAFETY: the union holds 31 `u64` registers, viewed either as named fields or as an
+            // array; every bit pattern is a valid `u64`, so either view may be read.
             unsafe { context.Anonymous.Anonymous.Fp },
+            // SAFETY: as above, every view of the register union is plain `u64`s.
             unsafe { context.Anonymous.Anonymous.Lr },
             context.Sp,
             context.Pc,
@@ -240,6 +252,8 @@ fn get_context_info(context: &CONTEXT) -> String {
     if context.ContextFlags & CONTEXT_INTEGER_ARM64 != 0 {
         context_str.push('\n');
         for x in 0..=28 {
+            // SAFETY: every view of the register union is plain `u64`s, and `x <= 28` indexes
+            // the 31-element `X` array (bounds-checked anyway).
             writeln!(&mut context_str, "\tX{}: {:#x?}", x, unsafe {
                 context.Anonymous.X[x]
             })
@@ -255,6 +269,8 @@ fn get_context_info(context: &CONTEXT) -> String {
         )
         .unwrap();
         for q in 0..=31 {
+            // SAFETY: each NEON register is a union of integer views of the same 16 bytes, so
+            // reading it as bytes is valid for any value; `q <= 31` indexes the 32-element `V`.
             writeln!(&mut context_str, "\tQ{}: {:#x?}", q, unsafe {
                 context.V[q].B
             })

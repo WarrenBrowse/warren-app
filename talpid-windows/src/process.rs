@@ -1,5 +1,3 @@
-#![allow(clippy::undocumented_unsafe_blocks)] // Remove me if you dare
-
 use std::{
     ffi::CStr,
     io, mem,
@@ -21,7 +19,8 @@ pub struct ProcessSnapshot {
 impl ProcessSnapshot {
     /// Create a new process snapshot using `CreateToolhelp32Snapshot`
     pub fn new(flags: u32, process_id: u32) -> io::Result<ProcessSnapshot> {
-        // SAFETY: `CreateToolhelp32Snapshot` should handle invalid flags and process IDs
+        // SAFETY: both arguments are plain integers; `CreateToolhelp32Snapshot` reports invalid
+        // flags or process IDs through `INVALID_HANDLE_VALUE`, checked below.
         let snap = unsafe { CreateToolhelp32Snapshot(flags, process_id) };
 
         if snap == INVALID_HANDLE_VALUE {
@@ -91,7 +90,8 @@ impl Iterator for ProcessSnapshotModules<'_> {
 
     fn next(&mut self) -> Option<io::Result<ModuleEntry>> {
         if self.iter_started {
-            // SAFETY: `self.snapshot` is a valid pointer, and `temp_entry` is a valid `MODULEENTRY32`
+            // SAFETY: the snapshot handle is owned by `self.snapshot`, which the iterator borrows,
+            // and `temp_entry` is a `MODULEENTRY32` whose `dwSize` was set by `modules()`.
             if unsafe { Module32Next(self.snapshot.as_raw_handle(), &raw mut self.temp_entry) } == 0
             {
                 let last_error = io::Error::last_os_error();
@@ -103,7 +103,8 @@ impl Iterator for ProcessSnapshotModules<'_> {
                 };
             }
         } else {
-            // SAFETY: `self.snapshot` is a valid pointer, and `temp_entry` is a valid `MODULEENTRY32`
+            // SAFETY: the snapshot handle is owned by `self.snapshot`, which the iterator borrows,
+            // and `temp_entry` is a `MODULEENTRY32` whose `dwSize` was set by `modules()`.
             if unsafe { Module32First(self.snapshot.as_raw_handle(), &raw mut self.temp_entry) }
                 == 0
             {
@@ -113,7 +114,8 @@ impl Iterator for ProcessSnapshotModules<'_> {
         }
 
         let cstr_ref = &self.temp_entry.szModule[0];
-        // SAFETY: `szModule` is a null-terminated C string
+        // SAFETY: a successful `Module32First`/`Module32Next` stores a NUL-terminated module name
+        // in `szModule`, a fixed array owned by `self.temp_entry` that outlives `cstr`.
         let cstr = unsafe { CStr::from_ptr(cstr_ref) };
         Some(Ok(ModuleEntry {
             name: cstr.to_string_lossy().into_owned(),
@@ -143,7 +145,8 @@ impl Iterator for ProcessSnapshotEntries<'_> {
 
     fn next(&mut self) -> Option<io::Result<ProcessEntry>> {
         if self.iter_started {
-            // SAFETY: `self.snapshot` is a valid pointer, and `temp_entry` is a valid `PROCESSENTRY32W`
+            // SAFETY: the snapshot handle is owned by `self.snapshot`, which the iterator borrows,
+            // and `temp_entry` is a `PROCESSENTRY32W` whose `dwSize` was set by `processes()`.
             if unsafe { Process32NextW(self.snapshot.as_raw_handle(), &raw mut self.temp_entry) }
                 == 0
             {
@@ -156,7 +159,8 @@ impl Iterator for ProcessSnapshotEntries<'_> {
                 };
             }
         } else {
-            // SAFETY: `self.snapshot` is a valid pointer, and `temp_entry` is a valid `PROCESSENTRY32W`
+            // SAFETY: the snapshot handle is owned by `self.snapshot`, which the iterator borrows,
+            // and `temp_entry` is a `PROCESSENTRY32W` whose `dwSize` was set by `processes()`.
             if unsafe { Process32FirstW(self.snapshot.as_raw_handle(), &raw mut self.temp_entry) }
                 == 0
             {

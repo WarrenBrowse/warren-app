@@ -1,5 +1,3 @@
-#![allow(clippy::undocumented_unsafe_blocks)] // Remove me if you dare.
-
 mod driver;
 mod path_monitor;
 pub use driver::SublayerGuids;
@@ -553,12 +551,19 @@ impl InitializedSplitTunnelState {
         overlapped: &mut Overlapped,
         data_buffer: &mut Vec<u8>,
     ) -> io::Result<EventResult> {
+        // SAFETY: `quit_event` is an event object created by `Event::new`, which is waitable, and
+        // the borrow keeps its handle open for the wait.
         if unsafe { driver::wait_for_single_object(quit_event, Some(Duration::ZERO)) }.is_ok() {
             return Ok(EventResult::Quit);
         }
 
         data_buffer.resize(DRIVER_EVENT_BUFFER_SIZE, 0u8);
 
+        // SAFETY: the output pointer and length describe `data_buffer`, and `overlapped` carries
+        // an event (set in `spawn_event_listener`). Both are owned by the event thread and are
+        // not touched again until the request completes on the event path below. On the quit
+        // path the request is still pending when this returns, and the thread then drops both;
+        // nothing here cancels the request and waits for it before they are freed.
         unsafe {
             driver::device_io_control_buffer_async(
                 device,
@@ -581,6 +586,8 @@ impl InitializedSplitTunnelState {
             quit_event.as_raw_handle(),
         ];
 
+        // SAFETY: both handles are event objects, the overlapped event and `quit_event`, kept
+        // open by `overlapped` and `quit_event`, which outlive the wait.
         let signaled_object =
             unsafe { driver::wait_for_multiple_objects(&event_objects[..], false) }.inspect_err(
                 |error| {

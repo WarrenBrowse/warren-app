@@ -296,7 +296,13 @@ pub(super) fn apply_policy_connecting(
         .as_ref()
         .map_or(ptr::null(), |ip| ip.as_ptr());
 
-    #[expect(clippy::undocumented_unsafe_blocks)]
+    // SAFETY: every array is passed with its own `len()`, and every pointer refers to a value
+    // owned by a local of this function: the relay IP strings (`ip_strs`), the client paths
+    // (`relay_client_wstrs`), the exit IP string, the tunnel interface alias (`interface_wstr`),
+    // the allowed tunnel endpoints and their IP strings, the allowed endpoint container and the
+    // tailnet aliases. All of them outlive the call, which is synchronous and keeps no pointer
+    // after it returns. The exit IP, the alias and the tunnel endpoints are null when absent,
+    // which winfw.cpp maps to "none" for exactly these arguments.
     let res = unsafe {
         WinFw_ApplyPolicyConnecting(
             winfw_settings,
@@ -405,7 +411,12 @@ pub(super) fn apply_policy_connected(
         .as_ref()
         .map_or(ptr::null(), |ip| ip.as_ptr());
 
-    #[expect(clippy::undocumented_unsafe_blocks)]
+    // SAFETY: every array is passed with its own `len()`, and every pointer refers to a value
+    // owned by a local of this function: the relay IP strings (`ip_strs`), the client paths
+    // (`relay_client_wstrs`), `tunnel_alias`, the DNS server strings (the shadowed
+    // `Vec<WideCString>` bindings stay alive until the end of the scope) and the tailnet aliases.
+    // All of them outlive the call, which is synchronous and keeps no pointer after it returns.
+    // A missing exit IP is passed as null, which winfw.h documents as "no separate exit".
     let result = unsafe {
         WinFw_ApplyPolicyConnected(
             winfw_settings,

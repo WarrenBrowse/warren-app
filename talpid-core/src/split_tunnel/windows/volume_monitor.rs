@@ -113,6 +113,8 @@ fn start_internal_monitor(
 ) -> WindowCloseHandle {
     create_hidden_window(move |window, message, w_param, l_param| {
         if !is_device_arrival_or_removal(message, w_param) {
+            // SAFETY: forwards unchanged the arguments Windows passed to the window procedure
+            // that invoked this closure.
             return unsafe { DefWindowProcW(window, message, w_param, l_param) };
         }
         // Note: These locks must be acquired in the same order as in `frontend_monitor` to prevent
@@ -120,6 +122,9 @@ fn start_internal_monitor(
         let mut known_state_guard = known_state.lock().unwrap();
         let paths_guard = paths.lock().unwrap();
 
+        // SAFETY: for `WM_DEVICECHANGE` with `DBT_DEVICEARRIVAL` or `DBT_DEVICEREMOVECOMPLETE`,
+        // checked above, Windows documents `l_param` as a pointer to a `DEV_BROADCAST_HDR` that
+        // is valid while the message is processed, which covers this synchronous call.
         let volumes = unsafe { parse_device_volume_broadcast(&*(l_param as *const _)) };
 
         let prev_state = *known_state_guard;
@@ -148,6 +153,7 @@ fn start_internal_monitor(
 /// Each bit refers to a volume letter. The bit 0 refers to 'A', bit 1
 /// refers to 'B', bit 2 to 'C', etc.
 fn get_logical_drives() -> io::Result<u32> {
+    // SAFETY: takes no argument and only returns a bitmask.
     let result = unsafe { GetLogicalDrives() };
     if result == 0 {
         return Err(io::Error::last_os_error());
@@ -190,7 +196,11 @@ unsafe fn parse_device_volume_broadcast(broadcast: &DEV_BROADCAST_HDR) -> u32 {
         return 0;
     }
 
+    // SAFETY: a header whose `dbch_devicetype` is `DBT_DEVTYP_VOLUME` is, per the device
+    // broadcast contract, the start of a `DEV_BROADCAST_VOLUME`; the caller guarantees that
+    // `broadcast` points to a whole broadcast structure, and the reference keeps its lifetime.
     let volume_broadcast = unsafe { &*(broadcast as *const _ as *const DEV_BROADCAST_VOLUME) };
+
     if volume_broadcast.dbcv_flags & DBTF_NET != 0 {
         // Ignore net event
         return 0;

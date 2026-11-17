@@ -147,6 +147,7 @@ fn resolve_link<T: AsRef<Path> + Copy>(path: T) -> io::Result<Option<PathBuf>> {
 
     // Note: `file_attributes()` doesn't include all attributes, so we must use GetfileAttributesW.
     let mut u16_path: Vec<u16> = osstr_to_wide(&stripped_path);
+    // SAFETY: `osstr_to_wide` NUL-terminates `u16_path`, which outlives the call.
     let attributes = unsafe { GetFileAttributesW(u16_path.as_mut_ptr()) };
 
     if (attributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0 {
@@ -160,6 +161,10 @@ fn resolve_link<T: AsRef<Path> + Copy>(path: T) -> io::Result<Option<PathBuf>> {
 
     let mut bytes_returned = 0u32;
 
+    // SAFETY: the handle is owned by `file`, open for the whole call. There is no input buffer
+    // (null, 0), the output pointer and length describe `data_buffer`, the byte count points to a
+    // local, and the null `OVERLAPPED` makes the call synchronous, so nothing is written after it
+    // returns.
     if unsafe {
         DeviceIoControl(
             file.as_raw_handle() as HANDLE,
@@ -183,13 +188,21 @@ fn resolve_link<T: AsRef<Path> + Copy>(path: T) -> io::Result<Option<PathBuf>> {
         ));
     }
 
+    // SAFETY: `data_buffer` is a zero-initialised allocation of `MAXIMUM_REPARSE_DATA_BUFFER_SIZE`
+    // bytes, larger than every reparse header, and the Windows heap behind the global allocator
+    // returns blocks aligned to 16 bytes, enough for these `u32`-aligned `repr(C)` structs, whose
+    // fields are all plain integers.
     let reparse_tag = unsafe { &*(data_buffer.as_ptr() as *const ReparseData) }.tag;
     match reparse_tag {
         IO_REPARSE_TAG_SYMLINK => {
+            // SAFETY: as above: the buffer is initialised, larger than the symlink header and
+            // aligned for it.
             let is_relative = unsafe { &*(data_buffer.as_ptr() as *const ReparseDataSymlink) }
                 .flags
                 & SYMLINK_FLAG_RELATIVE
                 != 0;
+            // SAFETY: the buffer is initialised and aligned for `ReparseDataSymlink` (see above),
+            // and the macro checks that the name it slices ends inside the buffer.
             let mut path_buf = unsafe { get_reparse_path!(ReparseDataSymlink, data_buffer) }?;
 
             if is_relative {
@@ -203,6 +216,8 @@ fn resolve_link<T: AsRef<Path> + Copy>(path: T) -> io::Result<Option<PathBuf>> {
             Ok(Some(path_buf))
         }
         IO_REPARSE_TAG_MOUNT_POINT => {
+            // SAFETY: the buffer is initialised and aligned for `ReparseDataMountPoint` (see
+            // above), and the macro checks that the name it slices ends inside the buffer.
             let path_buf = unsafe { get_reparse_path!(ReparseDataMountPoint, data_buffer) }?;
             Ok(Some(strip_namespace(path_buf)))
         }
@@ -270,6 +285,9 @@ impl DirContext {
             .custom_flags(FILE_FLAG_OVERLAPPED | FILE_FLAG_BACKUP_SEMANTICS)
             .open(&path)?;
 
+        // SAFETY: both handles are owned by live values (`dir_handle`, opened for overlapped I/O,
+        // and the port kept alive by `io_completion_port`), and associating a file with an
+        // existing port reads no memory from the caller.
         let handle = unsafe {
             CreateIoCompletionPort(
                 dir_handle.as_raw_handle() as HANDLE,
@@ -288,6 +306,9 @@ impl DirContext {
             path: path.as_ref().to_path_buf(),
             dir_handle,
             buffer: vec![0u8; 16 * 1024],
+            // SAFETY: `OVERLAPPED` is a C struct of integers, a union of integers and a raw
+            // pointer, for which all-zero bytes are a valid value (and the documented initial
+            // state).
             overlapped: Box::pin(unsafe { mem::zeroed() }),
             _io_completion_port: io_completion_port,
         })
@@ -295,6 +316,12 @@ impl DirContext {
 
     fn read_directory_changes(&mut self) -> io::Result<()> {
         let mut _bytes_returned = 0;
+        // SAFETY: the directory handle is open for overlapped I/O and owned by `self`. The buffer
+        // pointer and length describe `self.buffer`, and the `OVERLAPPED` is pinned on the heap.
+        // Both stay allocated until the completion packet for this request is dequeued: a
+        // context is only freed after that packet arrives (`free_discarded_context`,
+        // `abort_all_requests`), or leaked with `mem::forget` when it never does. No new request
+        // is issued on the same `OVERLAPPED` before the previous one completed.
         if unsafe {
             ReadDirectoryChangesW(
                 self.dir_handle.as_raw_handle() as HANDLE,
@@ -321,6 +348,8 @@ impl DirContext {
 
     /// Try to cancel a request. On success, return whether a request was cancelled.
     fn cancel_io(&mut self) -> io::Result<bool> {
+        // SAFETY: the directory handle is owned by `self` and open for the call; a null
+        // `OVERLAPPED` asks to cancel every request on that handle and reads no memory.
         if unsafe { CancelIoEx(self.dir_handle.as_raw_handle() as HANDLE, ptr::null_mut()) } == 0 {
             match io::Error::last_os_error() {
                 _error if _error.raw_os_error() == Some(ERROR_NOT_FOUND as i32) => Ok(false),
@@ -340,7 +369,14 @@ impl Drop for DirContext {
     }
 }
 
+// SAFETY: the only field that is not `Send` is the `OVERLAPPED`, because of its `hEvent` raw
+// pointer, which stays null here (completions go to the port). The OVERLAPPED and the buffer are
+// owned heap allocations that do not move with the struct, and the kernel only writes them for
+// a pending request, whatever thread owns the context.
 unsafe impl Send for DirContext {}
+// SAFETY: every `&self` method reads only the path, the handle or the buffer, and the buffer is
+// only read after the completion packet of its request has been dequeued, when the kernel no
+// longer writes to it.
 unsafe impl Sync for DirContext {}
 
 struct CompletionStatus {
@@ -356,6 +392,9 @@ struct CompletionPort {
 impl CompletionPort {
     // `concurrent_threads`: 0 ==> number of processors
     fn create(concurrent_threads: u32) -> io::Result<Self> {
+        // SAFETY: `INVALID_HANDLE_VALUE` with a null existing port is the documented way to
+        // create a new port that is not associated with any file; the other arguments are
+        // integers.
         let handle = unsafe {
             CreateIoCompletionPort(INVALID_HANDLE_VALUE, ptr::null_mut(), 0, concurrent_threads)
         };
@@ -381,6 +420,8 @@ impl CompletionPort {
             used_overlapped: ptr::null_mut(),
         };
 
+        // SAFETY: the port handle is owned by `self`, and the three out-pointers refer to fields
+        // of the local `result`, which outlives the call.
         if unsafe {
             GetQueuedCompletionStatus(
                 self.handle,
@@ -403,6 +444,9 @@ impl CompletionPort {
         completion_key: usize,
         overlapped: *mut OVERLAPPED,
     ) -> io::Result<()> {
+        // SAFETY: the port handle is owned by `self`. Windows does not dereference `overlapped`;
+        // it only hands the value back to the thread that dequeues the packet, which compares it
+        // and never reads through it.
         if unsafe {
             PostQueuedCompletionStatus(self.handle, bytes_transferred, completion_key, overlapped)
         } == 0
@@ -421,11 +465,17 @@ impl AsRawHandle for CompletionPort {
 
 impl Drop for CompletionPort {
     fn drop(&mut self) {
+        // SAFETY: `handle` is the non-null port created by `create`, owned by this value and
+        // closed only here, once.
         unsafe { CloseHandle(self.handle) };
     }
 }
 
+// SAFETY: an I/O completion port handle may be used and closed from any thread; the struct only
+// holds that handle.
 unsafe impl Send for CompletionPort {}
+// SAFETY: completion ports are designed for concurrent use: any number of threads may post to
+// and dequeue from the same port at once, and every method takes `&self` without Rust-side state.
 unsafe impl Sync for CompletionPort {}
 
 #[derive(Clone, Hash, PartialEq, Eq)]
@@ -714,8 +764,14 @@ impl PathMonitor {
     fn process_file_notification(&self, dir_context: &DirContext) -> io::Result<bool> {
         let mut info = dir_context.buffer.as_ptr() as *const FILE_NOTIFY_INFORMATION;
         loop {
+            // SAFETY: this runs only for a completed request that returned data. `info` starts at
+            // the beginning of `buffer` and then follows `NextEntryOffset`, so it always points to
+            // a `FILE_NOTIFY_INFORMATION` entry the kernel wrote inside the buffer, DWORD-aligned
+            // as the API guarantees (the buffer start is heap-aligned).
             let current_field = unsafe { &*info };
 
+            // SAFETY: the entry's name follows its header inside the buffer, `FileNameLength`
+            // bytes long, and the kernel wrote all of it.
             let file_name = unsafe {
                 std::slice::from_raw_parts(
                     current_field.FileName.as_ptr(),
@@ -730,6 +786,9 @@ impl PathMonitor {
                 if path.tail.len() <= file_name.len() {
                     continue;
                 }
+                // SAFETY: both pointers come from live slices and are read for
+                // `file_name.len()` units only; `path.tail` is longer than that, as checked just
+                // above.
                 let cmp_status = unsafe {
                     CompareStringOrdinal(
                         path.tail.as_ptr(),
@@ -749,6 +808,8 @@ impl PathMonitor {
             if current_field.NextEntryOffset == 0 {
                 break;
             }
+            // SAFETY: a non-zero `NextEntryOffset` is the byte offset of the next entry the
+            // kernel wrote in the same buffer, so the result stays inside the allocation.
             info = unsafe { (info as *mut u8).offset(current_field.NextEntryOffset as isize) }
                 as *const FILE_NOTIFY_INFORMATION;
         }
@@ -807,6 +868,8 @@ fn get_full_path_name<T: AsRef<OsStr>>(path: T) -> io::Result<PathBuf> {
     let mut full_path_buffer = vec![0u16; 2048 / mem::size_of::<u16>()];
 
     let full_length = loop {
+        // SAFETY: `osstr_to_wide` NUL-terminates `path_buf_os`, the output pointer and length
+        // describe `full_path_buffer`, and a null file-part pointer is accepted by the API.
         let required_length = unsafe {
             GetFullPathNameW(
                 path_buf_os.as_ptr(),

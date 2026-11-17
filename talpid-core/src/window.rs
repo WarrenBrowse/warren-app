@@ -1,5 +1,4 @@
 //! Utilities for working with windows on Windows.
-#![allow(clippy::undocumented_unsafe_blocks)] // Remove me if you dare.
 
 use std::{os::windows::io::AsRawHandle, ptr, sync::Arc, thread};
 use tokio::sync::broadcast;
@@ -30,7 +29,11 @@ impl WindowCloseHandle {
     /// Close the window and wait for the thread.
     pub fn close(&mut self) {
         if let Some(thread) = self.thread.take() {
+            // SAFETY: the thread handle is owned by `thread`, which is alive until the `join`
+            // below, so it is open during the call.
             let thread_id = unsafe { GetThreadId(thread.as_raw_handle() as HANDLE) };
+            // SAFETY: only integers are passed. A thread id that no longer has a message queue
+            // makes the call fail, which reads no memory and is ignored here.
             unsafe { PostThreadMessageW(thread_id, REQUEST_THREAD_SHUTDOWN, 0, 0) };
             let _ = thread.join();
         }
@@ -42,6 +45,11 @@ pub fn create_hidden_window<F: (Fn(HWND, u32, WPARAM, LPARAM) -> LRESULT) + Send
     wnd_proc: F,
 ) -> WindowCloseHandle {
     let join_handle = thread::spawn(move || {
+        // SAFETY: `CLASS_NAME` is a static NUL-terminated UTF-16 string naming the system
+        // "STATIC" class. The window name, parent, menu and creation parameter are null, which
+        // the API accepts, and `GetModuleHandleW(null)` returns the handle of the running
+        // executable without taking a reference. A failure returns a null handle, which the
+        // calls below reject without touching memory.
         let dummy_window = unsafe {
             CreateWindowExW(
                 0,
@@ -63,6 +71,10 @@ pub fn create_hidden_window<F: (Fn(HWND, u32, WPARAM, LPARAM) -> LRESULT) + Send
         // This enables us to reach the callback through a "thin pointer".
         let raw_callback = Box::into_raw(Box::new(wnd_proc));
 
+        // SAFETY: `dummy_window` was created by this thread, which is the only one allowed to
+        // change it. The user data is set before the window procedure, so `window_procedure::<F>`
+        // never sees a pointer of another type, and `raw_callback` stays allocated until after
+        // the message loop below has ended.
         unsafe {
             SetWindowLongPtrW(dummy_window, GWLP_USERDATA, raw_callback as isize);
             SetWindowLongPtrW(
@@ -74,9 +86,13 @@ pub fn create_hidden_window<F: (Fn(HWND, u32, WPARAM, LPARAM) -> LRESULT) + Send
             );
         }
 
+        // SAFETY: `MSG` is a plain C struct of integers and pointers, for which all-zero bytes are
+        // a valid value.
         let mut msg = unsafe { std::mem::zeroed() };
 
         loop {
+            // SAFETY: `msg` is a live local `MSG` that `GetMessageW` fills in; a null window
+            // filter means "any message of this thread".
             let status = unsafe { GetMessageW(&raw mut msg, ptr::null_mut(), 0, 0) };
 
             if status < 0 {
@@ -88,9 +104,13 @@ pub fn create_hidden_window<F: (Fn(HWND, u32, WPARAM, LPARAM) -> LRESULT) + Send
 
             if msg.hwnd.is_null() {
                 if msg.message == REQUEST_THREAD_SHUTDOWN {
+                    // SAFETY: `DestroyWindow` must run on the thread that created the window,
+                    // which is this one; a null or already destroyed handle only makes it fail.
                     unsafe { DestroyWindow(dummy_window) };
                 }
             } else {
+                // SAFETY: `msg` was filled in by the successful `GetMessageW` above and is only
+                // read by both calls.
                 unsafe {
                     TranslateMessage(&raw const msg);
                     DispatchMessageW(&raw const msg);
@@ -99,6 +119,9 @@ pub fn create_hidden_window<F: (Fn(HWND, u32, WPARAM, LPARAM) -> LRESULT) + Send
         }
 
         // Free callback.
+        // SAFETY: `raw_callback` came from `Box::into_raw` above and is freed only here. The
+        // message loop has ended and this thread retrieves no more messages, so the window
+        // procedure, the only other user of the pointer, can no longer run.
         let _ = unsafe { Box::from_raw(raw_callback) };
     });
 
@@ -117,14 +140,22 @@ where
     F: Fn(HWND, u32, WPARAM, LPARAM) -> LRESULT,
 {
     if message == WM_DESTROY {
+        // SAFETY: only posts `WM_QUIT` to the queue of the calling thread, the window's own.
         unsafe { PostQuitMessage(0) };
         return 0;
     }
+    // SAFETY: `window` is the live handle Windows passes to its own window procedure.
     let raw_callback = unsafe { GetWindowLongPtrW(window, GWLP_USERDATA) };
     if raw_callback != 0 {
+        // SAFETY: this procedure is only installed by `create_hidden_window::<F>`, which stores
+        // a `Box<F>` pointer in the user data first and frees it only after its message loop has
+        // ended. The callback runs on the window's own thread. A re-entrant message sent while
+        // the callback runs would create a second `&mut F`; `F: Fn`, so a shared reference would
+        // be enough and would remove that aliasing.
         let typed_callback = unsafe { &mut *(raw_callback as *mut F) };
         return typed_callback(window, message, wparam, lparam);
     }
+    // SAFETY: forwards unchanged the arguments Windows passed to this window procedure.
     unsafe { DefWindowProcW(window, message, wparam, lparam) }
 }
 
@@ -171,9 +202,13 @@ impl PowerManagementListener {
                 && tx.send(event).is_err()
             {
                 log::error!("Stopping power management event monitor");
+                // SAFETY: only posts `WM_QUIT` to the queue of the calling thread, the window's
+                // own, since this closure only runs inside its window procedure.
                 unsafe { PostQuitMessage(0) };
                 return 0;
             }
+            // SAFETY: forwards unchanged the arguments Windows passed to the window procedure
+            // that invoked this closure.
             unsafe { DefWindowProcW(window, message, wparam, lparam) }
         };
 

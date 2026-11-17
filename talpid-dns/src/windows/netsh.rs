@@ -1,5 +1,3 @@
-#![allow(clippy::undocumented_unsafe_blocks)] // Remove me if you dare.
-
 use super::{DnsMonitorT, ResolvedDnsConfig};
 use std::{
     io::{self, Write},
@@ -192,6 +190,8 @@ fn wait_for_child(subproc: &mut Child, timeout: Duration) -> io::Result<Option<E
     let dur_millis = u32::try_from(timeout.as_millis()).unwrap_or(INFINITE);
 
     let subproc_handle = subproc.as_raw_handle();
+    // SAFETY: the process handle is owned by `subproc`, which the caller borrows mutably for the
+    // whole call, so the handle stays open while Windows waits on it.
     match unsafe { WaitForSingleObject(subproc_handle, dur_millis) } {
         WAIT_OBJECT_0 => subproc.try_wait(),
         WAIT_TIMEOUT => Ok(None),

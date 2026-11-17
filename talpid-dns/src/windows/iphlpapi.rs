@@ -2,7 +2,6 @@
 //! <https://learn.microsoft.com/en-us/windows/win32/api/netioapi/nf-netioapi-setinterfacednssettings>,
 //! it requires at least Windows 10, build 19041. For that reason, use run-time linking and fall
 //! back on other methods if it is not available.
-#![allow(clippy::undocumented_unsafe_blocks)] // Remove me if you dare.
 
 use super::{DnsMonitorT, ResolvedDnsConfig};
 use once_cell::sync::OnceCell;
@@ -65,13 +64,19 @@ struct IphlpApi {
     set_interface_dns_settings: SetInterfaceDnsSettingsFn,
 }
 
+// SAFETY: the only field is a function pointer, which is `Send` on its own. It points into
+// iphlpapi.dll, which `IphlpApi::new` never unloads, so it stays valid on every thread.
 unsafe impl Send for IphlpApi {}
+// SAFETY: the function pointer is immutable once stored and `SetInterfaceDnsSettings` may be
+// called from any thread, so sharing `&IphlpApi` (through the `OnceCell`) cannot race.
 unsafe impl Sync for IphlpApi {}
 
 static IPHLPAPI_HANDLE: OnceCell<IphlpApi> = OnceCell::new();
 
 impl IphlpApi {
     fn new() -> Result<Self, Error> {
+        // SAFETY: `w!` yields a static NUL-terminated UTF-16 string, the reserved file handle
+        // argument is null as the API requires, and the flag restricts the search to System32.
         let module = unsafe {
             LoadLibraryExW(
                 w!("iphlpapi.dll"),
@@ -87,6 +92,8 @@ impl IphlpApi {
         // This function is loaded at runtime since it may be unavailable. See the module-level
         // docs. TODO: `windows_sys` can be used directly when support for versions older
         // than Windows 10, 2004, is dropped.
+        // SAFETY: `module` is the non-null handle just returned by `LoadLibraryExW`, and `s!`
+        // yields a static NUL-terminated ANSI string.
         let set_interface_dns_settings =
             unsafe { GetProcAddress(module, s!("SetInterfaceDnsSettings")) };
         let set_interface_dns_settings = set_interface_dns_settings.ok_or_else(|| {
@@ -98,6 +105,8 @@ impl IphlpApi {
                 );
             }
 
+            // SAFETY: `module` was loaded above, is released exactly once here, and no pointer
+            // into it escapes this error path.
             unsafe { FreeLibrary(module) };
             Error::GetFunction(error)
         })?;
@@ -105,6 +114,11 @@ impl IphlpApi {
         // NOTE: Leaking `module` here, since we're lazily initializing it
 
         Ok(Self {
+            // SAFETY: both types are function pointers of the same size. The export named
+            // `SetInterfaceDnsSettings` has the documented C signature
+            // `DWORD (GUID Interface, const DNS_INTERFACE_SETTINGS *Settings)`, which
+            // `SetInterfaceDnsSettingsFn` mirrors with the `system` ABI, and the module is never
+            // unloaded, so the pointer stays callable.
             set_interface_dns_settings: unsafe {
                 *((&raw const set_interface_dns_settings).cast())
             },
@@ -219,6 +233,9 @@ fn set_interface_dns_servers<T: ToString>(
         ProfileNameServer: ptr::null_mut(),
     };
 
+    // SAFETY: the settings struct is a version 1 struct, as its `Version` says, and the flags
+    // only ask Windows to read `NameServer`, which points to `nameservers`, a NUL-terminated
+    // UTF-16 string that outlives the synchronous call. Every other pointer field is null.
     win32_err!(unsafe {
         (iphlpapi.set_interface_dns_settings)(guid.to_owned(), &raw const dns_interface_settings)
     })

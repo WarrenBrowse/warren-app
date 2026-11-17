@@ -91,6 +91,8 @@ fn query_dos_device<T: AsRef<OsStr>>(device_name: T) -> io::Result<OsString> {
     let mut new_prefix = vec![0u16; 64];
 
     loop {
+        // SAFETY: `device_name_c` is NUL-terminated by the `chain` above, and the output pointer
+        // and length describe `new_prefix`, a live, initialised buffer of that many `u16`s.
         let prefix_len = unsafe {
             QueryDosDeviceW(
                 device_name_c.as_ptr(),
@@ -113,6 +115,8 @@ fn query_dos_device<T: AsRef<OsStr>>(device_name: T) -> io::Result<OsString> {
         // Because `new_prefix` may contain multiple strings.
 
         let real_len = new_prefix.iter().position(|&c| c == 0u16).unwrap();
+        // SAFETY: `real_len` is an index into `new_prefix`, so it is below the current length,
+        // and every element was initialised by `vec!`; shrinking the length exposes nothing new.
         unsafe { new_prefix.set_len(real_len) };
 
         break Ok(OsString::from_wide(&new_prefix));
@@ -130,6 +134,8 @@ impl WinHandle {
 
 impl Drop for WinHandle {
     fn drop(&mut self) {
+        // SAFETY: a `WinHandle` is only built by `open_process` from a non-null handle that it
+        // owns, the field is private, and `drop` runs once, so the handle is closed exactly once.
         unsafe { CloseHandle(self.0) };
     }
 }
@@ -146,6 +152,8 @@ pub fn open_process(
     inherit_handle: bool,
     pid: u32,
 ) -> Result<WinHandle, io::Error> {
+    // SAFETY: only integers are passed; a bad pid or access mask makes the call return null,
+    // checked below.
     let handle = unsafe { OpenProcess(access as u32, if inherit_handle { 1 } else { 0 }, pid) };
     if handle.is_null() {
         return Err(io::Error::last_os_error());
@@ -156,8 +164,13 @@ pub fn open_process(
 /// Returns the age of a running process.
 pub fn get_process_creation_time(handle: HANDLE) -> Result<u64, io::Error> {
     // TODO: FileTimeToSystemTime -> chrono::NaiveDateTime
+    // SAFETY: `FILETIME` is two `u32`s, for which all-zero bytes are a valid value.
     let mut creation_time: FILETIME = unsafe { mem::zeroed() };
+    // SAFETY: as above, `FILETIME` is two `u32`s.
     let mut dummy: FILETIME = unsafe { mem::zeroed() };
+    // SAFETY: the four out-pointers refer to live local `FILETIME`s; the three times this
+    // function ignores may share one, since the call only writes them. Windows validates
+    // `handle` and fails on a handle that is not a process.
     if unsafe {
         GetProcessTimes(
             handle,
@@ -202,6 +215,9 @@ fn get_process_device_path_inner(
     let mut buffer = Vec::<u16>::new();
     buffer.reserve_exact(buffer_capacity);
 
+    // SAFETY: the pointer and size describe the allocation of `buffer`, whose capacity is at
+    // least `buffer_capacity` `u16`s. Windows validates `handle` and fails on a handle that is
+    // not a process.
     let written = unsafe {
         GetProcessImageFileNameW(
             handle,
@@ -214,6 +230,8 @@ fn get_process_device_path_inner(
     }
 
     // `written` does not include a null terminator
+    // SAFETY: on success Windows initialised the first `written` `u16`s of the allocation, and
+    // `written` is below the capacity passed to it.
     unsafe { buffer.set_len(written as usize) };
 
     Ok(OsStringExt::from_wide(&buffer))

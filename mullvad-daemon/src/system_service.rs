@@ -1,5 +1,3 @@
-#![allow(clippy::undocumented_unsafe_blocks)] // Remove me if you dare.
-
 use crate::{cli, init_daemon_logging};
 use mullvad_daemon::{
     DaemonShutdownHandle,
@@ -412,6 +410,8 @@ impl HibernationDetector {
     fn is_interactive_session(session_id: u32) -> bool {
         let mut logon_session_count = 0u32;
         let mut logon_session_list: *mut LUID = ptr::null_mut();
+        // SAFETY: both out-pointers refer to locals of the declared types; on success LSA
+        // stores a count and a buffer it allocated, released with `LsaFreeReturnBuffer` below.
         let status = unsafe {
             LsaEnumerateLogonSessions(&raw mut logon_session_count, &raw mut logon_session_list)
         };
@@ -419,7 +419,9 @@ impl HibernationDetector {
             log::warn!("LsaEnumerateLogonSessions() failed, error code: {}", status);
             return false;
         }
-        // SAFETY: `logon_session_list` is not mutated before being freed.
+        // SAFETY: on success `logon_session_list` points to `logon_session_count` LUIDs allocated
+        // by LSA. It is non-null because the list always holds at least the logon session this
+        // service runs in (SYSTEM), and it is neither mutated nor freed while `logons` is used.
         let logons =
             unsafe { slice::from_raw_parts(logon_session_list, logon_session_count as usize) };
         let mut interactive = false;
@@ -431,10 +433,16 @@ impl HibernationDetector {
                 log::warn!("LsaGetLogonSessionData() failed, error code: {}", status);
                 continue;
             }
+            // SAFETY: the call succeeded, so `session_data` points to a
+            // `SECURITY_LOGON_SESSION_DATA` allocated by LSA, which is freed only after both reads.
             let candidate_correct_session = unsafe { *session_data }.Session == session_id;
+            // SAFETY: as above, `session_data` is valid until the `LsaFreeReturnBuffer` below.
             let candidate_interactive =
                 unsafe { *session_data }.LogonType == SECURITY_LOGON_TYPE_INTERACTIVE;
+            // SAFETY: `session_data` was allocated by `LsaGetLogonSessionData`, is freed exactly
+            // once here, and is not read afterwards.
             unsafe { LsaFreeReturnBuffer(session_data as *mut c_void) };
+
             if candidate_correct_session {
                 interactive = candidate_interactive;
                 break;

@@ -1,5 +1,3 @@
-#![allow(clippy::undocumented_unsafe_blocks)] // Remove me if you dare.
-
 use std::{
     io,
     os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle, RawHandle},
@@ -13,12 +11,19 @@ use windows_sys::Win32::{
 /// Windows event object
 pub struct Event(OwnedHandle);
 
+// SAFETY: the only field is an `OwnedHandle`, which std already declares `Send`: an event is a
+// kernel object whose handle may be used and closed from any thread of the process.
 unsafe impl Send for Event {}
+// SAFETY: `OwnedHandle` is also `Sync`, and every method takes `&self` and only hands the handle
+// to thread-safe kernel calls (`SetEvent`, `DuplicateHandle`), so no Rust-side state can race.
 unsafe impl Sync for Event {}
 
 impl Event {
     /// Create a new event object using `CreateEventW`
     pub fn new(manual_reset: bool, initial_state: bool) -> io::Result<Self> {
+        // SAFETY: both pointer arguments are null, which `CreateEventW` documents as "default
+        // security descriptor, handle not inheritable" and "unnamed event". The other arguments
+        // are plain integers.
         let event = unsafe {
             CreateEventW(
                 ptr::null_mut(),
@@ -46,6 +51,9 @@ impl Event {
     /// Duplicate the event object with `DuplicateHandle()`
     pub fn duplicate(&self) -> io::Result<Event> {
         let mut new_event = ptr::null_mut();
+        // SAFETY: `GetCurrentProcess` returns a pseudo handle that needs no closing, the source
+        // handle is owned by `self` and stays open for the duration of the call, and the target
+        // pointer refers to a local that `DuplicateHandle` writes once on success.
         let status = unsafe {
             DuplicateHandle(
                 GetCurrentProcess(),
