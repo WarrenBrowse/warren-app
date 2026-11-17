@@ -88,6 +88,15 @@ jobs:
             $(grep -vE '^[[:space:]]*(#|$)' ci/rust-fmt-scope.txt | sed 's/^/-p /') \
             -- --check
 
+      # The repository is public: lot and phase numbers, finding ids and
+      # references to numbered documents of the private backend mean nothing
+      # to a reader. The Rust, TOML and proto sources are clean; the commit
+      # hook holds every other language to it for the lines a commit adds.
+      - name: Work-tracking markers in source
+        run: |
+          bash ci/test-check-comment-markers.sh
+          bash ci/check-comment-markers.sh '*.rs' '*.toml' '*.proto'
+
       # Sub-second, and it guards the release notes every surface shows: the
       # GitHub release body, the in-app what's-new (changes.txt) and the signed
       # manifests all read CHANGELOG.md, and the test pins the bash reader
