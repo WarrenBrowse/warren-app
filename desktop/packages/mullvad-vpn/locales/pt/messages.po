@@ -699,10 +699,6 @@ msgid "Enter port"
 msgstr "Introduzir porta"
 
 msgctxt "api-access-methods-view"
-msgid "If you are not connected to our VPN, then the Encrypted DNS proxy will use your own non-VPN IP when connecting. The DoH servers are hosted by one of the following providers: Quad9 or Cloudflare."
-msgstr "Se não estiver ligado à nossa VPN, o proxy DNS encriptado utiliza o seu próprio IP e não a VPN ao estabelecer a ligação. Os servidores DoH são alojados por um dos seguintes fornecedores: Quad9 ou Cloudflare."
-
-msgctxt "api-access-methods-view"
 msgid "In use"
 msgstr "Em uso"
 
@@ -783,10 +779,6 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "A porta TCP onde o seu servidor SOCKS5 local escuta."
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
-msgstr "Isto pode ser útil se a API estiver censurada, mas os servidores de ponte da Warren não."
-
-msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
 msgstr "Isto pode ser útil quando não é afetado pela censura."
 
@@ -805,14 +797,6 @@ msgstr "Protocolo de transporte"
 msgctxt "api-access-methods-view"
 msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
 msgstr "Com o método \"Direto\", a app comunica diretamente com um servidor da Warren API sem quaisquer proxies intermédios."
-
-msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "Com o método \"Proxy DNS encriptado\", a aplicação irá comunicar com a nossa API Warren através de um endereço proxy. Para tal, obtém um endereço de um servidor DNS sobre HTTPS (DoH) e utiliza-o para aceder aos nossos servidores de API."
-
-msgctxt "api-access-methods-view"
-msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "Com o método \"pontes da Warren\", a app comunica com um servidor da Warren API através de um servidor de ponte da Warren. Este método envia o tráfego ofuscado por Shadowsocks."
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -5196,22 +5180,6 @@ msgstr "Tentar novamente"
 msgctxt "account-view"
 msgid "Public key"
 msgstr "Chave pública"
-
-msgctxt "api-access-methods-view"
-msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
-msgstr "A CDN utilizada é a CDN77 da Datapacket. A CDN apenas consegue observar o tráfego TLS encaminhado, não o seu conteúdo."
-
-msgctxt "api-access-methods-view"
-msgid "The app communicates with a Warren API server via %(domainFronting)s."
-msgstr "A aplicação comunica com um servidor da API Warren através de %(domainFronting)s."
-
-msgctxt "api-access-methods-view"
-msgid "This can be useful when direct access and other methods are blocked by censorship."
-msgstr "Isto pode ser útil quando o acesso direto e outros métodos estão bloqueados por censura."
-
-msgctxt "api-access-methods-view"
-msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
-msgstr "Com o método de acesso %(domainFronting)s, a aplicação chega à API Warren através de uma CDN, misturando o tráfego com muito outro tráfego da Internet, o que torna a censura mais difícil."
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."

@@ -37,42 +37,11 @@ class MullvadApi {
         let directRaw = convert_builtin_access_method_setting(
             UUID().uuidString, "Direct", true, UInt8(KindDirect.rawValue), nil
         )
-        // Bridges and EncryptedDNS must be disabled because the shadowsocks bridge provider
-        // is initialized with a nil loader. If Direct fails and the access method selector
-        // falls back to Bridges, it will dereference the nil pointer and SIGABRT.
-        let bridgesRaw = convert_builtin_access_method_setting(
-            UUID().uuidString, "Bridges", false, UInt8(KindBridge.rawValue), nil
-        )
-        let encryptedDNSRaw = convert_builtin_access_method_setting(
-            UUID().uuidString,
-            "EncryptedDNS",
-            false,
-            UInt8(
-                KindEncryptedDnsProxy.rawValue
-            ),
-            nil
-        )
-        let domainFrontingRaw = convert_builtin_access_method_setting(
-            UUID().uuidString,
-            "Domain fronting",
-            false,
-            UInt8(KindDomainFronting.rawValue),
-            nil
-        )
-        let settingsWrapper = init_access_method_settings_wrapper(
-            directRaw, bridgesRaw, encryptedDNSRaw, domainFrontingRaw, nil, 0
-        )
-        let bridgeProvider = SwiftShadowsocksLoaderWrapper(
-            _0: SwiftShadowsocksLoaderWrapperContext(shadowsocks_loader: nil)
-        )
-        let domainFrontingConfig = new_domain_fronting_config("", "")
+        let settingsWrapper = init_access_method_settings_wrapper(directRaw, nil, 0)
         context = mullvad_api_init_inner(
             hostname,
             apiAddress,
-            hostname,
-            domainFrontingConfig,
             false,
-            bridgeProvider,
             settingsWrapper,
             nil,
             nil

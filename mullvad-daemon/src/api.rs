@@ -12,34 +12,22 @@ use mullvad_api::{
     availability::ApiAvailability,
     proxy::{ApiConnectionMode, ProxyConfig},
 };
-use mullvad_encrypted_dns_proxy::state::EncryptedDnsProxyState;
 use mullvad_management_interface::async_trait;
-use mullvad_relay_selector::RelaySelector;
 use mullvad_types::access_method::{AccessMethod, BuiltInAccessMethod};
 #[cfg(target_os = "android")]
 use talpid_core::mpsc::Sender;
 use talpid_types::net::AllowedEndpoint;
 use talpid_types::net::Endpoint;
 use talpid_types::net::TransportProtocol;
-use talpid_types::net::{AllowedClients, Connectivity, proxy::CustomProxy};
+use talpid_types::net::{AllowedClients, Connectivity};
 
 pub struct DaemonAccessMethodResolver {
-    relay_selector: RelaySelector,
-    encrypted_dns_proxy_cache: EncryptedDnsProxyState,
     address_cache: AddressCache<FileAddressCacheBacking>,
 }
 
 impl DaemonAccessMethodResolver {
-    pub fn new(
-        relay_selector: RelaySelector,
-        encrypted_dns_proxy_cache: EncryptedDnsProxyState,
-        address_cache: AddressCache<FileAddressCacheBacking>,
-    ) -> Self {
-        Self {
-            relay_selector,
-            encrypted_dns_proxy_cache,
-            address_cache,
-        }
+    pub fn new(address_cache: AddressCache<FileAddressCacheBacking>) -> Self {
+        Self { address_cache }
     }
 }
 
@@ -52,42 +40,6 @@ impl AccessMethodResolver for DaemonAccessMethodResolver {
         let connection_mode = {
             match access_method {
                 AccessMethod::BuiltIn(BuiltInAccessMethod::Direct) => ApiConnectionMode::Direct,
-                AccessMethod::BuiltIn(BuiltInAccessMethod::Bridge) => {
-                    let Some(bridge) = self.relay_selector.get_bridge_forced() else {
-                        log::warn!("Could not select a Warren bridge");
-                        log::debug!("The relay list might be empty");
-                        return None;
-                    };
-                    let proxy = CustomProxy::Shadowsocks(bridge);
-                    ApiConnectionMode::Proxied(ProxyConfig::from(proxy))
-                }
-                AccessMethod::BuiltIn(BuiltInAccessMethod::EncryptedDnsProxy) => {
-                    if let Err(error) = self
-                        .encrypted_dns_proxy_cache
-                        .fetch_configs("dns.warrenbrowse.com")
-                        .await
-                    {
-                        log::warn!("Failed to fetch new Encrypted DNS Proxy configurations");
-                        log::debug!("{error:#?}");
-                    }
-                    let Some(edp) = self.encrypted_dns_proxy_cache.next_configuration() else {
-                        log::warn!("Could not select next Encrypted DNS proxy config");
-                        return None;
-                    };
-                    ApiConnectionMode::Proxied(ProxyConfig::from(edp))
-                }
-                AccessMethod::BuiltIn(BuiltInAccessMethod::DomainFronting) => {
-                    // Warren operates no built-in domain-fronting endpoint
-                    // (the upstream Mullvad CDN77 front was dead code and
-                    // removed). The method stays disabled in settings for
-                    // upstream-rebase compatibility; if ever selected it
-                    // resolves to "unavailable". A real fronting endpoint can
-                    // still be added as a Custom access method.
-                    log::warn!(
-                        "DomainFronting has no Warren built-in endpoint; method unavailable"
-                    );
-                    return None;
-                }
                 AccessMethod::Custom(config) => {
                     ApiConnectionMode::Proxied(ProxyConfig::from(config.clone()))
                 }

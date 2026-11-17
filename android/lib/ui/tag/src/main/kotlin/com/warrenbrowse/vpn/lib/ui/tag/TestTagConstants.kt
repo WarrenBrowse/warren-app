@@ -100,26 +100,6 @@ const val SELECT_LOCATION_CUSTOM_LIST_BOTTOM_SHEET_TEST_TAG =
 const val SELECT_LOCATION_LOCATION_BOTTOM_SHEET_TEST_TAG =
     "select_location_location_bottom_sheet_test_tag"
 
-// SaveApiAccessMethodDialog
-const val SAVE_API_ACCESS_METHOD_LOADING_SPINNER_TEST_TAG =
-    "save_api_access_method_loading_spinner_test_tag"
-const val SAVE_API_ACCESS_METHOD_CANCEL_BUTTON_TEST_TAG =
-    "save_api_access_method_cancel_button_test_tag"
-const val SAVE_API_ACCESS_METHOD_SAVE_BUTTON_TEST_TAG =
-    "save_api_access_method_save_button_test_tag"
-
-// ApiAccessListScreen
-const val API_ACCESS_LIST_INFO_TEST_TAG = "api_access_list_info_test_tag"
-
-// ApiAccessMethodDetailsScreen
-const val API_ACCESS_DETAILS_TOP_BAR_DROPDOWN_BUTTON_TEST_TAG =
-    "api_access_details_top_bar_dropdown_button_test_tag"
-const val API_ACCESS_DETAILS_EDIT_BUTTON_TEST_TAG = "api_access_details_edit_button_test_tag"
-const val API_ACCESS_USE_METHOD_BUTTON_TEST_TAG = "api_access_details_use_method_test_tag"
-const val API_ACCESS_TEST_METHOD_BUTTON_TEST_TAG = "api_access_details_test_method_test_tag"
-
-// EditApiAccessMethodScreen
-const val EDIT_API_ACCESS_NAME_INPUT_TEST_TAG = "edit_api_access_name_input_test_tag"
 const val SELECT_PORT_CUSTOM_TEST_TAG = "select_port_custom_test_tag"
 
 // LoginScreen

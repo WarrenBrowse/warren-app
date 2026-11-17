@@ -58,6 +58,11 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Keep the same session identity from one start of the VPN to the next, so the tunnel gets
   its address and its chosen forwarded port back after a restart.
 
+### Removed
+- Remove the "Warren bridges", "Encrypted DNS proxy" and "Domain fronting" API access methods,
+  which depended on servers Warren does not run. Direct access and custom SOCKS5 and Shadowsocks
+  proxies remain. Settings format updated to `v18`.
+
 ## [1.1.57] - 2026-11-09
 ### Changed
 - [Windows, macOS, Linux, Android] Redraw the plain landscape shown while the VPN is disconnected,

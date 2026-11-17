@@ -5,8 +5,7 @@ import { RoutePath } from '../../../../src/shared/routes';
 import { TestUtils } from '../../utils';
 import { startInstalledApp } from '../installed-utils';
 
-// This test expects the daemon to be logged in and only have "Direct" and "Warren Bridges"
-// access methods.
+// This test expects the daemon to be logged in and only have the "Direct" access method.
 // Env parameters:
 //   `SHADOWSOCKS_SERVER_IP`
 //   `SHADOWSOCKS_SERVER_PORT`
@@ -14,9 +13,6 @@ import { startInstalledApp } from '../installed-utils';
 //   `SHADOWSOCKS_SERVER_PASSWORD`
 
 const DIRECT_NAME = 'Direct';
-const BRIDGES_NAME = 'Warren Bridges';
-const ENCRYPTED_DNS_PROXY_NAME = 'Encrypted DNS proxy';
-const DOMAIN_FRONTING_NAME = 'Domain fronting';
 const IN_USE_LABEL = 'In use';
 const FUNCTIONING_METHOD_NAME = 'Test method';
 const NON_FUNCTIONING_METHOD_NAME = 'Non functioning test method';
@@ -47,16 +43,10 @@ test('App should display access methods', async () => {
   await navigateToAccessMethods();
 
   const accessMethods = page.getByTestId('access-method');
-  await expect(accessMethods).toHaveCount(3);
+  await expect(accessMethods).toHaveCount(1);
 
   const direct = accessMethods.first();
-  const bridges = accessMethods.nth(1);
-  const encryptedDnsProxy = accessMethods.nth(2);
-  const domainFronting = accessMethods.nth(3);
   await expect(direct).toContainText(DIRECT_NAME);
-  await expect(bridges).toContainText(BRIDGES_NAME);
-  await expect(encryptedDnsProxy).toContainText(ENCRYPTED_DNS_PROXY_NAME);
-  await expect(domainFronting).toContainText(DOMAIN_FRONTING_NAME);
   await expect(page.getByText(IN_USE_LABEL)).toHaveCount(1);
 });
 
@@ -90,8 +80,8 @@ test('App should add invalid access method', async () => {
   await util.expectRoute(RoutePath.apiAccessMethods);
 
   const accessMethods = page.getByTestId('access-method');
-  // Direct, Bridges, Encrypted DNS Proxy & the non-functioning access method.
-  await expect(accessMethods).toHaveCount(4);
+  // Direct & the non-functioning access method.
+  await expect(accessMethods).toHaveCount(2);
 
   await expect(accessMethods.last()).toHaveText(NON_FUNCTIONING_METHOD_NAME);
 });
@@ -147,8 +137,8 @@ test('App should edit access method', async () => {
   await util.expectRoute(RoutePath.apiAccessMethods);
 
   const accessMethods = page.getByTestId('access-method');
-  // Direct, Bridges, Encrypted DNS Proxy & the custom access method.
-  await expect(accessMethods).toHaveCount(4);
+  // Direct & the custom access method.
+  await expect(accessMethods).toHaveCount(2);
 
   await expect(accessMethods.last()).toHaveText(FUNCTIONING_METHOD_NAME);
 });
@@ -157,8 +147,6 @@ test('App should use valid method', async () => {
   const accessMethods = page.getByTestId('access-method');
 
   const direct = accessMethods.first();
-  const bridges = accessMethods.nth(1);
-  const encryptedDnsProxy = accessMethods.nth(2);
   const functioningTestMethod = accessMethods.last();
 
   await expect(page.getByText(IN_USE_LABEL)).toHaveCount(1);
@@ -169,8 +157,6 @@ test('App should use valid method', async () => {
   await contextMenuButton.click();
   await functioningTestMethod.getByText('Use').click();
   await expect(direct).not.toContainText(IN_USE_LABEL);
-  await expect(bridges).not.toContainText(IN_USE_LABEL);
-  await expect(encryptedDnsProxy).not.toContainText(IN_USE_LABEL);
   await expect(functioningTestMethod).toContainText('API reachable');
   await expect(functioningTestMethod).toContainText(IN_USE_LABEL);
 });
@@ -185,6 +171,5 @@ test('App should delete method', async () => {
 
   await expect(page.getByText(`Delete ${FUNCTIONING_METHOD_NAME}?`)).toBeVisible();
   await page.locator('button:has-text("Delete")').click();
-  // Direct, Bridges, Encrypted DNS Proxy.
-  await expect(accessMethods).toHaveCount(3);
+  await expect(accessMethods).toHaveCount(1);
 });

@@ -693,10 +693,6 @@ msgid "Enter port"
 msgstr "輸入連接埠"
 
 msgctxt "api-access-methods-view"
-msgid "If you are not connected to our VPN, then the Encrypted DNS proxy will use your own non-VPN IP when connecting. The DoH servers are hosted by one of the following providers: Quad9 or Cloudflare."
-msgstr "如果您未連線至我們的 VPN 服務，則加密 DNS 代理伺服器將在連線時使用您本人的非 VPN IP。DoH 伺服器由下列供應商之一負責託管：Quad9 或 Cloudflare。"
-
-msgctxt "api-access-methods-view"
 msgid "In use"
 msgstr "正在使用"
 
@@ -777,10 +773,6 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "正由本機 SOCKS5 伺服器接聽的 TCP 連接埠。"
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
-msgstr "如果 API 受到審查，但 Warren 的橋接伺服器未受到審查，此方式可能會很有用。"
-
-msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
 msgstr "當您不受審查影響時，此方式可能會很有用。"
 
@@ -799,14 +791,6 @@ msgstr "傳輸通訊協定"
 msgctxt "api-access-methods-view"
 msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
 msgstr "使用「直接」方式，應用程式將直接與 Mulvad API 伺服器通訊，而不經過任何中間代理伺服器。"
-
-msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "使用「加密 DNS 代理伺服器」方法時，應用程式會透過代理伺服器位址和我們的 Warren API 通訊。應用程式會先從 DNS over HTTPS (DoH) 伺服器取得一個位址，再利用該位址連線至我們的 API 伺服器。"
-
-msgctxt "api-access-methods-view"
-msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "使用「Warren 橋接」方式，則應用程式會透過 Warren 橋接伺服器，與 Warren API 伺服器進行通訊。應用程式會透過 Shadowsocks 將流量混淆再加以送出，從而實現這種通訊方式。"
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -5057,22 +5041,6 @@ msgstr "再試一次"
 msgctxt "account-view"
 msgid "Public key"
 msgstr "公鑰"
-
-msgctxt "api-access-methods-view"
-msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
-msgstr "使用的 CDN 是 Datapacket 的 CDN77。CDN 只能觀察到經中繼的 TLS 流量，無法看到其內容。"
-
-msgctxt "api-access-methods-view"
-msgid "The app communicates with a Warren API server via %(domainFronting)s."
-msgstr "應用程式透過 %(domainFronting)s 與 Warren API 伺服器通訊。"
-
-msgctxt "api-access-methods-view"
-msgid "This can be useful when direct access and other methods are blocked by censorship."
-msgstr "當直接存取及其他方式遭審查封鎖時，這會很有用。"
-
-msgctxt "api-access-methods-view"
-msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
-msgstr "使用 %(domainFronting)s 存取方式時，應用程式會透過 CDN 連線至 Warren API，將流量與大量其他網際網路流量混雜在一起，使其更難被審查。"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."

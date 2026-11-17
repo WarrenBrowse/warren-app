@@ -693,10 +693,6 @@ msgid "Enter port"
 msgstr "ポートを入力"
 
 msgctxt "api-access-methods-view"
-msgid "If you are not connected to our VPN, then the Encrypted DNS proxy will use your own non-VPN IP when connecting. The DoH servers are hosted by one of the following providers: Quad9 or Cloudflare."
-msgstr "当社のVPNに接続していない場合、暗号化DNSプロキシは接続時に独自の非VPN IPを使用します。DoHサーバーは、Quad9またはCloudflareのいずれかによってホストされます。"
-
-msgctxt "api-access-methods-view"
 msgid "In use"
 msgstr "使用中"
 
@@ -777,10 +773,6 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "ローカルSOCKS5サーバーがリッスンしているTCPポートです。"
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
-msgstr "これは、APIが検閲されていてもWarrenのブリッジサーバーが検閲されていない場合に便利な場合があります。"
-
-msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
 msgstr "これは、検閲による影響を受けていない場合に便利な場合があります。"
 
@@ -799,14 +791,6 @@ msgstr "転送プロトコル"
 msgctxt "api-access-methods-view"
 msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
 msgstr "「ダイレクト」方法の場合、アプリは中間プロキシを使わずにWarren APIサーバーと直接通信します。"
-
-msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "[暗号化DNSプロキシ] 方式を使用すると、アプリはプロキシアドレスを通じてWarren APIと通信します。これはDNS over HTTPS (DoH) サーバーからアドレスを取得し、APIサーバーへのアクセスに利用することで行われます。"
-
-msgctxt "api-access-methods-view"
-msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "「Warrenブリッジ」方法の場合、アプリはWarrenブリッジサーバーを経由してWarren APIサーバーと通信します。この通信では、Shadowsocksによって難読化されたトラフィックが送信されます。"
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -5057,22 +5041,6 @@ msgstr "再試行"
 msgctxt "account-view"
 msgid "Public key"
 msgstr "公開鍵"
-
-msgctxt "api-access-methods-view"
-msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
-msgstr "使用される CDN は Datapacket の CDN77 です。CDN は中継される TLS トラフィックを観測できますが、その内容は確認できません。"
-
-msgctxt "api-access-methods-view"
-msgid "The app communicates with a Warren API server via %(domainFronting)s."
-msgstr "アプリは %(domainFronting)s を介して Warren API サーバーと通信します。"
-
-msgctxt "api-access-methods-view"
-msgid "This can be useful when direct access and other methods are blocked by censorship."
-msgstr "これは、直接アクセスやその他の方法が検閲によってブロックされている場合に役立ちます。"
-
-msgctxt "api-access-methods-view"
-msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
-msgstr "%(domainFronting)s アクセス方式では、アプリは CDN を介して Warren API に接続し、トラフィックを他の多数のインターネット通信に紛れ込ませることで、検閲をより困難にします。"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."

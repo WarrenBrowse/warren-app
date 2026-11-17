@@ -11,14 +11,10 @@ import WarrenTypes
 public func initAccessMethodSettingsWrapper(methods: [PersistentAccessMethod]) -> SwiftAccessMethodSettingsWrapper {
     let validShadowsocksCiphers = ShadowsocksCipherService().getCiphers()
 
-    // 1. Get all the built in access methods, it is expected that they are always available
+    // 1. Get the built in access method, it is expected that it is always available
     let directMethod = methods.first(where: { $0.proxyConfiguration == .direct })!
-    let bridgesMethod = methods.first(where: { $0.proxyConfiguration == .bridges })!
-    let encryptedDNSMethod = methods.first(where: { $0.proxyConfiguration == .encryptedDNS })!
-    let domainFrontingMethod = methods.first(where: { $0.proxyConfiguration == .domainFronting })!
 
     // 2. Get the custom access methods
-    let defaultMethods: [PersistentProxyConfiguration] = [.direct, .bridges, .encryptedDNS, .domainFronting]
     let customMethods = methods.filter {
         // Make sure we only use access methods with valid ciphers.
         if case .shadowsocks(let config) = $0.proxyConfiguration {
@@ -27,14 +23,11 @@ public func initAccessMethodSettingsWrapper(methods: [PersistentAccessMethod]) -
             }
         }
 
-        return !defaultMethods.contains($0.proxyConfiguration)
+        return $0.proxyConfiguration != .direct
     }
 
-    // 3. Convert the builtin access methods
+    // 3. Convert the builtin access method
     let directMethodRaw = convertAccessMethod(accessMethod: directMethod)
-    let bridgesMethodRaw = convertAccessMethod(accessMethod: bridgesMethod)
-    let encryptedDNSMethodRaw = convertAccessMethod(accessMethod: encryptedDNSMethod)
-    let domainFrontingMethodRaw = convertAccessMethod(accessMethod: domainFrontingMethod)
 
     // 4. Convert the custom access methods (all takes different parameters)
     var rawCustomMethods = customMethods.map { convertAccessMethod(accessMethod: $0) }
@@ -45,9 +38,6 @@ public func initAccessMethodSettingsWrapper(methods: [PersistentAccessMethod]) -
         {
             init_access_method_settings_wrapper(
                 directMethodRaw,
-                bridgesMethodRaw,
-                encryptedDNSMethodRaw,
-                domainFrontingMethodRaw,
                 $0.baseAddress!,
                 UInt(customMethodCount)
             )
@@ -57,7 +47,7 @@ public func initAccessMethodSettingsWrapper(methods: [PersistentAccessMethod]) -
 
 public func convertAccessMethod(accessMethod: PersistentAccessMethod) -> UnsafeMutableRawPointer? {
     switch accessMethod.proxyConfiguration {
-    case .direct, .bridges, .encryptedDNS, .domainFronting:
+    case .direct:
         return convert_builtin_access_method_setting(
             accessMethod.id.uuidString,
             accessMethod.name,
@@ -108,9 +98,6 @@ fileprivate
     func kind() -> UInt8 {
         switch kind {
         case .direct: UInt8(KindDirect.rawValue)
-        case .bridges: UInt8(KindBridge.rawValue)
-        case .encryptedDNS: UInt8(KindEncryptedDnsProxy.rawValue)
-        case .domainFronting: UInt8(KindDomainFronting.rawValue)
         case .shadowsocks: UInt8(KindShadowsocks.rawValue)
         case .socks5: UInt8(KindSocks5Local.rawValue)
         }

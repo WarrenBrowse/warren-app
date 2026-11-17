@@ -56,7 +56,7 @@ mod test {
     use super::migrate;
     use mullvad_types::{
         app_routing::{AppId, AppIdFlavor, SplitMode},
-        settings::{CURRENT_SETTINGS_VERSION, Settings, SettingsVersion},
+        settings::{Settings, SettingsVersion},
     };
     use serde_json::json;
 
@@ -81,7 +81,7 @@ mod test {
             })
         );
         let settings: Settings = serde_json::from_value(settings).unwrap();
-        assert_eq!(settings.settings_version, CURRENT_SETTINGS_VERSION);
+        assert_eq!(settings.settings_version, SettingsVersion::V17);
         assert!(settings.app_routing.exclusions_active());
         let firefox = AppId::parse_as(
             AppIdFlavor::Unix,
@@ -133,7 +133,7 @@ mod test {
         let settings: Settings = serde_json::from_value(settings).unwrap();
         assert_eq!(settings.app_routing.split_mode, SplitMode::Off);
         assert!(settings.app_routing.excluded_apps.is_empty());
-        assert_eq!(settings.settings_version, CURRENT_SETTINGS_VERSION);
+        assert_eq!(settings.settings_version, SettingsVersion::V17);
     }
 
     #[test]

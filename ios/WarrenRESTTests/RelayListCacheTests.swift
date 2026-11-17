@@ -108,25 +108,12 @@ class RelayListCacheTests: XCTestCase {
     // MARK: - Helpers
 
     private func makeApiProxy(port: UInt16) throws -> APIQuerying {
-        let shadowsocksLoader = ShadowsocksLoaderStub(
-            configuration: ShadowsocksConfiguration(
-                address: .ipv4(.loopback),
-                port: 1080,
-                password: "123",
-                cipher: "aes-128-cfb"
-            )
-        )
-
         let accessMethodsRepository = AccessMethodRepositoryStub.stub
 
         let context = try MullvadApiContext(
             host: "localhost",
             address: "\(IPv4Address.loopback.debugDescription):\(port)",
-            encryptedDnsDomain: REST.encryptedDNSHostname,
-            domainFrontingFront: "",
-            domainFrontingProxyHost: "",
             disableTls: true,
-            shadowsocksProvider: shadowsocksLoader,
             accessMethodWrapper: initAccessMethodSettingsWrapper(methods: accessMethodsRepository.fetchAll()),
             accessMethodChangeListeners: []
         )

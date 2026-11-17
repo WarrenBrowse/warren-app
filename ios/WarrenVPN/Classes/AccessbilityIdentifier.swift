@@ -100,9 +100,6 @@ public enum AccessibilityIdentifier: Equatable {
     // Cells
     case deviceCell
     case accessMethodDirectCell
-    case accessMethodBridgesCell
-    case accessMethodEncryptedDNSCell
-    case accessMethodDomainFrontingCell
     case accessMethodProtocolSelectionCell
     case vpnSettingsCell
     case dnsSettingsAddServerCell

@@ -14,8 +14,6 @@
 	<string>$(ATTACH_APP_LOGS_ON_FAILURE)</string>
 	<key>DisplayName</key>
 	<string>$(DISPLAY_NAME)</string>
-	<key>EncryptedDnsHostName</key>
-	<string>$(ENCRYPTED_DNS_HOST_NAME)</string>
 	<key>FirewallApiBaseURL</key>
 	<string>$(FIREWALL_API_BASE_URL)</string>
 	<key>HasTimeAccountNumber</key>

@@ -77,9 +77,9 @@ enum Cli {
     Relay(relay::Relay),
     /// Manage Warren API access methods.
     ///
-    /// Access methods are used to connect to the Warren API via one of
-    /// Warren's bridge servers or a custom proxy (SOCKS5 & Shadowsocks) when
-    /// and where establishing a direct connection does not work.
+    /// Access methods are used to connect to the Warren API through a custom
+    /// proxy (SOCKS5 & Shadowsocks) when and where establishing a direct
+    /// connection does not work.
     ///
     /// If the Warren daemon is unable to connect to the Warren API, it will
     /// automatically try to use any other configured access method and re-try

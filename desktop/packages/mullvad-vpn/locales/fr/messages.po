@@ -727,10 +727,6 @@ msgid "Enter port"
 msgstr "Saisir le port"
 
 msgctxt "api-access-methods-view"
-msgid "If you are not connected to our VPN, then the Encrypted DNS proxy will use your own non-VPN IP when connecting. The DoH servers are hosted by one of the following providers: Quad9 or Cloudflare."
-msgstr "Si vous n'êtes pas connecté à notre VPN, le proxy DNS chiffré utilisera votre propre IP non VPN lors de la connexion. Les serveurs DoH sont hébergés par l'un des fournisseurs suivants : Quad 9 ou Cloudflare."
-
-msgctxt "api-access-methods-view"
 msgid "In use"
 msgstr "En cours d'utilisation"
 
@@ -794,14 +790,6 @@ msgctxt "api-access-methods-view"
 msgid "The API could not be reached using the %(name)s method."
 msgstr "L'API n'a pas pu être atteinte en utilisant le mode %(name)s."
 
-#. Part of a description of the 'Domain fronting' API access method
-#. which the app uses to reach Warren's API servers
-#. Available placeholders:
-#. %(domainFronting)s - Will be replaced with: 'Domain fronting'
-msgctxt "api-access-methods-view"
-msgid "The app communicates with a Warren API server via %(domainFronting)s."
-msgstr "L'application communique avec un serveur API Warren via %(domainFronting)s."
-
 msgctxt "api-access-methods-view"
 msgid "The app needs the remote server details, where your local SOCKS5 server will forward your traffic."
 msgstr "L'application a besoin des coordonnées du serveur distant, où votre serveur SOCKS5 local transmettra votre trafic."
@@ -810,12 +798,6 @@ msgctxt "api-access-methods-view"
 msgid "The app needs to communicate with a Warren API server to log you in, fetch server lists, and other critical operations."
 msgstr "L'application doit communiquer avec un serveur d'API Warren pour vous connecter, récupérer des listes de serveurs et effectuer d'autres opérations critiques."
 
-#. Part of a description of the 'Domain fronting' API access method
-#. which the app uses to reach Warren's API servers
-msgctxt "api-access-methods-view"
-msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
-msgstr "Le CDN utilisé est le CDN77 de Datapacket. Le CDN ne peut observer que le trafic TLS relayé, pas son contenu."
-
 msgctxt "api-access-methods-view"
 msgid "The in use API access method will change."
 msgstr "Le mode d'accès à l'API en cours d'utilisation sera modifié."
@@ -823,16 +805,6 @@ msgstr "Le mode d'accès à l'API en cours d'utilisation sera modifié."
 msgctxt "api-access-methods-view"
 msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "Le port TCP sur lequel votre serveur SOCKS5 local écoute."
-
-msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
-msgstr "Cela peut être utile si l'API est censurée, mais que les serveurs de pont Warren ne le sont pas."
-
-#. Part of a description of the 'Domain fronting' API access method
-#. which the app uses to reach Warren's API servers
-msgctxt "api-access-methods-view"
-msgid "This can be useful when direct access and other methods are blocked by censorship."
-msgstr "Cela peut être utile lorsque l'accès direct et les autres méthodes sont bloqués par la censure."
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
@@ -853,22 +825,6 @@ msgstr "Protocole de transport"
 msgctxt "api-access-methods-view"
 msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
 msgstr "Avec le mode « Direct », l'application communique directement avec un serveur d'API Warren, sans passer par des proxys intermédiaires."
-
-msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "Avec la méthode « proxy DNS chiffré », l'application communiquera avec notre API Warren par le biais d'une adresse proxy. Pour ce faire, elle récupère une adresse auprès d'un serveur DNS over HTTPS (DoH) et l'utilise pour atteindre nos serveurs API."
-
-msgctxt "api-access-methods-view"
-msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "Dans la méthode « Ponts Warren », l'application communique avec un serveur d'API Warren via un serveur pont Warren. Pour ce faire, elle envoie le trafic obscurci par Shadowsocks."
-
-#. Part of a description of the 'Domain fronting' API access method
-#. which the app uses to reach Warren's API servers
-#. Available placeholders:
-#. %(domainFronting)s - Will be replaced with: 'Domain fronting'
-msgctxt "api-access-methods-view"
-msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
-msgstr "Avec la méthode d'accès %(domainFronting)s, l'application atteint l'API Warren via un CDN, mêlant le trafic à beaucoup d'autres flux internet, ce qui rend la censure plus difficile."
 
 #. Title of the app info view.
 msgctxt "app-info-view"

@@ -11,15 +11,6 @@ public enum PersistentProxyConfiguration: Codable, Equatable, Sendable, CustomDe
     /// Direct communication without proxy.
     case direct
 
-    /// Communication over bridges.
-    case bridges
-
-    /// Communication over proxy address from a DNS.
-    case encryptedDNS
-
-    /// Communication via domain fronting.
-    case domainFronting
-
     /// Communication over shadowsocks.
     case shadowsocks(ShadowsocksConfiguration)
 
@@ -30,12 +21,6 @@ public enum PersistentProxyConfiguration: Codable, Equatable, Sendable, CustomDe
         switch self {
         case .direct:
             return "Direct"
-        case .bridges:
-            return "Bridges"
-        case .encryptedDNS:
-            return "Encrypted DNS"
-        case .domainFronting:
-            return "Domain fronting"
         case .shadowsocks(let config):
             return "Shadowsocks: \(config)"
         case .socks5(let config):

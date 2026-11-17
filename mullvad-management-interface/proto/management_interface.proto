@@ -825,15 +825,12 @@ message CustomProxy {
 
 message AccessMethod {
   message Direct {}
-  message Bridges {}
-  message EncryptedDnsProxy {}
-  message DomainFronting {}
+  // Built-in methods that reached the API through third-party infrastructure.
+  reserved 2, 3, 5;
+  reserved "bridges", "encrypted_dns_proxy", "domain_fronting";
   oneof access_method {
     Direct direct = 1;
-    Bridges bridges = 2;
-    EncryptedDnsProxy encrypted_dns_proxy = 3;
     CustomProxy custom = 4;
-    DomainFronting domain_fronting = 5;
   }
 }
 
@@ -852,10 +849,9 @@ message NewAccessMethodSetting {
 
 message ApiAccessMethodSettings {
   AccessMethodSetting direct = 1;
-  AccessMethodSetting mullvad_bridges = 2;
-  AccessMethodSetting encrypted_dns_proxy = 3;
+  reserved 2, 3, 5;
+  reserved "mullvad_bridges", "encrypted_dns_proxy", "domain_fronting";
   repeated AccessMethodSetting custom = 4;
-  AccessMethodSetting domain_fronting = 5;
 }
 
 message Settings {

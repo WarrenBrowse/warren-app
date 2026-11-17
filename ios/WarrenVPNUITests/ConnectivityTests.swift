@@ -42,8 +42,6 @@ class ConnectivityTests: LoggedOutUITestCase {
 
         login(accountNumber: hasTimeAccountNumber)
 
-        disableBridgesAccessMethod()
-
         TunnelControlPage(app)
             .tapSelectLocationButton()
 

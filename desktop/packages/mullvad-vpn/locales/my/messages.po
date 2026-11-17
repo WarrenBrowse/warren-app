@@ -693,10 +693,6 @@ msgid "Enter port"
 msgstr "ပေါ့တ် ရိုက်ထည့်ရန်"
 
 msgctxt "api-access-methods-view"
-msgid "If you are not connected to our VPN, then the Encrypted DNS proxy will use your own non-VPN IP when connecting. The DoH servers are hosted by one of the following providers: Quad9 or Cloudflare."
-msgstr "အကယ်၍ သင်သည် ကျွန်ုပ်တို့၏ VPN သို့ ချိတ်ဆက်ထားခြင်းမရှိပါက ကုဒ်ဝှက်ထားသော DNS ပရောက်စီသည် ချိတ်ဆက်ရာတွင် သင်၏ကိုယ်ပိုင် VPN မဟုတ်သော IP ကို ​​အသုံးပြုပါမည်။ DoH ဆာဗာများကို အောက်ပါဝန်ဆောင်မှုပေးသူများထဲမှ တစ်ခုမှ လက်ခံဆောင်ရွက်ပေးသည်- Quad 9 သို့မဟုတ် Cloudflare ။"
-
-msgctxt "api-access-methods-view"
 msgid "In use"
 msgstr "အသုံးပြုဆဲ"
 
@@ -777,10 +773,6 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "သင့်စက်တွင်း SOCKS5 ဆာဗာသည် TCP ပေါ့တ် ချိတ်ဆက်ရန် စောင့်ဆိုင်းနေသည်။"
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
-msgstr "API ကို စိစစ်ဖြတ်တောက်မှုများ ပြုလုပ်ထားသော်လည်း Warren ၏ ပေါင်းကူးဆာဗာများကို မပြုလုပ်ထားပါက ၎င်းသည် အသုံးဝင်နိုင်သည်။"
-
-msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
 msgstr "သင့်အပေါ် စိစစ်ဖြတ်တောက်မှု၏ အကျိုးသက်ရောက်ခြင်း မရှိသည့်အခါ ၎င်းသည် အသုံးဝင်နိုင်ပါသည်။"
 
@@ -799,14 +791,6 @@ msgstr "ပို့ဆောင်ရေး ပရိုတိုကောလ�
 msgctxt "api-access-methods-view"
 msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
 msgstr "\"တိုက်ရိုက်\" နည်းလမ်းဖြင့်ဆိုလျှင် အက်ပ်သည် ကြားခံ ပရောက်စီများ မပါဘဲ Warren API ဆာဗာနှင့် တိုက်ရိုက် ဆက်သွယ်ပါသည်။"
-
-msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "ထိုအက်ပ်သည် “ကုဒ်ဝှက်ထားသော DNS ပရောက်စီ” နည်းလမ်းအားဖြင့် ကျွန်ုပ်တို့၏ Warren API ထံသို့ ပရောက်စီလိပ်စာမှတစ်ဆင့် ဆက်သွယ်ပေးမည်ဖြစ်သည်။ HTTPS (DoH) ဆာဗာရှိ DNS မှ လိပ်စာတစ်ခုကို ပြန်လည်ရယူခြင်းအားဖြင့် ထိုသို့လုပ်ဆောင်ပြီးနောက် ကျွန်ုပ်တို့၏ API ဆာဗာများသို့ရောက်ရှိရန် ၎င်းကို အသုံးပြုသည်။"
-
-msgctxt "api-access-methods-view"
-msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "\"Warren ပေါင်းကူးများ\" နည်းလမ်းဖြင့်ဆိုလျှင် အက်ပ်သည် Warren API ဆာဗာအား Warren ပေါင်းကူး ဆာဗာမှတစ်ဆင့် ဆက်သွယ်ပါသည်။ Shadowsock များဖြင့် ရှုပ်ထွေးအောင် ပြုလုပ်ထားသည့် ဒေတာကူးလူးမှုများကို ပေးပို့ခြင်းဖြင့် ၎င်းက အဆိုပါကိစ္စကို ဆောင်ရွက်ပါသည်။"
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -5060,22 +5044,6 @@ msgstr "ထပ်ကြိုးစားရန်"
 msgctxt "account-view"
 msgid "Public key"
 msgstr "အများသုံးသော့"
-
-msgctxt "api-access-methods-view"
-msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
-msgstr "အသုံးပြုသော CDN မှာ Datapacket ၏ CDN77 ဖြစ်သည်။ CDN သည် ပြန်လည်ဆက်သွယ်ပေးထားသော TLS အသွားအလာကိုသာ မြင်နိုင်ပြီး အကြောင်းအရာများကို မမြင်နိုင်ပါ။"
-
-msgctxt "api-access-methods-view"
-msgid "The app communicates with a Warren API server via %(domainFronting)s."
-msgstr "အက်ပ်သည် %(domainFronting)s မှတစ်ဆင့် Warren API ဆာဗာနှင့် ဆက်သွယ်သည်။"
-
-msgctxt "api-access-methods-view"
-msgid "This can be useful when direct access and other methods are blocked by censorship."
-msgstr "တိုက်ရိုက်ဝင်ရောက်မှုနှင့် အခြားနည်းလမ်းများကို ဆင်ဆာဖြတ်တောက်မှုဖြင့် ပိတ်ဆို့ထားသည့်အခါ ဤနည်းသည် အသုံးဝင်နိုင်သည်။"
-
-msgctxt "api-access-methods-view"
-msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
-msgstr "%(domainFronting)s ဝင်ရောက်မှုနည်းလမ်းဖြင့် အက်ပ်သည် CDN မှတစ်ဆင့် Warren API သို့ ရောက်ရှိပြီး အသွားအလာကို အခြားအင်တာနက်အသွားအလာများစွာနှင့် ရောစပ်စေကာ ဆင်ဆာဖြတ်တောက်ရန် ပိုခက်ခဲစေသည်။"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."

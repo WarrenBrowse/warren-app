@@ -35,26 +35,34 @@ final class APIAccessMethodsTests: XCTestCase {
         let repository = AccessMethodRepository(shadowsocksCiphers: [])
         let storedMethods = repository.fetchAll()
 
-        let hasDirectMethod = storedMethods.contains { method in
-            method.kind == .direct
-        }
+        XCTAssertEqual(storedMethods.map(\.kind), [.direct])
+    }
 
-        let hasBridgesMethod = storedMethods.contains { method in
-            method.kind == .bridges
-        }
+    func testStoreWrittenWithRemovedMethodsKeepsDirectAndCustomMethods() throws {
+        let custom = socks5AccessMethod(with: UUID())
+        let customJSON = String(decoding: try JSONEncoder().encode(custom), as: UTF8.self)
+        let bridges = """
+            {"id":"8586E75A-CA7B-4432-B70D-EE65F3F95084","name":"Warren bridges","isEnabled":true,\
+            "proxyConfiguration":{"bridges":{}}}
+            """
+        let legacyStore = """
+            {"lastReachableAccessMethod":\(bridges),"accessMethods":[\
+            {"id":"C9DB7457-2A55-42C3-A926-C07F82131994","name":"Direct","isEnabled":true,\
+            "proxyConfiguration":{"direct":{}}},\
+            \(bridges),\
+            {"id":"831CB1F8-1829-42DD-B9DC-82902F298EC0","name":"Encrypted DNS proxy","isEnabled":true,\
+            "proxyConfiguration":{"encryptedDNS":{}}},\
+            {"id":"E4BC6B6B-18E7-4E6F-9E53-95E3426B1796","name":"Domain fronting","isEnabled":true,\
+            "proxyConfiguration":{"domainFronting":{}}},\
+            \(customJSON)]}
+            """
+        try Self.store.write(Data(legacyStore.utf8), for: .apiAccessMethods)
 
-        let hasEncryptedDNS = storedMethods.contains { method in
-            method.kind == .encryptedDNS
-        }
+        let repository = AccessMethodRepository(shadowsocksCiphers: [])
 
-        let hasDomainFronting = storedMethods.contains { method in
-            method.kind == .domainFronting
-        }
-
-        XCTAssertEqual(storedMethods.count, 4)
-        XCTAssertTrue(
-            hasDirectMethod && hasBridgesMethod && hasEncryptedDNS && hasDomainFronting
-        )
+        XCTAssertEqual(repository.fetchAll().map(\.kind), [.direct, .socks5])
+        XCTAssertEqual(repository.fetch(by: custom.id)?.name, custom.name)
+        XCTAssertEqual(repository.fetchLastReachable().id, AccessMethodRepository.directId)
     }
 
     func testAddingSocks5AccessMethod() throws {
@@ -91,8 +99,8 @@ final class APIAccessMethodsTests: XCTestCase {
 
         let storedMethods = repository.fetchAll()
 
-        // Account for .direct, .bridges and .encryptedDNS that are always added by default.
-        XCTAssertEqual(storedMethods.count, 5)
+        // Account for .direct that is always added by default.
+        XCTAssertEqual(storedMethods.count, 2)
     }
 
     func testUpdatingAccessMethod() throws {

@@ -152,20 +152,6 @@ class RelaySelectorTests: XCTestCase {
         XCTAssertEqual(selectedRelay?.location, "es-mad")
     }
 
-    func testClosestShadowsocksRelay() throws {
-        let constraints = RelayConstraints(
-            exitLocations: .only(UserSelectedRelays(locations: [.city("se", "sto")]))
-        )
-
-        let selectedRelay = RelaySelector.Shadowsocks.closestBridge(
-            location: constraints.exitLocations,
-            in: sampleRelays
-        )
-
-        // One of the five relays in Stockholm is the closest.
-        XCTAssertEqual(selectedRelay?.location, "se-sto")
-    }
-
     func testRelayFilterConstraintWithOwnedOwnership() throws {
         let filter = RelayFilter(ownership: .owned, providers: .any)
 

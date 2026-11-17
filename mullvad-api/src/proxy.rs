@@ -2,7 +2,6 @@ use hyper_util::client::legacy::connect::{Connected, Connection};
 use serde::{Deserialize, Serialize};
 use std::{
     fmt, io,
-    net::SocketAddr,
     path::Path,
     pin::Pin,
     task::{self, Poll},
@@ -75,30 +74,6 @@ pub enum ProxyConfig {
     Shadowsocks(proxy::Shadowsocks),
     Socks5Local(proxy::Socks5Local),
     Socks5Remote(proxy::Socks5Remote),
-    EncryptedDnsProxy(mullvad_encrypted_dns_proxy::config::ProxyConfig),
-    DomainFronting(DomainFrontingConfig),
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct DomainFrontingConfig {
-    pub addr: SocketAddr,
-    pub domain_fronting: domain_fronting::DomainFronting,
-}
-
-impl DomainFrontingConfig {
-    /// Resolve a domain fronting configuration by performing DNS lookup on the front domain.
-    pub async fn resolve(
-        front: String,
-        proxy_host: String,
-        session_header_key: String,
-    ) -> Result<Self, domain_fronting::Error> {
-        let df = domain_fronting::DomainFronting::new(front, proxy_host, session_header_key);
-        let proxy_config = df.proxy_config().await?;
-        Ok(Self {
-            addr: proxy_config.addr,
-            domain_fronting: df,
-        })
-    }
 }
 
 impl ProxyConfig {
@@ -112,13 +87,6 @@ impl ProxyConfig {
             ProxyConfig::Socks5Remote(remote) => {
                 Endpoint::from_socket_address(remote.endpoint, TransportProtocol::Tcp)
             }
-            ProxyConfig::EncryptedDnsProxy(proxy) => {
-                let addr = SocketAddr::V4(proxy.addr);
-                Endpoint::from_socket_address(addr, TransportProtocol::Tcp)
-            }
-            ProxyConfig::DomainFronting(config) => {
-                Endpoint::from_socket_address(config.addr, TransportProtocol::Tcp)
-            }
         }
     }
 }
@@ -130,12 +98,6 @@ impl From<proxy::CustomProxy> for ProxyConfig {
             proxy::CustomProxy::Socks5Local(socks) => ProxyConfig::Socks5Local(socks),
             proxy::CustomProxy::Socks5Remote(socks) => ProxyConfig::Socks5Remote(socks),
         }
-    }
-}
-
-impl From<mullvad_encrypted_dns_proxy::config::ProxyConfig> for ProxyConfig {
-    fn from(value: mullvad_encrypted_dns_proxy::config::ProxyConfig) -> Self {
-        ProxyConfig::EncryptedDnsProxy(value)
     }
 }
 

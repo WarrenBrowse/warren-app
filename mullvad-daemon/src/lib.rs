@@ -170,7 +170,6 @@ use management_interface::ManagementInterfaceServer;
 use mullvad_api::{
     ApiEndpoint, CachedRelayList, access_mode::AccessMethodEvent, proxy::ApiConnectionMode,
 };
-use mullvad_encrypted_dns_proxy::state::EncryptedDnsProxyState;
 use mullvad_relay_selector::RelaySelector;
 #[cfg(target_os = "android")]
 use mullvad_types::account::{PlayExternalObfuscatedAccountId, PlayPurchase};
@@ -1507,12 +1506,7 @@ impl Daemon {
             settings_event_listener.notify_settings(settings.to_owned());
         });
 
-        let encrypted_dns_proxy_cache = EncryptedDnsProxyState::default();
-        let method_resolver = DaemonAccessMethodResolver::new(
-            relay_selector.clone(),
-            encrypted_dns_proxy_cache,
-            api_runtime.address_cache().clone(),
-        );
+        let method_resolver = DaemonAccessMethodResolver::new(api_runtime.address_cache().clone());
 
         let (access_mode_handler, access_mode_provider) =
             mullvad_api::access_mode::AccessModeSelector::spawn(

@@ -50,6 +50,11 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Păstrarea aceleiași identități de sesiune de la o pornire a VPN-ului la următoarea, astfel
   încât tunelul își regăsește adresa și portul ales după o repornire.
 
+### Eliminat
+- Metodele de acces la API „Warren bridges”, „Encrypted DNS proxy” și „Domain fronting”, care
+  depindeau de servere pe care Warren nu le operează. Accesul direct și proxy-urile SOCKS5 și
+  Shadowsocks personalizate rămân disponibile.
+
 ## [1.1.57] - 2026-11-09
 ### Modificat
 - [Windows, macOS, Linux, Android] Redesenarea peisajului de câmpie afișat cât timp VPN-ul este

@@ -125,24 +125,6 @@ export function getDefaultApiAccessMethods(): ApiAccessMethodSettings {
       enabled: true,
       type: 'direct',
     },
-    mullvadBridges: {
-      id: '',
-      name: 'Warren Bridges',
-      enabled: false,
-      type: 'bridges',
-    },
-    encryptedDnsProxy: {
-      id: '',
-      name: 'Encrypted DNS Proxy',
-      enabled: false,
-      type: 'encrypted-dns-proxy',
-    },
-    domainFronting: {
-      id: '',
-      enabled: false,
-      name: 'Domain fronting',
-      type: 'domain-fronting',
-    },
     custom: [],
   };
 }

@@ -1273,27 +1273,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "domain-fronting"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b79073a27116e860b1573be87e6e698a37e3b286d6bab740cf7f4cdd9e80f9b3"
-dependencies = [
- "anyhow",
- "async-trait",
- "bytes",
- "http",
- "http-body-util",
- "hyper",
- "hyper-util",
- "log",
- "papaya",
- "serde",
- "thiserror 2.0.21",
- "tokio",
- "uuid",
-]
-
-[[package]]
 name = "dynosaur"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1849,24 +1828,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c480823ed7c2c5d0f09c41020cb6b7c28029ce60ec42dc942158dcf22f8e0a4d"
 dependencies = [
  "async-trait",
- "bytes",
  "cfg-if",
  "data-encoding",
  "futures-channel",
  "futures-io",
  "futures-util",
- "h2",
  "hickory-proto",
- "http",
  "idna",
  "ipnet",
  "jni 0.22.4",
  "rand 0.10.3",
- "rustls",
  "thiserror 2.0.21",
  "tinyvec",
  "tokio",
- "tokio-rustls",
  "tracing",
  "url",
 ]
@@ -1911,13 +1885,11 @@ dependencies = [
  "parking_lot",
  "rand 0.10.3",
  "resolv-conf",
- "rustls",
  "serde",
  "smallvec",
  "system-configuration 0.7.0",
  "thiserror 2.0.21",
  "tokio",
- "tokio-rustls",
  "tracing",
 ]
 
@@ -2905,7 +2877,6 @@ dependencies = [
  "anyhow",
  "async-trait",
  "chrono",
- "domain-fronting",
  "ed25519-dalek",
  "futures",
  "hex",
@@ -2917,7 +2888,6 @@ dependencies = [
  "libc",
  "log",
  "mullvad-api-constants",
- "mullvad-encrypted-dns-proxy",
  "mullvad-fs",
  "mullvad-types",
  "mullvad-update",
@@ -3004,7 +2974,6 @@ dependencies = [
  "mockito",
  "mullvad-api",
  "mullvad-api-constants",
- "mullvad-encrypted-dns-proxy",
  "mullvad-fs",
  "mullvad-leak-checker",
  "mullvad-logging",
@@ -3067,19 +3036,6 @@ dependencies = [
  "windows-sys 0.61.2",
  "winres",
  "zeroize",
-]
-
-[[package]]
-name = "mullvad-encrypted-dns-proxy"
-version = "0.0.0"
-dependencies = [
- "hickory-resolver",
- "log",
- "rustls",
- "serde",
- "tokio",
- "tracing-subscriber",
- "webpki-roots",
 ]
 
 [[package]]
@@ -3816,16 +3772,6 @@ checksum = "9aa2b01e1d916879f73a53d01d1d6cee68adbb31d6d9177a8cfce093cced1d50"
 dependencies = [
  "futures-core",
  "pin-project-lite",
-]
-
-[[package]]
-name = "papaya"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da2442474a9404698c42509b8967f437249dbc7b50493e83020333d3943ec0ae"
-dependencies = [
- "equivalent",
- "seize",
 ]
 
 [[package]]
@@ -4892,16 +4838,6 @@ checksum = "6ce2691df843ecc5d231c0b14ece2acc3efb62c0a398c7e1d875f3983ce020e3"
 dependencies = [
  "core-foundation-sys",
  "libc",
-]
-
-[[package]]
-name = "seize"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b55fb86dfd3a2f5f76ea78310a88f96c4ea21a3031f8d212443d56123fd0521"
-dependencies = [
- "libc",
- "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6633,7 +6569,6 @@ dependencies = [
  "log",
  "mockito",
  "mullvad-api",
- "mullvad-encrypted-dns-proxy",
  "mullvad-logging",
  "mullvad-types",
  "mullvad-update",

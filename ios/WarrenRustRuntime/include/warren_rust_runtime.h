@@ -27,11 +27,8 @@
  */
 enum SwiftAccessMethodKind {
   KindDirect = 0,
-  KindBridge,
-  KindEncryptedDnsProxy,
   KindShadowsocks,
   KindSocks5Local,
-  KindDomainFronting,
 };
 typedef uint8_t SwiftAccessMethodKind;
 
@@ -171,8 +168,6 @@ typedef enum WarrenTunnelStateC {
 } WarrenTunnelStateC;
 
 typedef struct ApiContext ApiContext;
-
-typedef struct DomainFrontingConfigContext DomainFrontingConfigContext;
 
 typedef struct RequestCancelHandle RequestCancelHandle;
 
@@ -469,22 +464,6 @@ typedef struct SwiftApiContext {
 typedef struct SwiftAccessMethodSettingsWrapper {
   struct SwiftAccessMethodSettingsContext *_0;
 } SwiftAccessMethodSettingsWrapper;
-
-/**
- * Opaque wrapper around domain fronting configuration, created by
- * [`new_domain_fronting_config`] and consumed by the init functions.
- */
-typedef struct SwiftDomainFrontingConfig {
-  struct DomainFrontingConfigContext *_0;
-} SwiftDomainFrontingConfig;
-
-typedef struct SwiftShadowsocksLoaderWrapperContext {
-  const void *shadowsocks_loader;
-} SwiftShadowsocksLoaderWrapperContext;
-
-typedef struct SwiftShadowsocksLoaderWrapper {
-  struct SwiftShadowsocksLoaderWrapperContext _0;
-} SwiftShadowsocksLoaderWrapper;
 
 typedef struct SwiftData {
   void *ptr;
@@ -1393,17 +1372,6 @@ void mullvad_api_use_access_method(struct SwiftApiContext api_context,
 void mullvad_api_update_address_cache(struct SwiftApiContext swift_api_context);
 
 /**
- * Creates a [`SwiftDomainFrontingConfig`] that owns copies of the provided strings.
- *
- * # Safety
- *
- * Both `front` and `proxy_host` must be pointers to null-terminated strings.
- * The pointers only need to be valid for the duration of this call.
- */
-struct SwiftDomainFrontingConfig new_domain_fronting_config(const char *front,
-                                                            const char *proxy_host);
-
-/**
  * # Safety
  *
  * `host` must be a pointer to a null terminated string representing a hostname for Mullvad API host.
@@ -1419,9 +1387,6 @@ struct SwiftDomainFrontingConfig new_domain_fronting_config(const char *front,
  */
 struct SwiftApiContext mullvad_api_init_new_tls_disabled(const char *host,
                                                          const char *address,
-                                                         const char *encrypted_dns_domain,
-                                                         struct SwiftDomainFrontingConfig domain_fronting,
-                                                         struct SwiftShadowsocksLoaderWrapper bridge_provider,
                                                          struct SwiftAccessMethodSettingsWrapper settings_provider,
                                                          void (*access_method_change_callback)(const void*,
                                                                                                const uint8_t*),
@@ -1451,9 +1416,6 @@ struct SwiftApiContext mullvad_api_init_new_tls_disabled(const char *host,
  */
 struct SwiftApiContext mullvad_api_init_new(const char *host,
                                             const char *address,
-                                            const char *encrypted_dns_domain,
-                                            struct SwiftDomainFrontingConfig domain_fronting,
-                                            struct SwiftShadowsocksLoaderWrapper bridge_provider,
                                             struct SwiftAccessMethodSettingsWrapper settings_provider,
                                             void (*access_method_change_callback)(const void*,
                                                                                   const uint8_t*),
@@ -1475,10 +1437,7 @@ struct SwiftApiContext mullvad_api_init_new(const char *host,
  */
 struct SwiftApiContext mullvad_api_init_inner(const char *host,
                                               const char *address,
-                                              const char *encrypted_dns_domain,
-                                              struct SwiftDomainFrontingConfig domain_fronting,
                                               bool disable_tls,
-                                              struct SwiftShadowsocksLoaderWrapper bridge_provider,
                                               struct SwiftAccessMethodSettingsWrapper settings_provider,
                                               void (*access_method_change_callback)(const void*,
                                                                                     const uint8_t*),
@@ -1509,15 +1468,11 @@ void *convert_builtin_access_method_setting(const char *unique_identifier,
  * Creates a wrapper around a `Settings` object that can be safely sent across the FFI boundary.
  *
  * # SAFETY
- * `direct_method_raw`, `bridges_method_raw`, `encrypted_dns_method_raw` and
- * `domain_fronting_method_raw` must be raw pointers resulting from a call to
+ * `direct_method_raw` must be a raw pointer resulting from a call to
  * `convert_builtin_access_method_setting`.
  * `custom_methods_raw` is an array of pointers to instances of `AccessMethodSetting`
  */
 struct SwiftAccessMethodSettingsWrapper init_access_method_settings_wrapper(const void *direct_method_raw,
-                                                                            const void *bridges_method_raw,
-                                                                            const void *encrypted_dns_method_raw,
-                                                                            const void *domain_fronting_method_raw,
                                                                             const void *custom_methods_raw,
                                                                             uintptr_t custom_method_count);
 
@@ -1924,26 +1879,6 @@ struct SwiftRetryStrategy mullvad_api_retry_strategy_exponential(uintptr_t max_r
                                                                  uint64_t initial_sec,
                                                                  uint32_t factor,
                                                                  uint64_t max_delay_sec);
-
-/**
- * Creates a `Shadowsocks` configuration.
- *
- * # SAFETY
- * `rawBridgeProvider` **must** be provided by a call to `init_swift_shadowsocks_loader_wrapper`
- * It is okay to persist it, and use it across multiple threads.
- */
-extern const void *swift_get_shadowsocks_bridges(const void *rawBridgeProvider);
-
-/**
- * Called by the Swift side in order to provide an object to rust that can create
- * Shadowsocks configurations
- *
- * # SAFETY
- * `shadowsocks_loader` **must be** pointing to a valid instance of a `SwiftShadowsocksBridgeProvider`
- * That instance's lifetime has to be equivalent to a `'static` lifetime in Rust
- * This function does not take ownership of `shadowsocks_loader`
- */
-struct SwiftShadowsocksLoaderWrapper init_swift_shadowsocks_loader_wrapper(const void *shadowsocks_loader);
 
 /**
  * # Safety

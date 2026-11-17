@@ -1153,16 +1153,8 @@ export type CustomProxy = Socks5LocalCustomProxy | Socks5RemoteCustomProxy | Sha
 export type NamedCustomProxy = CustomProxy & { name: string };
 
 export type DirectMethod = { type: 'direct' };
-export type BridgesMethod = { type: 'bridges' };
-export type EncryptedDnsProxy = { type: 'encrypted-dns-proxy' };
-export type DomainFronting = { type: 'domain-fronting' };
 
-export type AccessMethod =
-  | DirectMethod
-  | BridgesMethod
-  | EncryptedDnsProxy
-  | CustomProxy
-  | DomainFronting;
+export type AccessMethod = DirectMethod | CustomProxy;
 
 export type NamedAccessMethod<T extends AccessMethod> = T & { name: string };
 
@@ -1177,9 +1169,6 @@ export type AccessMethodSetting<T extends AccessMethod = AccessMethod> =
 
 export type ApiAccessMethodSettings = {
   direct: AccessMethodSetting<DirectMethod>;
-  mullvadBridges: AccessMethodSetting<BridgesMethod>;
-  encryptedDnsProxy: AccessMethodSetting<EncryptedDnsProxy>;
-  domainFronting: AccessMethodSetting<DomainFronting>;
   custom: Array<AccessMethodSetting<CustomProxy>>;
 };
 

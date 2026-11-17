@@ -12,7 +12,6 @@ import {
   AppRoutingSettings,
   AppSplitMode,
   AuthFailedError,
-  BridgesMethod,
   ConnectionConfig,
   Constraint,
   CustomLists,
@@ -23,8 +22,6 @@ import {
   DeviceEvent,
   DeviceState,
   DirectMethod,
-  DomainFronting,
-  EncryptedDnsProxy,
   EndpointObfuscationType,
   ErrorStateCause,
   ErrorStateDetails,
@@ -1564,21 +1561,6 @@ function fillApiAccessMethodSetting<T extends grpcTypes.NewAccessMethodSetting>(
       accessMethod.setDirect(direct);
       break;
     }
-    case 'bridges': {
-      const bridges = new grpcTypes.AccessMethod.Bridges();
-      accessMethod.setBridges(bridges);
-      break;
-    }
-    case 'encrypted-dns-proxy': {
-      const encryptedDnsProxy = new grpcTypes.AccessMethod.EncryptedDnsProxy();
-      accessMethod.setEncryptedDnsProxy(encryptedDnsProxy);
-      break;
-    }
-    case 'domain-fronting': {
-      const domainFronting = new grpcTypes.AccessMethod.DomainFronting();
-      accessMethod.setDomainFronting(domainFronting);
-      break;
-    }
     default:
       accessMethod.setCustom(convertToCustomProxy(method));
   }
@@ -1633,24 +1615,12 @@ function convertToSocksAuth(authentication: SocksAuth): grpcTypes.SocksAuth {
   return auth;
 }
 
-function convertFromApiAccessMethodSettings(
+export function convertFromApiAccessMethodSettings(
   accessMethods: grpcTypes.ApiAccessMethodSettings,
 ): ApiAccessMethodSettings {
   const direct = convertFromApiAccessMethodSetting(
     ensureExists(accessMethods.getDirect(), "no 'Direct' access method was found"),
   ) as AccessMethodSetting<DirectMethod>;
-  const bridges = convertFromApiAccessMethodSetting(
-    ensureExists(accessMethods.getMullvadBridges(), "no 'Mullvad Bridges' access method was found"),
-  ) as AccessMethodSetting<BridgesMethod>;
-  const encryptedDnsProxy = convertFromApiAccessMethodSetting(
-    ensureExists(
-      accessMethods.getEncryptedDnsProxy(),
-      "no 'Encrypted DNS proxy' access method was found",
-    ),
-  ) as AccessMethodSetting<EncryptedDnsProxy>;
-  const domainFronting = convertFromApiAccessMethodSetting(
-    ensureExists(accessMethods.getDomainFronting(), "no 'Domain fronting' access method was found"),
-  ) as AccessMethodSetting<DomainFronting>;
   const custom = accessMethods
     .getCustomList()
     .filter((setting) => setting.hasId() && setting.hasAccessMethod())
@@ -1658,23 +1628,13 @@ function convertFromApiAccessMethodSettings(
     // The last filter helps TypeScript infer the custom proxy type.
     .filter(isCustomProxy);
 
-  return {
-    direct,
-    mullvadBridges: bridges,
-    encryptedDnsProxy,
-    domainFronting,
-    custom,
-  };
+  return { direct, custom };
 }
 
 function isCustomProxy(
   accessMethod: AccessMethodSetting,
 ): accessMethod is AccessMethodSetting<CustomProxy> {
-  return (
-    accessMethod.type !== 'direct' &&
-    accessMethod.type !== 'bridges' &&
-    accessMethod.type !== 'encrypted-dns-proxy'
-  );
+  return accessMethod.type !== 'direct';
 }
 
 export function convertFromApiAccessMethodSetting(
@@ -1695,12 +1655,6 @@ function convertFromAccessMethod(method: grpcTypes.AccessMethod): AccessMethod {
   switch (method.getAccessMethodCase()) {
     case grpcTypes.AccessMethod.AccessMethodCase.DIRECT:
       return { type: 'direct' };
-    case grpcTypes.AccessMethod.AccessMethodCase.BRIDGES:
-      return { type: 'bridges' };
-    case grpcTypes.AccessMethod.AccessMethodCase.ENCRYPTED_DNS_PROXY:
-      return { type: 'encrypted-dns-proxy' };
-    case grpcTypes.AccessMethod.AccessMethodCase.DOMAIN_FRONTING:
-      return { type: 'domain-fronting' };
     case grpcTypes.AccessMethod.AccessMethodCase.CUSTOM: {
       return convertFromCustomProxy(method.getCustom()!);
     }

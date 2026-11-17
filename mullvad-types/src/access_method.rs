@@ -6,31 +6,13 @@ use talpid_types::net::proxy::{CustomProxy, Shadowsocks, Socks5Local, Socks5Remo
 pub struct Settings {
     #[serde(default = "Settings::create_direct")]
     direct: AccessMethodSetting,
-    #[serde(default = "Settings::create_mullvad_bridges")]
-    mullvad_bridges: AccessMethodSetting,
-    #[serde(default = "Settings::create_encrypted_dns_proxy")]
-    encrypted_dns_proxy: AccessMethodSetting,
-    #[serde(default = "Settings::create_domain_fronting")]
-    domain_fronting: AccessMethodSetting,
     /// Custom API access methods.
     custom: Vec<AccessMethodSetting>,
 }
 
 impl Settings {
-    pub fn new(
-        direct: AccessMethodSetting,
-        mullvad_bridges: AccessMethodSetting,
-        encrypted_dns_proxy: AccessMethodSetting,
-        domain_fronting: AccessMethodSetting,
-        custom: Vec<AccessMethodSetting>,
-    ) -> Settings {
-        Settings {
-            direct,
-            mullvad_bridges,
-            encrypted_dns_proxy,
-            domain_fronting,
-            custom,
-        }
+    pub fn new(direct: AccessMethodSetting, custom: Vec<AccessMethodSetting>) -> Settings {
+        Settings { direct, custom }
     }
 
     /// Append an [`AccessMethod`] to the end of `api_access_methods`.
@@ -153,21 +135,13 @@ impl Settings {
     /// Iterate over references of built-in & custom access methods.
     pub fn iter(&self) -> impl Iterator<Item = &AccessMethodSetting> + Clone {
         use std::iter::once;
-        once(&self.direct)
-            .chain(once(&self.mullvad_bridges))
-            .chain(once(&self.encrypted_dns_proxy))
-            .chain(once(&self.domain_fronting))
-            .chain(&self.custom)
+        once(&self.direct).chain(&self.custom)
     }
 
     /// Iterate over mutable references of built-in & custom access methods.
     fn iter_mut(&mut self) -> impl Iterator<Item = &mut AccessMethodSetting> {
         use std::iter::once;
-        once(&mut self.direct)
-            .chain(once(&mut self.mullvad_bridges))
-            .chain(once(&mut self.encrypted_dns_proxy))
-            .chain(once(&mut self.domain_fronting))
-            .chain(&mut self.custom)
+        once(&mut self.direct).chain(&mut self.custom)
     }
 
     /// Iterate over references of custom access methods.
@@ -185,43 +159,9 @@ impl Settings {
         &self.direct
     }
 
-    pub fn mullvad_bridges(&self) -> &AccessMethodSetting {
-        &self.mullvad_bridges
-    }
-
-    pub fn encrypted_dns_proxy(&self) -> &AccessMethodSetting {
-        &self.encrypted_dns_proxy
-    }
-
-    pub fn domain_fronting(&self) -> &AccessMethodSetting {
-        &self.domain_fronting
-    }
-
     fn create_direct() -> AccessMethodSetting {
         let method = BuiltInAccessMethod::Direct;
         AccessMethodSetting::new(method.canonical_name(), true, AccessMethod::from(method))
-    }
-
-    // The Bridge, EncryptedDnsProxy and DomainFronting access methods all rely
-    // on Mullvad-operated infrastructure (relay-list bridges, frakta.eu encrypted
-    // DNS proxies, the CDN77 domain-fronting endpoint with the X-Mullvad-Session
-    // header). Warren does not operate any of that, so these built-in methods are
-    // created disabled: only the Direct connection to api.warrenbrowse.com is
-    // ever used. They remain in the settings model for upstream-rebase
-    // compatibility but never enter the access-method rotation.
-    fn create_mullvad_bridges() -> AccessMethodSetting {
-        let method = BuiltInAccessMethod::Bridge;
-        AccessMethodSetting::new(method.canonical_name(), false, AccessMethod::from(method))
-    }
-
-    fn create_encrypted_dns_proxy() -> AccessMethodSetting {
-        let method = BuiltInAccessMethod::EncryptedDnsProxy;
-        AccessMethodSetting::new(method.canonical_name(), false, AccessMethod::from(method))
-    }
-
-    fn create_domain_fronting() -> AccessMethodSetting {
-        let method = BuiltInAccessMethod::DomainFronting;
-        AccessMethodSetting::new(method.canonical_name(), false, AccessMethod::from(method))
     }
 }
 
@@ -229,9 +169,6 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             direct: Settings::create_direct(),
-            mullvad_bridges: Settings::create_mullvad_bridges(),
-            encrypted_dns_proxy: Settings::create_encrypted_dns_proxy(),
-            domain_fronting: Settings::create_domain_fronting(),
             custom: vec![],
         }
     }
@@ -367,9 +304,6 @@ impl AccessMethodSetting {
 #[serde(rename_all = "snake_case")]
 pub enum BuiltInAccessMethod {
     Direct,
-    Bridge,
-    EncryptedDnsProxy,
-    DomainFronting,
 }
 
 impl AccessMethod {
@@ -385,9 +319,6 @@ impl BuiltInAccessMethod {
     pub fn canonical_name(&self) -> String {
         match self {
             BuiltInAccessMethod::Direct => "Direct".to_string(),
-            BuiltInAccessMethod::Bridge => "Warren Bridges".to_string(),
-            BuiltInAccessMethod::EncryptedDnsProxy => "Encrypted DNS proxy".to_string(),
-            BuiltInAccessMethod::DomainFronting => "Domain fronting".to_string(),
         }
     }
 }

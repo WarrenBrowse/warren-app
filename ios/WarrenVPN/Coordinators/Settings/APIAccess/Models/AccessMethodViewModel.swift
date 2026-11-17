@@ -84,27 +84,6 @@ extension AccessMethodViewModel {
                 body: NSLocalizedString("The app communicates with a Warren API server directly.", comment: ""),
                 link: String(format: NSLocalizedString("About %@ method...", comment: ""), "Direct")
             )
-        case AccessMethodRepository.bridgeId:
-            InfoHeaderConfig(
-                body: NSLocalizedString("The app communicates with a Warren API server via a Warren bridge server.",
-                    comment: ""
-                ),
-                link: String(format: NSLocalizedString("About %@ method...", comment: ""), "Warren bridges")
-            )
-        case AccessMethodRepository.encryptedDNSId:
-            InfoHeaderConfig(
-                body: NSLocalizedString("The app communicates with a Warren API server via a proxy address.",
-                    comment: ""
-                ),
-                link: String(format: NSLocalizedString("About %@ method...", comment: ""), "Encrypted DNS proxy")
-            )
-        case AccessMethodRepository.domainFrontingId:
-            InfoHeaderConfig(
-                body: NSLocalizedString("The app communicates with a Warren API server via domain fronting.",
-                    comment: ""
-                ),
-                link: String(format: NSLocalizedString("About %@ method...", comment: ""), "Domain fronting")
-            )
         default:
             nil
         }
@@ -122,71 +101,6 @@ extension AccessMethodViewModel {
                         comment: ""
                     ),
                     NSLocalizedString("This can be useful when you are not affected by censorship.", comment: ""),
-                ]
-            )
-        case AccessMethodRepository.bridgeId:
-            InfoModalConfig(
-                header: "Warren bridges",
-                preamble: NSLocalizedString("The app communicates with a Warren API server via a Warren bridge server.",
-                    comment: ""
-                ),
-                body: [
-                    NSLocalizedString("With the “Warren bridges” method, the app communicates with a Warren API server via a "
-                            + "Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks.",
-                        comment: ""
-                    ),
-                    NSLocalizedString("This can be useful if the API is censored but Warren’s bridge servers are not.",
-                        comment: ""
-                    ),
-                ]
-            )
-        case AccessMethodRepository.encryptedDNSId:
-            InfoModalConfig(
-                header: "Encrypted DNS proxy",
-                preamble: NSLocalizedString("The app communicates with a Warren API server via a proxy address.",
-                    comment: ""
-                ),
-                body: [
-                    NSLocalizedString(
-                        "With the “Encrypted DNS proxy” method, the app will communicate with our "
-                            + "Warren API through a proxy address. It does this by retrieving "
-                            + "an address from a DNS over HTTPS (DoH) server and then using that "
-                            + "to reach our API servers.",
-                        comment: ""
-                    ),
-                    NSLocalizedString(
-                        """
-                        If you are not connected to our VPN, then the Encrypted DNS proxy will \
-                        use your own non-VPN IP when connecting. The DoH servers are hosted by \
-                        one of the following providers: Quad9 or Cloudflare.
-                        """,
-                        comment: ""
-                    ),
-                ]
-            )
-        case AccessMethodRepository.domainFrontingId:
-            InfoModalConfig(
-                header: "Domain fronting",
-                preamble: NSLocalizedString("The app communicates with a Warren API server via domain fronting.",
-                    comment: ""
-                ),
-                body: [
-                    String(
-                        format: NSLocalizedString("With the domain fronting access method, the app reaches the Warren API via a CDN, "
-                                + "mixing the traffic with a lot of other internet traffic, making it "
-                                + "more difficult to censor.",
-                            comment: "'Domain fronting' should not be translated as it is a technical term"
-                        ),
-                    ),
-                    NSLocalizedString(
-                        "This can be useful when direct access and other methods are blocked by censorship.",
-                        comment: ""
-                    ),
-                    NSLocalizedString(
-                        "The CDN used is Datapacket’s CDN77. The CDN can only observe the "
-                            + "proxied TLS traffic, not the contents.",
-                        comment: ""
-                    ),
                 ]
             )
         default:

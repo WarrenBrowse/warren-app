@@ -465,16 +465,12 @@ fn withhold_settings_secrets(settings: &mut types::Settings, may_see_secrets: bo
         tunnel.private_key.clear();
     }
     if let Some(methods) = settings.api_access_methods.as_mut() {
-        [
-            methods.direct.as_mut(),
-            methods.mullvad_bridges.as_mut(),
-            methods.encrypted_dns_proxy.as_mut(),
-            methods.domain_fronting.as_mut(),
-        ]
-        .into_iter()
-        .flatten()
-        .chain(methods.custom.iter_mut())
-        .for_each(withhold_access_method_secrets);
+        methods
+            .direct
+            .as_mut()
+            .into_iter()
+            .chain(methods.custom.iter_mut())
+            .for_each(withhold_access_method_secrets);
     }
 }
 

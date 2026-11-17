@@ -7,7 +7,6 @@ members = [
   "mullvad-api",
   "mullvad-cli",
   "mullvad-daemon",
-  "mullvad-encrypted-dns-proxy",
   "mullvad-exclude",
   "mullvad-fs",
   "warren-ios",

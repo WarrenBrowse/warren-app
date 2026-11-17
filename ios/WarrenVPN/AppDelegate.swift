@@ -44,13 +44,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         shadowsocksCiphers: ShadowsocksCipherService().getCiphers()
     )
     nonisolated(unsafe) private(set) var appPreferences = AppPreferences()
-    private(set) var shadowsocksLoader: ShadowsocksLoader!
     private(set) var ipOverrideRepository = IPOverrideRepository()
     private(set) var relaySelector: RelaySelectorWrapper!
     private(set) var launchArguments = LaunchArguments()
     var apiContext: MullvadApiContext!
     var accessMethodReceiver: MullvadAccessMethodReceiver!
-    private var shadowsocksCacheCleaner: ShadowsocksCacheCleaner!
     let breadcrumbsProvider = BreadcrumbsProvider()
     /// The community-forum wallet login (doc 55), from a deep link or a typed
     /// code; the scene that owns the window supplies its presenter.
@@ -117,21 +115,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         notificationSettingsUpdater = NotificationSettingsUpdater(listener: notificationSettingsListener)
 
-        let shadowsocksCache = ShadowsocksConfigurationCache(cacheDirectory: containerURL)
-        let shadowsocksRelaySelector = ShadowsocksRelaySelector(
-            relayCache: ipOverrideWrapper
-        )
-
         let tunnelSettings = (try? SettingsManager.readSettings()) ?? LatestTunnelSettings()
-
-        shadowsocksLoader = ShadowsocksLoader(
-            cache: shadowsocksCache,
-            relaySelector: shadowsocksRelaySelector,
-            tunnelSettings: tunnelSettings,
-            settingsUpdater: tunnelSettingsUpdater
-        )
-
-        shadowsocksCacheCleaner = ShadowsocksCacheCleaner(cache: shadowsocksCache)
 
         let opaqueAccessMethodSettingsWrapper = initAccessMethodSettingsWrapper(
             methods: accessMethodRepository.fetchAll()
@@ -141,12 +125,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         apiContext = try! MullvadApiContext(
             host: REST.defaultAPIHostname,
             address: REST.defaultAPIEndpoint.description,
-            encryptedDnsDomain: REST.encryptedDNSHostname,
-            domainFrontingFront: REST.domainFrontingFront,
-            domainFrontingProxyHost: REST.domainFrontingProxyHost,
-            shadowsocksProvider: shadowsocksLoader,
             accessMethodWrapper: opaqueAccessMethodSettingsWrapper,
-            accessMethodChangeListeners: [accessMethodRepository, shadowsocksCacheCleaner]
+            accessMethodChangeListeners: [accessMethodRepository]
         )
 
         accessMethodReceiver = MullvadAccessMethodReceiver(

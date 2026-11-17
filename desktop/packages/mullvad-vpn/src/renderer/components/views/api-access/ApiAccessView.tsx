@@ -2,7 +2,6 @@ import { useCallback, useMemo } from 'react';
 import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
-import { strings } from '../../../../shared/constants';
 import { AccessMethodSetting } from '../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
@@ -108,18 +107,6 @@ export function ApiAccessView() {
                     method={methods.direct}
                     inUse={methods.direct.id === currentMethod?.id}
                   />
-                  <ApiAccessMethod
-                    method={methods.mullvadBridges}
-                    inUse={methods.mullvadBridges.id === currentMethod?.id}
-                  />
-                  <ApiAccessMethod
-                    method={methods.encryptedDnsProxy}
-                    inUse={methods.encryptedDnsProxy.id === currentMethod?.id}
-                  />
-                  <ApiAccessMethod
-                    method={methods.domainFronting}
-                    inUse={methods.domainFronting.id === currentMethod?.id}
-                  />
                   {methods.custom.map((method) => (
                     <ApiAccessMethod
                       key={method.id}
@@ -198,7 +185,7 @@ function ApiAccessMethod(props: ApiAccessMethodProps) {
       },
     ];
 
-    // Edit and Delete shouldn't be available for direct, bridges or encrypted DNS proxy.
+    // Edit and Delete are only available for custom methods.
     if (props.custom) {
       items.push(
         { type: 'separator' as const },
@@ -262,79 +249,6 @@ function ApiAccessMethod(props: ApiAccessMethodProps) {
               messages.pgettext(
                 'api-access-methods-view',
                 'This can be useful when you are not affected by censorship.',
-              ),
-            ]}
-          />
-        )}
-        {props.method.type === 'bridges' && (
-          <InfoButton
-            message={[
-              messages.pgettext(
-                'api-access-methods-view',
-                'With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks.',
-              ),
-              messages.pgettext(
-                'api-access-methods-view',
-                'This can be useful if the API is censored but Warren’s bridge servers are not.',
-              ),
-            ]}
-          />
-        )}
-
-        {props.method.type === 'encrypted-dns-proxy' && (
-          <InfoButton
-            message={[
-              messages.pgettext(
-                'api-access-methods-view',
-                'With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers.',
-              ),
-              messages.pgettext(
-                'api-access-methods-view',
-                'If you are not connected to our VPN, then the Encrypted DNS proxy will use your own non-VPN IP when connecting. The DoH servers are hosted by one of the following providers: Quad9 or Cloudflare.',
-              ),
-            ]}
-          />
-        )}
-        {props.method.type === 'domain-fronting' && (
-          <InfoButton
-            message={[
-              sprintf(
-                // TRANSLATORS: Part of a description of the 'Domain fronting' API access method
-                // TRANSLATORS: which the app uses to reach Warren's API servers
-                // TRANSLATORS: Available placeholders:
-                // TRANSLATORS: %(domainFronting)s - Will be replaced with: 'Domain fronting'
-                messages.pgettext(
-                  'api-access-methods-view',
-                  'The app communicates with a Warren API server via %(domainFronting)s.',
-                ),
-                {
-                  domainFronting: strings.domainFronting,
-                },
-              ),
-              sprintf(
-                // TRANSLATORS: Part of a description of the 'Domain fronting' API access method
-                // TRANSLATORS: which the app uses to reach Warren's API servers
-                // TRANSLATORS: Available placeholders:
-                // TRANSLATORS: %(domainFronting)s - Will be replaced with: 'Domain fronting'
-                messages.pgettext(
-                  'api-access-methods-view',
-                  'With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor.',
-                ),
-                {
-                  domainFronting: strings.domainFronting,
-                },
-              ),
-              // TRANSLATORS: Part of a description of the 'Domain fronting' API access method
-              // TRANSLATORS: which the app uses to reach Warren's API servers
-              messages.pgettext(
-                'api-access-methods-view',
-                'This can be useful when direct access and other methods are blocked by censorship.',
-              ),
-              // TRANSLATORS: Part of a description of the 'Domain fronting' API access method
-              // TRANSLATORS: which the app uses to reach Warren's API servers
-              messages.pgettext(
-                'api-access-methods-view',
-                'The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents.',
               ),
             ]}
           />

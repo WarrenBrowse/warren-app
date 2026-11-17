@@ -22,31 +22,17 @@ public class MullvadApiContext: @unchecked Sendable {
     }
 
     public private(set) var context: SwiftApiContext!
-    private let shadowsocksBridgeProvider: SwiftShadowsocksBridgeProviding!
-    private let shadowsocksBridgeProviderWrapper: SwiftShadowsocksLoaderWrapper!
     public let accessMethodChangeListeners: [MullvadAccessMethodChangeListening]
 
     public init(
         host: String,
         address: String,
-        encryptedDnsDomain: String,
-        domainFrontingFront: String,
-        domainFrontingProxyHost: String,
         disableTls: Bool = false,
-        shadowsocksProvider: SwiftShadowsocksBridgeProviding,
         accessMethodWrapper: SwiftAccessMethodSettingsWrapper,
         accessMethodChangeListeners: [MullvadAccessMethodChangeListening]
     ) throws {
-        let bridgeProvider = SwiftShadowsocksBridgeProvider(provider: shadowsocksProvider)
-        self.shadowsocksBridgeProvider = bridgeProvider
-        self.shadowsocksBridgeProviderWrapper = initMullvadShadowsocksBridgeProvider(provider: bridgeProvider)
-
         self.accessMethodChangeListeners = accessMethodChangeListeners
 
-        let domainFrontingConfig = new_domain_fronting_config(
-            domainFrontingFront,
-            domainFrontingProxyHost
-        )
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
         context =
             switch disableTls {
@@ -54,9 +40,6 @@ public class MullvadApiContext: @unchecked Sendable {
                 mullvad_api_init_new_tls_disabled(
                     host,
                     address,
-                    encryptedDnsDomain,
-                    domainFrontingConfig,
-                    shadowsocksBridgeProviderWrapper,
                     accessMethodWrapper,
                     onAccessChangeCallback,
                     selfPtr
@@ -65,9 +48,6 @@ public class MullvadApiContext: @unchecked Sendable {
                 mullvad_api_init_new(
                     host,
                     address,
-                    encryptedDnsDomain,
-                    domainFrontingConfig,
-                    shadowsocksBridgeProviderWrapper,
                     accessMethodWrapper,
                     onAccessChangeCallback,
                     selfPtr

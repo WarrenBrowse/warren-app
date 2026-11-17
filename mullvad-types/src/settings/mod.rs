@@ -22,7 +22,7 @@ pub use lan::{LanNetworkError, MAX_LAN_NETWORKS, validate_lan_networks};
 /// latest version that exists in `SettingsVersion`.
 /// This should be bumped when a new version is introduced along with a migration
 /// being added to `mullvad-daemon`.
-pub const CURRENT_SETTINGS_VERSION: SettingsVersion = SettingsVersion::V17;
+pub const CURRENT_SETTINGS_VERSION: SettingsVersion = SettingsVersion::V18;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Clone, Copy)]
 #[repr(u32)]
@@ -43,6 +43,7 @@ pub enum SettingsVersion {
     V15 = 15,
     V16 = 16,
     V17 = 17,
+    V18 = 18,
 }
 
 impl<'de> Deserialize<'de> for SettingsVersion {
@@ -67,6 +68,7 @@ impl<'de> Deserialize<'de> for SettingsVersion {
             v if v == SettingsVersion::V15 as u32 => Ok(SettingsVersion::V15),
             v if v == SettingsVersion::V16 as u32 => Ok(SettingsVersion::V16),
             v if v == SettingsVersion::V17 as u32 => Ok(SettingsVersion::V17),
+            v if v == SettingsVersion::V18 as u32 => Ok(SettingsVersion::V18),
             v => Err(serde::de::Error::custom(format!(
                 "{v} is not a valid SettingsVersion"
             ))),

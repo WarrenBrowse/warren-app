@@ -8,14 +8,6 @@ HOST_NAME[config=Staging] = staging.warrenbrowse.com
 // configuration produced it.
 API_HOST_NAME = $(WARREN_API_HOST)
 
-ENCRYPTED_DNS_HOST_NAME[config=Debug] = dns.warrenbrowse.com
-ENCRYPTED_DNS_HOST_NAME[config=Release] = dns.warrenbrowse.com
-ENCRYPTED_DNS_HOST_NAME[config=MockRelease] = dns.warrenbrowse.com
-// Staging runs the API only: it has no encrypted-DNS host and no probe host
-// of its own, so both keep the production ones rather than naming hosts that
-// resolve to the marketing site through the wildcard record.
-ENCRYPTED_DNS_HOST_NAME[config=Staging] = dns.warrenbrowse.com
-
 // Bootstrap seed the iOS address cache dials before it self-populates (its
 // resolver has no system-DNS fallback), so it must be a live IP of the
 // configured API host, not desktop's 0.0.0.0 no-pin sentinel. It follows the
@@ -27,16 +19,7 @@ API_ENDPOINT = $(WARREN_API_ENDPOINT)
 AM_I_JSON_URL[config=Debug] = https:/${}/am.i.warrenbrowse.com/json
 AM_I_JSON_URL[config=Release] = https:/${}/am.i.warrenbrowse.com/json
 AM_I_JSON_URL[config=MockRelease] = https:/${}/am.i.warrenbrowse.com/json
+// Staging runs the API only: it has no probe host of its own, so it keeps the
+// production one rather than naming a host that resolves to the marketing site
+// through the wildcard record.
 AM_I_JSON_URL[config=Staging] = https:/${}/am.i.warrenbrowse.com/json
-
-// Warren runs no domain-fronting infrastructure yet; empty keeps the
-// access-method mechanism wired but inert (the Direct method stays default).
-DOMAIN_FRONTING_FRONT[config=Debug] =
-DOMAIN_FRONTING_FRONT[config=Release] =
-DOMAIN_FRONTING_FRONT[config=MockRelease] =
-DOMAIN_FRONTING_FRONT[config=Staging] =
-
-DOMAIN_FRONTING_PROXY_HOST[config=Debug] =
-DOMAIN_FRONTING_PROXY_HOST[config=Release] =
-DOMAIN_FRONTING_PROXY_HOST[config=MockRelease] =
-DOMAIN_FRONTING_PROXY_HOST[config=Staging] =

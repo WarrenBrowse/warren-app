@@ -699,10 +699,6 @@ msgid "Enter port"
 msgstr "Anna portti"
 
 msgctxt "api-access-methods-view"
-msgid "If you are not connected to our VPN, then the Encrypted DNS proxy will use your own non-VPN IP when connecting. The DoH servers are hosted by one of the following providers: Quad9 or Cloudflare."
-msgstr "Jos et ole yhteydessä VPN-verkkoomme, salattu DNS-välityspalvelin käyttää yhdistämiseen omaa osoitettasi, joka ei ole VPN-pohjainen. DoH-palvelimia isännöi joko Quad9 tai Cloudflare."
-
-msgctxt "api-access-methods-view"
 msgid "In use"
 msgstr "Käytössä"
 
@@ -783,10 +779,6 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "TCP-portti, jota paikallinen SOCKS5-palvelin kuuntelee."
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
-msgstr "Tästä voi olla hyötyä, jos ohjelmointirajapinta on sensuroitu, mutta Warrenin siltauspalvelimet eivät."
-
-msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
 msgstr "Tästä voi olla hyötyä, kun sensuurilla ei ole vaikutusta toimintaasi."
 
@@ -805,14 +797,6 @@ msgstr "Siirtoprotokolla"
 msgctxt "api-access-methods-view"
 msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
 msgstr "Nk. suora menetelmä sallii sovelluksen kommunikoida Warrenin ohjelmointirajapinnan palvelimen kanssa suoraan ilman välityspalvelimia."
-
-msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "Sovellus kommunikoi Warren API:n kanssa välityspalvelinosoitteen kautta \"Salattu DNS-välityspalvelin\" -menetelmällä, joka toimii niin, että sovellus hakee osoitteen DNS over HTTPS (DoH) -palvelimelta ja käyttää sitä API-palvelimillemme pääsemiseen."
-
-msgctxt "api-access-methods-view"
-msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "Kun käytössä on Warrenin siltausmenetelmä, sovellus kommunikoi Warrenin ohjelmointirajapinnan palvelimen kanssa Warrenin siltauspalvelimen kautta. Se tekee tämän lähettämällä liikenteen Shadowsocksin peittämänä."
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -5196,22 +5180,6 @@ msgstr "Yritä uudelleen"
 msgctxt "account-view"
 msgid "Public key"
 msgstr "Julkinen avain"
-
-msgctxt "api-access-methods-view"
-msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
-msgstr "Käytössä on Datapacketin CDN77-sisällönjakeluverkko. CDN voi havaita vain välitetyn TLS-liikenteen, ei sen sisältöä."
-
-msgctxt "api-access-methods-view"
-msgid "The app communicates with a Warren API server via %(domainFronting)s."
-msgstr "Sovellus kommunikoi Warren API -palvelimen kanssa %(domainFronting)s-menetelmällä."
-
-msgctxt "api-access-methods-view"
-msgid "This can be useful when direct access and other methods are blocked by censorship."
-msgstr "Tästä voi olla hyötyä, kun suora yhteys ja muut menetelmät on estetty sensuurilla."
-
-msgctxt "api-access-methods-view"
-msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
-msgstr "%(domainFronting)s-yhteysmenetelmällä sovellus tavoittaa Warren-rajapinnan CDN:n kautta sekoittaen liikenteen runsaaseen muuhun internetliikenteeseen, mikä vaikeuttaa sensurointia."
 
 msgctxt "auth-failure"
 msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."

@@ -36,13 +36,6 @@ class TunnelManagerTests: XCTestCase {
         application = UIApplicationStub()
         relayCacheTracker = RelayCacheTrackerStub()
         apiProxy = APIProxyStub()
-        let shadowsocksLoader = ShadowsocksLoader(
-            cache: ShadowsocksConfigurationCacheStub(),
-            relaySelector: ShadowsocksRelaySelectorStub(relays: .mock()),
-            tunnelSettings: LatestTunnelSettings(),
-            settingsUpdater: SettingsUpdater(listener: TunnelSettingsListener())
-        )
-
         let opaqueAccessMethodSettingsWrapper = initAccessMethodSettingsWrapper(
             methods: AccessMethodRepositoryStub.stub.fetchAll()
         )
@@ -50,10 +43,6 @@ class TunnelManagerTests: XCTestCase {
         apiContext = try MullvadApiContext(
             host: REST.defaultAPIHostname,
             address: REST.defaultAPIEndpoint.description,
-            encryptedDnsDomain: REST.encryptedDNSHostname,
-            domainFrontingFront: REST.domainFrontingFront,
-            domainFrontingProxyHost: REST.domainFrontingProxyHost,
-            shadowsocksProvider: shadowsocksLoader,
             accessMethodWrapper: opaqueAccessMethodSettingsWrapper,
             accessMethodChangeListeners: []
         )

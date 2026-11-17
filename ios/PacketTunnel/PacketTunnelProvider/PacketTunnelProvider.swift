@@ -31,7 +31,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
 
     var apiContext: MullvadApiContext!
     var accessMethodReceiver: MullvadAccessMethodReceiver!
-    private var shadowsocksCacheCleaner: ShadowsocksCacheCleaner!
 
     /// NWPath observer feeding the actor's reachability, so the observed
     /// state can tell reconnecting-with-network from reconnecting-offline
@@ -68,12 +67,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
             shadowsocksCiphers: ShadowsocksCipherService().getCiphers()
         )
 
-        setUpApiContextAndAccessMethodReceiver(
-            appContainerURL: containerURL,
-            ipOverrideWrapper: ipOverrideWrapper,
-            accessMethodRepository: accessMethodRepository,
-            tunnelSettings: tunnelSettings
-        )
+        setUpApiContext(accessMethodRepository: accessMethodRepository)
 
         setUpAccessMethodReceiver(
             accessMethodRepository: accessMethodRepository
@@ -219,27 +213,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
         } while hasNotMigrated
     }
 
-    private func setUpApiContextAndAccessMethodReceiver(
-        appContainerURL: URL,
-        ipOverrideWrapper: IPOverrideWrapper,
-        accessMethodRepository: AccessMethodRepository,
-        tunnelSettings: LatestTunnelSettings
-    ) {
-        let shadowsocksCache = ShadowsocksConfigurationCache(cacheDirectory: appContainerURL)
-
-        let shadowsocksRelaySelector = ShadowsocksRelaySelector(
-            relayCache: ipOverrideWrapper
-        )
-
-        let shadowsocksLoader = ShadowsocksLoader(
-            cache: shadowsocksCache,
-            relaySelector: shadowsocksRelaySelector,
-            tunnelSettings: tunnelSettings,
-            settingsUpdater: tunnelSettingsUpdater
-        )
-
-        shadowsocksCacheCleaner = ShadowsocksCacheCleaner(cache: shadowsocksCache)
-
+    private func setUpApiContext(accessMethodRepository: AccessMethodRepository) {
         let opaqueAccessMethodSettingsWrapper = initAccessMethodSettingsWrapper(
             methods: accessMethodRepository.fetchAll()
         )
@@ -248,12 +222,8 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
         apiContext = try! MullvadApiContext(
             host: REST.defaultAPIHostname,
             address: REST.defaultAPIEndpoint.description,
-            encryptedDnsDomain: REST.encryptedDNSHostname,
-            domainFrontingFront: REST.domainFrontingFront,
-            domainFrontingProxyHost: REST.domainFrontingProxyHost,
-            shadowsocksProvider: shadowsocksLoader,
             accessMethodWrapper: opaqueAccessMethodSettingsWrapper,
-            accessMethodChangeListeners: [accessMethodRepository, shadowsocksCacheCleaner]
+            accessMethodChangeListeners: [accessMethodRepository]
         )
     }
 

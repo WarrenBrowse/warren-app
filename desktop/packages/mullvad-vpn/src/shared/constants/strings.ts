@@ -6,5 +6,4 @@ export const strings = {
   supportEmail: 'support@warrenbrowse.com',
   lwo: 'LWO',
   quic: 'QUIC',
-  domainFronting: 'Domain fronting',
 } as const;

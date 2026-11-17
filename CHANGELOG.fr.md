@@ -53,6 +53,11 @@ par l'application, gardez-le tel quel.
 - [iOS] Garder la même identité de session d'un démarrage du VPN au suivant, pour que le tunnel
   retrouve son adresse et le port choisi après un redémarrage.
 
+### Retiré
+- Les méthodes d'accès à l'API « Warren bridges », « Encrypted DNS proxy » et « Domain fronting »,
+  qui reposaient sur des serveurs que Warren n'exploite pas. L'accès direct et les proxys SOCKS5 et
+  Shadowsocks personnalisés restent disponibles.
+
 ## [1.1.57] - 2026-11-09
 ### Modifié
 - [Windows, macOS, Linux, Android] Redessiner le paysage de plaine affiché quand le VPN est

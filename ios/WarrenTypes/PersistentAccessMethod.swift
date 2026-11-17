@@ -21,6 +21,52 @@ public struct PersistentAccessMethodStore: Codable {
         self.lastReachableAccessMethod = lastReachableAccessMethod
         self.accessMethods = accessMethods
     }
+
+    /// Reads a store written before the bridges, encrypted DNS proxy and domain fronting methods were
+    /// removed: their entries are dropped, and a last reachable method among them falls back to the
+    /// direct method, so the user's own methods survive the upgrade.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        accessMethods = try container.decode([StoredAccessMethod].self, forKey: .accessMethods)
+            .compactMap(\.method)
+
+        let lastReachable = try container.decode(StoredAccessMethod.self, forKey: .lastReachableAccessMethod)
+        if let method = lastReachable.method {
+            lastReachableAccessMethod = method
+        } else if let direct = accessMethods.first(where: { $0.proxyConfiguration == .direct }) {
+            lastReachableAccessMethod = direct
+        } else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .lastReachableAccessMethod,
+                in: container,
+                debugDescription: "No direct access method to fall back to"
+            )
+        }
+    }
+}
+
+/// An access method entry as stored, `nil` when it names one of the removed proxy configurations.
+private struct StoredAccessMethod: Decodable {
+    private enum CodingKeys: String, CodingKey {
+        case proxyConfiguration
+    }
+
+    private enum RemovedProxyConfiguration: String, CodingKey {
+        case bridges, encryptedDNS, domainFronting
+    }
+
+    let method: PersistentAccessMethod?
+
+    init(from decoder: any Decoder) throws {
+        do {
+            method = try PersistentAccessMethod(from: decoder)
+        } catch {
+            let configuration = try decoder.container(keyedBy: CodingKeys.self)
+                .nestedContainer(keyedBy: RemovedProxyConfiguration.self, forKey: .proxyConfiguration)
+            guard !configuration.allKeys.isEmpty else { throw error }
+            method = nil
+        }
+    }
 }
 
 /// Persistent access method model.

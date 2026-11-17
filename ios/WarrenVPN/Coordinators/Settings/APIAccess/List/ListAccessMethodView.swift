@@ -58,12 +58,6 @@ struct ListAccessMethodView<ViewModel>: View where ViewModel: ListAccessViewMode
                         switch item.id {
                         case AccessMethodRepository.directId:
                             AccessibilityIdentifier.accessMethodDirectCell
-                        case AccessMethodRepository.bridgeId:
-                            AccessibilityIdentifier.accessMethodBridgesCell
-                        case AccessMethodRepository.encryptedDNSId:
-                            AccessibilityIdentifier.accessMethodEncryptedDNSCell
-                        case AccessMethodRepository.domainFrontingId:
-                            AccessibilityIdentifier.accessMethodDomainFrontingCell
                         default:
                             nil
                         }

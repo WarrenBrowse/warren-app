@@ -182,17 +182,6 @@ appId: com.warrenbrowse.vpn
     path: SplitTunneling
 - back
 
-### API access
-- tapOn: "API access"
-- takeScreenshot:
-    path: ApiAccess
-
-- tapOn: "Mullvad Bridges"
-- takeScreenshot:
-    path: Bridges
-- back
-- back
-
 ### Report a problem
 - tapOn: "Report a problem"
 - takeScreenshot:
