@@ -10,6 +10,9 @@
     <issue id="TypographyDashes" severity="ignore" />
     <!-- Tracked externally (DROID-245) since the same texts are used across multiple platforms. -->
     <issue id="ImpliedQuantity" severity="ignore" />
+    <!-- The app module disables language splits in its bundle, which a library
+         module's own lint run cannot see. -->
+    <issue id="AppBundleLocaleChanges" severity="ignore" />
     <!-- Temporarily ignore the below checks while migrating to version catalogs. -->
     <issue id="GradleDependency" severity="ignore" />
     <issue id="AndroidGradlePluginVersion" severity="ignore" />

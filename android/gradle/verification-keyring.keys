@@ -598,7 +598,7 @@ Q3L0n1au+VI0B5Q+HE4pAvkV6DurLrS3k+fNmQqkkCtVSg==
 
 
 pub    15C71C0A4E0B8EDD
-uid    Matthias Bl?sing <mblaesing@doppel-helix.eu>
+uid    Matthias Bläsing <mblaesing@doppel-helix.eu>
 
 sub    891E4C2D471515FE
 -----BEGIN PGP PUBLIC KEY BLOCK-----
@@ -911,6 +911,25 @@ ABpc1kO4cUiT5IC3cj9ZFNgW8Rei23XRaFQ8eXcbaLhBwcXK8m00nNuZlMdGBdFu
 PGiPNb66a9ruAOlc35TcCH52AWNFVPlPVio51JQ0V4kn16Tk6pIHQX9kgMBzZwkj
 NblrOf6LII4Pqx0ip7s95q54JSpekQZ65g==
 =3q/e
+-----END PGP PUBLIC KEY BLOCK-----
+
+
+pub    234B5F5BB6811BE0
+uid    Mullvad VPN app (Android signing) <developers@mullvad.net>
+
+sub    09650EB0D45F1C5E
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+xjMEaXjAdRYJKwYBBAHaRw8BAQdAcZcWB2d0dqEhlQEfrQNeb+DuLKdWvCF8Y2Em
+g3aTuMW0Ok11bGx2YWQgVlBOIGFwcCAoQW5kcm9pZCBzaWduaW5nKSA8ZGV2ZWxv
+cGVyc0BtdWxsdmFkLm5ldD7OMwRpeMFNFgkrBgEEAdpHDwEBB0CtkCvL3QzyLhdF
+G8sgRdVoAJfN6dXlFsTWKxeo/uSSCsLALwQYFgoAIBYhBMUB4BedxCfzzF/E+yNL
+X1u2gRvgBQJpeMFNAhsCAIEJECNLX1u2gRvgdiAEGRYKAB0WIQRG9ZGgmzdQX1Oi
+m4IJZQ6w1F8cXgUCaXjBTQAKCRAJZQ6w1F8cXjSXAQCttC4eBVpHf66hAK95xC94
+rVzHE6LeYyY+jk4BNymmMgD7BQktz1WpxepPEWZxTsFeFheICSebdJ2sHIAv3LTz
+gw+BRQEAx7c3KqJ2GS2qDt5VFb1dpOKE35FiLEbEefi9RQlL15cA/0pSd0cXjZTU
+x48fEPDuppg/Jk0Tuaq502suf0WZ2QUP
+=l7Hk
 -----END PGP PUBLIC KEY BLOCK-----
 
 
@@ -3779,7 +3798,7 @@ vvzB6IAo6+u3AQDURXWfVKKr73oZFosnOt63VHnW6BV9mMqjj3wenu9FlQ==
 
 
 pub    B0F3710FA64900E7
-uid    ?amonn McManus <eamonn@mcmanus.net>
+uid    �amonn McManus <eamonn@mcmanus.net>
 
 sub    7892707E9657EBD4
 -----BEGIN PGP PUBLIC KEY BLOCK-----
@@ -5019,7 +5038,7 @@ zvokolnfxsAb
 
 
 pub    F067A2FD751AE3E4
-uid    David Burstr?m <david.burstrom@gmail.com>
+uid    David Burström <david.burstrom@gmail.com>
 
 sub    28CFDE1EB61BB6AA
 -----BEGIN PGP PUBLIC KEY BLOCK-----

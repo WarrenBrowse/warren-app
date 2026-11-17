@@ -241,6 +241,10 @@ android {
         }
     }
 
+    // The in-app language picker switches to any locale the app ships, so a
+    // bundle must not leave the other languages to on-demand splits.
+    bundle { language { enableSplit = false } }
+
     packaging {
         if (getBooleanProperty("warren.app.build.keepDebugSymbols")) {
             jniLibs.keepDebugSymbols.add("**/*.so")
