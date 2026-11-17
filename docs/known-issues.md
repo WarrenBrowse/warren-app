@@ -13,7 +13,7 @@ decided to not address for some reason. Some example reasons why issues might en
 * The only known fixes for the issue comes with other drawbacks, that we consider as bad, or worse
   than the original issue
 * We are not able to reliably reproduce the issue. Enough anecdotal evidence exists to indicate
-  the issue is real, but Mullvad is unable to reproduce it. As a result, it is really hard to fix.
+  the issue is real, but it cannot be reproduced reliably. As a result, it is really hard to fix.
 
 This document should only contain issues related to security and privacy. This document is a
 compliment to the [security documentation](./security.md). Where the security documentation
@@ -59,7 +59,7 @@ But some things user can do, depending on their threat model:
 * Disable the network before shutting the computer down, so it starts up without network.
   This allows `warren-daemon` to start before any program has had any chance to leak.
 * Do not start any program generating sensitive network traffic until you have verified
-  Mullvad is running and has secured the connection.
+  Warren VPN is running and has secured the connection.
 
 #### Timeline
 
@@ -77,7 +77,7 @@ We have determined that from a security and privacy standpoint, in relation to t
 app, TunnelVision (CVE-2024-3661) and TunnelCrack LocalNet (CVE-2023-36672 and CVE-2023-35838)
 are virtually identical.
 
-The Mullvad VPN iOS app is unfortunately vulnerable to these attacks. The only solution we know
+The iOS app (inherited from Mullvad VPN, not shipped by Warren yet) is vulnerable to these attacks. The only solution we know
 against these leaks on iOS is to enable a flag called `includeAllNetworks` in iOS VPN terminology.
 This flag has not been compatible with our app, so we have not been able to turn it on. But
 work is being done in order to change the app so `includeAllNetworks` can be used, and this
@@ -118,7 +118,7 @@ The known leaks include, but may not be limited to, the following type of traffi
 - [OS connectivity checks](https://issuetracker.google.com/issues/250529027).
 
 Multiple reports with variants of this behaviour have surfaced over the years, however the problems
-still persist. Mullvad is not aware of any mitigation to these leaks.
+still persist. No mitigation to these leaks is known.
 
 - [A few packets leak to the public network at VPN reconnection](https://issuetracker.google.com/issues/37343051)
 - [Android's VPN does not provide a seamless routing transition across VPN reconfigurations.](https://issuetracker.google.com/issues/117288570)
@@ -139,12 +139,51 @@ still persist. Mullvad is not aware of any mitigation to these leaks.
 A longstanding issue in Android makes it so that broadcast and multicast traffic to the local
 network that the device is on, bypasses the VPN and is sent outside the tunnel.
 
-This has been known for a long time, but has not been fixed in Android. Mullvad is not aware of
-any way that a VPN app can mitigate this issue. It has to be solved upstream in Android.
+This has been known for a long time, but has not been fixed in Android. No way is known for a VPN
+app to mitigate this issue. It has to be solved upstream in Android.
 
 #### Timeline
 
 * December 18, 2019 - Someone [reports the issue to google](https://issuetracker.google.com/issues/146484540)
+
+
+### Any app can leak the device IP on Android
+
+Android 16 and later has a bug where any app installed on the device can leak UDP traffic outside
+the tunnel (thus exposing the user's real IP address) by calling the
+`registerQuicConnectionClosePayload` method on `ConnectivityManager`, as first reported in
+[this blog post](https://lowlevel.fun/posts/tiny-udp-cannon-android-vpn-bypass).
+The leak requires no privileges, affects both Wi-Fi and cellular, and bypasses "Always-On VPN" with
+"Block connections without VPN". A partial workaround involving running ADB commands is given in
+the linked article.
+
+The cause is in Android, so it applies to the Warren app as to any VPN app. It has not been
+reproduced with the Warren app itself.
+
+#### Timeline
+
+* May 2, 2026 - Mullvad became aware of the issue.
+* May 4, 2026 - Mullvad was able to reproduce the leak on a Pixel 8 running Android 17 and on a
+  Pixel 8 running GrapheneOS based on Android 16.
+* May 5, 2026 - The vulnerability was fixed in the GrapheneOS code base.
+
+
+### NAT traversal keep-alive traffic can leak the device IP on Android
+
+A malicious app can leak the device's real IP address by misusing an Android API that exists to
+aid in network address translation (NAT) traversal. This requires no special app permissions and
+can happen even when "Block connections without VPN" is enabled.
+As there is no foolproof mitigation for this issue it must be fixed by Android.
+Mullvad [wrote a blog post](https://mullvad.net/en/blog/another-way-to-leak-traffic-on-android-has-been-discovered)
+with more details.
+
+The cause is in Android, so it applies to the Warren app as to any VPN app. It has not been
+reproduced with the Warren app itself.
+
+#### Timeline
+
+* Aug 28, 2026 - Mullvad became aware of the issue.
+* Sep 9, 2026 - Mullvad published a blog post detailing the issue.
 
 
 ### Possible leaks on macOS on first start after upgrade
@@ -205,7 +244,7 @@ For the Hyper-V firewall to function, your [WSL config] must not disable the `fi
 
 Network traffic from a Linux guest running under WSL2 always goes out the default route of
 the host machine without being inspected by the normal layers of WFP (the firewall on the
-Windows host that Mullvad use to prevent leaks). This means that if there is a VPN tunnel
+Windows host that the app uses to prevent leaks). This means that if there is a VPN tunnel
 up and running, the Linux guest’s traffic will be sent via the VPN with no leaks!
 In the other states, the mitigation above is used to prevent leaks.
 
@@ -240,7 +279,7 @@ We recommend users to not use Application Guard.
 #### Other VPN software
 
 We have tested a few other VPN clients from competitors and found that all of them leak in
-the same way. Therefore, this is not a problem with Mullvad VPN specifically, but rather an
+the same way. Therefore, this is not a problem with this app specifically, but rather an
 industry-wide issue. The way Microsoft has implemented virtual networking guests makes
 it very difficult to properly secure them.
 
@@ -265,7 +304,7 @@ This can be used by an adversary on the same local network to make a qualified g
 is using Warren VPN. Furthermore, since the in-tunnel IP only changes monthly, the adversary can
 also possibly identify a device over time.
 
-Android apps, including Mullvad VPN, do not have the permission to change kernel parameters such as
+Android apps, Warren VPN included, do not have the permission to change kernel parameters such as
 `arp_ignore`. All Android devices that we know of are affected, as it is the default behavior of the
 OS. We have reported this issue [upstream to Google], and recommended that they change the kernel
 parameter to prevent the device from disclosing the VPN tunnel IP to the local network in this way.
