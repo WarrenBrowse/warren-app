@@ -249,13 +249,11 @@ a no-op), so the app simply never detects updates.
 
 ## Verification after procurement
 
-After all secrets are wired, run a dry-run via the manual trigger:
-
-```sh
-gh workflow run release.yml --ref main --field tag=v0.1.0-beta.1
-```
-
-Then check the run logs at https://github.com/WarrenBrowse/warren-app/actions. Every signing step that was previously `::warning::` should now run the signed-build branch.
+The release workflow has no dry run: it starts only from a release tag
+(`ci/resolve-release-channel.sh` refuses a branch). After all secrets are wired,
+the next beta tag is the first signed build: check its run logs at
+https://github.com/WarrenBrowse/warren-app/actions. Every signing step that was
+previously `::warning::` should now run the signed-build branch.
 
 If a sign step still skips, double-check the secret name spelling (GitHub is case-sensitive).
 
@@ -287,7 +285,7 @@ attestation-signing task. The code-signing identities above are issued in the co
 - [ ] Android upload keystore + Google Play service account
 - [ ] Auto-update: dedicated ed25519 signing key (pubkey committed, secret in CI) + update-host SSH secrets (`docs/AUTO-UPDATE.md`)
 - [ ] All required secrets configured on `WarrenBrowse/warren-app`
-- [ ] Dry-run via `gh workflow run release.yml` succeeds on all 5 platforms
+- [ ] The first beta tag after the secrets are wired builds signed on all 5 platforms
 - [ ] Internal-test groups created in TestFlight + Play Console with at least 1 tester email
 
 Once all checkboxes are green, follow `docs/RUNBOOK-RELEASE.md` to tag and publish.

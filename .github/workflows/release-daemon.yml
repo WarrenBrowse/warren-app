@@ -140,10 +140,19 @@ jobs:
       # regression and a number the app series already used.
       - name: Refuse a version-regressing headless tag
         if: inputs.version == '' && steps.resolve.outputs.publish == 'true'
+        env:
+          WARREN_CHANNEL: ${{ steps.resolve.outputs.channel }}
+          WARREN_VERSION: ${{ steps.resolve.outputs.version }}
         run: |
           git fetch --tags --force origin
-          bash ci/check-release-version.sh \
-            "${{ steps.resolve.outputs.channel }}" "${{ steps.resolve.outputs.version }}"
+          bash ci/check-release-version.sh "$WARREN_CHANNEL" "$WARREN_VERSION"
+
+      # Same guard as the app's tag-guard: only a commit main carries ships.
+      - name: Refuse a headless tag on a commit main does not carry
+        if: inputs.version == '' && steps.resolve.outputs.publish == 'true'
+        run: |
+          git fetch --force origin main:refs/remotes/origin/main
+          bash ci/require-tag-on-main.sh "$GITHUB_SHA"
 
   linux:
     name: Linux x86_64 (.deb / .rpm / tarball)

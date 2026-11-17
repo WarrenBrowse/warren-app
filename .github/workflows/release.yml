@@ -106,12 +106,9 @@ on:
     tags:
       - 'v*.*.*'
       - 'beta-v*.*.*'
+  # Re-runs a release: dispatch it on the tag itself (`--ref beta-v1.2.3`).
+  # From a branch, tag-guard refuses to start.
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag to release (must already exist)"
-        type: string
-        required: true
 
 permissions:
   contents: write
@@ -142,21 +139,16 @@ jobs:
       - name: Resolve the release channel and version from the tag
         id: channel
         run: |
-          ref="${GITHUB_REF_NAME}"
+          set -euo pipefail
           # The API host follows the channel here and nowhere else, so a job
           # can never bake one environment's exit list into the other's app.
-          case "$ref" in
-            beta-v*) channel=beta; api_url=https://api.beta.warrenbrowse.com ;;
-            *)       channel=prod; api_url=https://api.warrenbrowse.com ;;
-          esac
-          version="${ref#beta-}"
-          version="${version#v}"
-          {
-            echo "channel=$channel"
-            echo "version=$version"
-            echo "api-url=$api_url"
-          } >> "$GITHUB_OUTPUT"
-          echo "channel=$channel version=$version api=$api_url (tag $ref)"
+          bash ci/resolve-release-channel.sh "$GITHUB_REF_NAME" | tee -a "$GITHUB_OUTPUT"
+      # The version guard below compares numbers only: a tag on a commit that
+      # never reached main would otherwise be built, signed and served.
+      - name: Refuse a tag on a commit main does not carry
+        run: |
+          git fetch --force origin main:refs/remotes/origin/main
+          bash ci/require-tag-on-main.sh "$GITHUB_SHA"
       # A release is defined by what it CONTAINS, and the guard below only ever
       # compared numbers. On 2026-08-08 `beta-v1.1.5` was cut from a `main`
       # carrying three unreviewed commits; one imported `electron` into the
@@ -187,16 +179,20 @@ jobs:
       # themselves 1.1.15 while being built from different commits).
       - name: Refuse a version-regressing release tag
         if: startsWith(github.ref, 'refs/tags/')
+        env:
+          WARREN_CHANNEL: ${{ steps.channel.outputs.channel }}
+          WARREN_VERSION: ${{ steps.channel.outputs.version }}
         run: |
           git fetch --tags --force origin
-          bash ci/check-release-version.sh \
-            "${{ steps.channel.outputs.channel }}" "${{ steps.channel.outputs.version }}"
+          bash ci/check-release-version.sh "$WARREN_CHANNEL" "$WARREN_VERSION"
 
       # The GitHub release body, the in-app "What's new" and the signed
       # manifests all show the tag's notes, in three languages.
       - name: Refuse a release tag without release notes
         if: startsWith(github.ref, 'refs/tags/')
-        run: bash ci/require-release-notes.sh "${{ steps.channel.outputs.version }}"
+        env:
+          WARREN_VERSION: ${{ steps.channel.outputs.version }}
+        run: bash ci/require-release-notes.sh "$WARREN_VERSION"
 
       # A production release never ships unsigned nor on the beta debug key.
       - name: Refuse a production tag without every signing identity
@@ -205,7 +201,8 @@ jobs:
           WARREN_CSC_KEY_PASSWORD_MACOS: ${{ secrets.WARREN_CSC_KEY_PASSWORD_MACOS }}
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
-        run: bash ci/require-signing-identities.sh "${{ steps.channel.outputs.channel }}"
+          WARREN_CHANNEL: ${{ steps.channel.outputs.channel }}
+        run: bash ci/require-signing-identities.sh "$WARREN_CHANNEL"
 
   # build-* job `needs: [tests]`, so a red test skips all builds and the publish.
   # Same reusable suite as the push/PR warren-checks.yml (single source of truth).

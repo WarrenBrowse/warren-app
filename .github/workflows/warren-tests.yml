@@ -524,6 +524,12 @@ jobs:
         shell: bash
         run: bash ci/test-generate-update-metadata.sh
 
+      # The tag picks the channel, and only a commit main carries is released.
+      - name: Release channel and tag guards
+        working-directory: .
+        shell: bash
+        run: bash ci/test-resolve-release.sh
+
       - name: Production signing identities guard
         working-directory: .
         shell: bash
