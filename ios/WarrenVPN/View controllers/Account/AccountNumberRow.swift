@@ -24,10 +24,9 @@ class AccountNumberRow: UIView {
 
     private let titleLabel: UILabel = {
         let textLabel = UILabel()
-        // The Warren identity is the wallet public key; "account number"
-        // is kept in parentheses so users coming from other VPNs still
-        // recognize the field (mirrors the desktop account view label).
-        textLabel.text = NSLocalizedString("Public key (account number)", comment: "")
+        // The Warren identity is the wallet public key, shown as its SS58
+        // address: same label as the desktop account view.
+        textLabel.text = NSLocalizedString("Public key (wallet address)", comment: "")
         textLabel.font = .warrenTiny
         textLabel.adjustsFontForContentSizeCategory = true
         textLabel.textColor = UIColor(white: 1.0, alpha: 0.6)
@@ -122,7 +121,7 @@ class AccountNumberRow: UIView {
 
         return [
             UIAccessibilityCustomAction(
-                name: NSLocalizedString("Copied Warren account number to pasteboard", comment: ""),
+                name: NSLocalizedString("Copy public key", comment: ""),
                 target: self,
                 selector: #selector(didTapCopyAccountNumber)
             )
