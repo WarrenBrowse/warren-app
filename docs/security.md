@@ -106,6 +106,9 @@ The following network traffic is allowed or blocked independent of state:
      server)
    * Incoming UDP from `[fe80::]/10:547` to `[fe80::]/10:546` (server to client)
 
+   One exception: the boot-time filters Windows keeps across a reboot (see [Windows](#windows))
+   permit nothing, DHCP included, until the service starts and replaces them.
+
 1. A subset of NDP is allowed:
    * Outgoing to `ff02::2`, but only ICMPv6 with type 133 and code 0 (Router solicitation)
    * Incoming from `fe80::/10`, but only ICMPv6 type 134 and code 0 (Router advertisement)
@@ -220,6 +223,10 @@ Examples:
   `warren-daemon.exe` or any process running as `root`, and incoming matching
   traffic. Do not allow any direct communication with the exit server with IP `a.b.c.d`.
 
+Each of these rules covers TCP as well as UDP, on the same address and port: the tunnel falls back
+to TLS over TCP to the same server when the network blocks UDP. The extra protocol never adds a
+destination, and it carries the same process/user restriction.
+
 Traffic inside the tunnel is permitted immediately after the tunnel device has been created. See
 the [connected] state for details on this.
 
@@ -247,6 +254,31 @@ server, only that server's combinations stay allowed. A move that does not compl
 server does not answer, or the session reaches it through a redial instead) leaves them allowed,
 for the same processes, until the tunnel is next rebuilt. The server comes from the server list
 the app verified, never from the exit or the entry that triggered the move.
+
+#### Tailscale
+
+On macOS, Linux and Windows, a Tailscale interface present on the machine keeps carrying tailnet
+traffic while the tunnel is [connecting] or [connected]: the firewall lets traffic through that
+interface to and from Tailscale's ranges only (`100.64.0.0/10` and `fd7a:115c:a1e0::/48`), DNS to
+Tailscale's resolver (`100.100.100.100`, inside that range) on that interface included. Traffic entering that
+interface is encrypted by Tailscale, and Tailscale's own sockets are filtered like any other
+program's, so they go through the tunnel. In the blocking states without a tunnel the opening does
+not exist.
+
+#### Include-only mode ("VPN only for these apps")
+
+In this mode only the selected programs use the tunnel, and the firewall treats the rest of the
+machine differently on Linux and on Windows:
+
+* On Linux, the selected programs' traffic may only leave through the tunnel, and is rejected
+  while there is no tunnel. Everything else is accepted in every state, the blocking states
+  ([connecting], [error], and [disconnected] with lockdown mode) included.
+* On Windows, the [connected] policy lets IPv4 traffic outside the tunnel go for every program
+  the split tunnel driver does not keep in it. The other states block all programs as described
+  above.
+
+This mode therefore weakens the guarantees of this document for every program that is not
+selected, and on Linux it does so in the blocking states too.
 
 ### Disconnecting
 
@@ -341,6 +373,10 @@ address range (such as 192.168.0.0/16) or a loopback address.
 The above holds during the [connected] state. In the [disconnected]
 state the app does nothing with DNS, meaning the default one is used, probably from the ISP.
 In the other states DNS is simply blocked.
+
+The advanced "Allow external DNS resolvers" setting, off by default, lets DNS requests reach any
+resolver instead of the relay or the custom servers, but only inside the tunnel: port 53 stays
+blocked on every other interface, and the local network sharing setting does not reopen it.
 
 
 ## Anti-censorship, obfuscation and API access methods
@@ -441,8 +477,10 @@ The `warren-daemon` transition to the [disconnected] state before exiting. To
 limit leaks during computer shutdown, it will maintain the blocking firewall
 rules upon exit in the following scenarios:
 - _Lockdown mode_ is enabled
-- A user didn't explicitly request for the `warren-daemon` to be shut down and
-  either or both of the following are true
+- A user didn't explicitly request for the `warren-daemon` to be shut down,
+  this install has not stood down for another Warren environment installed on the
+  same machine (a build that has stood down refuses to connect, so it never arms
+  the machine-wide block), and either or both of the following are true
     - The daemon is currently in one of the blocking states ([connected],
       [connecting], or [error])
     - _auto-connect_ is enabled
