@@ -64,6 +64,8 @@ private fun PreviewNotificationBanner() {
                     onClickDismissAnnouncement = {},
                     onClickReEnableAfterStandDown = {},
                     onClickManageDevices = {},
+                    onClickShowAlwaysOnVpnGuide = {},
+                    onClickDismissAlwaysOnVpnAdvice = {},
                 )
                 Spacer(modifier = Modifier.size(16.dp))
             }
@@ -89,6 +91,8 @@ fun NotificationBanner(
     onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
     onClickManageDevices: () -> Unit,
+    onClickShowAlwaysOnVpnGuide: () -> Unit,
+    onClickDismissAlwaysOnVpnAdvice: () -> Unit,
 ) {
     if (isTv()) {
         NotificationBannerTv(
@@ -108,6 +112,8 @@ fun NotificationBanner(
             onClickDismissAnnouncement = onClickDismissAnnouncement,
             onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
             onClickManageDevices = onClickManageDevices,
+            onClickShowAlwaysOnVpnGuide = onClickShowAlwaysOnVpnGuide,
+            onClickDismissAlwaysOnVpnAdvice = onClickDismissAlwaysOnVpnAdvice,
         )
     } else {
         AnimatedNotificationBanner(
@@ -135,6 +141,8 @@ fun NotificationBanner(
             onClickDismissAnnouncement = onClickDismissAnnouncement,
             onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
             onClickManageDevices = onClickManageDevices,
+            onClickShowAlwaysOnVpnGuide = onClickShowAlwaysOnVpnGuide,
+            onClickDismissAlwaysOnVpnAdvice = onClickDismissAlwaysOnVpnAdvice,
         )
     }
 }

@@ -540,6 +540,8 @@
     <string name="banner_vpn_permission_error">VPN 權限錯誤</string>
     <string name="banner_always_on_vpn_error">「一律啟用 VPN」已指派給 %1$s</string>
     <string name="banner_legacy_always_on_vpn_error">「一律啟用 VPN」已指派給其他 VPN</string>
+    <string name="banner_always_on_vpn_advice_title">系統封鎖已關閉</string>
+    <string name="always_on_vpn_advice_message">啟用「一律啟用 VPN」和「在沒有 VPN 的情況下封鎖連線」，讓流量在 Warren 更新期間或停止運作時維持封鎖。如需設定，請</string>
     <string name="banner_android_16_upgrade_warning_title">無法連線嗎？</string>
     <string name="connecting_stuck_title">連線遇到問題？</string>
     <string name="connecting_stuck_message">此程序比平常更久。Warren 會持續重試；若仍無法連線，請在我們的社群論壇回報問題。</string>

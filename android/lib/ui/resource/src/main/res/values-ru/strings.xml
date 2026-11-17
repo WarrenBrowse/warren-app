@@ -561,6 +561,8 @@
     <string name="banner_vpn_permission_error">Ошибка разрешения для VPN</string>
     <string name="banner_always_on_vpn_error">Опция «Постоянная VPN» назначена приложению «%1$s»</string>
     <string name="banner_legacy_always_on_vpn_error">Опция «Постоянная VPN» назначена другой VPN</string>
+    <string name="banner_always_on_vpn_advice_title">СИСТЕМНАЯ БЛОКИРОВКА ВЫКЛЮЧЕНА</string>
+    <string name="always_on_vpn_advice_message">Включите «Постоянная VPN» и «Блокировать соединения без VPN», чтобы трафик оставался заблокированным, пока Warren обновляется или если он остановится. Чтобы настроить,</string>
     <string name="banner_android_16_upgrade_warning_title">Проблемы с подключением?</string>
     <string name="connecting_stuck_title">ПРОБЛЕМЫ С ПОДКЛЮЧЕНИЕМ?</string>
     <string name="connecting_stuck_message">Это занимает больше времени, чем обычно. Warren продолжает попытки; если подключиться не удастся, сообщите о проблеме на нашем форуме.</string>

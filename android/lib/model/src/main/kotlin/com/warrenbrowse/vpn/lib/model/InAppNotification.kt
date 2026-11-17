@@ -171,4 +171,12 @@ sealed class InAppNotification {
         override val statusLevel = StatusLevel.Warning
         override val priority: Long = 998
     }
+
+    // The system does not block connections without this VPN, which is the only
+    // protection while the app is updated or after its process died. Advice, so
+    // it yields to everything above.
+    data object AlwaysOnVpnAdvice : InAppNotification() {
+        override val statusLevel = StatusLevel.Info
+        override val priority: Long = 997
+    }
 }

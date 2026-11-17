@@ -540,6 +540,8 @@
     <string name="banner_vpn_permission_error">VPN 权限错误</string>
     <string name="banner_always_on_vpn_error">“始终开启 VPN”已分配给 %1$s</string>
     <string name="banner_legacy_always_on_vpn_error">“始终开启 VPN”已分配给其他 VPN</string>
+    <string name="banner_always_on_vpn_advice_title">系统屏蔽已关闭</string>
+    <string name="always_on_vpn_advice_message">开启“始终开启 VPN”和“屏蔽未使用 VPN 的所有连接”，在 Warren 更新期间或其停止运行时让流量保持被阻止。如需设置，请</string>
     <string name="banner_android_16_upgrade_warning_title">无法连接？</string>
     <string name="connecting_stuck_title">连接遇到问题？</string>
     <string name="connecting_stuck_message">此过程比平常耗时更长。Warren 会持续重试；如果仍无法连接，请在我们的社区论坛上报告问题。</string>

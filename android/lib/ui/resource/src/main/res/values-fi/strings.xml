@@ -547,6 +547,8 @@
     <string name="banner_vpn_permission_error">VPN-lupavirhe</string>
     <string name="banner_always_on_vpn_error">%1$s on määritetty aina päällä olevan VPN:n asetukseksi</string>
     <string name="banner_legacy_always_on_vpn_error">Aina päällä oleva VPN on määritetty toiselle VPN:lle</string>
+    <string name="banner_always_on_vpn_advice_title">JÄRJESTELMÄN ESTO POIS PÄÄLTÄ</string>
+    <string name="always_on_vpn_advice_message">Ota käyttöön aina päällä oleva VPN ja \"Estä yhteydet ilman VPN:ää\", jotta liikenteesi pysyy estettynä Warrenin päivittyessä tai jos se pysähtyy. Määritä se</string>
     <string name="banner_android_16_upgrade_warning_title">Eikö yhteyden muodostaminen onnistu?</string>
     <string name="connecting_stuck_title">ONGELMIA YHDISTÄMISESSÄ?</string>
     <string name="connecting_stuck_message">Tämä kestää tavallista kauemmin. Warren jatkaa yrittämistä. Jos yhteys ei muodostu, ilmoita ongelmasta foorumillamme.</string>

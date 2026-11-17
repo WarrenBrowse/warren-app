@@ -86,9 +86,9 @@ class WarrenVpnService : LifecycleVpnService() {
                 WarrenJni.notifyPackagesChanged()
         }
 
-    /** The always-on state last written to the preferences, so a connected state re-emitted with
-     * new figures does not write it again. */
-    private var recordedAlwaysOnVpn: Boolean? = null
+    /** The always-on and lockdown state last written to the preferences, so a connected state
+     * re-emitted with new figures does not write it again. */
+    private var recordedProtection: Pair<Boolean, Boolean>? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -444,11 +444,15 @@ class WarrenVpnService : LifecycleVpnService() {
     /** Read once the tunnel is up: while it is still being set up, even an always-on start
      * answers false. */
     private suspend fun recordAlwaysOnVpn() {
-        val alwaysOnVpn = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && isAlwaysOn
-        if (alwaysOnVpn != recordedAlwaysOnVpn) {
-            Logger.i("Tunnel connected (always-on VPN: $alwaysOnVpn)")
-            getKoin().get<UserPreferencesRepository>().setAlwaysOnVpn(alwaysOnVpn)
-            recordedAlwaysOnVpn = alwaysOnVpn
+        val sdkQ = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+        val protection = (sdkQ && isAlwaysOn) to (sdkQ && isLockdownEnabled)
+        if (protection != recordedProtection) {
+            val (alwaysOnVpn, lockdown) = protection
+            Logger.i("Tunnel connected (always-on VPN: $alwaysOnVpn, lockdown: $lockdown)")
+            getKoin()
+                .get<UserPreferencesRepository>()
+                .recordSystemVpnProtection(alwaysOnVpn, lockdown)
+            recordedProtection = protection
         }
     }
 

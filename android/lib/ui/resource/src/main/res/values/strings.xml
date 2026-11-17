@@ -574,6 +574,8 @@
     <string name="banner_vpn_permission_error">VPN PERMISSION ERROR</string>
     <string name="banner_always_on_vpn_error">ALWAYS-ON VPN ASSIGNED TO %1$s</string>
     <string name="banner_legacy_always_on_vpn_error">ALWAYS-ON VPN ASSIGNED TO OTHER VPN</string>
+    <string name="banner_always_on_vpn_advice_title">SYSTEM BLOCK IS OFF</string>
+    <string name="always_on_vpn_advice_message">Turn on Always-on VPN and \"Block connections without VPN\" so your traffic stays blocked while Warren is updated or if it stops. To set it up,</string>
     <string name="banner_android_16_upgrade_warning_title">CAN’T CONNECT?</string>
 
     <!-- Stalled connect attempt: the neutral blocking banner becomes a help hint. -->

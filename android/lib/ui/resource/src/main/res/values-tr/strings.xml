@@ -547,6 +547,8 @@
     <string name="banner_vpn_permission_error">VPN izin hatası</string>
     <string name="banner_always_on_vpn_error">Her zaman açık VPN %1$s uygulamasına atandı</string>
     <string name="banner_legacy_always_on_vpn_error">Her zaman açık VPN diğer VPN\'e atandı</string>
+    <string name="banner_always_on_vpn_advice_title">SİSTEM ENGELİ KAPALI</string>
+    <string name="always_on_vpn_advice_message">Warren güncellenirken veya durursa trafiğinizin engelli kalması için Her zaman açık VPN\'i ve \"VPN üzerinden olmayan bağlantıları engelle\" seçeneğini açın. Ayarlamak için</string>
     <string name="banner_android_16_upgrade_warning_title">Bağlanamıyor musunuz?</string>
     <string name="connecting_stuck_title">BAĞLANTI SORUNU MU?</string>
     <string name="connecting_stuck_message">Bu işlem her zamankinden uzun sürüyor. Warren denemeye devam ediyor; bağlantı kurulmazsa sorunu topluluk forumumuzda bildirin.</string>

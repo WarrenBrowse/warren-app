@@ -561,6 +561,8 @@
     <string name="banner_vpn_permission_error">Помилка дозволу для VPN</string>
     <string name="banner_always_on_vpn_error">Опція «Завжди увімкнений VPN» призначена для %1$s</string>
     <string name="banner_legacy_always_on_vpn_error">Опція «Завжди увімкнений VPN» призначена іншому VPN</string>
+    <string name="banner_always_on_vpn_advice_title">СИСТЕМНЕ БЛОКУВАННЯ ВИМКНЕНО</string>
+    <string name="always_on_vpn_advice_message">Увімкніть «Завжди увімкнений VPN» і «Блокувати з’єднання без VPN», щоб трафік залишався заблокованим, поки Warren оновлюється або якщо він зупиниться. Щоб налаштувати,</string>
     <string name="banner_android_16_upgrade_warning_title">Не можете підключитися?</string>
     <string name="connecting_stuck_title">ПРОБЛЕМИ З ПІДКЛЮЧЕННЯМ?</string>
     <string name="connecting_stuck_message">Це триває довше, ніж зазвичай. Warren продовжує спроби; якщо підключитися не вдасться, повідомте про проблему на нашому форумі.</string>

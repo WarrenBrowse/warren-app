@@ -540,6 +540,8 @@
     <string name="banner_vpn_permission_error">VPN許可エラー</string>
     <string name="banner_always_on_vpn_error">Always-on VPNは%1$sに割り当てられました</string>
     <string name="banner_legacy_always_on_vpn_error">Always-on VPNは他のVPNに割り当てられました</string>
+    <string name="banner_always_on_vpn_advice_title">システムのブロックがオフです</string>
+    <string name="always_on_vpn_advice_message">Warren の更新中や停止時にもトラフィックをブロックしたままにするには、Always-on VPN と [VPNを使用していない接続をブロックする] をオンにしてください。設定するには</string>
     <string name="banner_android_16_upgrade_warning_title">接続できませんか？</string>
     <string name="connecting_stuck_title">接続に問題がありますか？</string>
     <string name="connecting_stuck_message">通常より時間がかかっています。Warren は再試行を続けます。接続できない場合は、コミュニティフォーラムで問題を報告してください。</string>

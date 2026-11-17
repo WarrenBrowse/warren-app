@@ -93,6 +93,7 @@ import com.warrenbrowse.vpn.common.compose.showSnackbarImmediately
 import com.warrenbrowse.vpn.core.LocalResultStore
 import com.warrenbrowse.vpn.core.NavKey2
 import com.warrenbrowse.vpn.core.Navigator
+import com.warrenbrowse.vpn.feature.autoconnect.api.AutoConnectNavKey
 import com.warrenbrowse.vpn.feature.appinfo.api.ChangelogNavKey
 import com.warrenbrowse.vpn.feature.home.api.Android16UpgradeInfoNavKey
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.AlwaysExpandedFeatureIndicators
@@ -608,6 +609,8 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             },
             onClickReEnableAfterStandDown = connectViewModel::reEnableAfterStandDown,
             onClickManageDevices = dropUnlessResumed { navigator.navigate(ManageDevicesNavKey) },
+            onClickShowAlwaysOnVpnGuide = dropUnlessResumed { navigator.navigate(AutoConnectNavKey) },
+            onClickDismissAlwaysOnVpnAdvice = connectViewModel::dismissAlwaysOnVpnAdvice,
             forumSlot = forumSlot,
             onForumClick =
                 dropUnlessResumed {
@@ -741,6 +744,8 @@ fun ConnectScreen(
     onClickDismissAnnouncement: () -> Unit = {},
     onClickReEnableAfterStandDown: () -> Unit = {},
     onClickManageDevices: () -> Unit = {},
+    onClickShowAlwaysOnVpnGuide: () -> Unit = {},
+    onClickDismissAlwaysOnVpnAdvice: () -> Unit = {},
     // The desktop header's forum slot: the bell with its badge, the lifebuoy
     // for a wallet with no forum account, nothing when the setting is off.
     forumSlot: ForumHeaderSlot? = null,
@@ -784,6 +789,8 @@ fun ConnectScreen(
                         onClickDismissAnnouncement = onClickDismissAnnouncement,
                         onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
                         onClickManageDevices = onClickManageDevices,
+                        onClickShowAlwaysOnVpnGuide = onClickShowAlwaysOnVpnGuide,
+                        onClickDismissAlwaysOnVpnAdvice = onClickDismissAlwaysOnVpnAdvice,
                     )
                 },
                 controls = {

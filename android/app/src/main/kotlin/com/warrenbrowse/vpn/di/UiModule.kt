@@ -3,6 +3,7 @@ package com.warrenbrowse.vpn.di
 import kotlinx.coroutines.flow.map
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
+import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import android.content.ComponentName
 import android.content.pm.PackageManager
 import android.os.Build
@@ -56,6 +57,7 @@ import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitEgressNotification
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.EnvStandDownUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitSwitchedNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.HostOfflineNotificationUseCase
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.AlwaysOnVpnAdviceNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.LaunchAnnouncementNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
@@ -126,6 +128,9 @@ val uiModule = module {
 
     single { TunnelStateNotificationUseCase(get()) } bind
         InAppNotificationUseCase::class
+    single {
+        AlwaysOnVpnAdviceNotificationUseCase(get<UserPreferencesRepository>()::showAlwaysOnVpnAdvice)
+    } bind InAppNotificationUseCase::class
     single { HostOfflineNotificationUseCase(get()) } bind
         InAppNotificationUseCase::class
     // The connect card ORs the wedge verdict into its offline flag; only the

@@ -540,6 +540,8 @@
     <string name="banner_vpn_permission_error">เกิดข้อผิดพลาดในการอนุญาต VPN</string>
     <string name="banner_always_on_vpn_error">VPN เปิดอยู่เสมอ ได้รับการมอบหมายไปยัง %1$s แล้ว</string>
     <string name="banner_legacy_always_on_vpn_error">VPN เปิดอยู่เสมอ ได้รับการมอบหมายไปยัง VPN อื่นแล้ว</string>
+    <string name="banner_always_on_vpn_advice_title">การปิดกั้นของระบบปิดอยู่</string>
+    <string name="always_on_vpn_advice_message">เปิด VPN เปิดอยู่เสมอ และ \"ปิดกั้นการเชื่อมต่อโดยไม่ใช้ VPN\" เพื่อให้ทราฟฟิกของคุณยังคงถูกปิดกั้นระหว่างที่ Warren อัปเดตหรือหากหยุดทำงาน หากต้องการตั้งค่า</string>
     <string name="banner_android_16_upgrade_warning_title">ไม่สามารถเชื่อมต่อได้ใช่ไหม</string>
     <string name="connecting_stuck_title">เชื่อมต่อมีปัญหาหรือไม่</string>
     <string name="connecting_stuck_message">ขั้นตอนนี้ใช้เวลานานกว่าปกติ Warren จะลองใหม่ต่อไป หากยังเชื่อมต่อไม่ได้ โปรดรายงานปัญหาในฟอรัมชุมชนของเรา</string>

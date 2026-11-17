@@ -540,6 +540,8 @@
     <string name="banner_vpn_permission_error">VPN 권한 오류</string>
     <string name="banner_always_on_vpn_error">상시 접속 VPN이 %1$s에 할당됨</string>
     <string name="banner_legacy_always_on_vpn_error">상시 접속 VPN이 다른 VPN에 할당됨</string>
+    <string name="banner_always_on_vpn_advice_title">시스템 차단이 꺼져 있음</string>
+    <string name="always_on_vpn_advice_message">Warren이 업데이트되는 동안이나 중지되었을 때도 트래픽이 차단되도록 상시 접속 VPN과 \"VPN 없이 연결 차단\"을 켜세요. 설정하려면</string>
     <string name="banner_android_16_upgrade_warning_title">연결이 되지 않나요?</string>
     <string name="connecting_stuck_title">연결에 문제가 있나요?</string>
     <string name="connecting_stuck_message">평소보다 오래 걸리고 있습니다. Warren이 계속 다시 시도합니다. 연결되지 않으면 커뮤니티 포럼에 문제를 신고하세요.</string>

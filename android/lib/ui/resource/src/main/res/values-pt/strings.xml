@@ -550,6 +550,8 @@
     <string name="banner_vpn_permission_error">Erro de permissão de VPN</string>
     <string name="banner_always_on_vpn_error">VPN sempre ligada atribuída a %1$s</string>
     <string name="banner_legacy_always_on_vpn_error">VPN sempre ligada atribuída a outra VPN</string>
+    <string name="banner_always_on_vpn_advice_title">BLOQUEIO DO SISTEMA DESLIGADO</string>
+    <string name="always_on_vpn_advice_message">Ative a VPN sempre ligada e \"Bloquear ligações sem VPN\" para que o seu tráfego continue bloqueado enquanto o Warren é atualizado ou se parar. Para configurar,</string>
     <string name="banner_android_16_upgrade_warning_title">Não consegue ligar?</string>
     <string name="connecting_stuck_title">PROBLEMAS AO LIGAR?</string>
     <string name="connecting_stuck_message">Isto está a demorar mais do que o habitual. O Warren continua a tentar; se não conseguir ligar, reporte o problema no nosso fórum da comunidade.</string>

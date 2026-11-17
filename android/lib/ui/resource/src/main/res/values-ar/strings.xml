@@ -575,6 +575,8 @@
     <string name="banner_vpn_permission_error">خطأ في إذن شبكة VPN</string>
     <string name="banner_always_on_vpn_error">تم تعيين \"تشغيل VPN دائمًا\" إلى %1$s</string>
     <string name="banner_legacy_always_on_vpn_error">تم تعيين \"تشغيل VPN دائمًا\" إلى شبكة VPN أخرى</string>
+    <string name="banner_always_on_vpn_advice_title">حظر النظام متوقف</string>
+    <string name="always_on_vpn_advice_message">فعّل \"تشغيل VPN دائمًا\" و\"حظر الاتصالات دون VPN\" لتبقى حركة مرورك محظورة أثناء تحديث Warren أو إذا توقف. لإعداد ذلك،</string>
     <string name="banner_android_16_upgrade_warning_title">هل يتعذَّر الاتصال؟</string>
     <string name="connecting_stuck_title">هل تواجه مشكلة في الاتصال؟</string>
     <string name="connecting_stuck_message">يستغرق هذا وقتًا أطول من المعتاد. يواصل Warren المحاولة، وإذا لم يتم الاتصال، فأبلغ عن المشكلة في منتدى مجتمعنا.</string>

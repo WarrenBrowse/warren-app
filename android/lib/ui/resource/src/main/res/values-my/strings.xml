@@ -540,6 +540,8 @@
     <string name="banner_vpn_permission_error">VPN ခွင့်ပြုချက် ချို့ယွင်းချက်</string>
     <string name="banner_always_on_vpn_error">အမြဲဖွင့် VPN ကို %1$s သို့ သတ်မှတ်ထားပါသည်</string>
     <string name="banner_legacy_always_on_vpn_error">အမြဲဖွင့် VPN ကို အခြား VPN တစ်ခုသို့ သတ်မှတ်ထားပါသည်</string>
+    <string name="banner_always_on_vpn_advice_title">စနစ်ပိတ်ဆို့မှု ပိတ်ထားသည်</string>
+    <string name="always_on_vpn_advice_message">Warren အပ်ဒိတ်လုပ်နေစဉ် သို့မဟုတ် ရပ်သွားလျှင် သင့်ဒေတာစီးဆင်းမှု ပိတ်ဆို့ထားရန် အမြဲဖွင့် VPN နှင့် \"VPN မသုံးဘဲချိတ်ဆက်မှုများကို ပိတ်ဆို့ရန်\" ကို ဖွင့်ပါ။ စနစ်ထည့်သွင်းရန်</string>
     <string name="banner_android_16_upgrade_warning_title">ချိတ်မရဘူးလား။</string>
     <string name="connecting_stuck_title">ချိတ်ဆက်ရာတွင် အခက်အခဲ ရှိပါသလား။</string>
     <string name="connecting_stuck_message">ဤလုပ်ဆောင်ချက်သည် ပုံမှန်ထက် ကြာနေပါသည်။ Warren မှ ဆက်လက် ကြိုးစားနေပါသည်။ မချိတ်ဆက်နိုင်ပါက ကျွန်ုပ်တို့၏ အသိုက်အဝန်း ဖိုရမ်တွင် ပြဿနာကို ရီပို့တ်လုပ်ပါ။</string>

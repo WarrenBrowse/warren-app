@@ -550,6 +550,8 @@
     <string name="banner_vpn_permission_error">Error en la autorización de la VPN</string>
     <string name="banner_always_on_vpn_error">La VPN siempre activa se ha asignado a %1$s</string>
     <string name="banner_legacy_always_on_vpn_error">La VPN siempre activa se ha asignado a otra VPN</string>
+    <string name="banner_always_on_vpn_advice_title">BLOQUEO DEL SISTEMA DESACTIVADO</string>
+    <string name="always_on_vpn_advice_message">Activa la VPN siempre activa y «Bloquear conexiones sin VPN» para que tu tráfico siga bloqueado mientras Warren se actualiza o si se detiene. Para configurarlo,</string>
     <string name="banner_android_16_upgrade_warning_title">¿No se puede conectar?</string>
     <string name="connecting_stuck_title">¿PROBLEMAS PARA CONECTAR?</string>
     <string name="connecting_stuck_message">Esto está tardando más de lo normal. Warren sigue intentándolo; si no logra conectarse, informe del problema en nuestro foro de la comunidad.</string>

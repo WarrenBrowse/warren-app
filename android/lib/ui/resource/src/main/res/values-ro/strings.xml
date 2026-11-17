@@ -558,6 +558,8 @@
     <string name="banner_vpn_permission_error">EROARE DE PERMISIUNE VPN</string>
     <string name="banner_always_on_vpn_error">VPN PERMANENT ATRIBUIT LUI %1$s</string>
     <string name="banner_legacy_always_on_vpn_error">VPN PERMANENT ATRIBUIT ALTUI VPN</string>
+    <string name="banner_always_on_vpn_advice_title">BLOCAREA SISTEMULUI ESTE OPRITĂ</string>
+    <string name="always_on_vpn_advice_message">Activați VPN permanent și \"Blocați conexiunile fără VPN\" ca traficul să rămână blocat cât timp Warren se actualizează sau dacă se oprește. Pentru configurare,</string>
     <string name="banner_android_16_upgrade_warning_title">NU VĂ PUTEȚI CONECTA?</string>
     <string name="connecting_stuck_title">PROBLEME LA CONECTARE?</string>
     <string name="connecting_stuck_message">Durează mai mult decât de obicei. Warren încearcă în continuare; dacă nu se conectează, raportați problema pe forumul nostru.</string>

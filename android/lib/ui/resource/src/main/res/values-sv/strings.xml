@@ -547,6 +547,8 @@
     <string name="banner_vpn_permission_error">Behörighetsfel med VPN</string>
     <string name="banner_always_on_vpn_error">Alltid på-VPN har tilldelats %1$s</string>
     <string name="banner_legacy_always_on_vpn_error">Alltid på-VPN har tilldelats en annan VPN</string>
+    <string name="banner_always_on_vpn_advice_title">SYSTEMBLOCKERING AV</string>
+    <string name="always_on_vpn_advice_message">Aktivera Alltid på-VPN och \"Blockera anslutningar utan VPN\" så att din trafik förblir blockerad medan Warren uppdateras eller om den stoppar. För att ställa in det,</string>
     <string name="banner_android_16_upgrade_warning_title">Kan du inte ansluta?</string>
     <string name="connecting_stuck_title">PROBLEM MED ATT ANSLUTA?</string>
     <string name="connecting_stuck_message">Det här tar längre tid än vanligt. Warren fortsätter att försöka. Rapportera problemet på vårt forum om anslutningen inte upprättas.</string>

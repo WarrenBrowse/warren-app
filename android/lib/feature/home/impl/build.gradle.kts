@@ -11,6 +11,7 @@ android { namespace = "com.warrenbrowse.vpn.feature.home.impl" }
 dependencies {
     implementation(projects.lib.feature.appinfo.api)
     implementation(projects.lib.feature.applisting.api)
+    implementation(projects.lib.feature.autoconnect.api)
     implementation(projects.lib.feature.home.api)
     implementation(projects.lib.feature.login.api)
     implementation(projects.lib.feature.settings.api)

@@ -257,6 +257,10 @@ class ConnectViewModel(
         _uiSideEffect.send(sideEffect)
     }
 
+    fun dismissAlwaysOnVpnAdvice() = viewModelScope.launch {
+        userPreferencesRepository.dismissAlwaysOnVpnAdvice()
+    }
+
     fun dismissAndroid16UpgradeWarning() = viewModelScope.launch {
         userPreferencesRepository.setShowAndroid16ConnectWarning(false)
     }

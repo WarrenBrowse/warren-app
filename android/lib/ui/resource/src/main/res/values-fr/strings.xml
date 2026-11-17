@@ -550,6 +550,8 @@
     <string name="banner_vpn_permission_error">ERREUR D’AUTORISATION VPN</string>
     <string name="banner_always_on_vpn_error">VPN PERMANENT ATTRIBUÉ À %1$s</string>
     <string name="banner_legacy_always_on_vpn_error">VPN PERMANENT ATTRIBUÉ À UN AUTRE VPN</string>
+    <string name="banner_always_on_vpn_advice_title">BLOCAGE SYSTÈME DÉSACTIVÉ</string>
+    <string name="always_on_vpn_advice_message">Activez « Toujours exiger un VPN » et « Bloquer les connexions sans VPN » pour que votre trafic reste bloqué pendant une mise à jour de Warren ou s\'il s\'arrête. Pour le configurer,</string>
     <string name="banner_android_16_upgrade_warning_title">IMPOSSIBLE DE SE CONNECTER ?</string>
     <string name="connecting_stuck_title">PROBLÈME DE CONNEXION ?</string>
     <string name="connecting_stuck_message">Cela prend plus de temps que d\'habitude. Warren continue d\'essayer ; si la connexion n\'aboutit pas, signalez le problème sur notre forum communautaire.</string>

@@ -41,4 +41,7 @@ message UserPreferences {
   // (VpnService.isAlwaysOn). The OS restarts an always-on VPN after an
   // update by itself; the system setting that says so is not readable by an app.
   bool always_on_vpn = 12;
+  // The user put away the advice to turn on the system's own block (Always-on
+  // VPN with "Block connections without VPN"); it is not shown again.
+  bool always_on_vpn_advice_dismissed = 13;
 }

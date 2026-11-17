@@ -131,6 +131,8 @@ fun InAppNotification.toNotificationData(
     onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
     onClickManageDevices: () -> Unit,
+    onClickShowAlwaysOnVpnGuide: () -> Unit,
+    onClickDismissAlwaysOnVpnAdvice: () -> Unit,
 ) =
     when (this) {
         is InAppNotification.LaunchAnnouncement ->
@@ -286,6 +288,32 @@ fun InAppNotification.toNotificationData(
                     dismissAction(onClickDismissChangelog),
             )
 
+        InAppNotification.AlwaysOnVpnAdvice ->
+            NotificationData(
+                title = stringResource(id = R.string.banner_always_on_vpn_advice_title),
+                message =
+                    ClickableText(
+                        text =
+                            buildAnnotatedString {
+                                append(stringResource(id = R.string.always_on_vpn_advice_message))
+                                append(SPACE_CHAR)
+                                withStyle(
+                                    SpanStyle(
+                                        textDecoration = TextDecoration.Underline,
+                                        color = LocalWarrenSurfaces.current.homeText,
+                                    )
+                                ) {
+                                    append(stringResource(R.string.click_here))
+                                }
+                                append(DOT_CHAR)
+                            },
+                        onClick = onClickShowAlwaysOnVpnGuide,
+                        contentDescription =
+                            stringResource(id = R.string.always_on_vpn_advice_message),
+                    ),
+                statusLevel = statusLevel,
+                action = dismissAction(onClickDismissAlwaysOnVpnAdvice),
+            )
         InAppNotification.Android16UpgradeWarning ->
             NotificationData(
                 title = stringResource(id = R.string.banner_android_16_upgrade_warning_title),

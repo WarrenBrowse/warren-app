@@ -36,26 +36,38 @@ class UserPreferencesRepository(
         }
     }
 
+    /** Whether the advice to turn on the system's own block is shown; see [alwaysOnVpnAdviceDue]. */
+    fun showAlwaysOnVpnAdvice(): Flow<Boolean> =
+        userPreferencesStore.data.map { it.showAlwaysOnVpnAdvice }
+
     /**
-     * Records that the OS is not blocking connections without this app's VPN,
-     * so the UI can point the user at the system setting once. The desktop
-     * apps arm their own protection across an update; on mobile the OS owns the
-     * tunnel and this setting is the only equivalent.
+     * Records how the OS runs the connected tunnel, read by the service once it is up: whether it
+     * is the always-on VPN, and whether connections without it are blocked. The update restore reads
+     * the first; the advice follows both.
      */
-    suspend fun setShowAlwaysOnVpnAdvice(show: Boolean) =
+    suspend fun recordSystemVpnProtection(alwaysOnVpn: Boolean, lockdown: Boolean) =
         userPreferencesStore.updateData { prefs ->
-            prefs.toBuilder().setShowAlwaysOnVpnAdvice(show).build()
+            prefs
+                .toBuilder()
+                .setAlwaysOnVpn(alwaysOnVpn)
+                .setShowAlwaysOnVpnAdvice(
+                    alwaysOnVpnAdviceDue(alwaysOnVpn, lockdown, prefs.alwaysOnVpnAdviceDismissed)
+                )
+                .build()
+        }
+
+    suspend fun dismissAlwaysOnVpnAdvice() =
+        userPreferencesStore.updateData { prefs ->
+            prefs
+                .toBuilder()
+                .setShowAlwaysOnVpnAdvice(false)
+                .setAlwaysOnVpnAdviceDismissed(true)
+                .build()
         }
 
     suspend fun setTunnelRequested(requested: Boolean) =
         userPreferencesStore.updateData { prefs ->
             prefs.toBuilder().setTunnelRequested(requested).build()
-        }
-
-    /** Whether the OS runs the connected tunnel as always-on VPN. */
-    suspend fun setAlwaysOnVpn(alwaysOnVpn: Boolean) =
-        userPreferencesStore.updateData { prefs ->
-            prefs.toBuilder().setAlwaysOnVpn(alwaysOnVpn).build()
         }
 
     suspend fun setShowAndroid16ConnectWarning(show: Boolean) =

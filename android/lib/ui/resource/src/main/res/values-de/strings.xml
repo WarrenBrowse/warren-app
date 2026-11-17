@@ -547,6 +547,8 @@
     <string name="banner_vpn_permission_error">VPN-Berechtigungsfehler</string>
     <string name="banner_always_on_vpn_error">Always-on VPN ist %1$s zugeordnet</string>
     <string name="banner_legacy_always_on_vpn_error">Always-on VPN ist einem anderen VPN zugeordnet</string>
+    <string name="banner_always_on_vpn_advice_title">SYSTEMSPERRE AUS</string>
+    <string name="always_on_vpn_advice_message">Aktiviere Always-on VPN und „Verbindungen ohne VPN blockieren“, damit dein Datenverkehr blockiert bleibt, während Warren aktualisiert wird oder wenn es stoppt. Zum Einrichten</string>
     <string name="banner_android_16_upgrade_warning_title">Keine Verbindung möglich?</string>
     <string name="connecting_stuck_title">VERBINDUNGSPROBLEME?</string>
     <string name="connecting_stuck_message">Das dauert länger als üblich. Warren versucht es weiter; falls keine Verbindung zustande kommt, melden Sie das Problem in unserem Community-Forum.</string>

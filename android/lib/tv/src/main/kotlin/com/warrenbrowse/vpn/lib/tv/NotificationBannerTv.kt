@@ -33,6 +33,8 @@ fun PreviewNotificationBannerTv() {
             onClickDismissAnnouncement = {},
             onClickReEnableAfterStandDown = {},
             onClickManageDevices = {},
+            onClickShowAlwaysOnVpnGuide = {},
+            onClickDismissAlwaysOnVpnAdvice = {},
         )
     }
 }
@@ -55,6 +57,8 @@ fun NotificationBannerTv(
     onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
     onClickManageDevices: () -> Unit,
+    onClickShowAlwaysOnVpnGuide: () -> Unit,
+    onClickDismissAlwaysOnVpnAdvice: () -> Unit,
 ) {
     AnimatedNotificationBanner(
         modifier = modifier,
@@ -84,5 +88,7 @@ fun NotificationBannerTv(
         onClickDismissAnnouncement = onClickDismissAnnouncement,
         onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
         onClickManageDevices = onClickManageDevices,
+        onClickShowAlwaysOnVpnGuide = onClickShowAlwaysOnVpnGuide,
+        onClickDismissAlwaysOnVpnAdvice = onClickDismissAlwaysOnVpnAdvice,
     )
 }

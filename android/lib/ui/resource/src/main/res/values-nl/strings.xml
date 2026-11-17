@@ -547,6 +547,8 @@
     <string name="banner_vpn_permission_error">VPN-machtigingsfout</string>
     <string name="banner_always_on_vpn_error">Altijd-aan VPN toegewezen aan %1$s</string>
     <string name="banner_legacy_always_on_vpn_error">Altijd-aan VPN toegewezen aan andere VPN</string>
+    <string name="banner_always_on_vpn_advice_title">SYSTEEMBLOKKERING UIT</string>
+    <string name="always_on_vpn_advice_message">Zet Altijd-aan VPN en \"Verbindingen zonder VPN blokkeren\" aan, zodat je verkeer geblokkeerd blijft terwijl Warren wordt bijgewerkt of als het stopt. Om het in te stellen,</string>
     <string name="banner_android_16_upgrade_warning_title">Krijgt u geen verbinding?</string>
     <string name="connecting_stuck_title">PROBLEMEN MET VERBINDEN?</string>
     <string name="connecting_stuck_message">Dit duurt langer dan gebruikelijk. Warren blijft het proberen; als er geen verbinding tot stand komt, meld het probleem dan op ons communityforum.</string>

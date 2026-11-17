@@ -561,6 +561,8 @@
     <string name="banner_vpn_permission_error">Błąd uprawnienia VPN</string>
     <string name="banner_always_on_vpn_error">Opcja „Zawsze włączony VPN” przypisana jest do %1$s</string>
     <string name="banner_legacy_always_on_vpn_error">Opcja „Zawsze włączony VPN” przypisana jest do innej aplikacji VPN</string>
+    <string name="banner_always_on_vpn_advice_title">BLOKADA SYSTEMOWA WYŁĄCZONA</string>
+    <string name="always_on_vpn_advice_message">Włącz „Zawsze włączony VPN” i „Blokuj połączenia bez pośrednictwa sieci VPN”, aby ruch pozostał zablokowany podczas aktualizacji Warren lub gdy aplikacja się zatrzyma. Aby to skonfigurować,</string>
     <string name="banner_android_16_upgrade_warning_title">Nie możesz się połączyć?</string>
     <string name="connecting_stuck_title">PROBLEM Z POŁĄCZENIEM?</string>
     <string name="connecting_stuck_message">Trwa to dłużej niż zwykle. Warren ponawia próby; jeśli połączenie nie zostanie nawiązane, zgłoś problem na naszym forum.</string>

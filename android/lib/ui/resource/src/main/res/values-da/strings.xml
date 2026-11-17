@@ -547,6 +547,8 @@
     <string name="banner_vpn_permission_error">VPN-tilladelsesfejl</string>
     <string name="banner_always_on_vpn_error">Altid-til VPN tildelt %1$s</string>
     <string name="banner_legacy_always_on_vpn_error">Altid-til VPN tildelt en anden VPN</string>
+    <string name="banner_always_on_vpn_advice_title">SYSTEMBLOKERING ER SLÅET FRA</string>
+    <string name="always_on_vpn_advice_message">Slå Altid-til VPN og \"Bloker forbindelser uden VPN\" til, så din trafik forbliver blokeret, mens Warren opdateres, eller hvis den stopper. For at sætte det op,</string>
     <string name="banner_android_16_upgrade_warning_title">Kan du ikke oprette forbindelse?</string>
     <string name="connecting_stuck_title">PROBLEMER MED AT OPRETTE FORBINDELSE?</string>
     <string name="connecting_stuck_message">Dette tager længere tid end normalt. Warren bliver ved med at forsøge. Rapporter problemet på vores forum, hvis forbindelsen ikke oprettes.</string>

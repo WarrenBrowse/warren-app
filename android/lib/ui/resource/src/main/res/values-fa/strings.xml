@@ -547,6 +547,8 @@
     <string name="banner_vpn_permission_error">خطای اجازهٔ VPN</string>
     <string name="banner_always_on_vpn_error">VPN همیشه‌فعال به %1$s اختصاص داده شد</string>
     <string name="banner_legacy_always_on_vpn_error">VPN همیشه‌فعال به یک VPN دیگر اختصاص داده شده است</string>
+    <string name="banner_always_on_vpn_advice_title">مسدودسازی سیستم خاموش است</string>
+    <string name="always_on_vpn_advice_message">VPN همیشه‌فعال و «مسدود کردن اتصال‌ها بدون VPN» را روشن کنید تا ترافیک شما هنگام به‌روزرسانی Warren یا اگر متوقف شود مسدود بماند. برای تنظیم آن،</string>
     <string name="banner_android_16_upgrade_warning_title">اتصال برقرار نمی‌شود؟</string>
     <string name="connecting_stuck_title">در اتصال مشکل دارید؟</string>
     <string name="connecting_stuck_message">این کار بیش از حد معمول طول کشیده است. Warren به تلاش ادامه می‌دهد؛ اگر متصل نشد، مشکل را در انجمن کاربران ما گزارش دهید.</string>
