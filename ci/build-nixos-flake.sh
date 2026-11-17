@@ -26,7 +26,10 @@ stage="${1:?usage: build-nixos-flake.sh <stage-dir> <input.deb> <output.tar.gz>}
 deb="${2:?missing input .deb}"
 output="${3:?missing output tarball}"
 
-image="${WARREN_NIX_IMAGE:-nixos/nix:latest}"
+# Pinned by digest: this container writes the published tarball, so what users
+# install must not change with a tag someone else moves. Bump it in a commit of
+# its own, and expect the first run after a bump to re-seed the store volume.
+image="${WARREN_NIX_IMAGE:-nixos/nix:2.35.6@sha256:b49cb33f3a7e5cf3933ad8774529de0e3807ec5cf54987aa7ccdfb49f2fc55ed}"
 
 command -v docker > /dev/null || {
     echo "::error::docker is required to build the NixOS flake" >&2
