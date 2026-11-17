@@ -120,11 +120,14 @@ export async function launchApplication(
   });
 }
 
-// Takes the same argument as launchApplication and returns the command to run
-async function getLaunchCommand(app: ILinuxSplitTunnelingApplication | string): Promise<string[]> {
-  if (typeof app === 'object') {
-    return formatExec(app.exec);
-  } else if (path.extname(app) === '.desktop') {
+// Takes the same argument as launchApplication and returns the command to run.
+// An application is identified by its path only: the command comes from its
+// desktop entry on disk, never from the `exec` the renderer sent along.
+export async function getLaunchCommand(
+  application: ILinuxSplitTunnelingApplication | string,
+): Promise<string[]> {
+  const app = typeof application === 'object' ? application.absolutepath : application;
+  if (path.extname(app) === '.desktop') {
     const entry = await readDesktopEntry(app);
     if (entry.exec !== undefined) {
       return formatExec(entry.exec);
