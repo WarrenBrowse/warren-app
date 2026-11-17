@@ -37,6 +37,5 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.datastore)
-    implementation(libs.androidx.fragment)
     implementation(libs.protobuf.kotlin.lite)
 }

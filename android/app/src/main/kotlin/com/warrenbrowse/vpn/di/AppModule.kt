@@ -182,6 +182,7 @@ val appModule = module {
     }
     single {
         WarrenConnectUseCase(
+            appContext = androidContext(),
             walletRepository = get(),
             configBuilder = get(),
             localSettings = get(),

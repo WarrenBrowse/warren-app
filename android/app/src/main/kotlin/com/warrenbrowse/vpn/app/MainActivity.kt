@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
         // `Prepared` branch in handleRequestVpnProfileIntent) through the
         // Warren Quinn use-case.
         lifecycleScope.launch {
-            runCatching { warrenConnect.connect(this@MainActivity) }
+            runCatching { warrenConnect.connect() }
                 .onFailure { e -> Logger.e(throwable = e) { "Warren connect dispatch failed" } }
         }
     }

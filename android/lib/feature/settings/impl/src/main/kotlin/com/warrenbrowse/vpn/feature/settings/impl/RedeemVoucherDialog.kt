@@ -37,7 +37,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.fragment.app.FragmentActivity
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
@@ -61,7 +60,7 @@ import org.koin.compose.koinInject
  */
 @Composable
 fun RedeemVoucherDialog(onDismiss: () -> Unit) {
-    val activity = LocalContext.current as FragmentActivity
+    val context = LocalContext.current
     val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
     val settings = koinInject<WarrenLocalSettingsRepository>()
     val scope = rememberCoroutineScope()
@@ -119,7 +118,7 @@ fun RedeemVoucherDialog(onDismiss: () -> Unit) {
         errorText = null
         scope.launch {
             val previousExpiry = settings.cachedSubscriptionExpiry.value
-            val outcome = subscriptionInvoker.redeemVoucher(activity, input)
+            val outcome = subscriptionInvoker.redeemVoucher(input)
             submitting = false
             if (outcome is WarrenVoucherOutcome.Success) {
                 // Write the credited expiry to the shared StateFlow so
@@ -134,7 +133,7 @@ fun RedeemVoucherDialog(onDismiss: () -> Unit) {
                     )
                 successExpiry = outcome.expiresAtUnixSecs
             } else {
-                errorText = voucherLabel(activity, outcome)
+                errorText = voucherLabel(context, outcome)
             }
         }
     }

@@ -79,7 +79,6 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -283,19 +282,15 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         }
     }
 
-    // Route the user-initiated Connect button through the Warren Quinn
-    // use-case. The Quinn path requires a FragmentActivity host for
-    // BiometricPrompt; the app's MainActivity extends FragmentActivity.
+    // Route the user-initiated Connect button through the Warren Quinn use case.
     val onWarrenConnectClick: () -> Unit = {
-        (context as? FragmentActivity)?.let { activity ->
-            warrenScope.launch {
-                runCatching { warrenConnect.connect(activity) }
-                    .onSuccess { result -> surfaceConnectFailure(result) }
-                    .onFailure { e ->
-                        co.touchlab.kermit.Logger.e(throwable = e) { "warren connect failed" }
-                        snackbarHostState.showSnackbarImmediately(message = genericErrorMessage)
-                    }
-            }
+        warrenScope.launch {
+            runCatching { warrenConnect.connect() }
+                .onSuccess { result -> surfaceConnectFailure(result) }
+                .onFailure { e ->
+                    co.touchlab.kermit.Logger.e(throwable = e) { "warren connect failed" }
+                    snackbarHostState.showSnackbarImmediately(message = genericErrorMessage)
+                }
         }
     }
 
@@ -316,12 +311,10 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     // Mirrors the desktop daemon keeping account.expiry fresh.
     LaunchedEffect(fullPubkey) {
         if (fullPubkey != null) {
-            (context as? FragmentActivity)?.let { activity ->
-                runCatching { subscriptionInvoker.fetch(activity) }
-                    .onFailure { e ->
-                        co.touchlab.kermit.Logger.w(throwable = e) { "subscription fetch failed" }
-                    }
-            }
+            runCatching { subscriptionInvoker.fetch() }
+                .onFailure { e ->
+                    co.touchlab.kermit.Logger.w(throwable = e) { "subscription fetch failed" }
+                }
         }
     }
     val copyPubkey = createCopyToClipboardHandle(snackbarHostState, isSensitive = false)
@@ -436,9 +429,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         minActiveState = Lifecycle.State.RESUMED,
     ) { sideEffect ->
         when (sideEffect) {
-            // The VM requests a Warren connect dispatch: invoke the
-            // WarrenQuinnConnectInvoker on the current FragmentActivity (the
-            // invoker needs the Activity host for the biometric prompt).
+            // The VM requests a Warren connect dispatch.
             ConnectViewModel.UiSideEffect.RequestWarrenConnect -> onWarrenConnectClick()
 
             is ConnectViewModel.UiSideEffect.NotPrepared ->
@@ -642,7 +633,6 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                     busy = pubkeyBusy,
                     errorText = pubkeyError,
                     onTrust = {
-                        val activity = context as? FragmentActivity
                         warrenScope.launch {
                             pubkeyBusy = true
                             pubkeyError = null
@@ -658,8 +648,8 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                                     )
                                 }
                             val result =
-                                if (saved.isSuccess && activity != null) {
-                                    runCatching { warrenConnect.connect(activity) }.getOrNull()
+                                if (saved.isSuccess) {
+                                    runCatching { warrenConnect.connect() }.getOrNull()
                                 } else {
                                     null
                                 }

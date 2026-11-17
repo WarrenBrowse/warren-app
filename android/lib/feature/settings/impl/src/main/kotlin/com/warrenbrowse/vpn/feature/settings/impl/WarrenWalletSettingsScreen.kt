@@ -150,10 +150,10 @@ fun WarrenWalletSettings(navigator: Navigator) {
     LifecycleResumeEffect(Unit) {
         pendingPurchase?.let { claim ->
             pendingPurchase = null
-            subscriptionInvoker.startPurchasePoll(activity, claim)
+            subscriptionInvoker.startPurchasePoll(claim)
         }
         if (walletRepository.state.value !is WalletState.Absent) {
-            scope.launch { runCatching { subscriptionInvoker.fetch(activity) } }
+            scope.launch { runCatching { subscriptionInvoker.fetch() } }
         }
         onPauseOrDispose {}
     }

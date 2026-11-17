@@ -1,6 +1,5 @@
 package com.warrenbrowse.vpn.app.connect
 
-import androidx.fragment.app.FragmentActivity
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
@@ -44,11 +43,10 @@ class WarrenSubscriptionUseCase(
 
     // App-scoped (not tied to any screen) so the purchase poll survives the
     // user navigating away while they pay in the browser, mirroring the desktop
-    // poll that lives on the AppRenderer. On the main dispatcher because the
-    // unlock step shows a BiometricPrompt.
+    // poll that lives on the AppRenderer. The network calls move to IO inside.
     private val pollScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    override suspend fun fetch(activity: FragmentActivity): WarrenSubscriptionOutcome {
+    override suspend fun fetch(): WarrenSubscriptionOutcome {
         // A Locked wallet is fine: unlock() decrypts from disk regardless of
         // state. Only Absent (no wallet) blocks the signed request. (Gating on
         // Ready alone broke fetch/redeem at rest, since the resting state is
@@ -91,7 +89,6 @@ class WarrenSubscriptionUseCase(
     }
 
     override suspend fun redeemVoucher(
-        activity: FragmentActivity,
         voucher: String,
     ): WarrenVoucherOutcome {
         if (walletRepository.state.value is WalletState.Absent) {
@@ -143,7 +140,6 @@ class WarrenSubscriptionUseCase(
      * poll ends.
      */
     override fun startPurchasePoll(
-        activity: FragmentActivity,
         claim: PurchaseClaim,
         intervalMs: Long,
         deadlineMs: Long,

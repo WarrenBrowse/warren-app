@@ -33,7 +33,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.common.compose.safeOpenUri
@@ -77,7 +76,6 @@ import org.koin.compose.koinInject
  */
 @Composable
 fun OutOfTimeScreen(navigator: Navigator) {
-    val activity = LocalContext.current as FragmentActivity
     val uriHandler = LocalUriHandler.current
     val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
     val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
@@ -122,7 +120,7 @@ fun OutOfTimeScreen(navigator: Navigator) {
     LifecycleResumeEffect(Unit) {
         pendingPurchase?.let { claim ->
             pendingPurchase = null
-            subscriptionInvoker.startPurchasePoll(activity, claim)
+            subscriptionInvoker.startPurchasePoll(claim)
         }
         onPauseOrDispose {}
     }
@@ -134,7 +132,7 @@ fun OutOfTimeScreen(navigator: Navigator) {
     // entry-time refresh guarding against a stale cache.
     LaunchedEffect(Unit) {
         while (true) {
-            runCatching { subscriptionInvoker.fetch(activity) }
+            runCatching { subscriptionInvoker.fetch() }
             delay(REFRESH_INTERVAL_MS)
         }
     }
@@ -226,9 +224,9 @@ fun OutOfTimeScreen(navigator: Navigator) {
                                 // expiry the gate observes.
                                 val redeemed =
                                     runCatching {
-                                        subscriptionInvoker.redeemVoucher(activity, "")
+                                        subscriptionInvoker.redeemVoucher("")
                                     }.getOrNull()
-                                runCatching { subscriptionInvoker.fetch(activity) }
+                                runCatching { subscriptionInvoker.fetch() }
                                 refreshFailed = redeemed !is WarrenVoucherOutcome.Success
                                 checking = false
                             }
@@ -258,7 +256,7 @@ fun OutOfTimeScreen(navigator: Navigator) {
                             onClick = {
                                 checking = true
                                 scope.launch {
-                                    runCatching { subscriptionInvoker.fetch(activity) }
+                                    runCatching { subscriptionInvoker.fetch() }
                                     checking = false
                                 }
                             },

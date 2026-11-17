@@ -2,7 +2,6 @@ package com.warrenbrowse.vpn.app.connect
 
 import android.content.Context
 import android.content.Intent
-import androidx.fragment.app.FragmentActivity
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.lib.repository.MnemonicCache
 import com.warrenbrowse.vpn.app.service.WarrenTunnelConfig
@@ -35,6 +34,7 @@ import kotlinx.coroutines.withContext
  *      with `KEY_WARREN_CONNECT_QUINN_ACTION` + the JSON-encoded config.
  */
 class WarrenConnectUseCase(
+    private val appContext: Context,
     private val walletRepository: WalletRepository,
     private val configBuilder: WarrenTunnelConfigBuilder,
     private val localSettings: WarrenLocalSettingsRepository,
@@ -173,8 +173,8 @@ class WarrenConnectUseCase(
      * lib-side [WarrenConnectResult] so UI layers in `lib/feature/<x>` (which
      * cannot import [Outcome]) can raise the pubkey-mismatch dialog.
      */
-    override suspend fun connect(activity: FragmentActivity): WarrenConnectResult =
-        when (val outcome = invoke(activity)) {
+    override suspend fun connect(): WarrenConnectResult =
+        when (val outcome = invoke(appContext)) {
             Outcome.Success -> WarrenConnectResult.Dispatched
             Outcome.WalletNotReady -> WarrenConnectResult.WalletNotReady
             Outcome.AuthorizationDenied -> WarrenConnectResult.AuthorizationDenied

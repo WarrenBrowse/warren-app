@@ -1,6 +1,5 @@
 package com.warrenbrowse.vpn.lib.repository
 
-import androidx.fragment.app.FragmentActivity
 import com.warrenbrowse.vpn.lib.model.AccountBan
 import kotlinx.coroutines.flow.StateFlow
 
@@ -48,7 +47,7 @@ interface WarrenQuinnConnectInvoker {
      * typed [WarrenConnectResult] so the caller can raise the pubkey-mismatch warning instead of
      * silently dropping the outcome.
      */
-    suspend fun connect(activity: FragmentActivity): WarrenConnectResult
+    suspend fun connect(): WarrenConnectResult
 }
 
 /**
@@ -374,10 +373,10 @@ sealed interface WarrenVoucherOutcome {
 }
 
 interface WarrenSubscriptionInvoker {
-    suspend fun fetch(activity: FragmentActivity): WarrenSubscriptionOutcome
+    suspend fun fetch(): WarrenSubscriptionOutcome
 
     /** Redeem a Crockford-32 voucher and bind it to the wallet. */
-    suspend fun redeemVoucher(activity: FragmentActivity, voucher: String): WarrenVoucherOutcome
+    suspend fun redeemVoucher(voucher: String): WarrenVoucherOutcome
 
     /**
      * Auto-credit an app-initiated purchase (warren-core doc 35): unlock once, then poll the signed
@@ -388,7 +387,6 @@ interface WarrenSubscriptionInvoker {
      * reactively.
      */
     fun startPurchasePoll(
-        activity: FragmentActivity,
         claim: PurchaseClaim,
         intervalMs: Long = 5_000,
         deadlineMs: Long = 10 * 60 * 1000,

@@ -215,8 +215,8 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
         val followUp = pickFollowUp(tunnelStateProvider.connectedInfo.value)
         if (followUp == PickFollowUp.Reconnect) reconnectInvoker.reconnect()
         if (followUp == PickFollowUp.Connect && connectOnPick) {
-            // The caller owns the VPN-consent gate and the biometric host, so
-            // the connect is handed back rather than dispatched from here.
+            // The caller owns the VPN-consent gate, so the connect is handed
+            // back rather than dispatched from here.
             navigator.goBack(ConnectAfterLocationPick)
         } else {
             navigator.goBack()

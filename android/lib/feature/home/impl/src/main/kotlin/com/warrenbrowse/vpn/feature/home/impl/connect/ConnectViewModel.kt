@@ -205,10 +205,8 @@ class ConnectViewModel(
     }
 
     fun onConnectClick() {
-        // Connect is dispatched from `ConnectScreen` directly through
-        // `WarrenQuinnConnectInvoker.connect(activity)` since the invoker
-        // needs a FragmentActivity for biometric unlock; the ViewModel only
-        // emits a side effect requesting the screen to perform the dispatch.
+        // The screen performs the dispatch (it surfaces the outcome: the exit
+        // key warning, the snackbars); the ViewModel only asks for it.
         viewModelScope.launch {
             _uiSideEffect.send(UiSideEffect.RequestWarrenConnect)
         }
@@ -217,8 +215,7 @@ class ConnectViewModel(
     fun createVpnProfileResult(hasVpnPermission: Boolean) {
         viewModelScope.launch {
             if (hasVpnPermission) {
-                // VPN permission granted: request the UI to dispatch
-                // WarrenQuinnConnectInvoker.connect(activity).
+                // VPN permission granted: request the UI to dispatch the connect.
                 _uiSideEffect.send(UiSideEffect.RequestWarrenConnect)
             } else {
                 // Either the user denied the permission or another always-on-vpn is active (if
@@ -300,9 +297,7 @@ class ConnectViewModel(
         data class OpenUri(val uri: Uri, val errorMessage: String) : UiSideEffect
 
 
-        // Connect dispatch needs a FragmentActivity for biometric unlock, so
-        // the VM emits this side effect and ConnectScreen invokes
-        // WarrenQuinnConnectInvoker.connect(activity) on the current Activity.
+        // ConnectScreen performs the connect dispatch and surfaces its outcome.
         data object RequestWarrenConnect : UiSideEffect
 
         data class NotPrepared(val prepareError: PrepareError) : UiSideEffect

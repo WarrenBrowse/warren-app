@@ -15,7 +15,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
@@ -44,7 +43,6 @@ import org.koin.compose.koinInject
  */
 @Composable
 fun OnboardingBetaAccessScreen(navigator: Navigator) {
-    val activity = LocalContext.current as FragmentActivity
     val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
     val settings = koinInject<WarrenLocalSettingsRepository>()
     val networkInfoProvider = koinInject<WarrenNetworkInfoProvider>()
@@ -65,8 +63,8 @@ fun OnboardingBetaAccessScreen(navigator: Navigator) {
             activating = true
             failed = false
             val redeemed =
-                runCatching { subscriptionInvoker.redeemVoucher(activity, "") }.getOrNull()
-            runCatching { subscriptionInvoker.fetch(activity) }
+                runCatching { subscriptionInvoker.redeemVoucher("") }.getOrNull()
+            runCatching { subscriptionInvoker.fetch() }
             activating = false
             if (redeemed is WarrenVoucherOutcome.Success) {
                 break

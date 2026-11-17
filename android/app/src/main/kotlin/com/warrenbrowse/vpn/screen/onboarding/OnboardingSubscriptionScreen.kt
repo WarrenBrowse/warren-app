@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.common.compose.safeOpenUri
@@ -53,7 +52,7 @@ import org.koin.compose.koinInject
 @Composable
 @Suppress("LongMethod")
 fun OnboardingSubscriptionScreen(navigator: Navigator) {
-    val activity = LocalContext.current as FragmentActivity
+    val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val walletRepository = koinInject<WalletRepository>()
     val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
@@ -80,11 +79,11 @@ fun OnboardingSubscriptionScreen(navigator: Navigator) {
     LifecycleResumeEffect(Unit) {
         pendingPurchase?.let { claim ->
             pendingPurchase = null
-            subscriptionInvoker.startPurchasePoll(activity, claim)
+            subscriptionInvoker.startPurchasePoll(claim)
         }
         // Refresh the cached expiry on (re)entry so an already-subscribed wallet
         // is recognised without the user tapping "I already have a subscription".
-        scope.launch { runCatching { subscriptionInvoker.fetch(activity) } }
+        scope.launch { runCatching { subscriptionInvoker.fetch() } }
         onPauseOrDispose {}
     }
 
@@ -112,14 +111,14 @@ fun OnboardingSubscriptionScreen(navigator: Navigator) {
         checking = true
         errorText = null
         scope.launch {
-            val fetched = runCatching { subscriptionInvoker.fetch(activity) }
+            val fetched = runCatching { subscriptionInvoker.fetch() }
             val funded = settings.cachedSubscriptionExpiry.value > System.currentTimeMillis() / 1000
             checking = false
             errorText = when {
                 fetched.isFailure ->
-                    activity.getString(R.string.onboarding_subscription_check_failed)
+                    context.getString(R.string.onboarding_subscription_check_failed)
                 funded -> null
-                else -> activity.getString(R.string.onboarding_subscription_none_found)
+                else -> context.getString(R.string.onboarding_subscription_none_found)
             }
         }
         Unit

@@ -52,7 +52,7 @@ class WarrenConnectUseCaseTest {
         every { localSettings.exitKeyVerdict(any(), any()) } returns verdict
         every { localSettings.allowLan } returns MutableStateFlow(true)
         every { localSettings.tunnelMtu } returns MutableStateFlow(1400)
-        return WarrenConnectUseCase(walletRepository, builder, localSettings, mockk<ConnectionProxy>())
+        return WarrenConnectUseCase(mockk(), walletRepository, builder, localSettings, mockk<ConnectionProxy>())
     }
 
     @Test
