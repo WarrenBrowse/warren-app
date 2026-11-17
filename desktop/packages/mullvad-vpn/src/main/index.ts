@@ -166,6 +166,7 @@ import RenewalFlow, {
 } from './renewal-flow';
 import { RenewalNoticeArchive, renewalNoticeDocument, renewalNoticeHtml } from './renewal-notice';
 import SafeStorageRenewalStore from './renewal-store';
+import { ScreenProtection } from './screen-protection';
 import Settings, { SettingsDelegate } from './settings';
 import { createTorrentClientAdapter } from './torrent-client/adapters';
 import { TorrentClientConfigStore } from './torrent-client/config';
@@ -322,8 +323,11 @@ class ApplicationMain
 
   private pendingForumLogin = new PendingForumRequest<IForumLoginRequest>(PENDING_LOGIN_MAX_AGE_MS);
   private pendingForumHandoff = new PendingForumHandoff();
-  private forumCodeProtection = new ForumCodeProtection((protect) =>
+  private screenProtection = new ScreenProtection((protect) =>
     this.userInterface?.setContentProtection(protect),
+  );
+  private forumCodeProtection = new ForumCodeProtection((protect) =>
+    this.screenProtection.setForumCode(protect),
   );
   private forumIdentityStore = new SafeStorageForumIdentityStore();
   private mnemonicClipboardGuard = new MnemonicClipboardGuard(clipboard);
@@ -1909,6 +1913,13 @@ class ApplicationMain
       this.mnemonicClipboardGuard.arm(mnemonic);
       return Promise.resolve();
     });
+    IpcMainEventChannel.app.handleMnemonicOnScreen((shown) => {
+      if (shown) {
+        this.screenProtection.mnemonicShown();
+      } else {
+        this.screenProtection.mnemonicHidden();
+      }
+    });
 
     IpcMainEventChannel.navigation.handleSetHistory((history) => {
       this.navigationHistory = history;
@@ -2344,7 +2355,7 @@ class ApplicationMain
   public handleUnpinnedWindowChange = () =>
     void this.userInterface
       ?.recreateWindow(this.account.isLoggedIn(), this.tunnelState.tunnelState)
-      .then(() => this.forumCodeProtection.reapply());
+      .then(() => this.screenProtection.windowRecreated());
 
   // AccountDelegate
   public getLocale = () => this.locale;

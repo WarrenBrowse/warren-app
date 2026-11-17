@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 import { Text } from '../../lib/components';
 import { colors, Radius, spacings } from '../../lib/foundations';
+import { useMnemonicOnScreen } from './use-mnemonic-on-screen';
 
 // Renders a 12 (or 24) word BIP39 mnemonic as a 3-column numbered grid.
 // Shared between the onboarding wallet step (`OnboardingWalletView` -
@@ -58,6 +59,7 @@ export type MnemonicGridProps = {
 
 export function MnemonicGrid({ mnemonic, revealed = true, onClick, ...rest }: MnemonicGridProps) {
   const words = React.useMemo(() => mnemonic.split(/\s+/).filter((w) => w.length > 0), [mnemonic]);
+  useMnemonicOnScreen(revealed && words.length > 0);
 
   return (
     <StyledGrid

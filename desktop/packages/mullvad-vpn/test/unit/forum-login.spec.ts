@@ -580,13 +580,4 @@ describe('the window while a sign-in code is on it', () => {
 
     expect(applied).toEqual([true, false]);
   });
-
-  it('carries the protection over to a window created while the code is up', () => {
-    protection.show();
-    protection.reapply();
-    protection.hide();
-    protection.reapply();
-
-    expect(applied).toEqual([true, true, false]);
-  });
 });

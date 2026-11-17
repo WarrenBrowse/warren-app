@@ -326,13 +326,6 @@ export class ForumCodeProtection {
     this.apply(false);
   }
 
-  /** A window created while the code is up starts unprotected. */
-  public reapply(): void {
-    if (this.timer !== undefined) {
-      this.apply(true);
-    }
-  }
-
   private clearTimer(): void {
     if (this.timer !== undefined) {
       clearTimeout(this.timer);

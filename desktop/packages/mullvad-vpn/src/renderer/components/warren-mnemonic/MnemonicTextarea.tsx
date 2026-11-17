@@ -5,6 +5,7 @@ import { messages } from '../../../shared/gettext';
 import { Text } from '../../lib/components';
 import { FlexColumn } from '../../lib/components/flex-column';
 import { colors, Radius, spacings } from '../../lib/foundations';
+import { useMnemonicOnScreen } from './use-mnemonic-on-screen';
 
 // 12 or 24 word BIP39 mnemonic input. Shared between the onboarding
 // wallet step (`OnboardingWalletView` - import mode) and the settings
@@ -67,6 +68,7 @@ export function MnemonicTextarea({
     [onValueChange],
   );
   const wordCount = countMnemonicWords(value);
+  useMnemonicOnScreen(wordCount > 0);
 
   return (
     <FlexColumn gap="tiny">

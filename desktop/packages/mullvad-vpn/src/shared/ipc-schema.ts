@@ -353,6 +353,9 @@ export const ipcSchema = {
     // permission handler, which only grants `clipboard-sanitized-write`
     // and so rejects a renderer-side `readText()`.
     armMnemonicClipboardClear: invoke<string, void>(),
+    // A screen that shows the recovery phrase mounted (true) or went away
+    // (false): main keeps the window out of screen captures meanwhile.
+    mnemonicOnScreen: send<boolean>(),
     upgrade: send<void>(),
     upgradeAbort: send<void>(),
     upgradeEvent: notifyRenderer<AppUpgradeEvent>(),
