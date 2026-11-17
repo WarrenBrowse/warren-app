@@ -985,14 +985,17 @@ jobs:
           ./gradlew app:assembleBetaRelease app:bundleBetaRelease --parallel \
             -Pwarren.app.config.override.versionCode="$WARREN_BETA_VERSION_CODE"
 
+      # Prod never takes the debug-key fallback: its installs would be bound to
+      # a key living on a runner (the Gradle build refuses it too,
+      # checkProdReleaseSigning).
+      - name: Refuse a prod release without the release keystore
+        if: env.WARREN_CHANNEL == 'prod' && env.ANDROID_KEYSTORE_B64 == ''
+        run: |
+          echo "::error::ANDROID_KEYSTORE_BASE64 secret not set; a prod release must be signed with the release keystore."
+          exit 1
+
       # No keystore: the release build type, signed with the runner's AGP debug
       # key. APK only, a debug-signed AAB has no store to go to.
-      - name: Build release APK signed with the runner debug key (prod)
-        if: env.WARREN_CHANNEL == 'prod' && env.ANDROID_KEYSTORE_B64 == ''
-        working-directory: android
-        run: |
-          echo "::warning::ANDROID_KEYSTORE_BASE64 secret not set; the release APK is signed with the runner's AGP debug key."
-          ./gradlew app:assembleProdRelease --parallel
 
       - name: Build release APK signed with the runner debug key (beta)
         if: env.WARREN_CHANNEL == 'beta' && env.ANDROID_KEYSTORE_B64 == ''

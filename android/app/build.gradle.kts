@@ -41,6 +41,35 @@ val rustJniLibsDir = layout.buildDirectory.dir("rustJniLibs/android").get()
 
 val appVersion = appVersionProvider.get()
 
+// Release signing: opt-in via Gradle properties OR env vars.
+// The Gradle-property path is preferred (`-Pwarren.keystore.path=...`)
+// because env-var reads happen at configure time and a long-lived
+// Gradle daemon's environment is FROZEN at daemon start; a CI job
+// that exports WARREN_KEYSTORE_* after the daemon is already warm
+// will silently ship an UNSIGNED build. Gradle properties bypass
+// the daemon-env trap because the property store is invalidated
+// per-invocation. The env fallback is retained for local dev use.
+//
+// CI guidance: prefer
+//   ./gradlew --no-daemon -Pwarren.keystore.path=$X ...
+// or run `./gradlew --stop` before the signing build.
+val warrenKeystorePath: String? =
+    (project.findProperty("warren.keystore.path") as String?)
+        ?: System.getenv("WARREN_KEYSTORE_PATH")
+val warrenKeystorePassword: String? =
+    (project.findProperty("warren.keystore.password") as String?)
+        ?: System.getenv("WARREN_KEYSTORE_PASSWORD")
+val warrenKeyAlias: String? =
+    (project.findProperty("warren.key.alias") as String?) ?: System.getenv("WARREN_KEY_ALIAS")
+val warrenKeyPassword: String? =
+    (project.findProperty("warren.key.password") as String?)
+        ?: System.getenv("WARREN_KEY_PASSWORD")
+val signingConfigured =
+    warrenKeystorePath != null &&
+        warrenKeystorePassword != null &&
+        warrenKeyAlias != null &&
+        warrenKeyPassword != null
+
 android {
     namespace = "com.warrenbrowse.vpn"
     compileSdk = libs.versions.compile.sdk.major.get().toInt()
@@ -90,34 +119,6 @@ android {
         generateLocaleConfig = false
     }
 
-    // Release signing: opt-in via Gradle properties OR env vars.
-    // The Gradle-property path is preferred (`-Pwarren.keystore.path=...`)
-    // because env-var reads happen at configure time and a long-lived
-    // Gradle daemon's environment is FROZEN at daemon start; a CI job
-    // that exports WARREN_KEYSTORE_* after the daemon is already warm
-    // will silently ship an UNSIGNED build. Gradle properties bypass
-    // the daemon-env trap because the property store is invalidated
-    // per-invocation. The env fallback is retained for local dev use.
-    //
-    // CI guidance: prefer
-    //   ./gradlew --no-daemon -Pwarren.keystore.path=$X ...
-    // or run `./gradlew --stop` before the signing build.
-    val warrenKeystorePath: String? =
-        (project.findProperty("warren.keystore.path") as String?)
-            ?: System.getenv("WARREN_KEYSTORE_PATH")
-    val warrenKeystorePassword: String? =
-        (project.findProperty("warren.keystore.password") as String?)
-            ?: System.getenv("WARREN_KEYSTORE_PASSWORD")
-    val warrenKeyAlias: String? =
-        (project.findProperty("warren.key.alias") as String?) ?: System.getenv("WARREN_KEY_ALIAS")
-    val warrenKeyPassword: String? =
-        (project.findProperty("warren.key.password") as String?)
-            ?: System.getenv("WARREN_KEY_PASSWORD")
-    val signingConfigured =
-        warrenKeystorePath != null &&
-            warrenKeystorePassword != null &&
-            warrenKeyAlias != null &&
-            warrenKeyPassword != null
 
     if (signingConfigured) {
         signingConfigs {
@@ -126,8 +127,9 @@ android {
                 storePassword = warrenKeystorePassword
                 keyAlias = warrenKeyAlias
                 keyPassword = warrenKeyPassword
-                // AGP defaults: v1 (jar) ON, v2 ON, v3 OFF, v4 OFF.
-                // Play Store accepts v2+, so the defaults are fine.
+                // v3 carries the signing lineage that a later key rotation
+                // (apksigner rotate) needs for installs to accept the new key.
+                enableV3Signing = true
             }
         }
     }
@@ -137,10 +139,10 @@ android {
             // Without an upload keystore the release build type is signed with the
             // AGP debug key; a null signing config would yield an unsigned APK that
             // installs nowhere. That key already signed every published beta, so
-            // the direct-APK beta keeps upgrading in place. The prod flavor takes
-            // the same fallback on purpose. Rationale, caveats and the fingerprint
-            // that guards the key: docs/BuildInstructions.md, "Release build
-            // without a keystore".
+            // the direct-APK beta keeps upgrading in place. The prod flavor never
+            // reaches the fallback: checkProdReleaseSigning stops it first.
+            // Rationale, caveats and the fingerprint that guards the key:
+            // docs/BuildInstructions.md, "Release build without a keystore".
             signingConfig =
                 if (signingConfigured) {
                     signingConfigs.getByName("warrenRelease")
@@ -354,6 +356,29 @@ val checkBaselineProfile by tasks.registering {
 tasks
     .matching { it.name.matches(Regex("merge(Prod|Beta|Staging)(Benchmark)?ReleaseArtProfile")) }
     .configureEach { dependsOn(checkBaselineProfile) }
+
+// The debug-key fallback of the release build type serves the direct-APK beta
+// only: its installs already carry that signer. A prod build signed with it
+// would bind every store install to a key that lives on a build machine, and
+// moving to a real key later would break their updates. So a prodRelease
+// build, APK or bundle, refuses to start without the release keystore. The
+// non-minified and benchmark variants the baseline profile generator builds
+// have their own pre-build tasks and stay free to sign with the debug key.
+val checkProdReleaseSigning by tasks.registering {
+    description = "Refuses a prod release build without the release keystore."
+    val configured = signingConfigured
+    doLast {
+        check(configured) {
+            "A prod release needs the release keystore: pass warren.keystore.path, " +
+                "warren.keystore.password, warren.key.alias and warren.key.password " +
+                "(docs/BuildInstructions.md, \"Release build without a keystore\")."
+        }
+    }
+}
+
+tasks.matching { it.name == "preProdReleaseBuild" }.configureEach {
+    dependsOn(checkProdReleaseSigning)
+}
 
 // Ensure that we have all the JNI libs before merging them.
 tasks

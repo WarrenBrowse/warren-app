@@ -33,6 +33,26 @@ class SigningFallbackTest {
     }
 
     @Test
+    fun the_prod_release_refuses_to_build_without_a_release_keystore() {
+        // The debug-key fallback exists for the direct-APK beta only: a prod build signed
+        // with it would bind every store install to a key that lives on a build machine.
+        val gradle = File(repoRoot, "android/app/build.gradle.kts").readText()
+        val guard = Regex("""val\s+checkProdReleaseSigning\s+by\s+tasks\.registering\s*\{""")
+        assertTrue(guard.containsMatchIn(gradle), "no prod release signing guard task")
+        assertTrue(
+            Regex("""matching\s*\{\s*it\.name\s*==\s*"preProdReleaseBuild"\s*}""")
+                .containsMatchIn(gradle) &&
+                gradle.contains("dependsOn(checkProdReleaseSigning)"),
+            "the guard must run before every prodRelease build, apk and bundle alike",
+        )
+        val workflow = File(repoRoot, ".github/workflows/release.yml").readText()
+        assertFalse(
+            workflow.contains("./gradlew app:assembleProdRelease --parallel\n"),
+            "the release workflow still builds prod with the debug-key fallback",
+        )
+    }
+
+    @Test
     fun r8_keeps_the_classes_the_runtime_reaches_by_name() {
         val rules =
             File(repoRoot, "android/app/proguard-rules.pro")

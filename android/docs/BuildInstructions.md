@@ -186,11 +186,13 @@ The signing inputs are the four Gradle properties `warren.keystore.path`,
 `warren.keystore.password`, `warren.key.alias` and `warren.key.password`, or
 their environment fallbacks `WARREN_KEYSTORE_PATH`, `WARREN_KEYSTORE_PASSWORD`,
 `WARREN_KEY_ALIAS` and `WARREN_KEY_PASSWORD`. When any of them is missing,
-`assembleProdRelease` and `assembleBetaRelease` still produce an installable
-APK: `app/build.gradle.kts` signs the release build type with the AGP debug
-keystore (`~/.android/debug.keystore`) instead of leaving the signing config
-null, which would yield an `app-<flavor>-release-unsigned.apk` that no device
-installs.
+`assembleBetaRelease` still produces an installable APK: `app/build.gradle.kts`
+signs the release build type with the AGP debug keystore
+(`~/.android/debug.keystore`) instead of leaving the signing config null, which
+would yield an `app-<flavor>-release-unsigned.apk` that no device installs.
+A prod release refuses to build instead (`checkProdReleaseSigning`, run before
+`preProdReleaseBuild`), and the release workflow fails a `v*` tag that has no
+keystore secret.
 
 This is what the release workflow ships for the beta while no upload keystore
 exists. The beta is distributed as a direct APK, and Android upgrades an app in
@@ -199,8 +201,11 @@ runner's debug keystore signed every beta APK published so far, so signing the
 optimised build (R8, release-profile Rust) with that key keeps every existing
 install upgrading. Until 1.1.28 the workflow fell back to the debug build type
 instead, an unoptimised datapath that held a Fairphone 3 at 59 % CPU. The prod
-flavor is wired the same way on purpose: a `v*` tag without a keystore also
-produces an installable release build.
+flavor never takes this path: a store install signed with a key that lives on a
+build machine could be updated by anyone holding a copy of that file, and the
+move to a real key would break its updates. The release keystore signs with
+scheme v3 so that a later key rotation (`apksigner rotate`) can carry the
+lineage to existing installs.
 
 The key is whatever `~/.android/debug.keystore` the build machine holds, and AGP
 generates a new one wherever it finds none. Two consequences:
