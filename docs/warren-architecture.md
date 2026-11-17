@@ -1,87 +1,98 @@
-# Warren client: how the fork works
+# Warren daemon architecture
 
-This document describes what Warren adds to the Mullvad VPN app it is forked from: the tunnel, the
-identity, and where each lives in the daemon. The security guarantees (firewall, kill switch,
-lockdown mode) are in [`security.md`](security.md); the build is in
-[`BuildInstructions.md`](../BuildInstructions.md).
+How the Warren parts of the daemon fit together. The per-module detail lives
+in the module headers of `mullvad-daemon/src/lib.rs` and in each module's own
+documentation, which are kept with the code; this page is the map.
+
+Related documents: [`app-routing.md`](app-routing.md) (which session each
+app's traffic leaves through), [`UPSTREAM-DETACH.md`](UPSTREAM-DETACH.md)
+(what is still inherited from Mullvad and how it is tracked),
+[`security.md`](security.md).
 
 ## Overview
 
-The Warren tunnel runs over **QUIC** and is the only tunnel the app has: the WireGuard data plane
-and its obfuscation modes are gone. Account, device and subscription operations go to the Warren
-API of the build's channel (`api.beta.warrenbrowse.com` for beta builds, `api.warrenbrowse.com`
-for production builds), each request signed with the wallet key below. Development builds may point
-at another API with `WARREN_API_URL`; release builds ignore it.
+The Warren tunnel (QUIC, the `warrenguard` engine driven by
+`talpid-warren-tunnel`) is the only tunnel backend. Account, device and
+subscription operations go to the Warren API of the product environment the
+binary was built for (`WARREN_PRODUCT_ENV`, resolved by
+`warren_product_config`), signed with the Ed25519 identity derived from the
+user's BIP39 recovery phrase. A release build always talks to its compiled
+API host; only a development build (`api-override` feature) honours
+`WARREN_API_URL` or the `warren_api_url` setting
+(`warren_remote_config::api_url`).
 
 ## Identity
 
-The user's identity is a non-custodial wallet: a BIP39 recovery phrase (12 or 24 words) from which
-one Ed25519 key is derived. The phrase is kept in the operating system's secret store (macOS
-Keychain, Windows DPAPI, a `0600` file under `<settings_dir>/secrets/` on Linux) and never leaves
-the device. There is no account number and no bearer token.
+- No identity exists until the user creates or imports one: the onboarding
+  actions (`CreateNewAccount`, `SetWarrenMnemonic`) are the only writers of a
+  recovery phrase. Loading at boot is read-only.
+- Storage (`warren_signer`, `os_secret_storage`): macOS System Keychain,
+  Windows DPAPI blob at `<settings_dir>/secrets/warren_mnemonic.dpapi`, Linux
+  plaintext file `<settings_dir>/secrets/warren_mnemonic.txt` (mode 0600,
+  root). A file left at the older `<settings_dir>/warren_mnemonic.txt` is
+  migrated on boot.
+- `warren_identity_manager` is the single surface that swaps the in-memory
+  identity (create, restore, logout), keeping the request signer and the SDK
+  seed in step without a daemon restart.
+- The key is derived with `warren_identity::derive_node_key` from the
+  `warren-sdk-rs` sibling repository. The same key authenticates the QUIC
+  handshake to an exit and signs API requests (`X-Warren-*` headers).
 
-That one key:
+## Exit list
 
-1. authenticates the QUIC TLS handshake to the exit (raw public keys), so the exit learns the
-   client's key from the handshake itself;
-2. signs every request to the Warren API, in the `X-Warren-PubKey`, `X-Warren-Signature`,
-   `X-Warren-Timestamp` and `X-Warren-Nonce` headers. The signed message format is the
-   `warren-contract` crate's, pinned by the golden vectors in `vectors/`.
-
-The GUI flows:
-
-- **Create a new account** generates a fresh phrase, shows it, and asks for three of its words
-  back before the account is used.
-- **Restore** imports an existing phrase.
-- **Log out** from the GUI erases the phrase from this device after a confirmation. A device
-  revoked from another device keeps its phrase unless the revocation carries the account's own
-  signature.
-
-## The exit list
-
-The exits are listed in a `SignedRelayList`, fetched from `GET {api}/v2/exits` and verified
-against the server key baked into the build before it is used or written to
-`<cache_dir>/warren-relays.json`. A list that fails verification never replaces the last good one.
-A copy baked in at build time (`<resource_dir>/warren-relays.json`) covers the first start.
-Hand-written JSON is not accepted: without a valid signature the file is ignored.
-
-## Where the code lives
-
-The daemon (`mullvad-daemon`, built as `warren-daemon`) keeps the upstream state machine and adds
-`warren_*` modules. The main ones:
-
-| module | role |
-|---|---|
-| [`warren_signer`](../mullvad-daemon/src/warren_signer.rs) | loads the recovery phrase and derives the signing key |
-| [`warren_identity_manager`](../mullvad-daemon/src/warren_identity_manager.rs) | the one owner of the live identity: the signing key and the seed the SDK client uses, swapped together |
-| [`warren_remote_config`](../mullvad-daemon/src/warren_remote_config.rs) | resolves the API URL (development overrides, then the channel default) |
-| [`warren_relay_list_updater`](../mullvad-daemon/src/warren_relay_list_updater.rs) | fetches and verifies the signed exit list |
-| [`warren_relay_selector`](../mullvad-daemon/src/warren_relay_selector.rs) | picks an exit from the verified list |
-| [`warren_tunnel_params`](../mullvad-daemon/src/warren_tunnel_params.rs) | assembles the tunnel parameters from the selected exit and the key |
-| [`warren_session_gate`](../mullvad-daemon/src/warren_session_gate.rs) | refuses a connect while no account is logged in, the device is revoked or the account's access is revoked, and orders a logout after the tunnel is down |
-| [`device/account_backend`](../mullvad-daemon/src/device/account_backend.rs) | account and device calls to the Warren API |
-
-The tunnel itself is [`talpid-warren-tunnel`](../talpid-warren-tunnel/), which plugs the engine of
-the [`warrenguard`](https://github.com/WarrenBrowse/warrenguard) repository into the talpid state
-machine.
+- `warren_relay_list_updater` fetches the signed exit list from
+  `GET {api}/v2/exits` (conditional GET, signature verified against the
+  pinned server key before caching, atomic write, hot swap into the live
+  selector).
+- The cache is `<cache_dir>/warren-relays.json`; a copy baked into the build
+  at CI time (`<resource_dir>/warren-relays.json`) seeds a fresh install. The
+  file is a signed envelope: a hand-written JSON list is rejected.
+- `warren_relay_selector` wraps `warren_discovery_core::WarrenRelaySelector`
+  (from the `warren-contract` sibling) and picks the exit for a query built by
+  `warren_query_from_settings` from the location the user chose.
+- `warren_relay_list_view` presents the list in the inherited `RelayList`
+  shape the desktop location picker reads.
 
 ## Connecting
 
 ```
-warren connect
-  -> gRPC SetTargetState(Secured)
-  -> state machine: ConnectingState
-  -> tunnel parameters from the selected exit and the signing key
-  -> talpid-warren-tunnel starts the warrenguard engine
-  -> QUIC handshake with the exit (TLS, Ed25519 raw public keys)
-  -> tunnel up, routes installed, firewall switched to the connected policy
+SetTargetState(Secured) over gRPC
+  -> Daemon::set_target_state
+  -> talpid-core tunnel state machine (ConnectingState)
+  -> tunnel::ParametersGenerator::generate_warren_tunnel_params
+       (selector, shared signing key, session token, multi-hop circuit)
+  -> warren_tunnel_params::assemble_for_attempt
+  -> talpid-warren-tunnel: QUIC handshake with the exit, tun device, routes
 ```
 
-When the exit's descriptor publishes an ML-KEM key, the tunnel is sealed with the hybrid X-Wing
-scheme, and the GUI shows the "Quantum resistance" indicator while it is.
+Multi-hop circuits come from the signed directory fetched by
+`warren_multi_hop_directory`. Anonymous session tokens are minted by
+`warren_token_provider`. The live tunnel status the clients show is cached in
+`warren_status` and served over the `GetWarrenStatus` RPC and its update
+stream.
 
-## Testing locally
+## Account
+
+`device::AccountManager` drives the account operations through
+`device::account_backend::WarrenRemoteAccountBackend` (signed requests to the
+Warren API: subscription expiry, voucher redemption and collection, account
+deletion). The wallet's port-forward standing is polled by
+`warren_account_standing`.
+
+## Background refreshers
+
+Signed artifacts refreshed on a schedule, all sharing the retry, ETag and
+atomic-write policy of `warren_artifact_refresh`: launch announcements
+(`warren_announcements_updater`), operator notices (`warren_notices_updater`),
+the forum digest (`warren_forum_digest_updater`) and the network descriptor
+(`warren_network_info`).
+
+## Running the tests
 
 ```bash
-cargo test -p mullvad-daemon --lib warren_
+cargo nextest run -p mullvad-daemon
+cargo nextest run -p talpid-warren-tunnel
 ```
+
+The forum login vectors need the `vectors` submodule:
+`git submodule update --init vectors`.
