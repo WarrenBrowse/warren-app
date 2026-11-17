@@ -92,17 +92,13 @@ jobs:
         id: resolve
         env:
           GH_TOKEN: ${{ github.token }}
-          HAS_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY != '' }}
           INPUT_TAG: ${{ inputs.tag }}
           REFRESH: ${{ inputs.refresh }}
         run: |
           set -euo pipefail
           eval "$(bash ci/update-channel-env.sh "$WARREN_CHANNEL")"
           enabled=true
-          if [ "$HAS_SIGNING_KEY" != true ]; then
-            echo "::warning::WARREN_UPDATE_SIGNING_KEY not set; no update metadata is published."
-            enabled=false
-          elif [ "$REFRESH" = true ] && ! curl -fsS -o /dev/null --max-time 30 "$WARREN_METADATA_BASE/macos.json"; then
+          if [ "$REFRESH" = true ] && ! curl -fsS -o /dev/null --max-time 30 "$WARREN_METADATA_BASE/macos.json"; then
             echo "::notice::$WARREN_METADATA_BASE/macos.json is not served; $WARREN_CHANNEL is retired or unpublished, skipping"
             enabled=false
           fi
@@ -184,6 +180,8 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  # Whether the key exists is only known here: once it lives in the
+  # environment, the jobs outside it cannot see it.
   sign:
     name: Sign ${{ inputs.channel }} manifests
     needs: generate
@@ -191,6 +189,8 @@ jobs:
     runs-on: ubuntu-24.04
     environment: update-signing
     timeout-minutes: 15
+    outputs:
+      signed: ${{ steps.sign.outputs.signed }}
     env:
       WARREN_CHANNEL: ${{ inputs.channel }}
     steps:
@@ -208,11 +208,22 @@ jobs:
           path: metadata
 
       - name: Sign the manifests and the checksum list
+        id: sign
         env:
           WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
           WARREN_SUMS_NAMESPACE: warren-desktop-sha256sums/1
         run: |
           set -euo pipefail
+          if [ -z "$WARREN_UPDATE_SIGNING_KEY" ]; then
+            # Production never ships without the clients hearing of it.
+            if [ "$WARREN_CHANNEL" = prod ]; then
+              echo "::error::WARREN_UPDATE_SIGNING_KEY is not available to the update-signing environment"
+              exit 1
+            fi
+            echo "::warning::WARREN_UPDATE_SIGNING_KEY not set; no update metadata is published."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           signer=metadata/bin/mullvad-version-metadata
           chmod +x "$signer"
           mkdir -p signed
@@ -236,8 +247,10 @@ jobs:
           cp metadata/SHA256SUMS signed/SHA256SUMS
           bash ci/sign-headless-sums.sh signed/SHA256SUMS
           ls -l signed
+          echo "signed=true" >> "$GITHUB_OUTPUT"
 
       - name: Hand the signatures to the publishing job
+        if: steps.sign.outputs.signed == 'true'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: update-metadata-${{ inputs.channel }}-signed
@@ -252,7 +265,7 @@ jobs:
   attach-to-release:
     name: Attach the torrents and the checksum signature to the release
     needs: [generate, sign]
-    if: ${{ !inputs.refresh }}
+    if: needs.sign.outputs.signed == 'true' && !inputs.refresh
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -282,6 +295,7 @@ jobs:
   publish:
     name: Publish ${{ inputs.channel }} to the update host
     needs: [generate, sign]
+    if: needs.sign.outputs.signed == 'true'
     runs-on: [self-hosted, macOS, ARM64]
     # ~800 MB at the 6 MB/s measured from this pool is a few minutes; the
     # budget leaves room for a degraded link, and the file-granular resume of
