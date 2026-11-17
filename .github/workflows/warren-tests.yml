@@ -178,6 +178,30 @@ jobs:
             -p mullvad-update -p mullvad-release \
             --features mullvad-update/sign,mullvad-update/client
 
+      # The firewall tests that need the kernel's nftables, as root: the
+      # kill switch kept across a daemon restart and the early-boot block (the
+      # 2026-09-28 incident), the per-app lock, and the DNS rules of the
+      # connected policy. A fresh VM per run, so the policies they apply for a
+      # moment touch nothing else.
+      - name: Linux firewall against the kernel (root)
+        # Same packages and features as the test step above, so nothing is
+        # rebuilt; the target runner only changes who executes the binaries.
+        timeout-minutes: 20
+        env:
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: sudo -E
+        run: |
+          cargo nextest run --locked --profile warren-ci --run-ignored only \
+            --test-threads 1 \
+            -p mullvad-daemon -p mullvad-api -p mullvad-types \
+            -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
+            -p mullvad-setup \
+            -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-dbus -p warren-jni \
+            -p talpid-app-routing -p warren-app-routes -p talpid-types -p talpid-cgroup -p mullvad-exclude \
+            -p warren-forum -p warren-product-env -p warren-ios -p warren-standing \
+            -p mullvad-update -p mullvad-release \
+            --features mullvad-update/sign,mullvad-update/client \
+            -E 'test(/^firewall::linux::/) | test(/^early_boot_firewall::/)'
+
       - name: cargo clippy Warren scope
         # --no-deps: lint only these Warren crates, not their entire upstream
         # Mullvad dependency tree. Without it, clippy -D warnings also fails on
@@ -194,6 +218,30 @@ jobs:
             cargo clippy --no-deps --locked -p "$crate" -- -D warnings
           done
           cargo clippy --no-deps --locked -p mullvad-update --features sign,client --bins -- -D warnings
+
+  pf-macos:
+    name: pf firewall on macOS (root)
+    # pf announces nothing when another process reloads the main ruleset or
+    # disables pf, which leaves the kill switch defined and enforcing nothing.
+    # These tests do both to a real pf and require the policy back, so they need
+    # root: a GitHub-hosted runner, a fresh VM per run.
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: pf against the kernel
+        timeout-minutes: 30
+        run: |
+          set -euo pipefail
+          core="$(bash ci/cargo-test-binary.sh talpid-core)"
+          "$core" firewall::macos
+          sudo "$core" reassert_kernel_tests --ignored --test-threads=1
 
   talpid-dns-macos:
     name: talpid-dns on macOS (cargo test)
