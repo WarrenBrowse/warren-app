@@ -25,7 +25,7 @@ if [[ $HOST == "aarch64"* ]]; then
 fi
 
 set -x
-exec "$CONTAINER_RUNNER" run --rm -it "${RUN_COMMANDS[@]}" \
+exec "$CONTAINER_RUNNER" run --rm "${RUN_COMMANDS[@]}" \
     -v "$PROTO_DIR:/proto:Z" \
     -v "$OUT_DIR:/proto-bindings:Z" \
     "$IMAGE_NAME"

@@ -4883,6 +4883,34 @@ export namespace LogMessage {
     }
 }
 
+export class DaemonLogChunk extends jspb.Message { 
+    getName(): string;
+    setName(value: string): DaemonLogChunk;
+    getSize(): number;
+    setSize(value: number): DaemonLogChunk;
+    getContent(): Uint8Array | string;
+    getContent_asU8(): Uint8Array;
+    getContent_asB64(): string;
+    setContent(value: Uint8Array | string): DaemonLogChunk;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): DaemonLogChunk.AsObject;
+    static toObject(includeInstance: boolean, msg: DaemonLogChunk): DaemonLogChunk.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: DaemonLogChunk, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): DaemonLogChunk;
+    static deserializeBinaryFromReader(message: DaemonLogChunk, reader: jspb.BinaryReader): DaemonLogChunk;
+}
+
+export namespace DaemonLogChunk {
+    export type AsObject = {
+        name: string,
+        size: number,
+        content: Uint8Array | string,
+    }
+}
+
 export class SplitFilterMigration extends jspb.Message { 
     getMultihopMigration(): SplitFilterMigration.MultihopMigrationState;
     setMultihopMigration(value: SplitFilterMigration.MultihopMigrationState): SplitFilterMigration;

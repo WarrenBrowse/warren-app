@@ -228,6 +228,17 @@ function deserialize_mullvad_daemon_management_interface_DaemonEvent(buffer_arg)
   return management_interface_pb.DaemonEvent.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_DaemonLogChunk(arg) {
+  if (!(arg instanceof management_interface_pb.DaemonLogChunk)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.DaemonLogChunk');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_DaemonLogChunk(buffer_arg) {
+  return management_interface_pb.DaemonLogChunk.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_DaitaSettings(arg) {
   if (!(arg instanceof management_interface_pb.DaitaSettings)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.DaitaSettings');
@@ -2385,6 +2396,20 @@ appUpgradeInstall: {
     requestDeserialize: deserialize_google_protobuf_Empty,
     responseSerialize: serialize_mullvad_daemon_management_interface_LogMessage,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_LogMessage,
+  },
+  // The end of each log file in the daemon's log directory, which only root
+// can read: the problem report collector, run as the user, asks for them
+// here. For the wallet owner and administrators only.
+getDaemonLogs: {
+    path: '/mullvad_daemon.management_interface.ManagementService/GetDaemonLogs',
+    requestStream: false,
+    responseStream: true,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.DaemonLogChunk,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_DaemonLogChunk,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_DaemonLogChunk,
   },
   // The great multihop migration of 2026
 //

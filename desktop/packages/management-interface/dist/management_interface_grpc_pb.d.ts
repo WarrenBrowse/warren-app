@@ -144,6 +144,7 @@ interface IManagementServiceService extends grpc.ServiceDefinition<grpc.UntypedS
     appUpgradeInstall: IManagementServiceService_IAppUpgradeInstall;
     setLogFilter: IManagementServiceService_ISetLogFilter;
     logListen: IManagementServiceService_ILogListen;
+    getDaemonLogs: IManagementServiceService_IGetDaemonLogs;
     getMigrationEvent: IManagementServiceService_IGetMigrationEvent;
     clearMigrationMessage: IManagementServiceService_IClearMigrationMessage;
 }
@@ -1336,6 +1337,15 @@ interface IManagementServiceService_ILogListen extends grpc.MethodDefinition<goo
     responseSerialize: grpc.serialize<management_interface_pb.LogMessage>;
     responseDeserialize: grpc.deserialize<management_interface_pb.LogMessage>;
 }
+interface IManagementServiceService_IGetDaemonLogs extends grpc.MethodDefinition<google_protobuf_empty_pb.Empty, management_interface_pb.DaemonLogChunk> {
+    path: "/mullvad_daemon.management_interface.ManagementService/GetDaemonLogs";
+    requestStream: false;
+    responseStream: true;
+    requestSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    requestDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+    responseSerialize: grpc.serialize<management_interface_pb.DaemonLogChunk>;
+    responseDeserialize: grpc.deserialize<management_interface_pb.DaemonLogChunk>;
+}
 interface IManagementServiceService_IGetMigrationEvent extends grpc.MethodDefinition<google_protobuf_empty_pb.Empty, management_interface_pb.SplitFilterMigration> {
     path: "/mullvad_daemon.management_interface.ManagementService/GetMigrationEvent";
     requestStream: false;
@@ -1490,6 +1500,7 @@ export interface IManagementServiceServer extends grpc.UntypedServiceImplementat
     appUpgradeInstall: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_wrappers_pb.StringValue>;
     setLogFilter: grpc.handleUnaryCall<management_interface_pb.LogFilter, google_protobuf_empty_pb.Empty>;
     logListen: grpc.handleServerStreamingCall<google_protobuf_empty_pb.Empty, management_interface_pb.LogMessage>;
+    getDaemonLogs: grpc.handleServerStreamingCall<google_protobuf_empty_pb.Empty, management_interface_pb.DaemonLogChunk>;
     getMigrationEvent: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.SplitFilterMigration>;
     clearMigrationMessage: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
 }
@@ -1885,6 +1896,8 @@ export interface IManagementServiceClient {
     setLogFilter(request: management_interface_pb.LogFilter, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     logListen(request: google_protobuf_empty_pb.Empty, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.LogMessage>;
     logListen(request: google_protobuf_empty_pb.Empty, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.LogMessage>;
+    getDaemonLogs(request: google_protobuf_empty_pb.Empty, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.DaemonLogChunk>;
+    getDaemonLogs(request: google_protobuf_empty_pb.Empty, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.DaemonLogChunk>;
     getMigrationEvent(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.SplitFilterMigration) => void): grpc.ClientUnaryCall;
     getMigrationEvent(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.SplitFilterMigration) => void): grpc.ClientUnaryCall;
     getMigrationEvent(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.SplitFilterMigration) => void): grpc.ClientUnaryCall;
@@ -2285,6 +2298,8 @@ export class ManagementServiceClient extends grpc.Client implements IManagementS
     public setLogFilter(request: management_interface_pb.LogFilter, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public logListen(request: google_protobuf_empty_pb.Empty, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.LogMessage>;
     public logListen(request: google_protobuf_empty_pb.Empty, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.LogMessage>;
+    public getDaemonLogs(request: google_protobuf_empty_pb.Empty, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.DaemonLogChunk>;
+    public getDaemonLogs(request: google_protobuf_empty_pb.Empty, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.DaemonLogChunk>;
     public getMigrationEvent(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.SplitFilterMigration) => void): grpc.ClientUnaryCall;
     public getMigrationEvent(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.SplitFilterMigration) => void): grpc.ClientUnaryCall;
     public getMigrationEvent(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.SplitFilterMigration) => void): grpc.ClientUnaryCall;
