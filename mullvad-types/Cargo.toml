@@ -7,6 +7,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
+warren-product-env = { path = "../warren-product-env" }
 chrono = { workspace = true, features = ["clock", "serde"] }
 clap = { workspace = true, optional = true }
 either = "1.11"

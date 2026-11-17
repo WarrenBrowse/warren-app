@@ -52,10 +52,10 @@ impl fmt::Debug for SplitApps {
 }
 
 /// Firewall mark carried by the traffic an include-only tunnel captures on
-/// Linux. Distinct from the exclusion mark (`0x6d6f6c65`) and from the
-/// tunnel carrier's own mark.
+/// Linux, this environment's own. Distinct from the exclusion mark and from
+/// the tunnel carrier's own mark.
 #[cfg(target_os = "linux")]
-pub const INCLUDE_FWMARK: u32 = 0x696e_636c;
+pub const INCLUDE_FWMARK: u32 = warren_product_env::CURRENT.linux_include_fwmark();
 
 #[cfg(test)]
 mod tests {

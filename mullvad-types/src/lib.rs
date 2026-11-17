@@ -22,11 +22,11 @@ pub mod wireguard;
 mod custom_tunnel;
 pub use crate::custom_tunnel::*;
 
-// b"mole" is [ 0x6d, 0x6f 0x6c, 0x65 ]
+// This environment's own, so co-installed products never share a routing table or a mark.
 #[cfg(target_os = "linux")]
-pub const TUNNEL_TABLE_ID: u32 = 0x6d6f6c65;
+pub const TUNNEL_TABLE_ID: u32 = warren_product_env::CURRENT.linux_tunnel_fwmark();
 #[cfg(target_os = "linux")]
-pub const TUNNEL_FWMARK: u32 = 0x6d6f6c65;
+pub const TUNNEL_FWMARK: u32 = warren_product_env::CURRENT.linux_tunnel_fwmark();
 
 pub use constraints::Intersection;
 pub use intersection_derive::Intersection;

@@ -607,7 +607,7 @@ platform, see below), so an included app's names never go to the ISP.
 |---|---|
 | macOS | the existing split-tunnel classifier (eslogger process tracking, pf route-to into the ST utun) with the decision inverted: included processes to the VPN, everything else to the default interface. A packet is attributed to the pktap effective pid when there is one, so WebKit's network process working for Safari counts as Safari. A process the monitor does not know yet is dropped, and an included packet without the tunnel address is dropped. System DNS to the tunnel resolver never reaches the classifier (a pf rule passes it on the tunnel first). The error and blocked states block everything, the rest of the system included. Needs Full Disk Access and a signed build, like exclude. |
 | Windows | the unmodified, Microsoft-signed Mullvad driver with the address pair swapped (tunnel address registered as "internet", physical as "tunnel") and the included apps registered as split; the tunnel gets its own `0.0.0.0/0` with a higher metric than the physical default instead of the two `/1` halves, and host routes to its resolvers; winfw's connected policy permits IPv4 outside the tunnel for non-included apps, and a hard block holds every app the driver splits to the tunnel interface and loopback in every state. IPv6 outside the tunnel stays blocked for every app. Included apps cannot reach the LAN. Details below. |
-| Linux | an `included` cgroup (`warren-inclusions`, cgroup2) marked in nft; the tunnel table lookup (pref 51) becomes conditional on that mark (`TunLookupScope::Marked`) and the exclusion bypass (pref 49) is not installed; marked traffic that would leave through anything but the tunnel is dropped; launched through `warren-include`, the mirror of `warren-exclude`, same owner-only rule. Details below. |
+| Linux | an `included` cgroup (`warren-inclusions` in prod, one per environment, cgroup2) marked in nft; the tunnel table lookup (pref 51) becomes conditional on that mark (`TunLookupScope::Marked`) and the exclusion bypass (pref 49) is not installed; marked traffic that would leave through anything but the tunnel is dropped; launched through `warren-include`, the mirror of `warren-exclude`, same owner-only rule. Details below. |
 | Android | `VpnService.Builder.addAllowedApplication`, never mixed with `addDisallowedApplication` in one builder (Android refuses it), with a guard for an empty or fully uninstalled list (Android would otherwise capture everything), and the same allow list on every blackhole plan. Details in section 3.4. |
 | iOS | not available. |
 
@@ -1354,7 +1354,9 @@ the one its main thread kept until the process exited;
 Linux keeps no list here either (section 7): an app is locked when Warren opens
 it, through "Open never without the VPN" on its route screen, which runs
 `warren-include --locked`. The launcher joins
-`/sys/fs/cgroup/warren-inclusions/warren-locked`, which the daemon creates
+`/sys/fs/cgroup/<inclusion cgroup>/warren-locked` (the inclusion cgroup is
+`warren-inclusions` in prod, `warren-beta-inclusions` in beta,
+`ProductEnv::linux_inclusion_cgroup`), which the daemon creates
 (`NftEnforcer` in `talpid-core/src/app_locks.rs`) and the launcher never does,
 so a program asked to be locked never runs unlocked. Under the included cgroup,
 include-only tunnels it too; its child processes inherit the cgroup.
