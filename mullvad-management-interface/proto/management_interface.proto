@@ -480,6 +480,9 @@ message ErrorState {
     // admits although the subscription is active; the app offers the
     // account's device list.
     NO_SESSION_TOKEN = 6;
+    // Warren: two distinct exits refused this device's time on the dated
+    // session setup; the app asks for automatic date and time.
+    CLOCK_SKEW = 7;
   }
 
   enum GenerationError {

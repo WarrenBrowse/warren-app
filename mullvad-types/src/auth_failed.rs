@@ -25,6 +25,11 @@ pub enum AuthFailed {
     /// client of it, hold this epoch's tokens, so the app offers the
     /// account's device list (warren-core doc 115).
     NoSessionToken,
+    /// Warren: two distinct exits refused this device's time on the dated
+    /// session setup, carried as the `[CLOCK_SKEW]` token. One refusal alone
+    /// is redialled, so this names the device clock only once a second exit
+    /// agrees; the app asks the user to set the date and time to automatic.
+    ClockSkew,
     Unknown,
 }
 
@@ -38,6 +43,7 @@ impl<'a> From<&'a str> for AuthFailed {
             Some("BANNED") => Banned,
             Some("BANNED_PORT_FORWARDING") => BannedPortForwarding,
             Some("NO_SESSION_TOKEN") => NoSessionToken,
+            Some("CLOCK_SKEW") => ClockSkew,
             Some(fail_id) => {
                 log::warn!(
                     "Received AUTH_FAILED message with unknown failure ID: {}",
@@ -63,6 +69,7 @@ impl AuthFailed {
             Banned => "[BANNED]",
             BannedPortForwarding => "[BANNED_PORT_FORWARDING]",
             NoSessionToken => "[NO_SESSION_TOKEN]",
+            ClockSkew => "[CLOCK_SKEW]",
             Unknown => "[Unknown]",
         }
     }
@@ -145,6 +152,19 @@ mod tests {
             "a tokenless session must parse as NoSessionToken"
         );
         assert_eq!(AuthFailed::NoSessionToken.as_str(), "[NO_SESSION_TOKEN]");
+    }
+
+    #[test]
+    fn two_exits_refusing_the_device_clock_reads_as_clock_skew() {
+        // The message `talpid-warren-tunnel`'s `refusal_error` carries once
+        // a second exit refused this device's time.
+        let reason = "[CLOCK_SKEW] two exits refused this device's time (clock skew); set the \
+                      date and time to automatic";
+        assert!(
+            matches!(AuthFailed::from(reason), AuthFailed::ClockSkew),
+            "a refused clock must parse as ClockSkew"
+        );
+        assert_eq!(AuthFailed::ClockSkew.as_str(), "[CLOCK_SKEW]");
     }
 
     #[test]

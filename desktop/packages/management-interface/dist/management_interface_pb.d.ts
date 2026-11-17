@@ -566,6 +566,7 @@ export namespace ErrorState {
     BANNED = 4,
     BANNED_PORT_FORWARDING = 5,
     NO_SESSION_TOKEN = 6,
+    CLOCK_SKEW = 7,
     }
 
     export enum GenerationError {

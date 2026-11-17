@@ -35,3 +35,24 @@ describe('a block for a session with no token', () => {
     });
   });
 });
+
+// The daemon blocks with this cause once two exits refused this device's
+// time: the banner asks for automatic date and time.
+describe('a block for a refused device clock', () => {
+  it('reaches the renderer as its own cause', () => {
+    const state = convertFromTunnelState(
+      blockedFor(grpcTypes.ErrorState.AuthFailedError.CLOCK_SKEW),
+    );
+
+    expect(AuthFailedError.clockSkew).to.be.a('number');
+    expect(AuthFailedError.clockSkew).to.not.equal(AuthFailedError.unknown);
+    expect(state).to.deep.equal({
+      state: 'error',
+      details: {
+        blockingError: undefined,
+        cause: ErrorStateCause.authFailed,
+        authFailedError: AuthFailedError.clockSkew,
+      },
+    });
+  });
+});

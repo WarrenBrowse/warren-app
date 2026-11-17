@@ -355,6 +355,8 @@ function convertFromAuthFailedError(error: grpcTypes.ErrorState.AuthFailedError)
       return AuthFailedError.bannedPortForwarding;
     case grpcTypes.ErrorState.AuthFailedError.NO_SESSION_TOKEN:
       return AuthFailedError.noSessionToken;
+    case grpcTypes.ErrorState.AuthFailedError.CLOCK_SKEW:
+      return AuthFailedError.clockSkew;
   }
 }
 

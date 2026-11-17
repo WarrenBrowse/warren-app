@@ -386,6 +386,7 @@ const fn get_auth_failed_message(auth_failed: AuthFailed) -> &'static str {
     const BANNED_MSG: &str = "Your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake.";
     const BANNED_PF_MSG: &str = "Your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at https://warren.ro/signalements";
     const NO_SESSION_TOKEN_MSG: &str = "No session token is left for this device although the subscription is active: other devices of this account, or an older Warren version on one of them, hold the current ones. Disconnect a device from the device list in the app, or update the older one.";
+    const CLOCK_SKEW_MSG: &str = "Two servers refused this device's clock. Set the date and time to automatic in the system settings, then connect again.";
     const UNKNOWN_MSG: &str = "Unknown error.";
 
     match auth_failed {
@@ -395,6 +396,7 @@ const fn get_auth_failed_message(auth_failed: AuthFailed) -> &'static str {
         AuthFailed::Banned => BANNED_MSG,
         AuthFailed::BannedPortForwarding => BANNED_PF_MSG,
         AuthFailed::NoSessionToken => NO_SESSION_TOKEN_MSG,
+        AuthFailed::ClockSkew => CLOCK_SKEW_MSG,
         AuthFailed::Unknown => UNKNOWN_MSG,
     }
 }
@@ -463,6 +465,17 @@ mod tests {
             "{line}"
         );
         assert!(line.contains("device list"), "{line}");
+    }
+
+    #[test]
+    fn a_refused_device_clock_asks_for_automatic_date_and_time() {
+        let line = auth_failed_line(AuthFailed::ClockSkew);
+
+        assert!(
+            line.starts_with("Blocked: Authentication with remote server failed: "),
+            "{line}"
+        );
+        assert!(line.contains("automatic"), "{line}");
     }
 
     #[test]

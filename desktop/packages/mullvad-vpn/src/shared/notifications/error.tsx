@@ -50,6 +50,15 @@ function isCausedByAnotherDevice(details: ErrorStateDetails): boolean {
   );
 }
 
+/** Whether two exits refused this device's time: the banner then names the clock. */
+function isClockSkew(details: ErrorStateDetails): boolean {
+  return (
+    details.blockingError === undefined &&
+    details.cause === ErrorStateCause.authFailed &&
+    details.authFailedError === AuthFailedError.clockSkew
+  );
+}
+
 /** The banner text, followed by the link to the device list when another device may block this one. */
 function withDevicesLink(
   details: ErrorStateDetails,
@@ -172,7 +181,9 @@ export class ErrorNotificationProvider
           ? messages.pgettext('in-app-notifications', 'NETWORK TRAFFIC MIGHT BE LEAKING')
           : isRevocation(this.context.tunnelState.details)
             ? messages.pgettext('in-app-notifications', 'ACCESS REVOKED')
-            : messages.pgettext('in-app-notifications', 'BLOCKING INTERNET'),
+            : isClockSkew(this.context.tunnelState.details)
+              ? messages.pgettext('in-app-notifications', 'DEVICE CLOCK IS OFF')
+              : messages.pgettext('in-app-notifications', 'BLOCKING INTERNET'),
         subtitle: withDevicesLink(this.context.tunnelState.details, subtitle),
         action: this.getActions(this.context.tunnelState.details) ?? undefined,
       };
@@ -280,6 +291,13 @@ export class ErrorNotificationProvider
               return messages.pgettext(
                 'auth-failure',
                 'This device has no session credentials right now. Another device of your account may be holding them.',
+              );
+
+            case AuthFailedError.clockSkew:
+              // Same copy as the token issuer's clock banner: one fix, one sentence.
+              return messages.pgettext(
+                'in-app-notifications',
+                'This device’s clock is off: set it right to connect.',
               );
 
             case AuthFailedError.unknown:

@@ -117,6 +117,9 @@ export enum AuthFailedError {
   // although the subscription is active; other devices of the account hold
   // them, so the app offers the account's device list.
   noSessionToken,
+  // Warren: two distinct exits refused this device's time on the dated
+  // session setup, so the app asks for automatic date and time.
+  clockSkew,
 }
 
 export enum TunnelParameterError {
