@@ -44,11 +44,18 @@ UI) is Warren-owned and no longer chases upstream.
 
 ## How to operate this
 
-- Review upstream periodically with the `upstream-sync` skill
+- Review upstream with the `upstream-sync` skill
   (`.claude/skills/upstream-sync/`). It runs `scripts/dev/upstream-triage.sh`
   from the commit in `.upstream-reviewed`, judges each watch-list commit and
   each upstream security entry, picks what applies, and records every verdict
   in [`UPSTREAM-SYNC-LOG.md`](UPSTREAM-SYNC-LOG.md).
+- Cadence: a whole review at least every 30 days, and a review within the week
+  of any new `### Security` entry in upstream's changelogs. An applicable
+  upstream security fix is ported within seven days of that review, or recorded
+  as an open item with what blocks it. Nobody has to remember this: the
+  scheduled workflow `upstream-review.yml` runs the triage every Monday and
+  opens (or comments on) the issue "Upstream review due" when
+  `scripts/dev/upstream-review-due.sh` finds either condition.
 - Do NOT attempt whole-tree rebases or merges.
 - This unblocks the dead-weight purge that was previously kept "for rebase
   hygiene" (legacy RelaySelector, settings migrations, access-method/shadowsocks

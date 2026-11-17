@@ -1,0 +1,96 @@
+---
+# Keeps the upstream review (docs/UPSTREAM-DETACH.md) from going stale: every
+# week it runs the mechanical triage against mullvad/mullvadvpn-app and opens,
+# or comments on, an issue when upstream's changelogs gained a Security entry
+# since the last review or when that review is older than the cadence allows.
+# The review itself stays a human or agent job: the upstream-sync skill.
+name: Upstream review watch
+on:
+  schedule:
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/upstream-review.yml
+      - scripts/dev/upstream-review-due.sh
+      - scripts/dev/test-upstream-review-due.sh
+  pull_request:
+    paths:
+      - .github/workflows/upstream-review.yml
+      - scripts/dev/upstream-review-due.sh
+      - scripts/dev/test-upstream-review-due.sh
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test the review trigger
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Test upstream-review-due.sh
+        run: bash scripts/dev/test-upstream-review-due.sh
+
+  watch:
+    name: Watch upstream
+    needs: test
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          # The triage reads this repo's history for the picks it already has.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Triage upstream
+        run: scripts/dev/upstream-triage.sh > "$RUNNER_TEMP/triage.txt"
+
+      - name: Decide whether a review is due
+        run: |
+          last_review="$(git log -1 --format=%ct -- .upstream-reviewed)"
+          scripts/dev/upstream-review-due.sh "$RUNNER_TEMP/triage.txt" "$last_review" \
+            > "$RUNNER_TEMP/due.txt"
+          cat "$RUNNER_TEMP/due.txt"
+
+      - name: Open or update the review issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [[ ! -s "$RUNNER_TEMP/due.txt" ]]; then
+            echo "No upstream review due."
+            exit 0
+          fi
+          title="Upstream review due"
+          {
+            cat "$RUNNER_TEMP/due.txt"
+            echo
+            echo "Run the review with the upstream-sync skill" \
+              "(.claude/skills/upstream-sync/SKILL.md) and record it in docs/UPSTREAM-SYNC-LOG.md."
+            echo "Triage of this run: $RUN_URL"
+            echo
+            echo '<details><summary>Triage report</summary>'
+            echo
+            echo '```'
+            head -c 50000 "$RUNNER_TEMP/triage.txt"
+            echo '```'
+            echo '</details>'
+          } > "$RUNNER_TEMP/body.md"
+          existing="$(gh issue list --state open --search "\"$title\" in:title" \
+            --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -n 1)"
+          if [[ -n "$existing" ]]; then
+            gh issue comment "$existing" --body-file "$RUNNER_TEMP/body.md"
+          else
+            gh issue create --title "$title" --body-file "$RUNNER_TEMP/body.md"
+          fi
