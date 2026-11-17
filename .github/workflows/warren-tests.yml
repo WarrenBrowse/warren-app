@@ -92,6 +92,10 @@ jobs:
       - name: Release-notes reader (shell tests)
         run: bash ci/test-extract-changelog-section.sh
 
+      # The release job refuses a tag whose notes are missing in a language.
+      - name: Release-notes guard (shell tests)
+        run: bash ci/test-require-release-notes.sh
+
       # Every warren-cli installer refuses a release this signer did not sign,
       # and the release pipeline fails rather than publish unsigned, so a
       # regression here stops the CLI from shipping at all.

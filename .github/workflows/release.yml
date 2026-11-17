@@ -194,6 +194,12 @@ jobs:
           bash ci/check-release-version.sh \
             "${{ steps.channel.outputs.channel }}" "${{ steps.channel.outputs.version }}"
 
+      # The GitHub release body, the in-app "What's new" and the signed
+      # manifests all show the tag's notes, in three languages.
+      - name: Refuse a release tag without release notes
+        if: startsWith(github.ref, 'refs/tags/')
+        run: bash ci/require-release-notes.sh "${{ steps.channel.outputs.version }}"
+
       # A production release never ships unsigned nor on the beta debug key.
       - name: Refuse a production tag without every signing identity
         env:
