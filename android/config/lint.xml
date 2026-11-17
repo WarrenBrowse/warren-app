@@ -14,9 +14,5 @@
     <!-- Temporarily ignored since a dependency is checked with older version of lint -->
     <issue id="ObsoleteLintCustomCheck" severity="ignore" />
     <issue id="NewerVersionAvailable" severity="ignore" />
-    <!-- Ignored, see more: https://github.com/grpc/grpc-java/blob/e8ff6da2cf57a39a62497e9f317e6976b5bfb98c/core/src/main/java/io/grpc/internal/JndiResourceResolverFactory.java#L199 -->
-    <issue id="InvalidPackage">
-      <ignore path="**/io.grpc/grpc-core/1.80.0/aae1d22e5a816650e1e7408f2f766bf769de76f1/grpc-core-1.80.0.jar" />
-    </issue>
     <issue id="OldTargetApi" severity="ignore" />
 </lint>

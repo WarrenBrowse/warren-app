@@ -1,5 +1,10 @@
 # Translations converter tool
 
+> **Do not run it on this fork.** Warren writes every Android string in each
+> `values-<locale>/strings.xml` directly (see `android/README.md`), and a run rewrites those files
+> from the desktop gettext catalogue alone, losing every translation that exists only on Android.
+> The crate stays a workspace member until the next lockfile regeneration removes it.
+
 A tool for helping two-way sync the translations between the Android and Desktop apps.
 
 ## How to run

@@ -1,9 +1,9 @@
 # Warren VPN Android app
 
 This directory contains the Android project as well as related files and information. The Android
-project relies on building the [warren-jni](../warren-jni/) Rust library (wired against
-[warren-core](https://github.com/WarrenBrowse/warren-core) Quinn tunnel) as a shared library
-bundled into the assembled APK.
+project relies on building the [warren-jni](../warren-jni/) Rust library (the Warren engine,
+consumed from the sibling `warrenguard`, `warren-sdk-rs` and `warren-contract` repositories) as a
+shared library bundled into the assembled APK.
 
 The app will be available for download on
 [our website](https://warrenbrowse.com/download) and
@@ -64,13 +64,13 @@ strict. See each `build.gradle.kts`for more information.
 
 ## Translations and localization
 
-See the [locale README][desktop-locales-readme] for how to easily update translations. It also
-includes documentation for which phrases and terms shouldn't be translated (Do Not Translate).
-Also see the [translations converter README][translations-converter-readme] for documentation about
-the tool used to sync translations between the Android and Desktop apps.
+Android strings are written directly in every locale: a key added to
+`lib/ui/resource/src/main/res/values/strings.xml` is added to the 23 `values-<locale>/strings.xml`
+files in the same change. `StringResourceCoverageTest` (in `:app`) fails on a missing or stale key,
+a dash, a placeholder the English string does not have, or a plural quantity a language needs.
+The [locale README][desktop-locales-readme] lists the terms that stay untranslated.
 
 [desktop-locales-readme]: ../desktop/packages/mullvad-vpn/locales/README.md
-[translations-converter-readme]: ./translations-converter/README.md
 
 ## Icons and assets
 

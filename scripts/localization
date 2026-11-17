@@ -35,11 +35,10 @@ function sync_localizations {
     npm run update-translations
     popd
 
-    # Update android strings and add Android strings to messages.pot
-    log_header "Extracting localization strings from android app source code"
-    pushd ../android/translations-converter/
-    cargo run
-    popd
+    # Android strings are not synced from gettext: each key is written in
+    # every values-<locale>/strings.xml directly (android/README.md). The
+    # inherited converter would overwrite those files from the desktop
+    # catalogue and lose every Android-only translation.
 }
 
 function update_relay_locations_pot {

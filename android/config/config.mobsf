@@ -13,7 +13,7 @@
   - android_root_detection
   - android_safetynet
 
-  # The backend API communication is done by the Mullvad Daemon which is built in rust.
+  # The backend API communication is done by the warren-jni engine, built in Rust.
   - android_ssl_pinning
   - android_certificate_pinning
   - android_certificate_transparency
