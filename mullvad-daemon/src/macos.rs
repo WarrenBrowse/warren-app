@@ -247,7 +247,7 @@ pub async fn handle_app_bundle_removal(
     // TODO: This check can be removed once we no longer care about downgrades to
     // versions that didn't unload the daemon in preinstall instead of postinstall.
     // E.g., a year after we released version 2025.7
-    if mullvad_installer_is_running() {
+    if product_installer_is_running() {
         log(format_args!(
             "Found installer process. Ignoring app removal"
         ));
@@ -313,17 +313,17 @@ fn reset_firewall() -> anyhow::Result<()> {
 }
 
 /// Figure out if a Mullvad installer is active
-fn mullvad_installer_is_running() -> bool {
+fn product_installer_is_running() -> bool {
     let Ok(pids) = list_pids() else {
         // If we can't retrieve any PIDs, assume installer isn't running
         return false;
     };
     pids.into_iter()
-        .any(|pid| process_has_mullvad_installer(pid).unwrap_or(false))
+        .any(|pid| process_has_product_installer(pid).unwrap_or(false))
 }
 
 /// Figure out if the 'pid' process is privileged and has a file open that matches a Mullvad pkg
-fn process_has_mullvad_installer(pid: pid_t) -> io::Result<bool> {
+fn process_has_product_installer(pid: pid_t) -> io::Result<bool> {
     // Ignore process if it isn't running as root
     // This is because the filename is easily spoofable
     if process_bsdinfo(pid)?.pbi_uid != 0 {
@@ -338,7 +338,7 @@ fn process_has_mullvad_installer(pid: pid_t) -> io::Result<bool> {
         return Ok(false);
     }
 
-    // Figure out if one of the file descriptors refers to a Mullvad installer
+    // Figure out if one of the file descriptors refers to an installer of this product
     for fd in process_file_descriptors(pid)? {
         // Only check vnodes
         if fd.proc_fdtype != PROX_FDTYPE_VNODE as u32 {
@@ -349,20 +349,22 @@ fn process_has_mullvad_installer(pid: pid_t) -> io::Result<bool> {
             continue;
         };
 
-        // Check if file refers to a Mullvad .pkg
-        let lower_path = path.to_bytes().to_ascii_lowercase();
-        let is_pkg = lower_path.ends_with(b".pkg");
-        let seq_to_find = b"mullvad";
-
-        if is_pkg
-            && lower_path
-                .windows(seq_to_find.len())
-                .any(|seq| seq == &seq_to_find[..])
-        {
+        if is_product_installer(path.to_bytes()) {
             return Ok(true);
         }
     }
     Ok(false)
+}
+
+/// Whether `path` names an installer package of this product. Every channel's package counts: a
+/// bundle removed while one installs is kept armed, which errs on the side of blocking.
+fn is_product_installer(path: &[u8]) -> bool {
+    let lower_path = path.to_ascii_lowercase();
+    let seq_to_find = b"warrenvpn";
+    lower_path.ends_with(b".pkg")
+        && lower_path
+            .windows(seq_to_find.len())
+            .any(|seq| seq == &seq_to_find[..])
 }
 
 #[cfg(test)]
@@ -424,6 +426,27 @@ mod test {
 
     /// The GUI package's copy is renamed by `transformEnvAssetText`; both copies are held to the
     /// same fixtures (`product-env-uninstall.spec.ts` regenerates them).
+    #[test]
+    fn the_package_of_an_upgrade_is_recognised_whatever_its_channel() {
+        for path in [
+            "/Users/someone/Downloads/WarrenVPN-Beta-1.1.57-macos-universal.pkg",
+            "/private/var/folders/xy/T/WarrenVPN-1.2.0-macos-universal.pkg",
+            "/Users/someone/Downloads/WarrenVPN-Beta-1.1.57-macos-universal (1).pkg",
+        ] {
+            assert!(is_product_installer(path.as_bytes()), "{path}");
+        }
+    }
+
+    #[test]
+    fn another_vendors_package_or_a_non_package_is_not_an_upgrade() {
+        for path in [
+            "/Users/someone/Downloads/MullvadVPN-2026.1.pkg",
+            "/Users/someone/Downloads/WarrenVPN-notes.txt",
+        ] {
+            assert!(!is_product_installer(path.as_bytes()), "{path}");
+        }
+    }
+
     #[test]
     fn the_uninstall_script_carries_the_names_of_the_environment_that_runs_it() {
         use warren_product_env::ProductEnv;
