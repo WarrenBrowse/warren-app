@@ -2,7 +2,6 @@ package com.warrenbrowse.vpn.di
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
@@ -365,10 +364,7 @@ val appModule = module {
     }
 
     single { LocaleRepository(get()) }
-    // TODO Move these back to UiModule when fixDisableBug is removed
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        single { LanguageRepository(androidContext()) }
-    }
+    single { LanguageRepository(androidContext()) }
     single<PackageManager> { androidContext().packageManager }
 
     single { NotificationChannel.TunnelUpdates } bind NotificationChannel::class

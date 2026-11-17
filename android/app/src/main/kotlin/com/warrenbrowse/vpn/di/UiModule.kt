@@ -278,9 +278,7 @@ val uiModule = module {
     viewModel { SplashViewModel(get(), get(), inject(), inject()) }
     viewModel { OutOfTimeGateViewModel(get(), get()) }
     viewModel { NotificationSettingsViewModel(get(), get(), get()) }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        viewModel { LanguageViewModel(get()) }
-    }
+    viewModel { LanguageViewModel(get()) }
     viewModel { AutoConnectAndLockdownModeViewModel(isPlayBuild = IS_PLAY_BUILD) }
     viewModel { params ->
         SplitTunnelingViewModel(
