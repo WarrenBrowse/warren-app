@@ -41,7 +41,6 @@ talpid-routing
 talpid-time
 talpid-tunnel
 talpid-windows
-translations-converter
 warren-incidents
 warren-nm-vpn-service
 windows-installer
