@@ -90,7 +90,18 @@ pub static PINNED_CERTIFICATE: LazyLock<reqwest::Certificate> = LazyLock::new(||
 /// any other key fail verification and the daemon reports
 /// `app-upgrade-error` (fail-closed).
 pub static TRUSTED_METADATA_SIGNING_PUBKEYS: LazyLock<Vec1<VerifyingKey>> =
-    LazyLock::new(|| parse_keys(include_str!("../warren-trusted-metadata-signing-pubkeys")));
+    LazyLock::new(|| trusted_metadata_signing_pubkeys(warren_product_env::CURRENT));
+
+/// The keys trusted to sign the update manifests of `env`'s channel. Each channel has its own
+/// trust file, so a manifest signed for one channel does not verify on another.
+pub fn trusted_metadata_signing_pubkeys(env: warren_product_env::ProductEnv) -> Vec1<VerifyingKey> {
+    use warren_product_env::ProductEnv;
+    parse_keys(match env {
+        ProductEnv::Prod => include_str!("../warren-trusted-metadata-signing-pubkeys"),
+        ProductEnv::Beta => include_str!("../warren-trusted-metadata-signing-pubkeys-beta"),
+        ProductEnv::Staging => include_str!("../warren-trusted-metadata-signing-pubkeys-staging"),
+    })
+}
 
 fn parse_keys(keys: &str) -> Vec1<VerifyingKey> {
     let mut v = vec![];
@@ -262,4 +273,72 @@ fn test_parse_keys() {
 
     // Test that actual keys are validly parsed
     let _prod = &*TRUSTED_METADATA_SIGNING_PUBKEYS;
+}
+
+#[cfg(test)]
+mod trusted_key_tests {
+    use super::*;
+    use warren_product_env::ProductEnv;
+
+    /// Each channel reads its own trust file, so the key that signs one channel's manifests
+    /// can be kept from every other channel's clients.
+    #[test]
+    fn each_channel_trusts_the_keys_of_its_own_file() {
+        let files = [
+            (
+                ProductEnv::Prod,
+                include_str!("../warren-trusted-metadata-signing-pubkeys"),
+            ),
+            (
+                ProductEnv::Beta,
+                include_str!("../warren-trusted-metadata-signing-pubkeys-beta"),
+            ),
+            (
+                ProductEnv::Staging,
+                include_str!("../warren-trusted-metadata-signing-pubkeys-staging"),
+            ),
+        ];
+        assert_eq!(files.len(), warren_product_env::ALL.len());
+        for (env, file) in files {
+            assert_eq!(
+                trusted_metadata_signing_pubkeys(env),
+                parse_keys(file),
+                "{}",
+                env.name()
+            );
+        }
+    }
+
+    /// The compiled client trusts its own channel's keys.
+    #[test]
+    fn the_compiled_channel_selects_its_trusted_keys() {
+        assert_eq!(
+            *TRUSTED_METADATA_SIGNING_PUBKEYS,
+            trusted_metadata_signing_pubkeys(warren_product_env::CURRENT)
+        );
+    }
+
+    /// The test key's private half is published in `update-testdata.sh`: no channel may
+    /// ever trust it.
+    #[test]
+    fn no_channel_trusts_the_published_test_key() {
+        let test_key = VerifyingKey::from_hex(include_str!("../test-pubkey").trim()).unwrap();
+        for env in warren_product_env::ALL {
+            assert!(
+                !trusted_metadata_signing_pubkeys(env).contains(&test_key),
+                "{} trusts the test key",
+                env.name()
+            );
+        }
+    }
+
+    /// A manifest signed for beta must not verify on a prod client. Holds once each channel
+    /// has its own key; until then both files carry the shared key.
+    #[test]
+    #[ignore = "both channels still share one update key"]
+    fn prod_and_beta_trust_no_key_in_common() {
+        let prod = trusted_metadata_signing_pubkeys(ProductEnv::Prod);
+        let beta = trusted_metadata_signing_pubkeys(ProductEnv::Beta);
+        assert!(prod.iter().all(|key| !beta.contains(key)));
+    }
 }

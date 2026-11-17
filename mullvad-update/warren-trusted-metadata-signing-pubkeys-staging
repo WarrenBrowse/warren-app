@@ -1,0 +1,10 @@
+# Ed25519 public keys trusted to sign the update manifests of the staging
+# channel. Same format as warren-trusted-metadata-signing-pubkeys, which
+# holds the prod channel's keys; a client trusts only its own channel's file.
+#
+# Until a staging update key is issued, this file carries the prod key, so a
+# manifest signed for one channel still verifies on the other. Issuing the
+# key: replace the line below with its public half, store the secret as the
+# CI secret the staging signing step reads, and un-ignore
+# prod_and_beta_trust_no_key_in_common in src/defaults.rs.
+0f684bb245acd5a684c467ccc9b92bb5daa2252ef12e89a68583b806ea2560a0
