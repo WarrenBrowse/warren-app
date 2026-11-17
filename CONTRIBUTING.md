@@ -1,57 +1,65 @@
 # How to contribute to the Warren VPN app
 
-The Warren VPN app is open sourced for many reasons, but primarily we want to
-* allow users to verify that our app functions as we claim it does, giving them the option to build
-  it from source without having to trust our released binaries
-* receive contributions from third parties.
+The Warren VPN app is open source so that
+* users can verify that the app does what we say it does, and build it from source instead of
+  trusting our released binaries
+* third parties can contribute to it.
 
 
 ## Filing issues
 
-If you find a bug in the app's code, please report it on GitHub in the issue tracker. Please send
-all other problems or questions (those not directly related to the app's development) to
-[support@warrenbrowse.com](mailto:support@warrenbrowse.com). This includes connection issues, questions
-regarding your account, and problems with the Warren VPN infrastructure or servers.
+If you find a bug in the app's code, report it in the
+[GitHub issue tracker](https://github.com/WarrenBrowse/warren-app/issues). Send every other problem
+or question (connection issues, your subscription, the servers) to
+[support@warrenbrowse.com](mailto:support@warrenbrowse.com) or to the
+[Warren forum](https://forum.warrenbrowse.com).
+
+Security issues go through the private channel described in [SECURITY.md](SECURITY.md), never
+through a public issue.
 
 
 ## Submitting changes
 
-If you would like to contribute to the development of the Warren VPN app, please carefully read the
-following sections first and then feel free to submit a pull request on GitHub.
+Read the sections below, then open a pull request on GitHub. Which changes are merged is decided by
+the maintainers, based on the development plans for the app. Before a new feature, a refactoring
+or any large change, describe it on the [Warren forum](https://forum.warrenbrowse.com) or in an
+issue first. For a bug fix, comment on the existing issue or open a
+[bug report](https://github.com/WarrenBrowse/warren-app/issues/new/choose).
 
-While we appreciate your interest in helping us to improve Warren VPN, please understand that
-choosing which submitted changes to merge is fully at our discretion, based upon our development
-plans for the app. Before implementing new features, refactoring or making major changes, consider
-existing [discussions](https://github.com/WarrenBrowse/warren-app/discussions) or creating a
-[new one](https://github.com/WarrenBrowse/warren-app/discussions/new).
-If you are fixing a bug, feel free to comment on the relevant existing issue or create a [bug report](https://github.com/WarrenBrowse/warren-app/issues/new)
-before you start.
+### How changes are written here
 
-### AI-assisted contributions
+Most changes to this repository are written by AI coding agents working under the rules in
+[CLAUDE.md](CLAUDE.md), and pull requests are reviewed automatically before a merge. An outside
+contribution is welcome whether or not an AI helped write it, provided a person has read all of it
+and answers the questions the review raises.
 
-A human must be behind all pull requests, issues, security advisories, and other submissions to this
-repository. Regardless of whether AI was used to author the code, we require that a human
-understands everything being submitted and is available for feedback and questions. If you have not
-read your own changes or do not fully understand them, please do not expect us to either.
+### Rules every change follows
 
-We will immediately close submissions where it is obvious that no human was in the loop, or where
-the only communication we receive from the author is clearly from a bot.
+* Test first: write a test that describes the behavior and fails, then the code that makes it
+  pass. A test must be able to fail when the code it covers is broken.
+* Code, comments, identifiers and commit messages are in English.
+* Commits follow [Conventional Commits](https://www.conventionalcommits.org/), with a subject line
+  and no body.
+* No em-dash or en-dash anywhere, translations included: use a comma, a colon, parentheses or a
+  period.
+* No public key, wallet address, IP address, nonce or seed in a log line or an error message.
+* The wire formats shared with the server are pinned by the golden vectors in `vectors/`. Fix the
+  code, never the vector.
 
 ### Localization / translations
 
-Warren translations are maintained directly in this repository (the upstream third-party
-translation pipeline is not used). If you want to improve an existing translation, open a pull
-request against the relevant PO / string resources, or report the issue on the
-[Warren forum](https://forum.warrenbrowse.com) if you prefer not to edit the files yourself.
+Warren translations are maintained in this repository. To improve a translation, open a pull
+request against the PO file, the Android `strings.xml` or the iOS `.xcstrings` catalog of that
+language, or report it on the [Warren forum](https://forum.warrenbrowse.com).
 
-### Copyright and ownership of contributed code and changes
+### Copyright and licensing of contributions
 
-Any code, binaries, tools, documentation, graphics, or any other material that you submit to this
-project will be licensed under GPL 3.0. Submitting to this project means that you are the original
-author of the entire contribution and grant us the full right to use, publish, change or remove
-the entire, or part of, your contribution under the terms defined by the GPL 3.0 license at any
-point in time.
+This repository is licensed under the GNU General Public License version 3 or later
+(`GPL-3.0-or-later`), see [LICENSE.md](LICENSE.md). Anything you submit to it (code, binaries,
+tools, documentation, graphics or any other material) is licensed under the same terms. Submitting
+means that you are the author of the whole contribution, or have the right to submit it under
+those terms. No contributor agreement grants anyone further rights over your contribution.
 
-### Code style and design
-
-Please follow the [coding guidelines](https://github.com/mullvad/coding-guidelines).
+The tunnel engine and the client SDK this app is built with live in their own repositories
+(`warrenguard`, `warren-sdk-rs`, `warren-contract`) under the GNU Affero General Public License
+version 3 or later; contributions to them follow their own `CONTRIBUTING` and licence files.

@@ -1,12 +1,12 @@
 ---
 name: 🐞📱 iOS app bug report
-description: This form is to report bugs in the iOS (iPhone + iPad) Mullvad VPN app.
+description: This form is to report bugs in the iOS (iPhone + iPad) Warren VPN app.
 labels: ["bug", "ios"]
 body:
   - type: markdown
     attributes:
       value: >
-        Thank you for wanting to help us improve the Mullvad VPN app by reporting issues.
+        Thank you for wanting to help us improve the Warren VPN app by reporting issues.
 
   - type: checkboxes
     id: it-is-a-bug
@@ -19,7 +19,7 @@ body:
         That way the support team gets redacted logs from your app and can help you out better.
         You can also just email them at support@warrenbrowse.com.
       options:
-        - label: I know this is an issue with the app, and contacting Mullvad support is not relevant.
+        - label: I know this is an issue with the app, and contacting Warren support is not relevant.
           required: true
 
   - type: checkboxes
@@ -28,7 +28,7 @@ body:
       label: I have checked if others have reported this already
       description: >
         Before you submit a bug report, please look through the
-        [existing issues](https://github.com/mullvad/mullvadvpn-app/issues?q=is%3Aissue)
+        [existing issues](https://github.com/WarrenBrowse/warren-app/issues?q=is%3Aissue)
         to see if it has already been reported by others. If so, please comment in those threads instead
         of creating new ones.
       options:
@@ -86,7 +86,7 @@ body:
   - type: input
     id: app-version
     attributes:
-      label: Mullvad VPN app version
+      label: Warren VPN app version
       description: >
         On what version(s) of the app have you experienced this bug?
         If you have experienced it on multiple versions you can write more than one version here.

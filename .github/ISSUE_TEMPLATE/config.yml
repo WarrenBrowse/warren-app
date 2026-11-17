@@ -1,13 +1,12 @@
 ---
 blank_issues_enabled: false
 contact_links:
-  - name: 💡 Feature requests & Ideas
-    url: https://github.com/mullvad/mullvadvpn-app/discussions/new/choose
-    about: Discuss and suggest new features in the Mullvad VPN app.
-  - name: Questions and issues not directly related to our VPN application
+  - name: Feature requests and ideas
+    url: https://forum.warrenbrowse.com/
+    about: Discuss and suggest new features on the Warren forum.
+  - name: Questions and issues not directly related to the app
     about: >
-      If your question is not related to our VPN application specifically,
-      please contact our support team at support@warrenbrowse.com or visit our help center
-      at https://mullvad.net/help instead of filing an issue.
-      This includes questions/issues about our service, infrastructure, DNS and more.
-    url: https://mullvad.net/help
+      If your question is not about the app itself, write to support@warrenbrowse.com
+      or read the help pages at https://warren.ro/faq instead of filing an issue.
+      This includes questions about your subscription, the servers and DNS.
+    url: https://warren.ro/faq
