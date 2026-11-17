@@ -5,4 +5,5 @@
 mod access_method;
 mod devices;
 mod forum;
+mod split_tunnel;
 mod tunnel_options;
