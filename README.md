@@ -99,13 +99,20 @@ That same key authenticates the QUIC TLS handshake to the exit *and* signs Warre
 
 ## Secure development
 
-The fork keeps the upstream signing and review practices:
+### How changes reach `main`
 
-### Git signatures
+Changes are rebased onto `main` rather than merged in. Commits are not GPG-signed:
+the upstream rule that required signed merge commits and signed changes to a list of locked-down
+files is not applied in this fork. Branch protection refuses force pushes to `main` and its
+deletion. Each push runs the CI workflows whose paths it touches.
 
-Every merge commit on the `main` branch must be PGP-signed. Individual commits in a feature branch
-do not need to be signed, unless they modify a *locked-down* file listed in
-[`verify-locked-down-signatures`](.github/workflows/verify-locked-down-signatures.yml).
+### Releases
+
+A release is built from a tag only, by [`release.yml`](.github/workflows/release.yml). Its
+`tag-guard` job refuses a tag that is not the highest version of its channel. The desktop app
+updates itself from a signed version manifest and checks the installer's SHA-256 against it
+([`docs/AUTO-UPDATE.md`](docs/AUTO-UPDATE.md)). The installers are not yet signed with a
+publisher identity (Apple Developer ID, Windows Authenticode, an Android release key).
 
 ### External audits (upstream)
 
@@ -501,9 +508,11 @@ firewall and DNS management, and the leak-prevention design that goes with them.
 This lineage covers the client codebase. The Warren service itself, its protocol, its exit fleet
 and its backend are Warren's own work and share no code with Mullvad.
 
-Upstream releases are merged in periodically. That is why the source tree keeps upstream directory
-and crate names (`mullvad-daemon`, `mullvad-cli`, `desktop/packages/mullvad-vpn`) while the built
-binaries and the installed product carry the Warren name.
+The fork stopped following upstream releases in June 2026 and takes only a named set of platform
+layers from it ([`docs/UPSTREAM-DETACH.md`](docs/UPSTREAM-DETACH.md)). The source tree keeps the
+upstream directory and crate names (`mullvad-daemon`, `mullvad-cli`,
+`desktop/packages/mullvad-vpn`) while the built binaries and the installed product carry the Warren
+name.
 
 # License
 

@@ -28,8 +28,6 @@
 /.github/workflows/osv-scanner*.yml @faern @raksooo @pinkisemils @rawa @tobias-jarvelov
 
 # Security related github action workflow changes must be approved by leads
-/.github/workflows/verify-locked-down-signatures.yml @faern @raksooo @pinkisemils @rawa
-/ci/verify-locked-down-signatures.sh @faern @raksooo @pinkisemils @rawa
 /.github/workflows/unicop.yml @faern @raksooo @pinkisemils @rawa
 
 # Our own code ownership mapping and automation must be approved by leads
