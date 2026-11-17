@@ -329,6 +329,13 @@ const ELECTRON_FUSES = {
   onlyLoadAppFromAsar: true,
   enableEmbeddedAsarIntegrityValidation: true,
   resetAdHocDarwinSignature: true,
+  // The remaining fuses are stated at their current value, so an Electron
+  // upgrade that changes a default cannot change the shipped binary unseen.
+  // No cookie reaches the disk: the forum login session is in memory.
+  enableCookieEncryption: false,
+  loadBrowserProcessSpecificV8Snapshot: false,
+  // The renderer is served from file://.
+  grantFileProtocolExtraPrivileges: true,
 };
 
 // Electron checks the asar hash on macOS and Windows only.
@@ -337,6 +344,9 @@ const LINUX_ELECTRON_FUSES = {
   enableNodeOptionsEnvironmentVariable: ELECTRON_FUSES.enableNodeOptionsEnvironmentVariable,
   enableNodeCliInspectArguments: ELECTRON_FUSES.enableNodeCliInspectArguments,
   onlyLoadAppFromAsar: ELECTRON_FUSES.onlyLoadAppFromAsar,
+  enableCookieEncryption: ELECTRON_FUSES.enableCookieEncryption,
+  loadBrowserProcessSpecificV8Snapshot: ELECTRON_FUSES.loadBrowserProcessSpecificV8Snapshot,
+  grantFileProtocolExtraPrivileges: ELECTRON_FUSES.grantFileProtocolExtraPrivileges,
 };
 
 function newConfig() {

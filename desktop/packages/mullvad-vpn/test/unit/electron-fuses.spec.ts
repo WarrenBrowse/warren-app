@@ -40,6 +40,11 @@ const HARDENED = {
   enableNodeOptionsEnvironmentVariable: false,
   enableNodeCliInspectArguments: false,
   onlyLoadAppFromAsar: true,
+  // Declared rather than left to the Electron default, so an Electron upgrade
+  // that changes a default cannot change the shipped binary unseen.
+  enableCookieEncryption: false,
+  loadBrowserProcessSpecificV8Snapshot: false,
+  grantFileProtocolExtraPrivileges: true,
 };
 
 async function distribution() {
