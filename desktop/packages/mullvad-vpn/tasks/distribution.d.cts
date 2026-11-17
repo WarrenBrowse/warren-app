@@ -37,3 +37,12 @@ export declare function macSignAsyncOptions<
   identity: string;
   optionsForFile: (filePath: string) => object;
 };
+export declare const DAEMON_SPAWN_CONSTRAINT_PLACEHOLDER: string;
+export declare function daemonSpawnConstraint(cdhashesHex: string[]): string;
+export declare function daemonSpawnConstraintFor(
+  daemonPath: string,
+  signed: boolean,
+  cdhashesOf?: (daemonPath: string) => string[],
+): string;
+export declare function writePkgScripts(outDir: string, spawnConstraint: string): void;
+export declare function assertSpawnConstraintResolved(pkgScriptsDir: string): void;
