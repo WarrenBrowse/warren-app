@@ -63,20 +63,52 @@ const OWNER_BACKLOG_CAP: usize = 16;
 
 /// Adds `subscriber` to the event stream, first handing it the owner events
 /// that waited for an owner when it may see them.
+///
+/// # Errors
+/// [`TooManyEventStreams`] when the caller's account already holds
+/// [`EVENT_STREAMS_PER_PEER`] streams. Unidentified callers share one count.
 fn register_events_subscriber(
     backlog: &OwnerBacklog,
     subscriptions: &Mutex<Vec<EventsSubscriber>>,
     wallet_access: &crate::wallet_access::WalletAccessControl,
     subscriber: EventsSubscriber,
-) {
+) -> Result<(), TooManyEventStreams> {
     let mut backlog = backlog.lock().unwrap();
     let mut subscriptions = subscriptions.lock().unwrap();
+    subscriptions.retain(|existing| !existing.tx.is_closed());
+    let principal = subscriber.peer.as_ref().map(|peer| &peer.principal);
+    let held = subscriptions
+        .iter()
+        .filter(|existing| existing.peer.as_ref().map(|peer| &peer.principal) == principal)
+        .count();
+    if held >= EVENT_STREAMS_PER_PEER {
+        return Err(TooManyEventStreams);
+    }
     if wallet_access.may_see_identity(subscriber.peer.as_ref()) {
         for event in backlog.drain(..) {
-            let _ = subscriber.tx.send(Ok(event));
+            let _ = subscriber.tx.try_send(Ok(event));
         }
     }
     subscriptions.push(subscriber);
+    Ok(())
+}
+
+/// The caller already holds [`EVENT_STREAMS_PER_PEER`] event streams.
+#[derive(Debug)]
+struct TooManyEventStreams;
+
+/// Events an `EventsListen` subscriber may leave unread. A client that falls
+/// further behind is dropped and has to subscribe again: every local account
+/// may subscribe, and an unread stream must not make the daemon, which holds
+/// the firewall, keep every event broadcast since.
+const EVENTS_BACKLOG: usize = 256;
+
+/// `EventsListen` streams one account may hold at once. The GUI and the CLI
+/// need one each.
+const EVENT_STREAMS_PER_PEER: usize = 16;
+
+fn events_channel() -> (EventsListenerSender, tokio::sync::mpsc::Receiver<EventItem>) {
+    tokio::sync::mpsc::channel(EVENTS_BACKLOG)
 }
 
 struct ManagementServiceImpl {
@@ -100,8 +132,9 @@ struct ManagementServiceImpl {
 }
 
 pub type ServiceResult<T> = std::result::Result<Response<T>, Status>;
-type EventsListenerReceiver = UnboundedReceiverStream<Result<types::DaemonEvent, Status>>;
-type EventsListenerSender = tokio::sync::mpsc::UnboundedSender<Result<types::DaemonEvent, Status>>;
+type EventItem = Result<types::DaemonEvent, Status>;
+type EventsListenerReceiver = tokio_stream::wrappers::ReceiverStream<EventItem>;
+type EventsListenerSender = tokio::sync::mpsc::Sender<EventItem>;
 
 /// Who is calling, and the class the gate admitted the call as.
 struct Call {
@@ -613,7 +646,7 @@ impl ManagementService for ManagementServiceImpl {
     //
 
     async fn events_listen(&self, request: Request<()>) -> ServiceResult<Self::EventsListenStream> {
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        let (tx, rx) = events_channel();
         register_events_subscriber(
             &self.owner_backlog,
             &self.subscriptions,
@@ -622,8 +655,13 @@ impl ManagementService for ManagementServiceImpl {
                 tx,
                 peer: Self::peer_of(&request),
             },
-        );
-        Ok(Response::new(UnboundedReceiverStream::new(rx)))
+        )
+        .map_err(|TooManyEventStreams| {
+            Status::resource_exhausted("too many event streams are open for this account")
+        })?;
+        Ok(Response::new(tokio_stream::wrappers::ReceiverStream::new(
+            rx,
+        )))
     }
 
     async fn prepare_restart(&self, request: Request<()>) -> ServiceResult<()> {
@@ -3043,11 +3081,17 @@ impl ManagementInterfaceEventBroadcaster {
                 .wallet_access
                 .may_see_identity(subscriber.peer.as_ref());
             match withhold_event_identity(value.clone(), may_see) {
-                Some(event) => {
-                    let sent = subscriber.tx.send(Ok(event)).is_ok();
-                    owners |= sent && may_see;
-                    sent
-                }
+                Some(event) => match subscriber.tx.try_send(Ok(event)) {
+                    Ok(()) => {
+                        owners |= may_see;
+                        true
+                    }
+                    Err(tokio::sync::mpsc::error::TrySendError::Full(_)) => {
+                        log::warn!("Dropping an event subscriber that stopped reading");
+                        false
+                    }
+                    Err(tokio::sync::mpsc::error::TrySendError::Closed(_)) => false,
+                },
                 None => !subscriber.tx.is_closed(),
             }
         });
@@ -4105,8 +4149,8 @@ mod tests {
             false,
             crate::wallet_access::test_support::NoConsole,
         ));
-        let (owner_tx, mut owner_rx) = tokio::sync::mpsc::unbounded_channel();
-        let (other_tx, mut other_rx) = tokio::sync::mpsc::unbounded_channel();
+        let (owner_tx, mut owner_rx) = super::events_channel();
+        let (other_tx, mut other_rx) = super::events_channel();
         let broadcaster = super::ManagementInterfaceEventBroadcaster {
             subscriptions: std::sync::Arc::new(std::sync::Mutex::new(vec![
                 super::EventsSubscriber {
@@ -4161,7 +4205,7 @@ mod tests {
             false,
             crate::wallet_access::test_support::NoConsole,
         ));
-        let (other_tx, mut other_rx) = tokio::sync::mpsc::unbounded_channel();
+        let (other_tx, mut other_rx) = super::events_channel();
         let broadcaster = super::ManagementInterfaceEventBroadcaster {
             subscriptions: std::sync::Arc::new(std::sync::Mutex::new(vec![
                 super::EventsSubscriber {
@@ -4175,7 +4219,7 @@ mod tests {
 
         broadcaster.notify_new_account_strike(&a_notice());
 
-        let (late_other_tx, mut late_other_rx) = tokio::sync::mpsc::unbounded_channel();
+        let (late_other_tx, mut late_other_rx) = super::events_channel();
         super::register_events_subscriber(
             &broadcaster.owner_backlog,
             &broadcaster.subscriptions,
@@ -4184,8 +4228,9 @@ mod tests {
                 tx: late_other_tx,
                 peer: Some(mullvad_management_interface::PeerCredentials::unix(1001, 0)),
             },
-        );
-        let (owner_tx, mut owner_rx) = tokio::sync::mpsc::unbounded_channel();
+        )
+        .unwrap();
+        let (owner_tx, mut owner_rx) = super::events_channel();
         super::register_events_subscriber(
             &broadcaster.owner_backlog,
             &broadcaster.subscriptions,
@@ -4194,7 +4239,8 @@ mod tests {
                 tx: owner_tx,
                 peer: Some(mullvad_management_interface::PeerCredentials::unix(1000, 0)),
             },
-        );
+        )
+        .unwrap();
 
         assert!(other_rx.try_recv().is_err());
         assert!(late_other_rx.try_recv().is_err());
@@ -4203,6 +4249,82 @@ mod tests {
             Some(daemon_event::Event::NewAccountStrike(_))
         ));
         assert!(broadcaster.owner_backlog.lock().unwrap().is_empty());
+    }
+
+    fn broadcaster_without_owner() -> (
+        super::ManagementInterfaceEventBroadcaster,
+        crate::wallet_access::test_support::Scratch,
+    ) {
+        let scratch = crate::wallet_access::test_support::Scratch::new("bounded");
+        let access = std::sync::Arc::new(crate::wallet_access::WalletAccessControl::new(
+            scratch.store(),
+            || false,
+            false,
+            crate::wallet_access::test_support::NoConsole,
+        ));
+        let broadcaster = super::ManagementInterfaceEventBroadcaster {
+            subscriptions: std::sync::Arc::new(std::sync::Mutex::new(vec![])),
+            owner_backlog: super::OwnerBacklog::default(),
+            wallet_access: access,
+        };
+        (broadcaster, scratch)
+    }
+
+    fn a_public_event() -> types::DaemonEvent {
+        types::DaemonEvent {
+            event: Some(daemon_event::Event::TunnelState(
+                types::TunnelState::default(),
+            )),
+        }
+    }
+
+    /// A subscriber that stops reading can no longer make the daemon hold
+    /// every event broadcast since: past its backlog, it is dropped.
+    #[test]
+    fn a_subscriber_that_stops_reading_is_dropped() {
+        let (broadcaster, _scratch) = broadcaster_without_owner();
+        let (tx, _rx) = super::events_channel();
+        super::register_events_subscriber(
+            &broadcaster.owner_backlog,
+            &broadcaster.subscriptions,
+            &broadcaster.wallet_access,
+            super::EventsSubscriber {
+                tx,
+                peer: Some(mullvad_management_interface::PeerCredentials::unix(1001, 0)),
+            },
+        )
+        .unwrap();
+
+        for _ in 0..=super::EVENTS_BACKLOG {
+            broadcaster.notify(a_public_event());
+        }
+
+        assert!(broadcaster.subscriptions.lock().unwrap().is_empty());
+    }
+
+    /// One account cannot open event streams without end.
+    #[test]
+    fn an_account_has_a_bounded_number_of_event_streams() {
+        let (broadcaster, _scratch) = broadcaster_without_owner();
+        let mut receivers = vec![];
+        let mut register = || {
+            let (tx, rx) = super::events_channel();
+            receivers.push(rx);
+            super::register_events_subscriber(
+                &broadcaster.owner_backlog,
+                &broadcaster.subscriptions,
+                &broadcaster.wallet_access,
+                super::EventsSubscriber {
+                    tx,
+                    peer: Some(mullvad_management_interface::PeerCredentials::unix(1001, 0)),
+                },
+            )
+        };
+        for _ in 0..super::EVENT_STREAMS_PER_PEER {
+            register().unwrap();
+        }
+
+        assert!(register().is_err());
     }
 
     #[test]
