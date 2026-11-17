@@ -275,7 +275,7 @@ class WarrenVpnService : LifecycleVpnService() {
                 foregroundNotificationHandler.startForeground()
                 lifecycleScope.launch {
                     val config =
-                        withContext(Dispatchers.Default) {
+                        withContext(Dispatchers.IO) {
                             when (val result = warrenConnectUseCase.buildFreshConfig()) {
                                 is WarrenConnectUseCase.ConfigResult.Ready -> result.config
                                 else -> {
