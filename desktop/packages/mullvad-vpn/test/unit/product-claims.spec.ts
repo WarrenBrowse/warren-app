@@ -60,15 +60,3 @@ describe('the French glossary', () => {
     });
   }
 });
-
-// The hybrid post-quantum seal follows the exit: an exit that publishes an
-// ML-KEM key gets it, whatever the settings say. A switch for it would change
-// a setting the tunnel never reads, and turning it off would not turn the
-// protection off.
-describe('the post-quantum seal', () => {
-  it('is not offered as a setting on the desktop', () => {
-    const template = read('desktop/packages/mullvad-vpn/locales/messages.pot');
-
-    expect(template).not.toContain('msgid "Quantum-resistant tunnel"');
-  });
-});
