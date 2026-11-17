@@ -244,7 +244,9 @@ class AndroidForumPlatformReads(private val context: Context) : ForumPlatformRea
         return NetworkFacts(
             transports = TRANSPORTS.filter { caps.hasTransport(it.first) }.mapTo(linkedSetOf()) { it.second },
             flags = FLAGS.filter { caps.hasCapability(it.first) }.mapTo(linkedSetOf()) { it.second },
-            mtu = props?.mtu ?: 0,
+            // LinkProperties.getMtu exists from API 29: below it the call throws
+            // NoSuchMethodError, and 0 already reads as "unknown".
+            mtu = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) props?.mtu ?: 0 else 0,
             linkAddresses =
                 addresses.filter { it is Inet4Address || it is Inet6Address }.map { it.hostAddress ?: "" },
             dnsServers = props?.dnsServers.orEmpty().map { it.hostAddress ?: "" },
