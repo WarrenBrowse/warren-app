@@ -72,6 +72,7 @@ import org.koin.android.scope.AndroidScopeComponent
 import org.koin.androidx.scope.activityScope
 import org.koin.core.context.loadKoinModules
 import com.warrenbrowse.vpn.lib.common.util.runCatchingCancellable
+import com.warrenbrowse.vpn.common.compose.finishDueClipboardWipe
 
 // `AppCompatActivity` rather than `ComponentActivity`: two things need more
 // than the bare activity. `BiometricPrompt` (used by `BiometricPromptAuthorizer`
@@ -158,6 +159,12 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
                 ForumLoginPromptHost()
                 ForumAttachPromptHost()
             }
+        }
+        // A recovery phrase copied before the user left the app is wiped when the
+        // window gets focus back, if its minute ran out meanwhile: focus is what
+        // makes the clip readable again.
+        window.decorView.viewTreeObserver.addOnWindowFocusChangeListener { hasFocus ->
+            if (hasFocus) finishDueClipboardWipe(this)
         }
         val jankLogger = JankLogger()
         jankStats =

@@ -7,30 +7,37 @@ class ClipboardAutoClearTest {
 
     @Test
     fun `clears when the clipboard still holds the copied secret`() {
-        assertEquals(true, shouldClearClipboard(currentClipText = SECRET, copiedText = SECRET))
+        assertEquals(
+            ClipboardWipe.Clear,
+            clipboardWipeStep(currentClipText = SECRET, copiedText = SECRET),
+        )
     }
 
     @Test
     fun `keeps the clipboard when another app has replaced the clip`() {
         assertEquals(
-            false,
-            shouldClearClipboard(currentClipText = "a shopping list", copiedText = SECRET),
+            ClipboardWipe.Done,
+            clipboardWipeStep(currentClipText = "a shopping list", copiedText = SECRET),
         )
     }
 
     @Test
-    fun `keeps the clipboard when the clip cannot be read`() {
+    fun `waits for the app to come back when the clip cannot be read`() {
         // Reading the primary clip from the background answers null on
-        // Android 10+. An unreadable clip is not proof the secret is still
-        // there, and clearing blind would drop whatever another app owns.
-        assertEquals(false, shouldClearClipboard(currentClipText = null, copiedText = SECRET))
+        // Android 10+. An unreadable clip is not proof the secret is gone, and
+        // clearing blind would drop whatever another app owns: the wipe is
+        // tried again once the app has the focus that makes the clip readable.
+        assertEquals(
+            ClipboardWipe.RetryInForeground,
+            clipboardWipeStep(currentClipText = null, copiedText = SECRET),
+        )
     }
 
     @Test
     fun `keeps the clipboard when the clip only starts with the copied text`() {
         assertEquals(
-            false,
-            shouldClearClipboard(currentClipText = "$SECRET and more", copiedText = SECRET),
+            ClipboardWipe.Done,
+            clipboardWipeStep(currentClipText = "$SECRET and more", copiedText = SECRET),
         )
     }
 

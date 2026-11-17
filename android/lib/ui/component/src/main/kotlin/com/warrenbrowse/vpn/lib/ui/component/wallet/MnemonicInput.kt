@@ -70,7 +70,10 @@ fun MnemonicInput(
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.None,
                 autoCorrectEnabled = false,
-                keyboardType = KeyboardType.Text,
+                // A password field: keyboards neither suggest nor learn what is
+                // typed into one, and a phrase must not end up in a dictionary.
+                // The words stay visible, with no visual transformation.
+                keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done,
             ),
         )
