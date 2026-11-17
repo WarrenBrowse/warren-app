@@ -102,8 +102,11 @@ pub struct Firewall {
     /// filters when this module shuts down or dies, so that it also blocks
     /// across a reboot.
     ///
-    /// Mirrors the user's lockdown setting, and nothing else: it is kept in
-    /// sync by [`SharedTunnelStateValues::set_lockdown_mode`]. Boot-time
+    /// Mirrors the lockdown mode the state machine last received, kept in sync
+    /// by [`SharedTunnelStateValues::set_lockdown_mode`]: the user's setting,
+    /// the restart lockdown an update arms (persistent only when the user chose
+    /// lockdown or auto-connect), and the block an unrequested daemon stop arms
+    /// while the tunnel is wanted, which is persistent. Boot-time
     /// filters permit nothing at all, not even DHCP, and they are applied
     /// before the daemon can run, so a machine that acquires them without the
     /// user having asked for a persistent kill switch comes back from a reboot

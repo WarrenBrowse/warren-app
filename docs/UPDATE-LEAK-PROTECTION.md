@@ -215,7 +215,7 @@ firewall has an owner.
 This also covers G4 without touching the postinstall's two aborts: they stay
 fatal, and the guard restores the user regardless.
 
-### Lot 4: align the three desktop platforms on the Windows caution (G5) [DONE, needs real-install validation]
+### Lot 4: align the three desktop platforms on the Windows caution (G5) [PARTLY DONE: first item only, needs real-install validation]
 
 - Make a failed `prepare-restart` fatal on macOS and Linux, matching the Windows
   arm. An installer that cannot arm the protection must not proceed to kill the
@@ -226,6 +226,12 @@ fatal, and the guard restores the user regardless.
   otherwise arm it for the window and let it die with the daemon. This is
   exactly the "re-disable it afterwards" property, made explicit rather than
   inherited from the process dying.
+
+  **Not implemented.** Outside Windows, `LockdownMode::persist()` is a no-op and
+  `should_persist()` answers `true` (`talpid-core/src/tunnel_state_machine/mod.rs`),
+  and `on_prepare_restart` passes `persist = true` on every platform but Windows
+  (`mullvad-daemon/src/lib.rs`). On macOS and Linux the restart block still
+  relies on dying with the daemon process.
 
 ### Lot 5: mobile (G6) [DONE, Android detection + advice; iOS documented as out of reach]
 
