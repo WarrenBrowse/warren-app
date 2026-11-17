@@ -151,11 +151,10 @@ mod tun05_imp {
 
     impl AsFd for TunnelDevice {
         fn as_fd(&self) -> BorrowedFd<'_> {
-            // TODO: make sure we uphold safety requirements of BorrowedFd
-            #[expect(clippy::undocumented_unsafe_blocks)]
-            unsafe {
-                BorrowedFd::borrow_raw(self.as_raw_fd())
-            }
+            // SAFETY: the descriptor is owned by `self.dev`, which closes it only on drop. The
+            // returned `BorrowedFd<'_>` borrows `self`, so the descriptor stays open for as long
+            // as the borrow lives, which is what `borrow_raw` requires.
+            unsafe { BorrowedFd::borrow_raw(self.as_raw_fd()) }
         }
     }
 

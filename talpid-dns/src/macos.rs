@@ -1,5 +1,3 @@
-#![allow(clippy::undocumented_unsafe_blocks)] // Remove me if you dare.
-
 use parking_lot::Mutex;
 use std::{
     collections::{BTreeSet, HashMap},
@@ -365,6 +363,10 @@ struct DnsSettings {
     name: String,
 }
 
+// SAFETY: the only non-`Send` field is `dict`, an immutable CFDictionary: it is either copied out
+// of the dynamic store or built by `from_server_addresses`, whose mutable handle is dropped right
+// after `to_immutable`, so nothing can mutate it afterwards. Immutable Core Foundation collections
+// may be read from any thread, and their retain and release are atomic.
 unsafe impl Send for DnsSettings {}
 
 impl DnsSettings {
@@ -374,6 +376,9 @@ impl DnsSettings {
             let cf_string_servers: Vec<CFString> =
                 server_addresses.iter().map(|s| CFString::new(s)).collect();
             let server_addresses_value = CFArray::from_CFTypes(&cf_string_servers).into_untyped();
+            // SAFETY: `kSCPropNetDNSServerAddresses` is a constant CFString exported by
+            // SystemConfiguration, initialised when the framework loads and never written, so it
+            // is a valid non-null CFStringRef. `wrap_under_get_rule` retains it.
             let server_addresses_key =
                 unsafe { CFString::wrap_under_get_rule(kSCPropNetDNSServerAddresses) };
             mut_dict.add(
@@ -383,6 +388,9 @@ impl DnsSettings {
 
             // Set port if non-standard
             if port != DNS_PORT {
+                // SAFETY: `kSCPropNetDNSServerPort` is a constant CFString exported by
+                // SystemConfiguration, initialised when the framework loads and never written,
+                // so it is a valid non-null CFStringRef. `wrap_under_get_rule` retains it.
                 let server_port_key =
                     unsafe { CFString::wrap_under_get_rule(kSCPropNetDNSServerPort) };
                 let server_port_value = CFNumber::from(i32::from(port));
@@ -433,7 +441,12 @@ impl DnsSettings {
     pub fn server_addresses(&self) -> BTreeSet<SocketAddr> {
         let port = self
             .dict
+            // SAFETY: `kSCPropNetDNSServerPort` is a constant CFString exported by
+            // SystemConfiguration, initialised when the framework loads and never written.
             .find(unsafe { kSCPropNetDNSServerPort }.to_void())
+            // SAFETY: every value of `dict` is a non-null CF object (a property list from the
+            // store, or the CFNumber written by `from_server_addresses`). It is retained before
+            // the dictionary borrow ends.
             .map(|ptr| unsafe { CFType::wrap_under_get_rule(*ptr) })
             .and_then(|port| port.downcast::<CFNumber>())
             .and_then(|port| port.to_i32())
@@ -441,7 +454,12 @@ impl DnsSettings {
             .unwrap_or(DNS_PORT);
 
         self.dict
+            // SAFETY: `kSCPropNetDNSServerAddresses` is a constant CFString exported by
+            // SystemConfiguration, initialised when the framework loads and never written.
             .find(unsafe { kSCPropNetDNSServerAddresses }.to_void())
+            // SAFETY: every value of `dict` is a non-null CF object (a property list from the
+            // store, or the CFArray written by `from_server_addresses`). It is retained before
+            // the dictionary borrow ends.
             .map(|array_ptr| unsafe { CFType::wrap_under_get_rule(*array_ptr) })
             .and_then(|array| array.downcast::<CFArray>())
             .and_then(Self::parse_cf_array_to_strings)
@@ -468,6 +486,9 @@ impl DnsSettings {
     fn parse_cf_array_to_strings(array: CFArray) -> Option<Vec<String>> {
         let mut strings = Vec::new();
         for item_ptr in array.iter() {
+            // SAFETY: the array is a value of a DNS settings dictionary, so it is a property-list
+            // array whose elements are non-null CF objects. `iter` yields only indices below the
+            // array count, and the element is retained before the array borrow ends.
             let item = unsafe { CFType::wrap_under_get_rule(*item_ptr) };
             if let Some(string) = item.downcast::<CFString>() {
                 strings.push(string.to_string());
@@ -512,13 +533,21 @@ impl InterfaceSettings {
     /// them on every store notification, forever.
     pub fn device_name(&self) -> Option<String> {
         self.0
+            // SAFETY: `kSCPropNetInterfaceDeviceName` is a constant CFString exported by
+            // SystemConfiguration, initialised when the framework loads and never written.
             .find(unsafe { kSCPropNetInterfaceDeviceName }.to_void())
+            // SAFETY: the dictionary is a property list (copied from the store, or built from CF
+            // objects in tests), so every value is a non-null CF object. It is retained before
+            // the dictionary borrow ends.
             .map(|str_pointer| unsafe { CFType::wrap_under_get_rule(*str_pointer) })
             .and_then(|string| string.downcast::<CFString>())
             .map(|cf_string| cf_string.to_string())
     }
 }
 
+// SAFETY: the wrapped CFDictionary is immutable (copied out of the dynamic store, or built in
+// tests from a mutable dictionary whose handle is dropped by `to_immutable`). Immutable Core
+// Foundation collections may be read from any thread, and their retain and release are atomic.
 unsafe impl Send for InterfaceSettings {}
 
 pub struct DnsMonitor {
@@ -668,6 +697,9 @@ fn create_dynamic_store(state: Arc<Mutex<State>>) -> Result<SCDynamicStore> {
 
 fn run_dynamic_store_runloop(store: SCDynamicStore) {
     let run_loop_source = store.create_run_loop_source();
+    // SAFETY: `kCFRunLoopCommonModes` is a constant CFString exported by Core Foundation,
+    // initialised when the framework loads and never written, so reading it yields a valid
+    // CFStringRef.
     CFRunLoop::get_current().add_source(&run_loop_source, unsafe { kCFRunLoopCommonModes });
 
     log::trace!("Entering DNS CFRunLoop");
@@ -1569,6 +1601,9 @@ mod test {
     /// publishes it: carrying the BSD device name.
     fn physical_service_interface(device: &str) -> InterfaceSettings {
         let mut dict = CFMutableDictionary::new();
+        // SAFETY: `kSCPropNetInterfaceDeviceName` is a constant CFString exported by
+        // SystemConfiguration, initialised when the framework loads and never written, so it is
+        // a valid non-null CFStringRef. `wrap_under_get_rule` retains it.
         let key = unsafe { CFString::wrap_under_get_rule(kSCPropNetInterfaceDeviceName) };
         let value = CFString::new(device);
         dict.add(&key.to_void(), &value.to_void());

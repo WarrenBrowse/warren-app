@@ -1,5 +1,3 @@
-#![allow(clippy::undocumented_unsafe_blocks)] // Remove me if you dare.
-
 use futures::channel::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use ipnetwork::IpNetwork;
 use nix::{
@@ -69,7 +67,11 @@ pub struct PrimaryInterfaceMonitor {
     prefs: SCPreferences,
 }
 
-// FIXME: Implement Send on SCDynamicStore, if it's safe
+// SAFETY: both fields are Core Foundation references, whose retain and release are atomic, so
+// moving the owning struct to another thread is sound. `store` is built without a callback
+// context and never gets a run loop source, so it carries no affinity to the thread that created
+// it (the listener uses its own store on its own thread). The struct is not `Sync`, so the two
+// references are only ever used from one thread at a time.
 unsafe impl Send for PrimaryInterfaceMonitor {}
 
 /// Contents of a `/Network/Service/<service_id>/IPvX` key in the [SCDynamicStore].
@@ -468,10 +470,15 @@ fn get_service_first_ip(service_dict: &CFDictionary, family: Family) -> Option<I
     };
     service_dict
         .find(ip_key.to_void())
+        // SAFETY: `service_dict` is a property list read from the dynamic store, so every value
+        // it holds is a non-null CF object. `wrap_under_get_rule` retains it, so the wrapper
+        // stays valid after the dictionary borrow ends.
         .map(|s| unsafe { CFType::wrap_under_get_rule(*s) })
         .and_then(|s| s.downcast::<CFArray>())
         .and_then(|ips| {
             ips.get(0)
+                // SAFETY: `get` bounds-checks the index, and every element of a property-list
+                // array is a non-null CF object. It is retained before the array borrow ends.
                 .map(|ip| unsafe { CFType::wrap_under_get_rule(*ip) })
         })
         .and_then(|s| s.downcast::<CFString>())
@@ -481,6 +488,9 @@ fn get_service_first_ip(service_dict: &CFDictionary, family: Family) -> Option<I
 
 fn get_dict_elem_as_string(dict: &CFDictionary, key: CFStringRef) -> Option<String> {
     dict.find(key.to_void())
+        // SAFETY: callers pass a property-list dictionary read from the dynamic store, so every
+        // value is a non-null CF object. `wrap_under_get_rule` retains it, so the wrapper stays
+        // valid after the dictionary borrow ends.
         .map(|s| unsafe { CFType::wrap_under_get_rule(*s) })
         .and_then(|s| s.downcast::<CFString>())
         .map(|s| s.to_string())
