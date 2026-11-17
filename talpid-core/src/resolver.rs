@@ -18,6 +18,7 @@ use std::{
 use futures::{
     SinkExt, StreamExt,
     channel::{mpsc, oneshot},
+    future,
 };
 
 use hickory_proto::{
@@ -31,13 +32,16 @@ use hickory_server::{
         runtime::{Time, TokioRuntimeProvider},
     },
     proto::{
-        op::{Header, HeaderCounts, MessageType, Metadata, OpCode},
+        op::{Header, HeaderCounts, MessageType, Metadata, OpCode, ResponseCode},
         rr::{RData, Record, domain::Name, rdata},
     },
     resolver::{
-        TokioResolver,
-        config::{NameServerConfig, ResolverConfig, ResolverOpts},
+        ConnectionProvider, PoolContext, Resolver as HickoryResolver,
+        config::{
+            ConnectionConfig, NameServerConfig, ProtocolConfig, ResolverConfig, ResolverOpts,
+        },
         lookup::Lookup,
+        net::{udp::UdpClientStream, xfer::DnsExchange},
     },
     server::{Request, RequestHandler, ResponseHandler, ResponseInfo},
     zone_handler::{AuthLookup, MessageRequest, MessageResponse, MessageResponseBuilder},
@@ -49,8 +53,10 @@ use talpid_routing::data::RouteSocketMessage;
 use talpid_types::drop_guard::{OnDrop, on_drop};
 use tokio::{
     net::{self, UdpSocket},
+    sync::Semaphore,
     task::JoinHandle,
 };
+use tokio_util::sync::{CancellationToken, DropGuard};
 
 /// Decide whether the macOS local (filtering) DNS resolver should run,
 /// from the `TALPID_DISABLE_LOCAL_DNS_RESOLVER` environment value.
@@ -136,6 +142,13 @@ const TTL_SECONDS: u32 = 3;
 /// belongs to the documentation range so should never be reachable.
 const RESOLVED_ADDR: Ipv4Addr = Ipv4Addr::new(198, 51, 100, 1);
 
+/// Maximum number of concurrently forwarded DNS queries.
+///
+/// Every forwarded query holds a UDP socket until it is answered or times out, so an unbounded
+/// burst of queries can exhaust the daemon's file descriptors. Any query past the limit is
+/// answered with SERVFAIL.
+const FORWARD_QUERY_LIMIT: usize = 64;
+
 fn clear_name_server_configs(dns_servers: &[IpAddr], port: u16) -> Vec<NameServerConfig> {
     dns_servers
         .iter()
@@ -202,6 +215,9 @@ struct LocalResolver {
     inner_resolver: Resolver,
     /// Which IP+port the local resolver is bound to.
     bound_to: SocketAddr,
+    /// Bounds the number of concurrently forwarded queries. Shared by every forwarding
+    /// resolver, so that the bound holds across config changes.
+    forward_limit: Arc<Semaphore>,
 }
 
 /// A message to [LocalResolver]
@@ -251,8 +267,14 @@ enum Resolver {
 
     /// Forward DNS queries to a configured server
     Forwarding {
-        resolver: Box<TokioResolver>,
+        resolver: Box<ForwardingResolver>,
         filter_out_aaaa: bool,
+        /// Bounds the number of concurrently forwarded queries.
+        limit: Arc<Semaphore>,
+        /// Cancelled when this resolver is replaced, so that queries still in flight to the old
+        /// servers release their sockets at once instead of waiting for a timeout.
+        cancel: CancellationToken,
+        _cancel_on_drop: DropGuard,
     },
 }
 
@@ -269,12 +291,27 @@ impl Resolver {
             Resolver::Forwarding {
                 resolver,
                 filter_out_aaaa,
+                limit,
+                cancel,
+                ..
             } => {
                 let resolver = resolver.clone();
+                let limit = Arc::clone(limit);
+                let cancel = cancel.clone();
                 let filter_out_aaaa = *filter_out_aaaa && !*NEVER_FILTER_AAAA_QUERIES;
                 tokio::spawn(async move {
-                    let lookup = Self::resolve_forward(*resolver, query, filter_out_aaaa);
-                    let _ = tx.send(lookup.await);
+                    let Ok(permit) = limit.try_acquire() else {
+                        let _ = tx.send(Err(servfail()));
+                        return;
+                    };
+                    let lookup = tokio::select! {
+                        lookup = Self::resolve_forward(*resolver, query, filter_out_aaaa) => lookup,
+                        // SERVFAIL makes the client retry against the new config instead of
+                        // waiting for its own timeout.
+                        () = cancel.cancelled() => Err(servfail()),
+                    };
+                    drop(permit);
+                    let _ = tx.send(lookup);
                 });
             }
         };
@@ -314,7 +351,7 @@ impl Resolver {
 
     /// Forward DNS queries to the specified DNS resolver.
     async fn resolve_forward(
-        resolver: TokioResolver,
+        resolver: ForwardingResolver,
         query: LowerQuery,
         filter_out_aaaa: bool,
     ) -> std::result::Result<AuthLookup, NetError> {
@@ -450,6 +487,7 @@ impl LocalResolver {
             dns_server_task,
             bound_to: resolver_addr,
             inner_resolver: Resolver::Blocking,
+            forward_limit: Arc::new(Semaphore::new(FORWARD_QUERY_LIMIT)),
         };
 
         Ok((resolver, ResolverHandle::new(command_tx, resolver_addr)))
@@ -640,9 +678,9 @@ impl LocalResolver {
         let forward_config = ResolverConfig::from_parts(None, vec![], forward_server_config);
         let resolver_opts = ResolverOpts::default();
 
-        let resolver = match TokioResolver::builder_with_config(
+        let resolver = match ForwardingResolver::builder_with_config(
             forward_config,
-            TokioRuntimeProvider::default(),
+            SingleSocketUdpProvider::default(),
         )
         .with_options(resolver_opts)
         .build()
@@ -655,10 +693,58 @@ impl LocalResolver {
             }
         };
 
+        let cancel = CancellationToken::new();
         self.inner_resolver = Resolver::Forwarding {
             resolver: Box::new(resolver),
             filter_out_aaaa,
+            limit: Arc::clone(&self.forward_limit),
+            _cancel_on_drop: cancel.clone().drop_guard(),
+            cancel,
         };
+    }
+}
+
+fn servfail() -> NetError {
+    NetError::Dns(DnsError::ResponseCode(ResponseCode::ServFail))
+}
+
+type ForwardingResolver = HickoryResolver<SingleSocketUdpProvider>;
+
+/// A [ConnectionProvider] that sends each UDP query on a single socket.
+///
+/// hickory resends an unanswered UDP query on a new socket every few hundred milliseconds, up to
+/// three times, and keeps every one of them open until the timeout. When the upstream server is
+/// slow or unreachable, that triples the file descriptors held by forwarded queries.
+#[derive(Clone, Default)]
+struct SingleSocketUdpProvider(TokioRuntimeProvider);
+
+impl ConnectionProvider for SingleSocketUdpProvider {
+    type Conn = DnsExchange<TokioRuntimeProvider>;
+    type FutureConn = <TokioRuntimeProvider as ConnectionProvider>::FutureConn;
+    type RuntimeProvider = TokioRuntimeProvider;
+
+    fn new_connection(
+        &self,
+        ip: IpAddr,
+        config: &ConnectionConfig,
+        cx: &PoolContext,
+    ) -> Result<Self::FutureConn, NetError> {
+        let ProtocolConfig::Udp = config.protocol else {
+            return self.0.new_connection(ip, config, cx);
+        };
+        // Same as the default provider, except for `with_max_retries`.
+        let exchange = UdpClientStream::builder(SocketAddr::new(ip, config.port), self.0.clone())
+            .with_timeout(Some(cx.options.timeout))
+            .with_os_port_selection(cx.options.os_port_selection)
+            .avoid_local_ports(cx.options.avoid_local_udp_ports.clone())
+            .with_bind_addr(config.bind_addr)
+            .with_max_retries(1)
+            .exchange();
+        Ok(Box::pin(future::ready(Ok(exchange))))
+    }
+
+    fn runtime_provider(&self) -> &Self::RuntimeProvider {
+        &self.0
     }
 }
 
@@ -786,6 +872,10 @@ impl ResolverImpl {
                             let response = MessageResponseBuilder::from_message_request(message)
                                 .error_msg(&message.metadata, no_records.response_code);
                             response_handler.send_response(response).await
+                        } else if let NetError::Dns(DnsError::ResponseCode(code)) = resolve_err {
+                            let response = MessageResponseBuilder::from_message_request(message)
+                                .error_msg(&message.metadata, code);
+                            response_handler.send_response(response).await
                         } else {
                             let response = Self::build_response(message, &AuthLookup::Empty);
                             response_handler.send_response(response).await
@@ -829,6 +919,7 @@ impl RequestHandler for ResolverImpl {
 #[cfg(test)]
 mod test {
     use super::*;
+    use hickory_server::resolver::TokioResolver;
     use std::{net::UdpSocket, sync::Mutex, thread};
     use typed_builder::TypedBuilder;
 
@@ -1003,6 +1094,148 @@ mod test {
         rt.block_on(handle.stop());
         thread::sleep(Duration::from_millis(300));
         UdpSocket::bind(addr).expect("Failed to bind to a port that should have been removed");
+    }
+
+    /// DNS response code for SERVFAIL (RFC 1035, section 4.1.1).
+    const RCODE_SERVFAIL: u8 = 2;
+
+    /// Encode a minimal A query for `name` with the given transaction id.
+    fn raw_a_query(id: u16, name: &str) -> Vec<u8> {
+        let mut packet = Vec::new();
+        packet.extend_from_slice(&id.to_be_bytes());
+        // Recursion desired, one question.
+        packet.extend_from_slice(&[0x01, 0x00, 0x00, 0x01, 0, 0, 0, 0, 0, 0]);
+        for label in name.split('.').filter(|label| !label.is_empty()) {
+            packet.push(u8::try_from(label.len()).unwrap());
+            packet.extend_from_slice(label.as_bytes());
+        }
+        packet.push(0);
+        // QTYPE A, QCLASS IN.
+        packet.extend_from_slice(&[0, 1, 0, 1]);
+        packet
+    }
+
+    /// Read responses on `client` until `deadline`, returning the response code of the first
+    /// response carrying transaction id `id`, or `None` if none arrived in time.
+    fn await_rcode(client: &UdpSocket, id: u16, deadline: Instant) -> Option<u8> {
+        let mut buf = [0u8; 512];
+        loop {
+            let left = deadline.checked_duration_since(Instant::now())?;
+            client
+                .set_read_timeout(Some(left.max(Duration::from_millis(1))))
+                .unwrap();
+            let Ok(len) = client.recv(&mut buf) else {
+                return None;
+            };
+            if len >= 4 && u16::from_be_bytes([buf[0], buf[1]]) == id {
+                return Some(buf[3] & 0x0f);
+            }
+        }
+    }
+
+    /// An upstream DNS server that never answers, so every forwarded query stays in flight.
+    /// It listens on the IPv6 loopback because the local resolver under test owns 127.0.0.1.
+    fn black_hole_upstream() -> UdpSocket {
+        UdpSocket::bind((std::net::Ipv6Addr::LOCALHOST, DNS_PORT)).unwrap()
+    }
+
+    fn query_client(resolver: SocketAddr) -> UdpSocket {
+        let client = UdpSocket::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+        client.connect(resolver).unwrap();
+        client
+    }
+
+    /// Queries past the forwarding limit are refused with SERVFAIL at once instead of opening
+    /// more sockets, so a burst of queries cannot exhaust the daemon's file descriptors.
+    #[test_log::test]
+    fn forwarded_queries_past_the_limit_get_servfail() {
+        let _mutex = LOCK.lock().unwrap();
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let _upstream = black_hole_upstream();
+
+        let handle = rt.block_on(start_resolver());
+        rt.block_on(
+            handle.enable_forward(vec![IpAddr::from(std::net::Ipv6Addr::LOCALHOST)], false),
+        );
+        let client = query_client(handle.listening_addr());
+
+        for id in 0..u16::try_from(FORWARD_QUERY_LIMIT).unwrap() {
+            client
+                .send(&raw_a_query(id, &format!("q{id}.example.")))
+                .unwrap();
+        }
+        // Let the resolver take every permit before the extra query arrives.
+        thread::sleep(Duration::from_millis(300));
+        let extra_id = 1000;
+        client
+            .send(&raw_a_query(extra_id, "extra.example."))
+            .unwrap();
+
+        let rcode = await_rcode(&client, extra_id, Instant::now() + Duration::from_secs(2));
+        assert_eq!(rcode, Some(RCODE_SERVFAIL));
+        rt.block_on(handle.stop());
+    }
+
+    /// Replacing the forwarding config answers the queries still in flight to the old servers
+    /// with SERVFAIL, so their sockets are released and the client retries on the new config.
+    #[test_log::test]
+    fn replacing_the_forwarder_fails_queries_in_flight() {
+        let _mutex = LOCK.lock().unwrap();
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let _upstream = black_hole_upstream();
+        let upstream_ip = IpAddr::from(std::net::Ipv6Addr::LOCALHOST);
+
+        let handle = rt.block_on(start_resolver());
+        rt.block_on(handle.enable_forward(vec![upstream_ip], false));
+        let client = query_client(handle.listening_addr());
+
+        let id = 7;
+        client.send(&raw_a_query(id, "inflight.example.")).unwrap();
+        thread::sleep(Duration::from_millis(300));
+        rt.block_on(handle.enable_forward(vec![upstream_ip], false));
+
+        let rcode = await_rcode(&client, id, Instant::now() + Duration::from_secs(1));
+        assert_eq!(rcode, Some(RCODE_SERVFAIL));
+        rt.block_on(handle.stop());
+    }
+
+    /// A forwarded query that gets no answer is not resent on fresh sockets: every datagram the
+    /// upstream server sees for it comes from one source port.
+    #[test_log::test]
+    fn unanswered_forwarded_query_uses_a_single_socket() {
+        let _mutex = LOCK.lock().unwrap();
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let upstream = black_hole_upstream();
+
+        let handle = rt.block_on(start_resolver());
+        rt.block_on(
+            handle.enable_forward(vec![IpAddr::from(std::net::Ipv6Addr::LOCALHOST)], false),
+        );
+        let client = query_client(handle.listening_addr());
+        client.send(&raw_a_query(9, "single.example.")).unwrap();
+
+        let mut source_ports = std::collections::BTreeSet::new();
+        let mut datagrams = 0;
+        let deadline = Instant::now() + Duration::from_secs(3);
+        let mut buf = [0u8; 512];
+        while let Some(left) = deadline.checked_duration_since(Instant::now()) {
+            upstream
+                .set_read_timeout(Some(left.max(Duration::from_millis(1))))
+                .unwrap();
+            let Ok((_, from)) = upstream.recv_from(&mut buf) else {
+                break;
+            };
+            datagrams += 1;
+            source_ports.insert(from.port());
+        }
+
+        assert!(datagrams > 0, "the query was never forwarded");
+        assert_eq!(
+            source_ports.len(),
+            1,
+            "query sent from ports {source_ports:?}"
+        );
+        rt.block_on(handle.stop());
     }
 
     #[derive(TypedBuilder)]
