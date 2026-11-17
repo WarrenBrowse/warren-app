@@ -92,6 +92,36 @@ describe('IAccountData cache', () => {
     return expect(update).resolves.toBe(undefined);
   });
 
+  // A Warren account is a key, so the API refusing a signed request is not a
+  // verdict on the account: it also answers a request it could not check (its
+  // database down). The cache keeps asking.
+  it('should retry after the API refused the request', async () => {
+    const update = new Promise<void>((resolve) => {
+      let attempts = 0;
+      const fetch = (): Promise<AccountDataResponse> => {
+        attempts++;
+        if (attempts === 1) {
+          setTimeout(() => vi.advanceTimersByTime(9000), 0);
+          return Promise.resolve({ type: 'error', error: 'invalid-account' });
+        }
+        return Promise.resolve(dummyAccountData);
+      };
+
+      const cache = new AccountDataCache(fetch, (data) => {
+        if (data) {
+          resolve();
+        }
+      });
+
+      cache.fetch(dummyPubKey, {
+        onFinish: () => {},
+        onError: (_error: AccountFetchError) => {},
+      });
+    });
+
+    return expect(update).resolves.toBeUndefined();
+  });
+
   it('should cancel first fetch', async () => {
     const firstError = vi.fn((_error: AccountFetchError) => {});
     const secondSuccess = vi.fn();

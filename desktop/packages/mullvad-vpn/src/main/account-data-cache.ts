@@ -164,10 +164,11 @@ export default class AccountDataCache {
       return;
     }
 
+    // A Warren account is a key, so no answer proves it invalid for good: the
+    // API also refuses a signed request it could not check (its database
+    // down), and the retry is what brings the account back afterwards.
     this.notifyWatchers((w) => w.onError(error));
-    if (error !== 'invalid-account') {
-      this.scheduleRetry(pubkey, error);
-    }
+    this.scheduleRetry(pubkey, error);
   }
 
   private scheduleRetry(pubkey: WarrenPubKey, error: AccountDataError['error']) {
