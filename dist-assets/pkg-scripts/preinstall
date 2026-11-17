@@ -108,7 +108,17 @@ fi
 # NOTE: This path must be kept in sync with the path defined
 # in warren-daemon/src/macos_launch_daemon.rs and postinstall
 DAEMON_PLIST_PATH="/Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist"
-launchctl unload -w $DAEMON_PLIST_PATH || echo "Failed to unload old warren-daemon"
+DAEMON_LABEL="com.warrenbrowse.vpn.daemon"
+launchctl unload -w "$DAEMON_PLIST_PATH" || echo "launchctl could not unload the old warren-daemon"
+# An old daemon still loaded would see its bundle deleted below and take the
+# upgrade for an uninstall, lifting the kill switch: stop before that instead.
+if launchctl print "system/$DAEMON_LABEL" > /dev/null 2>&1; then
+    echo "The old warren-daemon is still loaded; aborting the install"
+    if setup_may_run_as_root; then
+        "$SETUP" disarm-deadman || true
+    fi
+    exit 1
+fi
 
 # For good measure, delete old application directories that may prevent install/upgrade.
 # Make sure this happens after the daemon is unloaded, or it will trip the daemon's uninstall

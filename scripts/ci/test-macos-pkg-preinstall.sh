@@ -63,6 +63,12 @@ STUB
     cat > "$dir/bin/launchctl" <<'STUB'
 #!/usr/bin/env bash
 echo "$*" >> "$WARREN_TEST_SANDBOX/launchctl-calls"
+# `print` answers whether the service is loaded: only when a test leaves the
+# old daemon loaded after its unload.
+if [ "$1" = print ]; then
+    [ -e "$WARREN_TEST_SANDBOX/daemon-stays-loaded" ]
+    exit $?
+fi
 STUB
 
     # No GUI is running, which keeps the script off the root-owned /var/run
@@ -187,6 +193,19 @@ if [ -e "$dir/Applications/Warren VPN.app" ]; then
     failures=$((failures + 1))
 else
     echo "ok - a nominal upgrade removes the old bundle"
+fi
+
+# An old daemon that survives its unload would see its bundle deleted below and
+# take the upgrade for an uninstall, lifting the kill switch and the lockdown.
+dir=$(make_sandbox unload-failed 0 with-old-bundle)
+touch "$dir/daemon-stays-loaded"
+report "an upgrade aborts when the old daemon stays loaded" 1 "$(run_preinstall "$dir")" "$dir"
+assert_setup_called "an install aborted over a loaded daemon retires the guard" "$dir" disarm-deadman
+if [ -e "$dir/Applications/Warren VPN.app" ]; then
+    echo "ok - the bundle of a daemon still loaded is left in place"
+else
+    echo "FAIL - the bundle of a daemon still loaded is left in place"
+    failures=$((failures + 1))
 fi
 
 # The previous bundle sits where any admin can replace it. A warren-setup that
