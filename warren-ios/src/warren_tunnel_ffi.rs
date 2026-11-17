@@ -15,8 +15,9 @@
 //!
 //! The handle lifecycle:
 //! - `warren_tunnel_start` boxes the impl, returns the raw pointer.
-//! - `warren_tunnel_stop` reconstitutes the box via [`Box::from_raw`]
-//!   so Drop runs (Tokio runtime, channels, callback cleanup).
+//! - `warren_tunnel_stop` reconstitutes the box via [`Box::from_raw`],
+//!   empties the Swift callbacks and shuts the Tokio runtime down, which
+//!   drops every task of the session and the references they hold.
 //! - All other entry points cast the raw pointer back to `&mut Impl`
 //!   without taking ownership.
 
@@ -750,6 +751,9 @@ mod handle_impl {
     use warrenguard_transport::IosTun;
     use warrenguard_transport::supervisor::SupervisorHandle;
 
+    /// How long stop waits for the session's blocking work to end.
+    const SHUTDOWN_GRACE: std::time::Duration = std::time::Duration::from_secs(1);
+
     /// Pointer + opaque context pair tracked as a single unit. Both
     /// fields move together so the borrow checker enforces atomic
     /// replace via [`Mutex<Option<CallbackEntry<F>>>`].
@@ -777,9 +781,14 @@ mod handle_impl {
     /// [`super::warren_tunnel_start`] returns to Swift. All access
     /// (read or write) goes through the safe helpers below.
     pub struct WarrenTunnelHandleImpl {
-        /// Dedicated runtime for this tunnel session. Drops cleanly
-        /// when the box is dropped : all spawned tasks are aborted.
-        pub runtime: Runtime,
+        /// Spawns onto this session's runtime.
+        pub runtime: tokio::runtime::Handle,
+        /// The runtime itself. It stays out of reach of the tasks it runs,
+        /// which hold the handle: [`Self::shut_down`] takes it and shuts it
+        /// down, which drops every task and with them their references to
+        /// the handle. Left to the handle's own drop, it would never run,
+        /// since those references keep the handle alive.
+        owned_runtime: Mutex<Option<Runtime>>,
         /// Swift-side bridge to `NEPacketTunnelFlow`. The downlink
         /// pump (uplink in iOS terminology) calls
         /// `PacketDevice::send` ; the outbound dispatcher task drains
@@ -854,7 +863,8 @@ mod handle_impl {
                 .thread_name("warren-tunnel-ios")
                 .build()?;
             Ok(Self {
-                runtime,
+                runtime: runtime.handle().clone(),
+                owned_runtime: Mutex::new(Some(runtime)),
                 tun: IosTun::new(),
                 event_callback: Mutex::new(None),
                 outbound_callback: Mutex::new(None),
@@ -871,6 +881,39 @@ mod handle_impl {
                 entry_rtt: Arc::new(Mutex::new(warren_discovery_core::RttCache::new())),
                 ban: Mutex::new(None),
             })
+        }
+
+        /// Ends the session: no Swift callback runs once this returns, and
+        /// every task of the session is dropped with the runtime.
+        ///
+        /// The callbacks go first. Each one fires under its slot's lock, so
+        /// emptying the slots waits out a callback in flight, and Swift
+        /// releases the callback context as soon as stop returns.
+        pub fn shut_down(&self) {
+            fn clear<T>(slot: &Mutex<Option<T>>) {
+                *slot
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner) = None;
+            }
+            clear(&self.event_callback);
+            clear(&self.outbound_callback);
+            clear(&self.ip_assign_callback);
+            self.abort_watchdog();
+            clear(&self.supervisor);
+            let runtime = self
+                .owned_runtime
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .take();
+            if let Some(runtime) = runtime {
+                // Blocking on the shutdown from inside a runtime panics, so a
+                // stop reached from a runtime thread lets it finish there.
+                if tokio::runtime::Handle::try_current().is_ok() {
+                    runtime.shutdown_background();
+                } else {
+                    runtime.shutdown_timeout(SHUTDOWN_GRACE);
+                }
+            }
         }
 
         /// Install the multi-hop supervisor control handle (once, from
@@ -2529,10 +2572,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
             session_blinding,
             entitlement_blinding,
         );
-        // Box the Arc so the FFI sees a single owner ; clones live
-        // inside spawned tasks via the Arc.
-        let boxed = Box::new(arc);
-        Box::into_raw(boxed) as *mut WarrenTunnelHandle
+        into_ffi_handle(arc)
     }
     #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
     {
@@ -2562,13 +2602,13 @@ pub unsafe extern "C" fn warren_tunnel_stop(handle: *mut WarrenTunnelHandle) {
         // would tell the next screen the new tunnel is already degraded.
         reset_path_health();
         // SAFETY: caller upholds the precondition that `handle` came
-        // from `warren_tunnel_start` and has not been stopped yet. We
-        // reconstitute the Box so Drop runs (runtime shutdown, channel
-        // close, callback cleanup).
+        // from `warren_tunnel_start` and has not been stopped yet.
         let boxed = unsafe {
             Box::from_raw(handle as *mut std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>)
         };
-        boxed.abort_watchdog();
+        // Dropping the box alone would not end the session: the session's
+        // tasks hold the handle too. Shutting the runtime down drops them.
+        boxed.shut_down();
         drop(boxed);
     }
     #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
@@ -3143,6 +3183,14 @@ unsafe fn clone_arc_from_raw(
     Some(cloned)
 }
 
+/// The opaque handle Swift holds for a started session.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+fn into_ffi_handle(
+    arc: std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>,
+) -> *mut WarrenTunnelHandle {
+    Box::into_raw(Box::new(arc)) as *mut WarrenTunnelHandle
+}
+
 /// Seconds since Unix epoch, monotonic-ish.
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
 fn now_secs() -> u64 {
@@ -3714,5 +3762,59 @@ mod tests {
             !impl_.has_connected_once.load(Ordering::Acquire),
             "has_connected_once must be false immediately after construction"
         );
+    }
+
+    // ---- Session teardown ----
+
+    /// A task the session spawned holds the handle, as the outbound
+    /// dispatcher does for as long as the session lives. Stop must still end
+    /// the session: before, the handle outlived it with its runtime, its QUIC
+    /// connection and the Swift callbacks.
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
+    #[test]
+    fn stop_ends_the_session_while_its_tasks_still_hold_it() {
+        let arc = std::sync::Arc::new(
+            super::handle_impl::WarrenTunnelHandleImpl::new().expect("runtime"),
+        );
+        arc.spawn_outbound_dispatcher();
+        let weak = std::sync::Arc::downgrade(&arc);
+        let handle = super::into_ffi_handle(arc);
+
+        // SAFETY: `handle` comes from `into_ffi_handle` and is stopped once.
+        unsafe { super::warren_tunnel_stop(handle) };
+
+        assert!(
+            weak.upgrade().is_none(),
+            "the session must be gone once stop returns"
+        );
+    }
+
+    /// Swift releases the callback context as soon as stop returns, so no
+    /// callback may run after that, even from a reference to the session an
+    /// FFI call still holds.
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
+    #[test]
+    fn no_callback_reaches_swift_after_stop() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        static CALLS: AtomicUsize = AtomicUsize::new(0);
+        unsafe extern "C" fn count(_: *const super::WarrenTunnelEventC, _: *mut std::ffi::c_void) {
+            CALLS.fetch_add(1, Ordering::SeqCst);
+        }
+
+        let arc = std::sync::Arc::new(
+            super::handle_impl::WarrenTunnelHandleImpl::new().expect("runtime"),
+        );
+        let in_flight = std::sync::Arc::clone(&arc);
+        let handle = super::into_ffi_handle(arc);
+        // SAFETY: `handle` is live; the callback ignores its context.
+        let rc =
+            unsafe { super::warren_tunnel_set_event_callback(handle, count, std::ptr::null_mut()) };
+        assert_eq!(rc, super::RC_OK);
+
+        // SAFETY: `handle` comes from `into_ffi_handle` and is stopped once.
+        unsafe { super::warren_tunnel_stop(handle) };
+        in_flight.fire_event(super::WarrenTunnelEventTagC::EventDisconnected);
+
+        assert_eq!(CALLS.load(Ordering::SeqCst), 0);
     }
 }
