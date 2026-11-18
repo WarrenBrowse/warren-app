@@ -72,7 +72,7 @@ Line wrap the file at 100 chars.                                              Th
   mirrored.
 - [iOS] Keep App Transport Security on, and share only the wallet seed with the VPN extension.
 
-## [1.1.58] - 2026-11-18
+## [1.1.59] - 2026-11-18
 ### Added
 - [Windows, macOS, Linux] Add a Licenses screen under Settings, App info: the GPL text the app ships
   with, the license of the tunnel engine, the credit to Mullvad VPN AB, and links to the source code

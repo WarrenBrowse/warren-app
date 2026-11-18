@@ -66,7 +66,7 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] App Transport Security rămâne activ, iar cu extensia VPN se partajează doar sămânța
   portofelului.
 
-## [1.1.58] - 2026-11-18
+## [1.1.59] - 2026-11-18
 ### Adăugat
 - [Windows, macOS, Linux] Un ecran Licențe în Setări, Informații despre aplicație: textul GPL livrat
   cu aplicația, licența motorului tunelului, mențiunea Mullvad VPN AB și linkuri către codul sursă

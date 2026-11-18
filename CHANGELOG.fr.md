@@ -70,7 +70,7 @@ par l'application, gardez-le tel quel.
 - [iOS] Garder App Transport Security activé, et ne partager avec l'extension VPN que la graine du
   portefeuille.
 
-## [1.1.58] - 2026-11-18
+## [1.1.59] - 2026-11-18
 ### Ajouté
 - [Windows, macOS, Linux] Un écran Licences dans Réglages, Infos sur l'application : le texte de la
   GPL livré avec l'application, la licence du moteur du tunnel, la mention de Mullvad VPN AB, et des
