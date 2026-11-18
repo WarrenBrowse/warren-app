@@ -24,7 +24,6 @@ protobuf {
 }
 
 dependencies {
-    implementation(projects.lib.ui.resource)
     implementation(projects.lib.common)
     implementation(projects.lib.model)
 
