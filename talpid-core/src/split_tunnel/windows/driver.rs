@@ -1096,22 +1096,15 @@ unsafe fn deserialize_buffer<T>(buffer: &[u8]) -> T {
     }
 }
 
+/// Decodes the driver's native-endian UTF-16 bytes. The slice may sit at any offset of the event
+/// buffer, so it is read byte pair by byte pair rather than as `u16`s; a trailing odd byte is
+/// not a code unit and is dropped.
 fn buffer_to_osstring(buffer: &[u8]) -> OsString {
-    let mut out_buf = vec![0u16; (buffer.len() + 1) / mem::size_of::<u16>()];
-
-    // SAFETY: the destination holds `out_buf.len()` `u16`s and is suitably aligned. The source
-    // is NOT checked: the copy reads `2 * out_buf.len()` bytes as `u16`, which is one byte past
-    // `buffer` when its length is odd, and requires `buffer` to be 2-byte aligned. Both hold for
-    // the driver's events (UTF-16 byte lengths at even offsets of the event buffer), but this
-    // safe function does not enforce them.
-    unsafe {
-        ptr::copy_nonoverlapping(
-            buffer as *const _ as *const u16,
-            out_buf.as_mut_ptr(),
-            out_buf.len(),
-        )
-    };
-    OsStringExt::from_wide(&out_buf)
+    let wide: Vec<u16> = buffer
+        .chunks_exact(mem::size_of::<u16>())
+        .map(|pair| u16::from_ne_bytes([pair[0], pair[1]]))
+        .collect();
+    OsStringExt::from_wide(&wide)
 }
 
 /// Inserts a string into `buffer` at a given `byte_offset`.
@@ -1136,6 +1129,34 @@ pub fn as_uninit_byte_slice<T: Copy + Sized>(value: &T) -> &[mem::MaybeUninit<u8
     // for the same lifetime. `MaybeUninit<u8>` has alignment 1 and may hold any byte, padding
     // included, so viewing the bytes of `T` this way never reads an invalid value.
     unsafe { std::slice::from_raw_parts(value as *const _ as *const _, mem::size_of::<T>()) }
+}
+
+#[cfg(test)]
+mod string_tests {
+    use super::*;
+
+    fn wide_bytes(text: &str) -> Vec<u8> {
+        text.encode_utf16().flat_map(u16::to_ne_bytes).collect()
+    }
+
+    #[test]
+    fn a_string_at_an_odd_offset_is_decoded() {
+        let mut buffer = vec![0xAA_u8];
+        buffer.extend(wide_bytes("C:/app.exe"));
+
+        assert_eq!(
+            buffer_to_osstring(&buffer[1..]),
+            OsString::from("C:/app.exe")
+        );
+    }
+
+    #[test]
+    fn a_trailing_odd_byte_is_not_read_as_a_code_unit() {
+        let mut buffer = wide_bytes("ab");
+        buffer.push(b'c');
+
+        assert_eq!(buffer_to_osstring(&buffer), OsString::from("ab"));
+    }
 }
 
 #[cfg(test)]
