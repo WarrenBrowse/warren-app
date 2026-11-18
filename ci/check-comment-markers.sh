@@ -8,8 +8,8 @@
 #   bash ci/check-comment-markers.sh [pathspec...]           tracked files
 #   bash ci/check-comment-markers.sh --staged [pathspec...]  lines a commit adds
 #
-# Without a pathspec, every source file. CI passes the languages already
-# cleaned up; the commit hook holds every language to it for new lines.
+# Without a pathspec, every source file, which is what CI scans; the commit
+# hook holds the lines a commit adds to it.
 set -euo pipefail
 
 pattern='(^|[^A-Za-z])Lot [0-9]|(^|[^A-Za-z])Phase #?[0-9]|\([HML]-[0-9]+\)|(^|[^A-Za-z])POC([^A-Za-z]|$)|warren-core doc [0-9]|(^|[^A-Za-z])[Dd]ocs?[ /][0-9]{2,3}([^0-9]|$)|AUDIT-[0-9]{4}'

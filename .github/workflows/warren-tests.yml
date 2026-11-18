@@ -90,12 +90,12 @@ jobs:
 
       # The repository is public: lot and phase numbers, finding ids and
       # references to numbered documents of the private backend mean nothing
-      # to a reader. The Rust, TOML and proto sources are clean; the commit
-      # hook holds every other language to it for the lines a commit adds.
+      # to a reader. Every source language is clean, so the scan covers them
+      # all; the commit hook refuses the lines a commit would add.
       - name: Work-tracking markers in source
         run: |
           bash ci/test-check-comment-markers.sh
-          bash ci/check-comment-markers.sh '*.rs' '*.toml' '*.proto'
+          bash ci/check-comment-markers.sh
 
       # A public key, an address, a nonce or a seed never reaches a log in
       # clear. The gate reads the Rust log calls; a deliberate exception says
