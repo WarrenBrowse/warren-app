@@ -32,11 +32,12 @@ class NavigationState(val backStack: SnapshotStateList<NavKey2>) {
     val backStackFlow: Flow<List<NavKey2>> = snapshotFlow { backStack.toList() }
 }
 
-/** Convert NavigationState into NavEntries. */
+/**
+ * Convert NavigationState into NavEntries. The decorated list is handed to NavDisplay as it is: a
+ * copy into a new state list on every recomposition bought nothing.
+ */
 @Composable
-fun NavigationState.toEntries(
-    entryProvider: (NavKey2) -> NavEntry<NavKey2>
-): SnapshotStateList<NavEntry<NavKey2>> =
+fun NavigationState.toEntries(entryProvider: (NavKey2) -> NavEntry<NavKey2>): List<NavEntry<NavKey2>> =
     rememberDecoratedNavEntries(
             entryDecorators =
                 listOf(
@@ -49,7 +50,6 @@ fun NavigationState.toEntries(
             backStack = backStack,
             entryProvider = entryProvider,
         )
-        .toMutableStateList()
 
 @Composable
 fun <T : Parcelable> rememberParcelableNavBackStack(vararg initial: T): SnapshotStateList<T> {

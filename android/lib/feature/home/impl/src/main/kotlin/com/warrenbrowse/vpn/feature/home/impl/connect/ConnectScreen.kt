@@ -336,11 +336,12 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val cachedPinLabel by localSettings.exitPinLabel.collectAsStateWithLifecycle()
     val automaticLabel = stringResource(R.string.automatic)
     // The name the catalogue gives the pinned exit, once it has been fetched.
-    val resolvedPinLabel =
-        (exitPin as? ExitPin.Exit)?.let { pin ->
-            relays.firstOrNull { it.exitId == pin.exitId }
-                ?.let { it.city.ifBlank { countryDisplayName(it.country) } }
+    // Looked up once per catalogue and pin, not on every recomposition.
+    val pinnedRelay =
+        remember(relays, exitPin) {
+            (exitPin as? ExitPin.Exit)?.let { pin -> relays.firstOrNull { it.exitId == pin.exitId } }
         }
+    val resolvedPinLabel = pinnedRelay?.let { it.city.ifBlank { countryDisplayName(it.country) } }
     // Cached so the next cold start names the exit from the first frame.
     LaunchedEffect(resolvedPinLabel) {
         val pin = exitPin
@@ -369,7 +370,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             ExitPin.Automatic -> null
             is ExitPin.Country -> pin.country
             is ExitPin.City -> pin.country
-            is ExitPin.Exit -> relays.firstOrNull { it.exitId == pin.exitId }?.country
+            is ExitPin.Exit -> pinnedRelay?.country
         }
 
     val createVpnProfile =
@@ -405,7 +406,9 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             else -> null
         }
     val shufflePicks =
-        shuffleCandidates(relays, currentExitId(relays, activeEndpointHost, exitPin))
+        remember(relays, activeEndpointHost, exitPin) {
+            shuffleCandidates(relays, currentExitId(relays, activeEndpointHost, exitPin))
+        }
 
     // Desktop "surprise me" shuffle: pin a random active exit other than the
     // current one and apply it. While a tunnel is up the new exit is applied by
