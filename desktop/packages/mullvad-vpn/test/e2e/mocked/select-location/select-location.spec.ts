@@ -293,7 +293,9 @@ test.describe('Select location', () => {
         routes.selectLocation.getAddToNewCustomListButton(firstRecentName);
       await expect(addToNewCustomListButton).toBeVisible();
 
-      await page.locator('body').click(); // Click outside to close menu
+      // Close the menu on the title: a click in the middle of the page can land on a location
+      // and connect to it, which leaves the view.
+      await page.getByText('Select location', { exact: true }).first().click();
       await expect(addToCustomListButton).not.toBeVisible();
     });
 
@@ -321,7 +323,9 @@ test.describe('Select location', () => {
       const deleteCustomListButton = routes.selectLocation.getDeleteCustomListButton();
       await expect(deleteCustomListButton).toBeVisible();
 
-      await page.locator('body').click(); // Click outside to close menu
+      // Close the menu on the title: a click in the middle of the page can land on a location
+      // and connect to it, which leaves the view.
+      await page.getByText('Select location', { exact: true }).first().click();
       await expect(deleteCustomListButton).not.toBeVisible();
     });
   });
