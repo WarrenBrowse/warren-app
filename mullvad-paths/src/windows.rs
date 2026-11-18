@@ -261,6 +261,20 @@ fn owner_is_privileged(handle: &OwnedHandle) -> Result<bool> {
     Ok(privileged)
 }
 
+/// Like [`create_privileged_directory`], with nothing granted to other users: only the
+/// administrators and SYSTEM may enter it. For the directories that hold secrets, which must not
+/// depend on the ACL they would inherit.
+pub fn create_private_directory(path: &Path) -> Result<()> {
+    create_dir_recursive_with_permissions(
+        path,
+        UserPermissions {
+            read: false,
+            write: false,
+            execute: false,
+        },
+    )
+}
+
 /// Sets security permissions for path such that admin has full ownership and access while
 /// authenticated users only have read access.
 fn set_security_permissions(path: &Path, user_permissions: UserPermissions) -> Result<()> {
@@ -851,6 +865,17 @@ mod tests {
         crate::create_dir(logs.clone(), crate::logs::log_dir_permissions()).unwrap();
 
         assert!(!users_have_an_entry(&logs));
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_private_directory_grants_users_nothing() {
+        let root = scratch("private");
+        let secrets = root.join("settings").join("secrets");
+
+        create_private_directory(&secrets).unwrap();
+
+        assert!(!users_have_an_entry(&secrets));
         let _ = std::fs::remove_dir_all(&root);
     }
 

@@ -106,11 +106,12 @@ impl WindowsDpapiStorage {
         Ok(self.secrets_dir.join(format!("{key}.{DPAPI_EXTENSION}")))
     }
 
+    /// The blob is DPAPI-sealed for the machine, so any account that reads it can unseal it:
+    /// the directory's own ACL (administrators and SYSTEM only), set on every store rather than
+    /// inherited, is what keeps it to them.
     fn ensure_dir(&self) -> io::Result<()> {
-        if !self.secrets_dir.exists() {
-            fs::create_dir_all(&self.secrets_dir)?;
-        }
-        Ok(())
+        mullvad_paths::windows::create_private_directory(&self.secrets_dir)
+            .map_err(io::Error::other)
     }
 }
 

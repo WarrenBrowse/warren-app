@@ -59,16 +59,17 @@ impl PlaintextStorage {
     }
 
     fn ensure_dir(&self) -> io::Result<()> {
-        fs::create_dir_all(&self.secrets_dir)?;
-        // Tighten directory perms on Unix-like systems so that a
-        // file with relaxed mode created here is still protected by
-        // the enclosing directory, on every write: a directory left
-        // open by an older build or by hand is not trusted as found.
-        // No-op on Windows where ACLs are inherited from the parent
-        // (settings_dir is already ProgramData-style and root-owned).
+        // The directory's own permissions protect a file created here with a relaxed mode, on
+        // every write: a directory left open by an older build or by hand is not trusted as
+        // found. On Windows that is an explicit administrators-and-SYSTEM ACL, not the one the
+        // settings directory would hand down.
+        #[cfg(windows)]
+        mullvad_paths::windows::create_private_directory(&self.secrets_dir)
+            .map_err(io::Error::other)?;
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
+            fs::create_dir_all(&self.secrets_dir)?;
             let mut perm = fs::metadata(&self.secrets_dir)?.permissions();
             perm.set_mode(0o700);
             fs::set_permissions(&self.secrets_dir, perm)?;
