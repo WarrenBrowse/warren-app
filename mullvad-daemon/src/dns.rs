@@ -1,53 +1,33 @@
-use std::net::{IpAddr, Ipv4Addr};
+use std::net::IpAddr;
 
 use mullvad_types::settings::{DnsOptions, DnsState};
 use talpid_core::firewall::is_local_address;
 use talpid_dns::DnsConfig;
-
-/// When we want to block certain contents with the help of DNS server side,
-/// we compute the resolver IP to use based on these constants. The last
-/// byte can be ORed together to combine multiple block lists.
-const DNS_BLOCKING_IP_BASE: Ipv4Addr = Ipv4Addr::new(100, 64, 0, 0);
-const DNS_AD_BLOCKING_IP_BIT: u8 = 1 << 0; // 0b00000001
-const DNS_TRACKER_BLOCKING_IP_BIT: u8 = 1 << 1; // 0b00000010
-const DNS_MALWARE_BLOCKING_IP_BIT: u8 = 1 << 2; // 0b00000100
-const DNS_ADULT_BLOCKING_IP_BIT: u8 = 1 << 3; // 0b00001000
-const DNS_GAMBLING_BLOCKING_IP_BIT: u8 = 1 << 4; // 0b00010000
-const DNS_SOCIAL_MEDIA_BLOCKING_IP_BIT: u8 = 1 << 5; // 0b00100000
+use talpid_types::net::{
+    BLOCK_ADS, BLOCK_ADULT_CONTENT, BLOCK_GAMBLING, BLOCK_MALWARE, BLOCK_SOCIAL_MEDIA,
+    BLOCK_TRACKERS, content_blocking_resolver,
+};
 
 /// Return the DNS resolvers to use
 pub fn addresses_from_options(options: &DnsOptions) -> DnsConfig {
     let config = match options.state {
         DnsState::Default => {
-            // Check if we should use a custom blocking DNS resolver.
-            // And if so, compute the IP.
-            let mut last_byte: u8 = 0;
+            let blocked = &options.default_options;
+            let mask = [
+                (blocked.block_ads, BLOCK_ADS),
+                (blocked.block_trackers, BLOCK_TRACKERS),
+                (blocked.block_malware, BLOCK_MALWARE),
+                (blocked.block_adult_content, BLOCK_ADULT_CONTENT),
+                (blocked.block_gambling, BLOCK_GAMBLING),
+                (blocked.block_social_media, BLOCK_SOCIAL_MEDIA),
+            ]
+            .into_iter()
+            .filter(|(on, _)| *on)
+            .fold(0, |mask, (_, bit)| mask | bit);
 
-            if options.default_options.block_ads {
-                last_byte |= DNS_AD_BLOCKING_IP_BIT;
-            }
-            if options.default_options.block_trackers {
-                last_byte |= DNS_TRACKER_BLOCKING_IP_BIT;
-            }
-            if options.default_options.block_malware {
-                last_byte |= DNS_MALWARE_BLOCKING_IP_BIT;
-            }
-            if options.default_options.block_adult_content {
-                last_byte |= DNS_ADULT_BLOCKING_IP_BIT;
-            }
-            if options.default_options.block_gambling {
-                last_byte |= DNS_GAMBLING_BLOCKING_IP_BIT;
-            }
-            if options.default_options.block_social_media {
-                last_byte |= DNS_SOCIAL_MEDIA_BLOCKING_IP_BIT;
-            }
-
-            if last_byte != 0 {
-                let mut dns_ip = DNS_BLOCKING_IP_BASE.octets();
-                dns_ip[dns_ip.len() - 1] |= last_byte;
-                DnsConfig::from_addresses(&[IpAddr::V4(Ipv4Addr::from(dns_ip))], &[])
-            } else {
-                DnsConfig::default()
+            match content_blocking_resolver(mask) {
+                Some(resolver) => DnsConfig::from_addresses(&[IpAddr::V4(resolver)], &[]),
+                None => DnsConfig::default(),
             }
         }
         DnsState::Custom if options.custom_options.addresses.is_empty() => DnsConfig::default(),
@@ -97,13 +77,13 @@ mod test {
 
         assert_eq!(
             addresses_from_options(&public_cfg),
-            DnsConfig::from_addresses(&["100.64.0.1".parse().unwrap()], &[],)
+            DnsConfig::from_addresses(&["10.66.255.1".parse().unwrap()], &[],)
         );
     }
 
     /// Compose default-state options with the given category flags and assert
-    /// the resolver is `100.64.0.{octet}`. This locks the wire contract the
-    /// exit's kresd listeners decode (`100.64.0.1..63`): the last octet is a
+    /// the resolver is `10.66.255.{octet}`. This locks the wire contract the
+    /// exit's kresd listeners decode (`10.66.255.1..63`): the last octet is a
     /// bitmask OR of the per-category bits, so changing any value here is a
     /// server-incompatible break.
     fn assert_blocks_to(default_options: DefaultDnsOptions, octet: u8) {
@@ -115,7 +95,7 @@ mod test {
         };
         assert_eq!(
             addresses_from_options(&cfg),
-            DnsConfig::from_addresses(&[format!("100.64.0.{octet}").parse().unwrap()], &[]),
+            DnsConfig::from_addresses(&[format!("10.66.255.{octet}").parse().unwrap()], &[]),
         );
     }
 

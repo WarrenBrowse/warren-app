@@ -13,8 +13,10 @@ pub mod proxy;
 pub mod wireguard;
 
 mod allowed_nets;
+mod content_blocking;
 
 pub use allowed_nets::*;
+pub use content_blocking::*;
 
 /// Which underlying tunneling technology backs a [`TunnelEndpoint`].
 ///

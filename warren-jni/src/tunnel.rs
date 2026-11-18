@@ -134,7 +134,7 @@ pub struct WarrenTunnelConfig {
         )
     )]
     pub lockdown_mode: Option<bool>,
-    /// DNS options. On Android the magic-IP DNS (`100.64.0.X`) is composed and
+    /// DNS options. On Android the content-blocking DNS (`10.66.255.X`) is composed and
     /// applied client-side via `VpnService.Builder.addDnsServer`, and the
     /// per-category blocking is done by the exit's kresd resolver. This field is
     /// therefore unused here; it is accepted only for schema parity with desktop.

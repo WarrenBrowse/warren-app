@@ -465,7 +465,7 @@ impl Firewall {
 /// resolver the system uses, and content blocking stays in force. It is added
 /// because the product itself queries the gateway: the egress liveness probe
 /// resolves a name against it to prove the exit still forwards. When a content
-/// blocker is on, the configured resolver is `100.64.0.x` instead of the
+/// blocker is on, the configured resolver is `10.66.255.x` instead of the
 /// gateway, so without this the probe is denied by our own DNS leak protection,
 /// reads as "exit not forwarding", and reconnects the tunnel every ~22 seconds
 /// forever. Custom resolvers have the same problem.
@@ -491,7 +491,7 @@ mod allowed_tunnel_dns_tests {
 
     const GATEWAY: IpAddr = IpAddr::V4(Ipv4Addr::new(10, 66, 0, 1));
     /// What the daemon computes for ads+trackers+malware+adult (1|2|4|8).
-    const CONTENT_BLOCKER: IpAddr = IpAddr::V4(Ipv4Addr::new(100, 64, 0, 15));
+    const CONTENT_BLOCKER: IpAddr = IpAddr::V4(Ipv4Addr::new(10, 66, 255, 15));
 
     /// Resolve like the tunnel state machine does, with the gateway as the
     /// default in-tunnel resolver.

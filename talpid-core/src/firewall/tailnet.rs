@@ -568,6 +568,44 @@ mod tests {
         }
     }
 
+    fn content_blocking_resolvers() -> impl Iterator<Item = IpAddr> {
+        (1..=63).map(|mask| {
+            IpAddr::V4(
+                talpid_types::net::content_blocking_resolver(mask).expect("a known combination"),
+            )
+        })
+    }
+
+    /// The passes are placed ahead of the DNS rules: one covering a content-blocking resolver
+    /// would send the member's DNS to whichever tailnet node holds that address.
+    #[test]
+    fn no_pass_admits_a_content_blocking_resolver() {
+        let passes = tailnet_passes(&names(&["utun13"]));
+        for resolver in content_blocking_resolvers() {
+            assert!(
+                passes.iter().all(|pass| !pass.net.contains(resolver)),
+                "{resolver} is opened on the tailnet interface"
+            );
+        }
+    }
+
+    #[test]
+    fn the_linux_route_plan_never_sends_a_content_blocking_resolver_to_the_tailnet() {
+        let plan = linux_route_plan(Some("tailscale0"));
+        let routed: Vec<IpNetwork> = plan
+            .iter()
+            .filter(|command| command.iter().any(|word| word == "replace"))
+            .filter_map(|command| command.iter().find_map(|word| word.parse().ok()))
+            .collect();
+        assert!(!routed.is_empty(), "{plan:?}");
+        for resolver in content_blocking_resolvers() {
+            assert!(
+                routed.iter().all(|net| !net.contains(resolver)),
+                "{resolver} is routed to the tailnet: {routed:?}"
+            );
+        }
+    }
+
     #[test]
     fn no_interface_yields_no_pass() {
         assert!(tailnet_passes(&BTreeSet::new()).is_empty());
