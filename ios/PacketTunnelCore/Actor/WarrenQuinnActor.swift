@@ -115,7 +115,16 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// an async context (it's not Sendable / async-safe), so we hop
     /// through a regular sync function that uses `withLock`.
     private func snapshotState() -> ObservedState {
-        stateLock.withLock { currentState }
+        stateLock.withLock {
+            // An overlap move to an exit that seals differently publishes no
+            // engine event: the app's poll is where the seal change shows.
+            if case let .connected(observed) = currentState, let ctx = connectionContext,
+                observed.isPostQuantum != (adapter?.isPostQuantumSealed ?? false)
+            {
+                currentState = .connected(observedConnectionState(from: ctx))
+            }
+            return currentState
+        }
     }
 
     public var observedStates: AsyncStream<ObservedState> {
@@ -290,8 +299,9 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     }
 
     /// Build the UI-facing connection state from the captured context.
-    /// Pure (takes no lock) ; callers hold `stateLock`. Warren is QUIC/UDP
-    /// and post-quantum-free, hence the fixed `transportLayer`/`isPostQuantum`.
+    /// Pure (takes no lock) ; callers hold `stateLock`. Warren is QUIC/UDP,
+    /// hence the fixed `transportLayer`; the seal is the one the engine reports
+    /// for the live session.
     /// Reachability is the live NWPath verdict pushed in via
     /// [`updateNetworkReachability(networkPathStatus:)`], never a constant:
     /// the app maps reconnecting-while-unreachable to its offline treatment,
@@ -304,7 +314,7 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             connectionAttemptCount: 0,
             transportLayer: .udp,
             remotePort: ctx.remotePort,
-            isPostQuantum: false,
+            isPostQuantum: adapter?.isPostQuantumSealed ?? false,
             isDaitaEnabled: ctx.isDaitaEnabled
         )
     }

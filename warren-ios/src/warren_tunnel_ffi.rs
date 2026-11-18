@@ -1335,8 +1335,10 @@ impl warrenguard_transport::migration_watchdog::MigrationIo for IosMigrationIo {
 fn circuit_target(
     circuit: crate::warren_multihop_directory::SelectedCircuit,
 ) -> warrenguard_transport::supervisor::CircuitTarget {
+    let exit_mlkem768_pubkey = circuit.signed_mlkem768_pubkey();
+    record_seal(circuit.exit.exit_id, exit_mlkem768_pubkey.as_deref());
     warrenguard_transport::supervisor::CircuitTarget {
-        exit_mlkem768_pubkey: circuit.signed_mlkem768_pubkey(),
+        exit_mlkem768_pubkey,
         relay: std::sync::Arc::new(circuit.relay),
         exit_id: circuit.exit.exit_id,
         exit_x25519_multihop_pubkey: circuit.exit.exit_x25519_multihop_pubkey,
@@ -1669,6 +1671,7 @@ fn spawn_multi_hop(
         let rtt_store = std::sync::Arc::clone(&arc_for_task.entry_rtt);
         let dialled_exit = circuit.exit.exit_id;
         let exit_mlkem768_pubkey = circuit.signed_mlkem768_pubkey();
+        record_seal(circuit.exit.exit_id, exit_mlkem768_pubkey.as_deref());
         let cfg = SupervisorConfig {
             relay: std::sync::Arc::new(circuit.relay),
             exit_id: circuit.exit.exit_id,
@@ -1754,6 +1757,8 @@ fn spawn_multi_hop(
         // the caller through the published session, exactly as the desktop
         // daemon reads it.
         install_daita_watch(watch.clone());
+        // Likewise the seal: what the session runs, not what the setting asks.
+        install_seal_watch(watch.clone());
         // Migration watchdog: a Wi-Fi to cellular handover rebinds the live
         // QUIC endpoint and revalidates the path in about one RTT instead of
         // re-handshaking. Fed by `warren_tunnel_notify_path_change` from the
@@ -2207,6 +2212,96 @@ pub extern "C" fn warren_tunnel_daita_active() -> bool {
     })
 }
 
+/// The seal each exit a session of this tunnel may dial gets, keyed by exit
+/// id: the engine seals with the hybrid post-quantum KEM exactly when the
+/// dial target carries a non-empty ML-KEM key, and classically otherwise.
+/// Recorded where a target is built, the first circuit and every move, so
+/// the session watch can name the seal of whichever exit the live session
+/// terminates at.
+#[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
+#[derive(Debug)]
+struct SealLedger {
+    /// A handful of exits per tunnel at most: the circuit and its moves.
+    post_quantum: Vec<[u8; 16]>,
+}
+
+#[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
+impl SealLedger {
+    const fn new() -> Self {
+        Self {
+            post_quantum: Vec::new(),
+        }
+    }
+
+    fn record(&mut self, exit: [u8; 16], mlkem768_pubkey: Option<&[u8]>) {
+        self.post_quantum.retain(|known| *known != exit);
+        if mlkem768_pubkey.is_some_and(|key| !key.is_empty()) {
+            self.post_quantum.push(exit);
+        }
+    }
+
+    fn is_post_quantum(&self, exit: [u8; 16]) -> bool {
+        self.post_quantum.contains(&exit)
+    }
+
+    fn clear(&mut self) {
+        self.post_quantum.clear();
+    }
+}
+
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+static SEAL_LEDGER: std::sync::Mutex<SealLedger> = std::sync::Mutex::new(SealLedger::new());
+
+/// Notes the seal a dial to `target` gets, before the engine dials it.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+fn record_seal(exit: warrenguard_wire::ExitId, mlkem768_pubkey: Option<&[u8]>) {
+    SEAL_LEDGER
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .record(*exit.as_bytes(), mlkem768_pubkey);
+}
+
+/// Whether the live session is sealed with the post-quantum KEM. Same cell
+/// discipline as [`DAITA_ACTIVE`]: false while no session is up.
+static POST_QUANTUM_SEALED: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+/// Follows the published session and mirrors the seal of the exit it
+/// terminates at into [`POST_QUANTUM_SEALED`], through every overlap move.
+/// Clears the flag when the supervisor drops its sender at teardown.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+fn install_seal_watch(mut sessions: warrenguard_transport::supervisor::ClientWatch) {
+    tokio::spawn(async move {
+        loop {
+            let exit = sessions
+                .borrow_and_update()
+                .as_ref()
+                .map(|bundle| *bundle.exit_id().as_bytes());
+            let sealed = exit.is_some_and(|exit| {
+                SEAL_LEDGER
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .is_post_quantum(exit)
+            });
+            POST_QUANTUM_SEALED.store(sealed, std::sync::atomic::Ordering::Relaxed);
+            if sessions.changed().await.is_err() {
+                break;
+            }
+        }
+        POST_QUANTUM_SEALED.store(false, std::sync::atomic::Ordering::Relaxed);
+    });
+}
+
+/// Whether the live session is sealed with the hybrid post-quantum KEM
+/// (X-Wing). What the quantum-resistance chip shows: the setting only says
+/// whether a classical seal is refused. `false` while no session is up.
+#[unsafe(no_mangle)]
+pub extern "C" fn warren_tunnel_post_quantum_sealed() -> bool {
+    crate::ffi_guard(false, || {
+        POST_QUANTUM_SEALED.load(std::sync::atomic::Ordering::Relaxed)
+    })
+}
+
 /// The mapping a session asks the exit for, read once off the C ABI and
 /// carried to the spawn that happens later, when the inner address is known.
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
@@ -2585,6 +2680,12 @@ pub unsafe extern "C" fn warren_tunnel_start(
             // persists the revoked device state, which refuses a tunnel start
             // until a new login), so it must not end this one at once.
             crate::warren_devices_ffi::registry().forget_revocation();
+            // Seals recorded for an earlier tunnel's exits say nothing about
+            // the directory this one dials.
+            SEAL_LEDGER
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .clear();
             spawn_multi_hop(
                 std::sync::Arc::clone(&arc),
                 directory_json,
@@ -3300,6 +3401,10 @@ mod tests {
                 panicking(|| super::warren_tunnel_daita_active()),
                 (false, true)
             );
+            assert_eq!(
+                panicking(|| super::warren_tunnel_post_quantum_sealed()),
+                (false, true)
+            );
             let (started, caught) = panicking(|| super::warren_tunnel_start(null(), -1));
             assert!(started.is_null() && caught);
             assert_eq!(panicking(|| super::warren_tunnel_stop(handle)), ((), true));
@@ -3363,6 +3468,56 @@ mod tests {
             );
             assert_eq!(panicking(|| super::warren_pin_reset(null())), (-1, true));
         }
+    }
+
+    // ---- Seal: which exits a session reaches under the post-quantum KEM ----
+
+    const PQ_EXIT: [u8; 16] = [1; 16];
+    const CLASSICAL_EXIT: [u8; 16] = [2; 16];
+
+    #[test]
+    fn an_exit_dialled_with_an_ml_kem_key_is_sealed_post_quantum() {
+        let mut ledger = super::SealLedger::new();
+        ledger.record(PQ_EXIT, Some(&[7; 1184]));
+        ledger.record(CLASSICAL_EXIT, None);
+
+        assert!(ledger.is_post_quantum(PQ_EXIT));
+        assert!(!ledger.is_post_quantum(CLASSICAL_EXIT));
+        assert!(!ledger.is_post_quantum([3; 16]), "an exit never dialled");
+    }
+
+    /// The engine treats empty key material as no key and seals classically.
+    #[test]
+    fn an_empty_ml_kem_key_is_the_classical_seal() {
+        let mut ledger = super::SealLedger::new();
+        ledger.record(PQ_EXIT, Some(&[]));
+
+        assert!(!ledger.is_post_quantum(PQ_EXIT));
+    }
+
+    /// A directory that stops covering an exit's ML-KEM key moves its next
+    /// dial back to the classical seal.
+    #[test]
+    fn the_latest_target_for_an_exit_decides_its_seal() {
+        let mut ledger = super::SealLedger::new();
+        ledger.record(PQ_EXIT, Some(&[7; 1184]));
+        ledger.record(PQ_EXIT, None);
+
+        assert!(!ledger.is_post_quantum(PQ_EXIT));
+    }
+
+    #[test]
+    fn a_new_tunnel_forgets_the_seals_of_the_last_one() {
+        let mut ledger = super::SealLedger::new();
+        ledger.record(PQ_EXIT, Some(&[7; 1184]));
+        ledger.clear();
+
+        assert!(!ledger.is_post_quantum(PQ_EXIT));
+    }
+
+    #[test]
+    fn no_session_is_reported_sealed_post_quantum_before_one_is_up() {
+        assert!(!super::warren_tunnel_post_quantum_sealed());
     }
 
     // ---- Wallet identity: the tunnel signs as the address the app shows ----

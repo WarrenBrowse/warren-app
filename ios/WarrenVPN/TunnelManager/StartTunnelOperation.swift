@@ -117,7 +117,8 @@ class StartTunnelOperation: ResultOperation<Void>, @unchecked Sendable {
             tunnelStatus = TunnelStatus()
             tunnelStatus.state = .connecting(
                 selectedRelays,
-                isPostQuantum: interactor.settings.tunnelQuantumResistance.isEnabled,
+                // Nothing is sealed yet: the session reports its seal once up.
+                isPostQuantum: false,
                 isDaita: interactor.settings.daita.isEnabled
             )
         }

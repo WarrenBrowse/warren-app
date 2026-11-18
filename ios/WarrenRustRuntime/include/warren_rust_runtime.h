@@ -540,6 +540,13 @@ int32_t warren_tunnel_path_health(void);
 bool warren_tunnel_daita_active(void);
 
 /**
+ * Whether the live session is sealed with the hybrid post-quantum KEM
+ * (X-Wing). What the quantum-resistance chip shows: the setting only says
+ * whether a classical seal is refused. `false` while no session is up.
+ */
+bool warren_tunnel_post_quantum_sealed(void);
+
+/**
  * Starts a Warren tunnel with the given parameters. Returns an opaque
  * handle on success, or null on failure (invalid parameters, tunnel
  * feature disabled at build time, runtime allocation failure).

@@ -338,6 +338,9 @@ public protocol WarrenQuinnAdapting: AnyObject {
     func reconnect()
     func pause()
     func resume()
+    /// Whether the live session is sealed with the hybrid post-quantum KEM.
+    /// False while no session is up.
+    var isPostQuantumSealed: Bool { get }
 }
 
 public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting {
@@ -521,6 +524,13 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
     /// defense. One relaxed atomic load on the Rust side.
     public static func daitaActive() -> Bool {
         warren_tunnel_daita_active()
+    }
+
+    /// The seal of the live session, followed by the engine through every
+    /// move between exits: the setting only says whether a classical seal is
+    /// refused. One relaxed atomic load on the Rust side.
+    public var isPostQuantumSealed: Bool {
+        warren_tunnel_post_quantum_sealed()
     }
 
     /// What the goodput prober makes of the live datapath. Healthy while no

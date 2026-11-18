@@ -27,6 +27,7 @@ private final class MockWarrenQuinnAdapter: WarrenQuinnAdapting {
     private(set) var stopCount = 0
     private(set) var reconnectCount = 0
     private(set) var lastStartConfig: WarrenTunnelConfig?
+    var isPostQuantumSealed = false
     func start(config: WarrenTunnelConfig) throws {
         startCount += 1
         lastStartConfig = config
@@ -80,6 +81,38 @@ final class WarrenQuinnActorTests: XCTestCase {
             conn.selectedRelays.exit.hostname,
             RelaySelectorStub.selectedRelays.exit.hostname
         )
+    }
+
+    /// The chip used to be drawn from the setting, which only says whether a
+    /// classical seal is refused; the session reports the seal it runs.
+    func test_applyEvent_connected_reportsTheSealTheSessionRuns() async {
+        let adapter = MockWarrenQuinnAdapter()
+        let actor = makeStartedActor(adapter: adapter)
+
+        actor.applyEvent(.connected)
+        let classical = await actor.observedState
+        adapter.isPostQuantumSealed = true
+        actor.applyEvent(.connected)
+        let postQuantum = await actor.observedState
+
+        XCTAssertEqual(classical.connectionState?.isPostQuantum, false)
+        XCTAssertEqual(postQuantum.connectionState?.isPostQuantum, true)
+    }
+
+    /// An overlap move to an exit that seals differently publishes no engine
+    /// event, so the app's poll is where the change has to show.
+    func test_observedState_followsASealChangeUnderALiveSession() async {
+        let adapter = MockWarrenQuinnAdapter()
+        let actor = makeStartedActor(adapter: adapter)
+        actor.applyEvent(.connected)
+
+        adapter.isPostQuantumSealed = true
+        let state = await actor.observedState
+
+        guard case let .connected(conn) = state else {
+            return XCTFail("Expected .connected, got \(state)")
+        }
+        XCTAssertTrue(conn.isPostQuantum)
     }
 
     func test_applyEvent_failover_surfacesReconnecting() async {
