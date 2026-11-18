@@ -4813,10 +4813,6 @@ msgid "Until the new pins are established the substitution-detection guard is br
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
-msgstr ""
-
-msgctxt "vpn-settings-view"
 msgid "Use custom DNS server"
 msgstr ""
 
@@ -4827,10 +4823,6 @@ msgstr ""
 
 msgctxt "vpn-settings-view"
 msgid "Warning: The malware blocker is not an anti-virus and should not be treated as such, this is just an extra layer of protection."
-msgstr ""
-
-msgctxt "vpn-settings-view"
-msgid "Warren api URL"
 msgstr ""
 
 msgctxt "vpn-settings-view"

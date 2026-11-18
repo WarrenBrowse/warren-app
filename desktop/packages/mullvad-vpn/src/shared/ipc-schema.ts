@@ -411,7 +411,6 @@ export const ipcSchema = {
     setLanNetworks: invoke<string[] | undefined, void>(),
     // Persistent warren-api URL (empty string = unset). Daemon restart
     // required to apply.
-    setWarrenApiUrl: invoke<string, void>(),
     // Client-side bandwidth ceiling in bits per second (undefined =
     // unlimited). Applies to a live tunnel without a reconnect.
     setWarrenMaxRateBps: invoke<number | undefined, void>(),

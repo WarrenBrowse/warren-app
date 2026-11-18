@@ -52,12 +52,6 @@ export interface IUpdateLanNetworksAction {
   lanNetworks: ILanNetworks;
 }
 
-// Update action for the warren-api URL.
-export interface IUpdateWarrenApiUrlAction {
-  type: 'UPDATE_WARREN_API_URL';
-  warrenApiUrl?: string;
-}
-
 // Update action for the client-side bandwidth ceiling.
 export interface IUpdateWarrenMaxRateBpsAction {
   type: 'UPDATE_WARREN_MAX_RATE_BPS';
@@ -224,7 +218,6 @@ export type SettingsAction =
   | IUpdateWireguardEndpointData
   | IUpdateAllowLanAction
   | IUpdateLanNetworksAction
-  | IUpdateWarrenApiUrlAction
   | IUpdateWarrenMaxRateBpsAction
   | IUpdateWarrenMultiHopAction
   | IUpdateWarrenCustomExitAction
@@ -297,13 +290,6 @@ function updateLanNetworks(lanNetworks: ILanNetworks): IUpdateLanNetworksAction 
   return {
     type: 'UPDATE_LAN_NETWORKS',
     lanNetworks,
-  };
-}
-
-function updateWarrenApiUrl(warrenApiUrl?: string): IUpdateWarrenApiUrlAction {
-  return {
-    type: 'UPDATE_WARREN_API_URL',
-    warrenApiUrl,
   };
 }
 
@@ -528,7 +514,6 @@ export default {
   updateWireguardEndpointData,
   updateAllowLan,
   updateLanNetworks,
-  updateWarrenApiUrl,
   updateWarrenMaxRateBps,
   updateWarrenMultiHop,
   updateWarrenCustomExit,

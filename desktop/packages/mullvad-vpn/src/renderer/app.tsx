@@ -794,15 +794,6 @@ export default class AppRenderer {
     await IpcRendererEventChannel.settings.setLanNetworks(networks);
   };
 
-  // Persistent warren-api URL. Empty string → unset on the daemon
-  // side (= fallback to upstream Mullvad backend). Daemon restart is
-  // required to apply.
-  public setWarrenApiUrl = async (warrenApiUrl: string) => {
-    const actions = this.reduxActions;
-    await IpcRendererEventChannel.settings.setWarrenApiUrl(warrenApiUrl);
-    actions.settings.updateWarrenApiUrl(warrenApiUrl === '' ? undefined : warrenApiUrl);
-  };
-
   // Client-side bandwidth ceiling in bits per second (undefined =
   // unlimited). Applies to a live tunnel without a reconnect.
   public setWarrenMaxRateBps = async (warrenMaxRateBps?: number) => {
@@ -1160,7 +1151,6 @@ export default class AppRenderer {
 
     reduxSettings.updateAllowLan(newSettings.allowLan);
     reduxSettings.updateLanNetworks(newSettings.lanNetworks);
-    reduxSettings.updateWarrenApiUrl(newSettings.warrenApiUrl);
     reduxSettings.updateWarrenMaxRateBps(newSettings.warrenMaxRateBps);
     reduxSettings.updateWarrenMultiHop(newSettings.warrenMultiHop);
     reduxSettings.updateWarrenCustomExit(newSettings.warrenCustomExit);

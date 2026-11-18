@@ -37,10 +37,6 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetLanNetworks((networks) =>
       this.daemonRpc.setLanNetworks(networks),
     );
-    // IPC handler for the warren-api URL.
-    IpcMainEventChannel.settings.handleSetWarrenApiUrl((url) =>
-      this.daemonRpc.setWarrenApiUrl(url),
-    );
     // IPC handler for the client-side bandwidth ceiling.
     IpcMainEventChannel.settings.handleSetWarrenMaxRateBps((bps?: number) =>
       this.daemonRpc.setWarrenMaxRateBps(bps),
@@ -249,10 +245,6 @@ export default class Settings implements Readonly<ISettings> {
     return this.settingsValue.relayOverrides;
   }
 
-  // Persistent warren-api URL (undefined if unset on the daemon side).
-  public get warrenApiUrl() {
-    return this.settingsValue.warrenApiUrl;
-  }
   // Warren multi-hop settings. Daemon restart required to
   // apply.
   public get warrenMultiHop() {

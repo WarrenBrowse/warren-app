@@ -92,8 +92,6 @@ export interface ISettingsReduxState {
   enableIpv6: boolean;
   lockdownMode: boolean;
   showBetaReleases: boolean;
-  // Persistent warren-api URL.
-  warrenApiUrl?: string;
   warrenMaxRateBps?: number;
   // Warren two-relayed QUIC multi-hop settings.
   warrenMultiHop: WarrenMultiHopSettings;
@@ -173,7 +171,6 @@ const initialState: ISettingsReduxState = {
   enableIpv6: true,
   lockdownMode: false,
   showBetaReleases: false,
-  warrenApiUrl: undefined,
   warrenMaxRateBps: undefined,
   warrenMultiHop: {
     enabled: false,
@@ -292,12 +289,6 @@ export default function (
       return {
         ...state,
         lanNetworks: action.lanNetworks,
-      };
-
-    case 'UPDATE_WARREN_API_URL':
-      return {
-        ...state,
-        warrenApiUrl: action.warrenApiUrl,
       };
 
     case 'UPDATE_WARREN_MAX_RATE_BPS':

@@ -601,14 +601,6 @@ export class DaemonRpc extends GrpcClient {
     await this.call<grpcTypes.LanNetworks, Empty>(this.client.setLanNetworks, lanNetworks);
   }
 
-  // Persistent warren-api URL. Empty string → unset on the daemon
-  // side (= fallback to upstream Mullvad backend). Daemon restart is
-  // required to apply (see `resolve_warren_api_config` on the Rust
-  // side, which reads Settings at boot only).
-  public async setWarrenApiUrl(url: string): Promise<void> {
-    await this.callString(this.client.setWarrenApiUrl, url);
-  }
-
   // Client-side bandwidth ceiling in bits per second. `undefined`
   // maps to 0 on the wire = unset (unlimited). Applies to a live
   // tunnel without a reconnect.

@@ -57,7 +57,6 @@ interface CustomExitFieldProps {
 
 // One labelled text field that commits on blur / submit when valid and
 // dirty, and resets to the stored value when left in an invalid state.
-// Mirrors `WarrenApiUrlSetting`.
 function CustomExitField({
   label,
   placeholder,
