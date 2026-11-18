@@ -136,18 +136,18 @@ impl AddressFamily {
 
 /// Context for [`notify_ip_interface_change`]. When it is dropped,
 /// the callback is unregistered.
-pub struct IpNotifierHandle<'a> {
+pub struct IpNotifierHandle {
     #[expect(clippy::type_complexity)]
-    callback: Mutex<Box<dyn FnMut(&MIB_IPINTERFACE_ROW, i32) + Send + 'a>>,
+    callback: Mutex<Box<dyn FnMut(&MIB_IPINTERFACE_ROW, i32) + Send>>,
     handle: HANDLE,
 }
 
 // SAFETY: `callback` is `Send` (the bound on `notify_ip_interface_change`) and sits behind a
 // `Mutex`. The only non-`Send` field is `handle`, a notification handle owned by this struct that
 // any thread may pass to `CancelMibChangeNotify2`; `Drop` does so exactly once.
-unsafe impl Send for IpNotifierHandle<'_> {}
+unsafe impl Send for IpNotifierHandle {}
 
-impl Drop for IpNotifierHandle<'_> {
+impl Drop for IpNotifierHandle {
     fn drop(&mut self) {
         // SAFETY: `handle` is either the handle stored by a successful `NotifyIpInterfaceChange`,
         // cancelled only here, or null when the registration failed and `?` dropped the box, a
@@ -165,11 +165,14 @@ unsafe extern "system" fn inner_callback(
 ) {
     // SAFETY: `context` is the address of the boxed `IpNotifierHandle` registered by
     // `notify_ip_interface_change`, which stays allocated until `Drop` has cancelled the
-    // notification. `row` is non-null because the registration asks for no initial notification
-    // (the only case where Windows passes null), and points to a row that is valid for the
-    // duration of the callback. The callback itself is only reached through the `Mutex`.
+    // notification; a box leaked instead of dropped keeps it allocated forever, and the callback
+    // is `'static`, so it borrows nothing that could end first. `row` is non-null because the
+    // registration asks for no initial notification (the only case where Windows passes null),
+    // and points to a row that is valid for the duration of the callback. Windows may run
+    // callbacks on several threads at once, so the context is only borrowed shared and the
+    // callback is reached through the `Mutex`.
     unsafe {
-        let context = &mut *(context as *mut IpNotifierHandle<'_>);
+        let context = &*(context as *const IpNotifierHandle);
         context
             .callback
             .lock()
@@ -179,10 +182,10 @@ unsafe extern "system" fn inner_callback(
 
 /// Registers a callback function that is invoked when an interface is added, removed,
 /// or changed.
-pub fn notify_ip_interface_change<'a, T: FnMut(&MIB_IPINTERFACE_ROW, i32) + Send + 'a>(
+pub fn notify_ip_interface_change<T: FnMut(&MIB_IPINTERFACE_ROW, i32) + Send + 'static>(
     callback: T,
     family: Option<AddressFamily>,
-) -> io::Result<Box<IpNotifierHandle<'a>>> {
+) -> io::Result<Box<IpNotifierHandle>> {
     let mut context = Box::new(IpNotifierHandle {
         callback: Mutex::new(Box::new(callback)),
         handle: ptr::null_mut(),
