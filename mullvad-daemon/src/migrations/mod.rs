@@ -53,6 +53,7 @@ mod v14;
 mod v15;
 mod v16;
 mod v17;
+mod v18;
 mod v2;
 mod v3;
 mod v4;
@@ -215,6 +216,7 @@ async fn migrate_settings(
     v15::migrate(settings)?;
     v16::migrate(settings)?;
     v17::migrate(settings)?;
+    v18::migrate(settings)?;
 
     Ok(migration_data)
 }

@@ -24,9 +24,6 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
             auto_connect: settings.auto_connect,
             tunnel_options: Some(proto::TunnelOptions::from(&settings.tunnel_options)),
             show_beta_releases: settings.show_beta_releases,
-            obfuscation_settings: Some(proto::ObfuscationSettings::from(
-                &settings.obfuscation_settings,
-            )),
             split_tunnel,
             app_routing: Some(proto::AppRoutingSettings::from(&settings.app_routing)),
             custom_lists: Some(proto::CustomListSettings::from(
@@ -309,7 +306,6 @@ impl From<&mullvad_types::settings::DnsOptions> for proto::DnsOptions {
 impl From<&mullvad_types::settings::TunnelOptions> for proto::TunnelOptions {
     fn from(options: &mullvad_types::settings::TunnelOptions) -> Self {
         proto::TunnelOptions {
-            mtu: options.wireguard.mtu.map(u32::from),
             rotation_interval: None,
             quantum_resistant: Some(proto::QuantumResistantState::from(
                 options.wireguard.quantum_resistant,
@@ -317,7 +313,6 @@ impl From<&mullvad_types::settings::TunnelOptions> for proto::TunnelOptions {
             daita: Some(proto::DaitaSettings::from(options.wireguard.daita.clone())),
             enable_ipv6: options.generic.enable_ipv6,
             dns_options: Some(proto::DnsOptions::from(&options.dns_options)),
-            userspace: options.wireguard.userspace,
         }
     }
 }
@@ -337,12 +332,6 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
                 .tunnel_options
                 .ok_or(FromProtobufTypeError::invalid_argument(
                     "missing tunnel options",
-                ))?;
-        let obfuscation_settings =
-            settings
-                .obfuscation_settings
-                .ok_or(FromProtobufTypeError::invalid_argument(
-                    "missing obfuscation settings",
                 ))?;
         let custom_lists_settings =
             settings
@@ -384,9 +373,6 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
                 .collect::<Result<Vec<_>, _>>()?,
             show_beta_releases: settings.show_beta_releases,
             app_routing,
-            obfuscation_settings: mullvad_types::relay_constraints::ObfuscationSettings::try_from(
-                obfuscation_settings,
-            )?,
             // NOTE: This field is set based on mullvad-types. It's not based on the actual settings
             // version.
             settings_version: CURRENT_SETTINGS_VERSION,
@@ -484,7 +470,6 @@ impl TryFrom<proto::TunnelOptions> for mullvad_types::settings::TunnelOptions {
 
         Ok(Self {
             wireguard: mullvad_types::wireguard::TunnelOptions {
-                mtu: options.mtu.map(|mtu| mtu as u16),
                 quantum_resistant: options
                     .quantum_resistant
                     .map(mullvad_types::wireguard::QuantumResistantState::try_from)
@@ -497,7 +482,6 @@ impl TryFrom<proto::TunnelOptions> for mullvad_types::settings::TunnelOptions {
                     .ok_or(FromProtobufTypeError::invalid_argument(
                         "missing daita settings",
                     ))?,
-                userspace: options.userspace,
             },
             generic: net::GenericTunnelOptions {
                 enable_ipv6: options.enable_ipv6,

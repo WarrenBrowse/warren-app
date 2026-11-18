@@ -13,7 +13,7 @@ use mullvad_types::{
     custom_list::{CustomList, Id},
     device::DeviceState,
     features::FeatureIndicators,
-    relay_constraints::{AllowedIps, ObfuscationSettings, RelayOverride, RelaySettings},
+    relay_constraints::{RelayOverride, RelaySettings},
     settings::DnsOptions,
     wireguard::QuantumResistantState,
 };
@@ -288,12 +288,6 @@ impl MullvadProxyClient {
         Ok(())
     }
 
-    pub async fn set_obfuscation_settings(&mut self, settings: ObfuscationSettings) -> Result<()> {
-        let settings = types::ObfuscationSettings::from(&settings);
-        self.0.set_obfuscation_settings(settings).await?;
-        Ok(())
-    }
-
     pub async fn get_settings(&mut self) -> Result<Settings> {
         let settings = self.0.get_settings(()).await?.into_inner();
         Settings::try_from(settings).map_err(Error::InvalidResponse)
@@ -466,20 +460,8 @@ impl MullvadProxyClient {
             .map_err(Error::InvalidResponse)
     }
 
-    pub async fn set_wireguard_mtu(&mut self, mtu: Option<u16>) -> Result<()> {
-        self.0
-            .set_wireguard_mtu(mtu.map(u32::from).unwrap_or(0))
-            .await?;
-        Ok(())
-    }
-
     pub async fn set_enable_ipv6(&mut self, state: bool) -> Result<()> {
         self.0.set_enable_ipv6(state).await?;
-        Ok(())
-    }
-
-    pub async fn set_userspace_wireguard(&mut self, state: bool) -> Result<()> {
-        self.0.set_userspace_wireguard(state).await?;
         Ok(())
     }
 
@@ -857,15 +839,6 @@ impl MullvadProxyClient {
     pub async fn set_new_rollout_threshold_seed(&mut self, seed: u32) -> Result<()> {
         self.0
             .set_rollout_threshold_seed(types::Seed { seed })
-            .await?;
-        Ok(())
-    }
-
-    pub async fn set_wireguard_allowed_ips(&mut self, allowed_ips: AllowedIps) -> Result<()> {
-        self.0
-            .set_wireguard_allowed_ips(types::AllowedIpsList {
-                values: allowed_ips.0.iter().map(ToString::to_string).collect(),
-            })
             .await?;
         Ok(())
     }

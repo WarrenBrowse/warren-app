@@ -1,31 +1,8 @@
-//! The handlers of the tunnel options: IPv6, DNS, DAITA, relay overrides, and the WireGuard-era settings the clients still send.
+//! The handlers of the tunnel options: IPv6, DNS, DAITA, quantum resistance and relay overrides.
 
 use crate::*;
 
 impl Daemon {
-    pub(crate) async fn on_set_obfuscation_settings(
-        &mut self,
-        tx: ResponseTx<(), settings::Error>,
-        new_settings: ObfuscationSettings,
-    ) {
-        match self
-            .settings
-            .update(move |settings| settings.obfuscation_settings = new_settings)
-            .await
-        {
-            Ok(_) => {
-                Self::oneshot_send(tx, Ok(()), "set_obfuscation_settings");
-            }
-            Err(err) => {
-                log::error!(
-                    "{}",
-                    err.display_chain_with_msg("Failed to set obfuscation settings")
-                );
-                Self::oneshot_send(tx, Err(err), "set_obfuscation_settings");
-            }
-        }
-    }
-
     pub(crate) async fn on_set_enable_ipv6(
         &mut self,
         tx: ResponseTx<(), settings::Error>,
@@ -46,26 +23,6 @@ impl Daemon {
             Err(e) => {
                 log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
                 Self::oneshot_send(tx, Err(e), "set_enable_ipv6 response");
-            }
-        }
-    }
-
-    pub(crate) async fn on_set_userspace_wireguard(
-        &mut self,
-        tx: ResponseTx<(), settings::Error>,
-        userspace: bool,
-    ) {
-        match self
-            .settings
-            .update(|settings| settings.tunnel_options.wireguard.userspace = userspace)
-            .await
-        {
-            Ok(_) => {
-                Self::oneshot_send(tx, Ok(()), "set_userspace_wireguard response");
-            }
-            Err(e) => {
-                log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
-                Self::oneshot_send(tx, Err(e), "set_userspace_wireguard response");
             }
         }
     }
@@ -304,50 +261,6 @@ impl Daemon {
             Err(e) => {
                 log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
                 Self::oneshot_send(tx, Err(e), "clear_all_relay_overrides response");
-            }
-        }
-    }
-
-    pub(crate) async fn on_set_wireguard_mtu(
-        &mut self,
-        tx: ResponseTx<(), settings::Error>,
-        mtu: Option<u16>,
-    ) {
-        match self
-            .settings
-            .update(move |settings| settings.tunnel_options.wireguard.mtu = mtu)
-            .await
-        {
-            Ok(_) => {
-                Self::oneshot_send(tx, Ok(()), "set_wireguard_mtu response");
-            }
-            Err(e) => {
-                log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
-                Self::oneshot_send(tx, Err(e), "set_wireguard_mtu response");
-            }
-        }
-    }
-
-    pub(crate) async fn on_set_wireguard_allowed_ips(
-        &mut self,
-        tx: ResponseTx<(), settings::Error>,
-        allowed_ips: Constraint<AllowedIps>,
-    ) {
-        match self
-            .settings
-            .update(move |settings| {
-                if let RelaySettings::Normal(ref mut relay_settings) = settings.relay_settings {
-                    relay_settings.wireguard_constraints.allowed_ips = allowed_ips;
-                }
-            })
-            .await
-        {
-            Ok(_) => {
-                Self::oneshot_send(tx, Ok(()), "set_wireguard_allowed_ips response");
-            }
-            Err(e) => {
-                log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
-                Self::oneshot_send(tx, Err(e), "set_wireguard_allowed_ips response");
             }
         }
     }

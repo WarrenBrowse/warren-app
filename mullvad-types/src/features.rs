@@ -87,7 +87,6 @@ pub enum FeatureIndicator {
     Multihop,
     SplitTunneling,
     LockdownMode,
-    WireguardPort,
     Udp2Tcp,
     Shadowsocks,
     Quic,
@@ -99,7 +98,6 @@ pub enum FeatureIndicator {
     /// arbitrary resolvers through the tunnel).
     AllowExternalDns,
     ServerIpOverride,
-    CustomMtu,
     /// Whether DAITA (without multihop) is in use.
     /// Mutually exclusive with [FeatureIndicator::DaitaMultihop].
     Daita,
@@ -146,7 +144,6 @@ impl FeatureIndicator {
             FeatureIndicator::Multihop => "Multihop",
             FeatureIndicator::SplitTunneling => "Split Tunneling",
             FeatureIndicator::LockdownMode => "Lockdown Mode",
-            FeatureIndicator::WireguardPort => "WireGuard Port",
             FeatureIndicator::Udp2Tcp => "Udp2Tcp",
             FeatureIndicator::Shadowsocks => "Shadowsocks",
             FeatureIndicator::Quic => "Quic",
@@ -156,7 +153,6 @@ impl FeatureIndicator {
             FeatureIndicator::CustomDns => "Custom Dns",
             FeatureIndicator::AllowExternalDns => "Allow External Dns",
             FeatureIndicator::ServerIpOverride => "Server Ip Override",
-            FeatureIndicator::CustomMtu => "Custom MTU",
             FeatureIndicator::Daita => "DAITA",
             FeatureIndicator::DaitaMultihop => "DAITA: Multihop",
             FeatureIndicator::DaitaUnavailable => "DAITA: not active on this server",
@@ -211,16 +207,10 @@ pub fn compute_feature_indicators(
             .any(|single| single.obfuscation_type == obfs),
         None => false,
     };
-    let wireguard_port = matches!(
-        settings.obfuscation_settings.selected_obfuscation,
-        crate::relay_constraints::SelectedObfuscation::WireguardPort
-    );
     let udp_tcp = has_obfuscation(ObfuscationType::Udp2Tcp);
     let shadowsocks = has_obfuscation(ObfuscationType::Shadowsocks);
     let quic = has_obfuscation(ObfuscationType::Quic);
     let lwo = has_obfuscation(ObfuscationType::Lwo);
-
-    let mtu = settings.tunnel_options.wireguard.mtu.is_some();
 
     let mut daita_multihop = false;
     let mut multihop = false;
@@ -271,12 +261,10 @@ pub fn compute_feature_indicators(
         (lockdown_mode, FeatureIndicator::LockdownMode),
         (quantum_resistant, FeatureIndicator::QuantumResistance),
         (multihop, FeatureIndicator::Multihop),
-        (wireguard_port, FeatureIndicator::WireguardPort),
         (udp_tcp, FeatureIndicator::Udp2Tcp),
         (shadowsocks, FeatureIndicator::Shadowsocks),
         (quic, FeatureIndicator::Quic),
         (lwo, FeatureIndicator::Lwo),
-        (mtu, FeatureIndicator::CustomMtu),
         (daita, FeatureIndicator::Daita),
         (daita_multihop, FeatureIndicator::DaitaMultihop),
         (daita_unavailable, FeatureIndicator::DaitaUnavailable),
@@ -299,7 +287,7 @@ mod tests {
 
     use talpid_types::net::{Endpoint, ObfuscationEndpoint, TransportProtocol};
 
-    use crate::relay_constraints::{RelaySettings, SelectedObfuscation};
+    use crate::relay_constraints::RelaySettings;
 
     use super::*;
 
@@ -416,34 +404,6 @@ mod tests {
             compute_feature_indicators(&settings, &endpoint, false),
             expected_indicators
         );
-        // Check that custom Port triggers a feature indicator.
-        {
-            // Stash the currently selected obfuscation method and reset it after checking for the
-            // feature indicator.
-            let prev = settings.obfuscation_settings.selected_obfuscation;
-            settings.obfuscation_settings.selected_obfuscation = SelectedObfuscation::WireguardPort;
-
-            expected_indicators
-                .0
-                .insert(FeatureIndicator::WireguardPort);
-            assert_eq!(
-                compute_feature_indicators(&settings, &endpoint, false),
-                expected_indicators
-            );
-
-            settings.obfuscation_settings.selected_obfuscation = prev;
-            expected_indicators
-                .0
-                .remove(&FeatureIndicator::WireguardPort);
-        }
-
-        settings.tunnel_options.wireguard.mtu = Some(1300);
-        expected_indicators.0.insert(FeatureIndicator::CustomMtu);
-        assert_eq!(
-            compute_feature_indicators(&settings, &endpoint, false),
-            expected_indicators
-        );
-
         {
             endpoint.daita = true;
             expected_indicators.0.insert(FeatureIndicator::Daita);
@@ -508,7 +468,6 @@ mod tests {
             FeatureIndicator::Multihop => {}
             FeatureIndicator::SplitTunneling => {}
             FeatureIndicator::LockdownMode => {}
-            FeatureIndicator::WireguardPort => {}
             FeatureIndicator::Udp2Tcp => {}
             FeatureIndicator::Shadowsocks => {}
             FeatureIndicator::Quic => {}
@@ -518,7 +477,6 @@ mod tests {
             FeatureIndicator::CustomDns => {}
             FeatureIndicator::AllowExternalDns => {}
             FeatureIndicator::ServerIpOverride => {}
-            FeatureIndicator::CustomMtu => {}
             FeatureIndicator::Daita => {}
             FeatureIndicator::DaitaMultihop => {}
             FeatureIndicator::DaitaUnavailable => {}

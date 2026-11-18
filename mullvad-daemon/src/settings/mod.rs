@@ -448,9 +448,6 @@ impl Display for SettingsSummary<'_> {
 
         let relay_settings = self.settings.get_relay_settings();
 
-        write!(f, ", wg mtu: ")?;
-        Self::fmt_option(f, self.settings.tunnel_options.wireguard.mtu)?;
-
         if let RelaySettings::Normal(RelayConstraints {
             wireguard_constraints: WireguardConstraints { ip_version, .. },
             ..
@@ -469,12 +466,11 @@ impl Display for SettingsSummary<'_> {
 
         write!(
             f,
-            ", multihop: {}, ipv6 (tun): {}, lan: {}, pq: {}, obfs: {}",
+            ", multihop: {}, ipv6 (tun): {}, lan: {}, pq: {}",
             bool_to_label(multihop),
             bool_to_label(self.settings.tunnel_options.generic.enable_ipv6),
             bool_to_label(self.settings.allow_lan),
             self.settings.tunnel_options.wireguard.quantum_resistant,
-            self.settings.obfuscation_settings.selected_obfuscation,
         )?;
 
         // Print DNS options
@@ -540,15 +536,6 @@ impl Display for SettingsSummary<'_> {
             }
         }
         Ok(())
-    }
-}
-
-impl SettingsSummary<'_> {
-    fn fmt_option<T: Display>(f: &mut fmt::Formatter<'_>, val: Option<T>) -> fmt::Result {
-        match &val {
-            Some(inner) => inner.fmt(f),
-            _ => f.write_str("unset"),
-        }
     }
 }
 

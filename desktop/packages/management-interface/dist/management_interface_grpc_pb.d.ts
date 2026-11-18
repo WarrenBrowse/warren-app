@@ -26,7 +26,6 @@ interface IManagementServiceService extends grpc.ServiceDefinition<grpc.UntypedS
     updateRelayLocations: IManagementServiceService_IUpdateRelayLocations;
     getRelayLocations: IManagementServiceService_IGetRelayLocations;
     setRelaySettings: IManagementServiceService_ISetRelaySettings;
-    setObfuscationSettings: IManagementServiceService_ISetObfuscationSettings;
     getSettings: IManagementServiceService_IGetSettings;
     resetSettings: IManagementServiceService_IResetSettings;
     setAllowLan: IManagementServiceService_ISetAllowLan;
@@ -34,8 +33,6 @@ interface IManagementServiceService extends grpc.ServiceDefinition<grpc.UntypedS
     setShowBetaReleases: IManagementServiceService_ISetShowBetaReleases;
     setLockdownMode: IManagementServiceService_ISetLockdownMode;
     setAutoConnect: IManagementServiceService_ISetAutoConnect;
-    setWireguardMtu: IManagementServiceService_ISetWireguardMtu;
-    setWireguardAllowedIps: IManagementServiceService_ISetWireguardAllowedIps;
     setEnableIpv6: IManagementServiceService_ISetEnableIpv6;
     setQuantumResistantTunnel: IManagementServiceService_ISetQuantumResistantTunnel;
     setEnableDaita: IManagementServiceService_ISetEnableDaita;
@@ -45,7 +42,6 @@ interface IManagementServiceService extends grpc.ServiceDefinition<grpc.UntypedS
     setRelayOverride: IManagementServiceService_ISetRelayOverride;
     clearAllRelayOverrides: IManagementServiceService_IClearAllRelayOverrides;
     setEnableRecents: IManagementServiceService_ISetEnableRecents;
-    setUserspaceWireguard: IManagementServiceService_ISetUserspaceWireguard;
     setWarrenApiUrl: IManagementServiceService_ISetWarrenApiUrl;
     setWarrenNConnections: IManagementServiceService_ISetWarrenNConnections;
     setWarrenMaxRateBps: IManagementServiceService_ISetWarrenMaxRateBps;
@@ -275,15 +271,6 @@ interface IManagementServiceService_ISetRelaySettings extends grpc.MethodDefinit
     responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
     responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
 }
-interface IManagementServiceService_ISetObfuscationSettings extends grpc.MethodDefinition<management_interface_pb.ObfuscationSettings, google_protobuf_empty_pb.Empty> {
-    path: "/mullvad_daemon.management_interface.ManagementService/SetObfuscationSettings";
-    requestStream: false;
-    responseStream: false;
-    requestSerialize: grpc.serialize<management_interface_pb.ObfuscationSettings>;
-    requestDeserialize: grpc.deserialize<management_interface_pb.ObfuscationSettings>;
-    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
-    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
-}
 interface IManagementServiceService_IGetSettings extends grpc.MethodDefinition<google_protobuf_empty_pb.Empty, management_interface_pb.Settings> {
     path: "/mullvad_daemon.management_interface.ManagementService/GetSettings";
     requestStream: false;
@@ -344,24 +331,6 @@ interface IManagementServiceService_ISetAutoConnect extends grpc.MethodDefinitio
     responseStream: false;
     requestSerialize: grpc.serialize<google_protobuf_wrappers_pb.BoolValue>;
     requestDeserialize: grpc.deserialize<google_protobuf_wrappers_pb.BoolValue>;
-    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
-    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
-}
-interface IManagementServiceService_ISetWireguardMtu extends grpc.MethodDefinition<google_protobuf_wrappers_pb.UInt32Value, google_protobuf_empty_pb.Empty> {
-    path: "/mullvad_daemon.management_interface.ManagementService/SetWireguardMtu";
-    requestStream: false;
-    responseStream: false;
-    requestSerialize: grpc.serialize<google_protobuf_wrappers_pb.UInt32Value>;
-    requestDeserialize: grpc.deserialize<google_protobuf_wrappers_pb.UInt32Value>;
-    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
-    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
-}
-interface IManagementServiceService_ISetWireguardAllowedIps extends grpc.MethodDefinition<management_interface_pb.AllowedIpsList, google_protobuf_empty_pb.Empty> {
-    path: "/mullvad_daemon.management_interface.ManagementService/SetWireguardAllowedIps";
-    requestStream: false;
-    responseStream: false;
-    requestSerialize: grpc.serialize<management_interface_pb.AllowedIpsList>;
-    requestDeserialize: grpc.deserialize<management_interface_pb.AllowedIpsList>;
     responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
     responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
 }
@@ -439,15 +408,6 @@ interface IManagementServiceService_IClearAllRelayOverrides extends grpc.MethodD
 }
 interface IManagementServiceService_ISetEnableRecents extends grpc.MethodDefinition<google_protobuf_wrappers_pb.BoolValue, google_protobuf_empty_pb.Empty> {
     path: "/mullvad_daemon.management_interface.ManagementService/SetEnableRecents";
-    requestStream: false;
-    responseStream: false;
-    requestSerialize: grpc.serialize<google_protobuf_wrappers_pb.BoolValue>;
-    requestDeserialize: grpc.deserialize<google_protobuf_wrappers_pb.BoolValue>;
-    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
-    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
-}
-interface IManagementServiceService_ISetUserspaceWireguard extends grpc.MethodDefinition<google_protobuf_wrappers_pb.BoolValue, google_protobuf_empty_pb.Empty> {
-    path: "/mullvad_daemon.management_interface.ManagementService/SetUserspaceWireguard";
     requestStream: false;
     responseStream: false;
     requestSerialize: grpc.serialize<google_protobuf_wrappers_pb.BoolValue>;
@@ -1382,7 +1342,6 @@ export interface IManagementServiceServer extends grpc.UntypedServiceImplementat
     updateRelayLocations: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
     getRelayLocations: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.RelayList>;
     setRelaySettings: grpc.handleUnaryCall<management_interface_pb.RelaySettings, google_protobuf_empty_pb.Empty>;
-    setObfuscationSettings: grpc.handleUnaryCall<management_interface_pb.ObfuscationSettings, google_protobuf_empty_pb.Empty>;
     getSettings: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.Settings>;
     resetSettings: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
     setAllowLan: grpc.handleUnaryCall<google_protobuf_wrappers_pb.BoolValue, google_protobuf_empty_pb.Empty>;
@@ -1390,8 +1349,6 @@ export interface IManagementServiceServer extends grpc.UntypedServiceImplementat
     setShowBetaReleases: grpc.handleUnaryCall<google_protobuf_wrappers_pb.BoolValue, google_protobuf_empty_pb.Empty>;
     setLockdownMode: grpc.handleUnaryCall<google_protobuf_wrappers_pb.BoolValue, google_protobuf_empty_pb.Empty>;
     setAutoConnect: grpc.handleUnaryCall<google_protobuf_wrappers_pb.BoolValue, google_protobuf_empty_pb.Empty>;
-    setWireguardMtu: grpc.handleUnaryCall<google_protobuf_wrappers_pb.UInt32Value, google_protobuf_empty_pb.Empty>;
-    setWireguardAllowedIps: grpc.handleUnaryCall<management_interface_pb.AllowedIpsList, google_protobuf_empty_pb.Empty>;
     setEnableIpv6: grpc.handleUnaryCall<google_protobuf_wrappers_pb.BoolValue, google_protobuf_empty_pb.Empty>;
     setQuantumResistantTunnel: grpc.handleUnaryCall<management_interface_pb.QuantumResistantState, google_protobuf_empty_pb.Empty>;
     setEnableDaita: grpc.handleUnaryCall<google_protobuf_wrappers_pb.BoolValue, google_protobuf_empty_pb.Empty>;
@@ -1401,7 +1358,6 @@ export interface IManagementServiceServer extends grpc.UntypedServiceImplementat
     setRelayOverride: grpc.handleUnaryCall<management_interface_pb.RelayOverride, google_protobuf_empty_pb.Empty>;
     clearAllRelayOverrides: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
     setEnableRecents: grpc.handleUnaryCall<google_protobuf_wrappers_pb.BoolValue, google_protobuf_empty_pb.Empty>;
-    setUserspaceWireguard: grpc.handleUnaryCall<google_protobuf_wrappers_pb.BoolValue, google_protobuf_empty_pb.Empty>;
     setWarrenApiUrl: grpc.handleUnaryCall<google_protobuf_wrappers_pb.StringValue, google_protobuf_empty_pb.Empty>;
     setWarrenNConnections: grpc.handleUnaryCall<google_protobuf_wrappers_pb.UInt32Value, google_protobuf_empty_pb.Empty>;
     setWarrenMaxRateBps: grpc.handleUnaryCall<google_protobuf_wrappers_pb.UInt64Value, google_protobuf_empty_pb.Empty>;
@@ -1547,9 +1503,6 @@ export interface IManagementServiceClient {
     setRelaySettings(request: management_interface_pb.RelaySettings, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setRelaySettings(request: management_interface_pb.RelaySettings, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setRelaySettings(request: management_interface_pb.RelaySettings, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    setObfuscationSettings(request: management_interface_pb.ObfuscationSettings, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    setObfuscationSettings(request: management_interface_pb.ObfuscationSettings, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    setObfuscationSettings(request: management_interface_pb.ObfuscationSettings, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     getSettings(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.Settings) => void): grpc.ClientUnaryCall;
     getSettings(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.Settings) => void): grpc.ClientUnaryCall;
     getSettings(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.Settings) => void): grpc.ClientUnaryCall;
@@ -1571,12 +1524,6 @@ export interface IManagementServiceClient {
     setAutoConnect(request: google_protobuf_wrappers_pb.BoolValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setAutoConnect(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setAutoConnect(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    setWireguardMtu(request: google_protobuf_wrappers_pb.UInt32Value, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    setWireguardMtu(request: google_protobuf_wrappers_pb.UInt32Value, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    setWireguardMtu(request: google_protobuf_wrappers_pb.UInt32Value, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    setWireguardAllowedIps(request: management_interface_pb.AllowedIpsList, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    setWireguardAllowedIps(request: management_interface_pb.AllowedIpsList, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    setWireguardAllowedIps(request: management_interface_pb.AllowedIpsList, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setEnableIpv6(request: google_protobuf_wrappers_pb.BoolValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setEnableIpv6(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setEnableIpv6(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
@@ -1604,9 +1551,6 @@ export interface IManagementServiceClient {
     setEnableRecents(request: google_protobuf_wrappers_pb.BoolValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setEnableRecents(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setEnableRecents(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    setUserspaceWireguard(request: google_protobuf_wrappers_pb.BoolValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    setUserspaceWireguard(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    setUserspaceWireguard(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setWarrenApiUrl(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setWarrenApiUrl(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setWarrenApiUrl(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
@@ -1949,9 +1893,6 @@ export class ManagementServiceClient extends grpc.Client implements IManagementS
     public setRelaySettings(request: management_interface_pb.RelaySettings, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setRelaySettings(request: management_interface_pb.RelaySettings, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setRelaySettings(request: management_interface_pb.RelaySettings, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    public setObfuscationSettings(request: management_interface_pb.ObfuscationSettings, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    public setObfuscationSettings(request: management_interface_pb.ObfuscationSettings, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    public setObfuscationSettings(request: management_interface_pb.ObfuscationSettings, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public getSettings(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.Settings) => void): grpc.ClientUnaryCall;
     public getSettings(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.Settings) => void): grpc.ClientUnaryCall;
     public getSettings(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.Settings) => void): grpc.ClientUnaryCall;
@@ -1973,12 +1914,6 @@ export class ManagementServiceClient extends grpc.Client implements IManagementS
     public setAutoConnect(request: google_protobuf_wrappers_pb.BoolValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setAutoConnect(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setAutoConnect(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    public setWireguardMtu(request: google_protobuf_wrappers_pb.UInt32Value, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    public setWireguardMtu(request: google_protobuf_wrappers_pb.UInt32Value, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    public setWireguardMtu(request: google_protobuf_wrappers_pb.UInt32Value, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    public setWireguardAllowedIps(request: management_interface_pb.AllowedIpsList, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    public setWireguardAllowedIps(request: management_interface_pb.AllowedIpsList, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    public setWireguardAllowedIps(request: management_interface_pb.AllowedIpsList, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setEnableIpv6(request: google_protobuf_wrappers_pb.BoolValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setEnableIpv6(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setEnableIpv6(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
@@ -2006,9 +1941,6 @@ export class ManagementServiceClient extends grpc.Client implements IManagementS
     public setEnableRecents(request: google_protobuf_wrappers_pb.BoolValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setEnableRecents(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setEnableRecents(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    public setUserspaceWireguard(request: google_protobuf_wrappers_pb.BoolValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    public setUserspaceWireguard(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
-    public setUserspaceWireguard(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setWarrenApiUrl(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setWarrenApiUrl(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setWarrenApiUrl(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;

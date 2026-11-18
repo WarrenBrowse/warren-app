@@ -118,17 +118,6 @@ function deserialize_mullvad_daemon_management_interface_AccountHistory(buffer_a
   return management_interface_pb.AccountHistory.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
-function serialize_mullvad_daemon_management_interface_AllowedIpsList(arg) {
-  if (!(arg instanceof management_interface_pb.AllowedIpsList)) {
-    throw new Error('Expected argument of type mullvad_daemon.management_interface.AllowedIpsList');
-  }
-  return Buffer.from(arg.serializeBinary());
-}
-
-function deserialize_mullvad_daemon_management_interface_AllowedIpsList(buffer_arg) {
-  return management_interface_pb.AllowedIpsList.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
 function serialize_mullvad_daemon_management_interface_AppExit(arg) {
   if (!(arg instanceof management_interface_pb.AppExit)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.AppExit');
@@ -446,17 +435,6 @@ function serialize_mullvad_daemon_management_interface_NewCustomList(arg) {
 
 function deserialize_mullvad_daemon_management_interface_NewCustomList(buffer_arg) {
   return management_interface_pb.NewCustomList.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
-function serialize_mullvad_daemon_management_interface_ObfuscationSettings(arg) {
-  if (!(arg instanceof management_interface_pb.ObfuscationSettings)) {
-    throw new Error('Expected argument of type mullvad_daemon.management_interface.ObfuscationSettings');
-  }
-  return Buffer.from(arg.serializeBinary());
-}
-
-function deserialize_mullvad_daemon_management_interface_ObfuscationSettings(buffer_arg) {
-  return management_interface_pb.ObfuscationSettings.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_mullvad_daemon_management_interface_PlayExternalObfuscatedAccountId(arg) {
@@ -920,17 +898,6 @@ updateRelayLocations: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
-  setObfuscationSettings: {
-    path: '/mullvad_daemon.management_interface.ManagementService/SetObfuscationSettings',
-    requestStream: false,
-    responseStream: false,
-    requestType: management_interface_pb.ObfuscationSettings,
-    responseType: google_protobuf_empty_pb.Empty,
-    requestSerialize: serialize_mullvad_daemon_management_interface_ObfuscationSettings,
-    requestDeserialize: deserialize_mullvad_daemon_management_interface_ObfuscationSettings,
-    responseSerialize: serialize_google_protobuf_Empty,
-    responseDeserialize: deserialize_google_protobuf_Empty,
-  },
   // Settings
 getSettings: {
     path: '/mullvad_daemon.management_interface.ManagementService/GetSettings',
@@ -1008,28 +975,6 @@ setLanNetworks: {
     responseType: google_protobuf_empty_pb.Empty,
     requestSerialize: serialize_google_protobuf_BoolValue,
     requestDeserialize: deserialize_google_protobuf_BoolValue,
-    responseSerialize: serialize_google_protobuf_Empty,
-    responseDeserialize: deserialize_google_protobuf_Empty,
-  },
-  setWireguardMtu: {
-    path: '/mullvad_daemon.management_interface.ManagementService/SetWireguardMtu',
-    requestStream: false,
-    responseStream: false,
-    requestType: google_protobuf_wrappers_pb.UInt32Value,
-    responseType: google_protobuf_empty_pb.Empty,
-    requestSerialize: serialize_google_protobuf_UInt32Value,
-    requestDeserialize: deserialize_google_protobuf_UInt32Value,
-    responseSerialize: serialize_google_protobuf_Empty,
-    responseDeserialize: deserialize_google_protobuf_Empty,
-  },
-  setWireguardAllowedIps: {
-    path: '/mullvad_daemon.management_interface.ManagementService/SetWireguardAllowedIps',
-    requestStream: false,
-    responseStream: false,
-    requestType: management_interface_pb.AllowedIpsList,
-    responseType: google_protobuf_empty_pb.Empty,
-    requestSerialize: serialize_mullvad_daemon_management_interface_AllowedIpsList,
-    requestDeserialize: deserialize_mullvad_daemon_management_interface_AllowedIpsList,
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
@@ -1123,17 +1068,6 @@ setLanNetworks: {
   },
   setEnableRecents: {
     path: '/mullvad_daemon.management_interface.ManagementService/SetEnableRecents',
-    requestStream: false,
-    responseStream: false,
-    requestType: google_protobuf_wrappers_pb.BoolValue,
-    responseType: google_protobuf_empty_pb.Empty,
-    requestSerialize: serialize_google_protobuf_BoolValue,
-    requestDeserialize: deserialize_google_protobuf_BoolValue,
-    responseSerialize: serialize_google_protobuf_Empty,
-    responseDeserialize: deserialize_google_protobuf_Empty,
-  },
-  setUserspaceWireguard: {
-    path: '/mullvad_daemon.management_interface.ManagementService/SetUserspaceWireguard',
     requestStream: false,
     responseStream: false,
     requestType: google_protobuf_wrappers_pb.BoolValue,

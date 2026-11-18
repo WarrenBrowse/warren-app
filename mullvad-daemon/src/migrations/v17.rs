@@ -62,7 +62,7 @@ mod test {
     use super::migrate;
     use mullvad_types::{
         access_method::AccessMethodSetting,
-        settings::{CURRENT_SETTINGS_VERSION, Settings, SettingsVersion},
+        settings::{Settings, SettingsVersion},
     };
     use serde_json::json;
     use talpid_types::net::proxy::{Shadowsocks, ShadowsocksCipher};
@@ -99,8 +99,11 @@ mod test {
             assert!(!methods.contains_key(removed), "{removed} survived");
         }
         assert_eq!(methods["direct"]["enabled"], json!(true));
+        assert_eq!(
+            settings["settings_version"],
+            json!(SettingsVersion::V18 as u64)
+        );
         let settings: Settings = serde_json::from_value(settings).unwrap();
-        assert_eq!(settings.settings_version, CURRENT_SETTINGS_VERSION);
         assert_eq!(settings.api_access_methods.cardinality(), 1);
         assert!(settings.api_access_methods.direct().enabled());
     }

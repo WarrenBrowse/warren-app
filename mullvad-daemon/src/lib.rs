@@ -176,9 +176,7 @@ use mullvad_types::{
     device::{DeviceEvent, DeviceState},
     features::{FeatureIndicator, FeatureIndicators, compute_feature_indicators},
     location::{GeoIpLocation, LocationEventData},
-    relay_constraints::{
-        ObfuscationSettings, RelayOverride, RelaySettings, allowed_ip::AllowedIps,
-    },
+    relay_constraints::{RelayOverride, RelaySettings},
     relay_list::RelayList,
     settings::{DnsOptions, Settings},
     states::{Secured, TargetState, TargetStateStrict, TunnelState},
@@ -735,8 +733,6 @@ pub enum DaemonCommand {
     SetAutoConnect(ResponseTx<(), GuardedSettingError>, bool),
     /// Set if IPv6 should be enabled in the tunnel
     SetEnableIpv6(ResponseTx<(), settings::Error>, bool),
-    /// Set if userspace WireGuard should be forced.
-    SetUserspaceWireguard(ResponseTx<(), settings::Error>, bool),
     /// Set if recents should be enabled
     SetEnableRecents(ResponseTx<(), settings::Error>, bool),
     /// Set whether to enable PQ PSK exchange in the tunnel
@@ -752,10 +748,6 @@ pub enum DaemonCommand {
     /// Remove all relay override options
     ClearAllRelayOverrides(ResponseTx<(), settings::Error>),
     /// Toggle macOS network check leak
-    /// Set MTU for wireguard tunnels
-    SetWireguardMtu(ResponseTx<(), settings::Error>, Option<u16>),
-    /// Set allowed IPs for wireguard tunnels
-    SetWireguardAllowedIps(ResponseTx<(), settings::Error>, Constraint<AllowedIps>),
     /// Get the daemon settings
     GetSettings(oneshot::Sender<Settings>),
     /// Reset all daemon settings to the defaults
@@ -851,8 +843,6 @@ pub enum DaemonCommand {
     /// Notify the split tunnel monitor that a volume was mounted or dismounted
     #[cfg(target_os = "windows")]
     CheckVolumes(ResponseTx<(), Error>),
-    /// Register settings for WireGuard obfuscator
-    SetObfuscationSettings(ResponseTx<(), settings::Error>, ObfuscationSettings),
     /// Saves the target tunnel state and enters a blocking state. The state is restored
     /// upon restart.
     PrepareRestart(bool),
@@ -2183,9 +2173,6 @@ impl Daemon {
             }
             SetAutoConnect(tx, auto_connect) => self.on_set_auto_connect(tx, auto_connect).await,
             SetEnableIpv6(tx, enable_ipv6) => self.on_set_enable_ipv6(tx, enable_ipv6).await,
-            SetUserspaceWireguard(tx, userspace) => {
-                self.on_set_userspace_wireguard(tx, userspace).await
-            }
             SetEnableRecents(tx, enable_recents) => {
                 self.on_set_enable_recents(tx, enable_recents).await
             }
@@ -2205,10 +2192,6 @@ impl Daemon {
                 self.on_set_relay_override(tx, relay_override).await
             }
             ClearAllRelayOverrides(tx) => self.on_clear_all_relay_overrides(tx).await,
-            SetWireguardMtu(tx, mtu) => self.on_set_wireguard_mtu(tx, mtu).await,
-            SetWireguardAllowedIps(tx, allowed_ips) => {
-                self.on_set_wireguard_allowed_ips(tx, allowed_ips).await
-            }
             GetSettings(tx) => self.on_get_settings(tx),
             ResetSettings(tx) => self.on_reset_settings(tx).await,
             CreateCustomList(tx, name, locations) => {
@@ -2308,9 +2291,6 @@ impl Daemon {
             GetSplitTunnelProcesses(tx) => self.on_get_split_tunnel_processes(tx),
             #[cfg(target_os = "windows")]
             CheckVolumes(tx) => self.on_check_volumes(tx),
-            SetObfuscationSettings(tx, settings) => {
-                self.on_set_obfuscation_settings(tx, settings).await
-            }
             PrepareRestart(shutdown) => self.on_prepare_restart(shutdown),
             ApplyJsonSettings(tx, blob) => self.on_apply_json_settings(tx, blob).await,
             ExportJsonSettings(tx) => self.on_export_json_settings(tx),

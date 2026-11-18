@@ -4,9 +4,8 @@ use crate::{
     constraints::Constraint,
     custom_list::CustomListsSettings,
     relay_constraints::{
-        GeographicLocationConstraint, LocationConstraint, ObfuscationSettings, RelayConstraints,
-        RelayOverride, RelaySettings, RelaySettingsFormatter, SelectedObfuscation,
-        WireguardConstraints,
+        GeographicLocationConstraint, LocationConstraint, RelayConstraints, RelayOverride,
+        RelaySettings, RelaySettingsFormatter, WireguardConstraints,
     },
     wireguard,
 };
@@ -22,7 +21,7 @@ pub use lan::{LanNetworkError, MAX_LAN_NETWORKS, is_public_lan_network, validate
 /// latest version that exists in `SettingsVersion`.
 /// This should be bumped when a new version is introduced along with a migration
 /// being added to `mullvad-daemon`.
-pub const CURRENT_SETTINGS_VERSION: SettingsVersion = SettingsVersion::V18;
+pub const CURRENT_SETTINGS_VERSION: SettingsVersion = SettingsVersion::V19;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Clone, Copy)]
 #[repr(u32)]
@@ -44,6 +43,7 @@ pub enum SettingsVersion {
     V16 = 16,
     V17 = 17,
     V18 = 18,
+    V19 = 19,
 }
 
 impl<'de> Deserialize<'de> for SettingsVersion {
@@ -69,6 +69,7 @@ impl<'de> Deserialize<'de> for SettingsVersion {
             v if v == SettingsVersion::V16 as u32 => Ok(SettingsVersion::V16),
             v if v == SettingsVersion::V17 as u32 => Ok(SettingsVersion::V17),
             v if v == SettingsVersion::V18 as u32 => Ok(SettingsVersion::V18),
+            v if v == SettingsVersion::V19 as u32 => Ok(SettingsVersion::V19),
             v => Err(serde::de::Error::custom(format!(
                 "{v} is not a valid SettingsVersion"
             ))),
@@ -90,7 +91,6 @@ impl Serialize for SettingsVersion {
 #[serde(default)]
 pub struct Settings {
     pub relay_settings: RelaySettings,
-    pub obfuscation_settings: ObfuscationSettings,
     /// All of the custom relay lists
     pub custom_lists: CustomListsSettings,
     /// API access methods
@@ -548,10 +548,6 @@ impl Default for Settings {
             // We only want to set this flag to true if the settings file hasn't been
             // created yet so that we don't affect existing users' relay settings.
             update_default_location: true,
-            obfuscation_settings: ObfuscationSettings {
-                selected_obfuscation: SelectedObfuscation::Auto,
-                ..Default::default()
-            },
             custom_lists: CustomListsSettings::default(),
             api_access_methods: access_method::Settings::default(),
             allow_lan: false,
@@ -647,7 +643,7 @@ impl Settings {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default)]
 pub struct TunnelOptions {
-    /// Contains wireguard tunnel options.
+    /// Quantum resistance and DAITA, under their inherited WireGuard key.
     pub wireguard: wireguard::TunnelOptions,
 
     // TODO: should this still exist?

@@ -1,6 +1,3 @@
-//! When changing relay selection, please verify if `docs/relay-selector.md` needs to be
-//! updated as well.
-
 use crate::{
     CustomTunnelEndpoint,
     constraints::{Constraint, Match},
@@ -379,7 +376,6 @@ pub struct TransportPort {
 #[serde(rename_all = "snake_case", default)]
 pub struct WireguardConstraints {
     pub ip_version: Constraint<IpVersion>,
-    pub allowed_ips: Constraint<AllowedIps>,
     pub use_multihop: bool,
     pub entry_location: Constraint<LocationConstraint>,
     pub entry_providers: Constraint<Providers>,
@@ -390,7 +386,6 @@ pub use allowed_ip::AllowedIps;
 pub mod allowed_ip {
     use std::net::{Ipv4Addr, Ipv6Addr};
 
-    use crate::constraints::Constraint;
     use ipnetwork::IpNetwork;
     use serde::{Deserialize, Serialize};
 
@@ -470,16 +465,6 @@ pub mod allowed_ip {
             Ok(AllowedIps(networks))
         }
 
-        /// Converts the `AllowedIps` into a `Constraint<AllowedIps>`.
-        /// If the list of ip ranges is empty, it returns `Constraint::Any`, otherwise it returns `Constraint::Only(self)`.
-        pub fn to_constraint(self) -> Constraint<AllowedIps> {
-            if self.0.is_empty() {
-                Constraint::Any
-            } else {
-                Constraint::Only(self)
-            }
-        }
-
         /// Resolves the allowed IPs to a `Vec<IpNetwork>`, adding the host IPv4 and IPv6 addresses if provided.
         pub fn resolve(
             self,
@@ -496,22 +481,6 @@ pub mod allowed_ip {
             log::trace!("Resolved allowed IPs: {networks:?}");
             networks
         }
-    }
-
-    /// Resolves the allowed IPs from a `Constraint<AllowedIps>`, adding the host IPv4 and IPv6 addresses if provided.
-    /// If the constraint is `Constraint::Any` or `Constraint::Only` with an empty list, it allows all IPs.
-    /// Returns a vector of `IpNetwork` containing the resolved allowed IPs.
-    pub fn resolve_from_constraint(
-        allowed_ips: &Constraint<AllowedIps>,
-        host_ipv4: Option<Ipv4Addr>,
-        host_ipv6: Option<Ipv6Addr>,
-    ) -> Vec<IpNetwork> {
-        match allowed_ips {
-            Constraint::Any => AllowedIps::allow_all(),
-            Constraint::Only(ips) if ips.0.is_empty() => AllowedIps::allow_all(),
-            Constraint::Only(ips) => ips.clone(),
-        }
-        .resolve(host_ipv4, host_ipv6)
     }
 }
 
@@ -547,217 +516,6 @@ impl fmt::Display for WireguardConstraintsFormatter<'_> {
             write!(f, ", multihop entry {location}")?;
         }
         Ok(())
-    }
-}
-
-#[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
-pub enum SelectedObfuscation {
-    #[default]
-    Auto,
-    Off,
-    WireguardPort,
-    #[cfg_attr(feature = "clap", clap(name = "udp2tcp"))]
-    Udp2Tcp,
-    Shadowsocks,
-    Quic,
-    Lwo,
-}
-
-impl fmt::Display for SelectedObfuscation {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            SelectedObfuscation::Auto => "auto".fmt(f),
-            SelectedObfuscation::Off => "off".fmt(f),
-            SelectedObfuscation::Udp2Tcp => "udp2tcp".fmt(f),
-            SelectedObfuscation::Shadowsocks => "shadowsocks".fmt(f),
-            SelectedObfuscation::Quic => "quic".fmt(f),
-            SelectedObfuscation::Lwo => "lwo".fmt(f),
-            SelectedObfuscation::WireguardPort => "wireguard port".fmt(f),
-        }
-    }
-}
-
-#[derive(Default, Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub struct Udp2TcpObfuscationSettings {
-    pub port: Constraint<u16>,
-}
-
-impl fmt::Display for Udp2TcpObfuscationSettings {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.port {
-            Constraint::Any => write!(f, "any port"),
-            Constraint::Only(port) => write!(f, "port {port}"),
-        }
-    }
-}
-
-#[derive(Default, Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub struct ShadowsocksSettings {
-    pub port: Constraint<u16>,
-}
-
-impl fmt::Display for ShadowsocksSettings {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.port {
-            Constraint::Any => write!(f, "any port"),
-            Constraint::Only(port) => write!(f, "port {port}"),
-        }
-    }
-}
-
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub struct WireguardPortSettings {
-    port: Constraint<u16>,
-}
-
-impl WireguardPortSettings {
-    pub const fn get(&self) -> Constraint<u16> {
-        self.port
-    }
-}
-
-impl From<Constraint<u16>> for WireguardPortSettings {
-    fn from(port: Constraint<u16>) -> Self {
-        Self { port }
-    }
-}
-
-impl From<Option<u16>> for WireguardPortSettings {
-    fn from(port: Option<u16>) -> Self {
-        Self::from(Constraint::from(port))
-    }
-}
-
-impl From<u16> for WireguardPortSettings {
-    fn from(port: u16) -> Self {
-        Self::from(Constraint::Only(port))
-    }
-}
-
-impl fmt::Display for WireguardPortSettings {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.port {
-            Constraint::Any => write!(f, "any port"),
-            Constraint::Only(port) => write!(f, "port {port}"),
-        }
-    }
-}
-
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub struct LwoSettings {
-    pub port: Constraint<u16>,
-}
-
-impl fmt::Display for LwoSettings {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.port {
-            Constraint::Any => write!(f, "any port"),
-            Constraint::Only(port) => write!(f, "port {port}"),
-        }
-    }
-}
-
-/// Contains obfuscation settings
-#[derive(Default, Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(default)]
-pub struct ObfuscationSettings {
-    pub selected_obfuscation: SelectedObfuscation,
-    pub udp2tcp: Udp2TcpObfuscationSettings,
-    pub shadowsocks: ShadowsocksSettings,
-    pub wireguard_port: WireguardPortSettings,
-    pub lwo: LwoSettings,
-}
-
-/// Represents a specific obfuscation method (or explicit "off").
-///
-/// This enum does *not* have an `Auto` variant - that role is played by
-/// `Constraint::Any` on the wrapping `Constraint<ObfuscationMode>`.
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum ObfuscationMode {
-    Off,
-    Port(WireguardPortSettings),
-    Udp2tcp(Udp2TcpObfuscationSettings),
-    Shadowsocks(ShadowsocksSettings),
-    Quic,
-    Lwo(LwoSettings),
-}
-
-impl ObfuscationMode {
-    pub fn into_settings(self) -> ObfuscationSettings {
-        let selected_obfuscation = match self {
-            ObfuscationMode::Off => SelectedObfuscation::Off,
-            ObfuscationMode::Quic => SelectedObfuscation::Quic,
-            ObfuscationMode::Lwo(settings) => {
-                return ObfuscationSettings {
-                    selected_obfuscation: SelectedObfuscation::Lwo,
-                    lwo: settings,
-                    ..Default::default()
-                };
-            }
-            ObfuscationMode::Port(wireguard_port) => {
-                return ObfuscationSettings {
-                    selected_obfuscation: SelectedObfuscation::WireguardPort,
-                    wireguard_port,
-                    ..Default::default()
-                };
-            }
-            ObfuscationMode::Udp2tcp(settings) => {
-                return ObfuscationSettings {
-                    selected_obfuscation: SelectedObfuscation::Udp2Tcp,
-                    udp2tcp: settings,
-                    ..Default::default()
-                };
-            }
-            ObfuscationMode::Shadowsocks(settings) => {
-                return ObfuscationSettings {
-                    selected_obfuscation: SelectedObfuscation::Shadowsocks,
-                    shadowsocks: settings,
-                    ..Default::default()
-                };
-            }
-        };
-        ObfuscationSettings {
-            selected_obfuscation,
-            ..Default::default()
-        }
-    }
-}
-
-pub fn obfuscation_to_settings(constraint: Constraint<ObfuscationMode>) -> ObfuscationSettings {
-    match constraint {
-        Constraint::Any => ObfuscationSettings {
-            selected_obfuscation: SelectedObfuscation::Auto,
-            ..Default::default()
-        },
-        Constraint::Only(mode) => mode.into_settings(),
-    }
-}
-
-/// Convert [`ObfuscationSettings`] into a `Constraint<ObfuscationMode>`.
-///
-/// `SelectedObfuscation::Auto` maps to `Constraint::Any`.
-///
-/// Note: this drops protocol-specific constraints from [`ObfuscationSettings`]
-/// when the selected obfuscation type is auto.
-pub fn obfuscation_constraint_from_settings(
-    obfuscation: ObfuscationSettings,
-) -> Constraint<ObfuscationMode> {
-    use SelectedObfuscation::*;
-    match obfuscation.selected_obfuscation {
-        Auto => Constraint::Any,
-        Off => Constraint::Only(ObfuscationMode::Off),
-        WireguardPort => Constraint::Only(ObfuscationMode::Port(obfuscation.wireguard_port)),
-        Udp2Tcp => Constraint::Only(ObfuscationMode::Udp2tcp(obfuscation.udp2tcp)),
-        Shadowsocks => Constraint::Only(ObfuscationMode::Shadowsocks(obfuscation.shadowsocks)),
-        Quic => Constraint::Only(ObfuscationMode::Quic),
-        Lwo => Constraint::Only(ObfuscationMode::Lwo(obfuscation.lwo)),
     }
 }
 

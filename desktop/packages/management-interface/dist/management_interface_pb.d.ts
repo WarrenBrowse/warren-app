@@ -1301,155 +1301,6 @@ export namespace GeographicLocationConstraint {
     }
 }
 
-export class ObfuscationSettings extends jspb.Message { 
-    getSelectedObfuscation(): ObfuscationSettings.SelectedObfuscation;
-    setSelectedObfuscation(value: ObfuscationSettings.SelectedObfuscation): ObfuscationSettings;
-
-    hasUdp2tcp(): boolean;
-    clearUdp2tcp(): void;
-    getUdp2tcp(): ObfuscationSettings.Udp2TcpObfuscation | undefined;
-    setUdp2tcp(value?: ObfuscationSettings.Udp2TcpObfuscation): ObfuscationSettings;
-
-    hasShadowsocks(): boolean;
-    clearShadowsocks(): void;
-    getShadowsocks(): ObfuscationSettings.Shadowsocks | undefined;
-    setShadowsocks(value?: ObfuscationSettings.Shadowsocks): ObfuscationSettings;
-
-    hasWireguardPort(): boolean;
-    clearWireguardPort(): void;
-    getWireguardPort(): ObfuscationSettings.WireguardPort | undefined;
-    setWireguardPort(value?: ObfuscationSettings.WireguardPort): ObfuscationSettings;
-
-    hasLwo(): boolean;
-    clearLwo(): void;
-    getLwo(): ObfuscationSettings.Lwo | undefined;
-    setLwo(value?: ObfuscationSettings.Lwo): ObfuscationSettings;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): ObfuscationSettings.AsObject;
-    static toObject(includeInstance: boolean, msg: ObfuscationSettings): ObfuscationSettings.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: ObfuscationSettings, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): ObfuscationSettings;
-    static deserializeBinaryFromReader(message: ObfuscationSettings, reader: jspb.BinaryReader): ObfuscationSettings;
-}
-
-export namespace ObfuscationSettings {
-    export type AsObject = {
-        selectedObfuscation: ObfuscationSettings.SelectedObfuscation,
-        udp2tcp?: ObfuscationSettings.Udp2TcpObfuscation.AsObject,
-        shadowsocks?: ObfuscationSettings.Shadowsocks.AsObject,
-        wireguardPort?: ObfuscationSettings.WireguardPort.AsObject,
-        lwo?: ObfuscationSettings.Lwo.AsObject,
-    }
-
-
-    export class Udp2TcpObfuscation extends jspb.Message { 
-
-        hasPort(): boolean;
-        clearPort(): void;
-        getPort(): number | undefined;
-        setPort(value: number): Udp2TcpObfuscation;
-
-        serializeBinary(): Uint8Array;
-        toObject(includeInstance?: boolean): Udp2TcpObfuscation.AsObject;
-        static toObject(includeInstance: boolean, msg: Udp2TcpObfuscation): Udp2TcpObfuscation.AsObject;
-        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-        static serializeBinaryToWriter(message: Udp2TcpObfuscation, writer: jspb.BinaryWriter): void;
-        static deserializeBinary(bytes: Uint8Array): Udp2TcpObfuscation;
-        static deserializeBinaryFromReader(message: Udp2TcpObfuscation, reader: jspb.BinaryReader): Udp2TcpObfuscation;
-    }
-
-    export namespace Udp2TcpObfuscation {
-        export type AsObject = {
-            port?: number,
-        }
-    }
-
-    export class Shadowsocks extends jspb.Message { 
-
-        hasPort(): boolean;
-        clearPort(): void;
-        getPort(): number | undefined;
-        setPort(value: number): Shadowsocks;
-
-        serializeBinary(): Uint8Array;
-        toObject(includeInstance?: boolean): Shadowsocks.AsObject;
-        static toObject(includeInstance: boolean, msg: Shadowsocks): Shadowsocks.AsObject;
-        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-        static serializeBinaryToWriter(message: Shadowsocks, writer: jspb.BinaryWriter): void;
-        static deserializeBinary(bytes: Uint8Array): Shadowsocks;
-        static deserializeBinaryFromReader(message: Shadowsocks, reader: jspb.BinaryReader): Shadowsocks;
-    }
-
-    export namespace Shadowsocks {
-        export type AsObject = {
-            port?: number,
-        }
-    }
-
-    export class WireguardPort extends jspb.Message { 
-
-        hasPort(): boolean;
-        clearPort(): void;
-        getPort(): number | undefined;
-        setPort(value: number): WireguardPort;
-
-        serializeBinary(): Uint8Array;
-        toObject(includeInstance?: boolean): WireguardPort.AsObject;
-        static toObject(includeInstance: boolean, msg: WireguardPort): WireguardPort.AsObject;
-        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-        static serializeBinaryToWriter(message: WireguardPort, writer: jspb.BinaryWriter): void;
-        static deserializeBinary(bytes: Uint8Array): WireguardPort;
-        static deserializeBinaryFromReader(message: WireguardPort, reader: jspb.BinaryReader): WireguardPort;
-    }
-
-    export namespace WireguardPort {
-        export type AsObject = {
-            port?: number,
-        }
-    }
-
-    export class Lwo extends jspb.Message { 
-
-        hasPort(): boolean;
-        clearPort(): void;
-        getPort(): number | undefined;
-        setPort(value: number): Lwo;
-
-        serializeBinary(): Uint8Array;
-        toObject(includeInstance?: boolean): Lwo.AsObject;
-        static toObject(includeInstance: boolean, msg: Lwo): Lwo.AsObject;
-        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-        static serializeBinaryToWriter(message: Lwo, writer: jspb.BinaryWriter): void;
-        static deserializeBinary(bytes: Uint8Array): Lwo;
-        static deserializeBinaryFromReader(message: Lwo, reader: jspb.BinaryReader): Lwo;
-    }
-
-    export namespace Lwo {
-        export type AsObject = {
-            port?: number,
-        }
-    }
-
-
-    export enum SelectedObfuscation {
-    AUTO = 0,
-    OFF = 1,
-    WIREGUARD_PORT = 2,
-    UDP2TCP = 3,
-    SHADOWSOCKS = 4,
-    QUIC = 5,
-    LWO = 6,
-    }
-
-}
-
 export class CustomList extends jspb.Message { 
     getId(): string;
     setId(value: string): CustomList;
@@ -1854,11 +1705,6 @@ export class Settings extends jspb.Message {
     getSplitTunnel(): SplitTunnelSettings | undefined;
     setSplitTunnel(value?: SplitTunnelSettings): Settings;
 
-    hasObfuscationSettings(): boolean;
-    clearObfuscationSettings(): void;
-    getObfuscationSettings(): ObfuscationSettings | undefined;
-    setObfuscationSettings(value?: ObfuscationSettings): Settings;
-
     hasCustomLists(): boolean;
     clearCustomLists(): void;
     getCustomLists(): CustomListSettings | undefined;
@@ -1930,7 +1776,6 @@ export namespace Settings {
         tunnelOptions?: TunnelOptions.AsObject,
         showBetaReleases: boolean,
         splitTunnel?: SplitTunnelSettings.AsObject,
-        obfuscationSettings?: ObfuscationSettings.AsObject,
         customLists?: CustomListSettings.AsObject,
         apiAccessMethods?: ApiAccessMethodSettings.AsObject,
         relayOverridesList: Array<RelayOverride.AsObject>,
@@ -3507,10 +3352,6 @@ export class WireguardConstraints extends jspb.Message {
     clearIpVersion(): void;
     getIpVersion(): IpVersion | undefined;
     setIpVersion(value: IpVersion): WireguardConstraints;
-    clearAllowedIpsList(): void;
-    getAllowedIpsList(): Array<string>;
-    setAllowedIpsList(value: Array<string>): WireguardConstraints;
-    addAllowedIps(value: string, index?: number): string;
     getUseMultihop(): boolean;
     setUseMultihop(value: boolean): WireguardConstraints;
 
@@ -3538,7 +3379,6 @@ export class WireguardConstraints extends jspb.Message {
 export namespace WireguardConstraints {
     export type AsObject = {
         ipVersion?: IpVersion,
-        allowedIpsList: Array<string>,
         useMultihop: boolean,
         entryLocation?: LocationConstraint.AsObject,
         entryProvidersList: Array<string>,
@@ -3720,11 +3560,6 @@ export namespace DaitaSettings {
 
 export class TunnelOptions extends jspb.Message { 
 
-    hasMtu(): boolean;
-    clearMtu(): void;
-    getMtu(): number | undefined;
-    setMtu(value: number): TunnelOptions;
-
     hasRotationInterval(): boolean;
     clearRotationInterval(): void;
     getRotationInterval(): google_protobuf_duration_pb.Duration | undefined;
@@ -3746,8 +3581,6 @@ export class TunnelOptions extends jspb.Message {
     clearDnsOptions(): void;
     getDnsOptions(): DnsOptions | undefined;
     setDnsOptions(value?: DnsOptions): TunnelOptions;
-    getUserspace(): boolean;
-    setUserspace(value: boolean): TunnelOptions;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): TunnelOptions.AsObject;
@@ -3761,13 +3594,11 @@ export class TunnelOptions extends jspb.Message {
 
 export namespace TunnelOptions {
     export type AsObject = {
-        mtu?: number,
         rotationInterval?: google_protobuf_duration_pb.Duration.AsObject,
         quantumResistant?: QuantumResistantState.AsObject,
         daita?: DaitaSettings.AsObject,
         enableIpv6: boolean,
         dnsOptions?: DnsOptions.AsObject,
-        userspace: boolean,
     }
 }
 
@@ -4751,28 +4582,6 @@ export namespace PlayPurchasePaymentToken {
     }
 }
 
-export class AllowedIpsList extends jspb.Message { 
-    clearValuesList(): void;
-    getValuesList(): Array<string>;
-    setValuesList(value: Array<string>): AllowedIpsList;
-    addValues(value: string, index?: number): string;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): AllowedIpsList.AsObject;
-    static toObject(includeInstance: boolean, msg: AllowedIpsList): AllowedIpsList.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: AllowedIpsList, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): AllowedIpsList;
-    static deserializeBinaryFromReader(message: AllowedIpsList, reader: jspb.BinaryReader): AllowedIpsList;
-}
-
-export namespace AllowedIpsList {
-    export type AsObject = {
-        valuesList: Array<string>,
-    }
-}
-
 export class LogFilter extends jspb.Message { 
     getLogFilter(): string;
     setLogFilter(value: string): LogFilter;
@@ -4896,7 +4705,6 @@ export enum FeatureIndicator {
     MULTIHOP = 1,
     SPLIT_TUNNELING = 2,
     LOCKDOWN_MODE = 3,
-    WIREGUARD_PORT = 4,
     UDP_2_TCP = 5,
     SHADOWSOCKS = 6,
     QUIC = 7,
@@ -4905,7 +4713,6 @@ export enum FeatureIndicator {
     DNS_CONTENT_BLOCKERS = 10,
     CUSTOM_DNS = 11,
     SERVER_IP_OVERRIDE = 12,
-    CUSTOM_MTU = 13,
     DAITA = 14,
     DAITA_MULTIHOP = 15,
     ALLOW_EXTERNAL_DNS = 16,

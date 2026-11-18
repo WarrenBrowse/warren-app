@@ -1,10 +1,9 @@
 #![allow(clippy::identity_op)]
 use serde::{Deserialize, Serialize};
 use std::{fmt, str::FromStr};
-use talpid_types::net::wireguard;
 
 // `QuantumResistantState`, `DaitaSettings` and `TunnelOptions` feed the
-// Quinn tunnel's MTU/DAITA/quantum-resistant settings.
+// Warren tunnel's DAITA and quantum-resistant settings.
 
 #[derive(Serialize, Deserialize, Default, Copy, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -80,38 +79,11 @@ impl Default for DaitaSettings {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default)]
 pub struct TunnelOptions {
-    /// MTU for the wireguard tunnel
-    pub mtu: Option<u16>,
-    /// Obtain a PSK using the relay config client.
+    /// Require the post-quantum seal on the tunnel session.
     pub quantum_resistant: QuantumResistantState,
     /// Configure DAITA
     pub daita: DaitaSettings,
-    /// Use userspace WireGuard.
-    pub userspace: bool,
-}
-
-#[expect(clippy::derivable_impls)]
-impl Default for TunnelOptions {
-    fn default() -> Self {
-        TunnelOptions {
-            mtu: None,
-            quantum_resistant: QuantumResistantState::default(),
-            daita: DaitaSettings::default(),
-            userspace: false,
-        }
-    }
-}
-
-impl TunnelOptions {
-    pub fn into_talpid_tunnel_options(self) -> wireguard::TunnelOptions {
-        wireguard::TunnelOptions {
-            mtu: self.mtu,
-            quantum_resistant: self.quantum_resistant.enabled(),
-            daita: self.daita.enabled,
-            userspace: self.userspace,
-        }
-    }
 }

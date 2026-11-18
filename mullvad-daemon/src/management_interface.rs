@@ -13,9 +13,7 @@ use mullvad_types::relay_constraints::GeographicLocationConstraint;
 use mullvad_types::{
     account::AccountNumber,
     app_routing::{AppRouteStatus, AppRoutingError, ExitChoice},
-    relay_constraints::{
-        ObfuscationSettings, RelayOverride, RelaySettings, allowed_ip::AllowedIps,
-    },
+    relay_constraints::{RelayOverride, RelaySettings},
     relay_list::RelayList,
     settings::{DnsOptions, Settings},
     states::{TargetState, TunnelState},
@@ -789,20 +787,6 @@ impl ManagementService for ManagementServiceImpl {
             .map(|relays| Response::new(types::RelayList::from(relays)))
     }
 
-    async fn set_obfuscation_settings(
-        &self,
-        request: Request<types::ObfuscationSettings>,
-    ) -> ServiceResult<()> {
-        let call = Self::call_of(&request);
-        let settings =
-            ObfuscationSettings::try_from(request.into_inner()).map_err(map_protobuf_type_err)?;
-        log::debug!("set_obfuscation_settings({:?})", settings);
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(&call, DaemonCommand::SetObfuscationSettings(tx, settings))?;
-        self.wait_for_result(rx).await??;
-        Ok(Response::new(()))
-    }
-
     // Settings
     //
 
@@ -1531,33 +1515,12 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    async fn set_wireguard_mtu(&self, request: Request<u32>) -> ServiceResult<()> {
-        let call = Self::call_of(&request);
-        let mtu = request.into_inner();
-        let mtu = if mtu != 0 { Some(mtu as u16) } else { None };
-        log::debug!("set_wireguard_mtu({:?})", mtu);
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(&call, DaemonCommand::SetWireguardMtu(tx, mtu))?;
-        self.wait_for_result(rx).await??;
-        Ok(Response::new(()))
-    }
-
     async fn set_enable_ipv6(&self, request: Request<bool>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
         let enable_ipv6 = request.into_inner();
         log::debug!("set_enable_ipv6({})", enable_ipv6);
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(&call, DaemonCommand::SetEnableIpv6(tx, enable_ipv6))?;
-        self.wait_for_result(rx).await??;
-        Ok(Response::new(()))
-    }
-
-    async fn set_userspace_wireguard(&self, request: Request<bool>) -> ServiceResult<()> {
-        let call = Self::call_of(&request);
-        let userspace = request.into_inner();
-        log::debug!("set_userspace_wireguard({})", userspace);
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(&call, DaemonCommand::SetUserspaceWireguard(tx, userspace))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
@@ -1919,31 +1882,6 @@ impl ManagementService for ManagementServiceImpl {
     async fn get_wireguard_key(&self, _: Request<()>) -> ServiceResult<types::PublicKey> {
         log::debug!("get_wireguard_key");
         Err(Status::not_found("no WireGuard key"))
-    }
-
-    async fn set_wireguard_allowed_ips(
-        &self,
-        request: Request<types::AllowedIpsList>,
-    ) -> ServiceResult<()> {
-        let call = Self::call_of(&request);
-        let allowed_ips_str = request.into_inner().values;
-        // no-log: the allowed-IPs setting the user just set, not traffic
-        log::debug!("set_wireguard_allowed_ips({:?})", allowed_ips_str);
-
-        let (tx, rx) = oneshot::channel();
-        let allowed_ips = AllowedIps::parse(&allowed_ips_str)
-            .map_err(|e| {
-                log::error!("{e}");
-                Status::invalid_argument(format!("Invalid allowed IPs: {e}"))
-            })?
-            .to_constraint();
-
-        self.send_command_to_daemon(
-            &call,
-            DaemonCommand::SetWireguardAllowedIps(tx, allowed_ips),
-        )?;
-        self.wait_for_result(rx).await??;
-        Ok(Response::new(()))
     }
 
     // Custom lists
