@@ -1,6 +1,7 @@
 import { test } from '@playwright/test';
 import { Page } from 'playwright';
 
+import { RoutePath } from '../../../src/shared/routes';
 import { RoutesObjectModel } from '../route-object-models';
 import { MockedTestUtils, startMockedApp } from './mocked-utils';
 
@@ -9,6 +10,10 @@ let util: MockedTestUtils;
 let routes: RoutesObjectModel;
 
 const START_DATE = new Date('2025-01-01T13:37:00');
+
+const NEW_PUBKEY = 'wb1234123412341234123412341234123412341234123412';
+const RECOVERY_PHRASE =
+  'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
 
 const CLOSE_TO_EXPIRY_DIFF = 60 * 60 * 1000;
 const CLOSE_TO_EXPIRY_EXPIRY = {
@@ -79,6 +84,12 @@ test.describe('Account expiry', () => {
     });
   });
 
+  // A new wallet goes on to the onboarding wizard, which its creation owes.
+  async function startUsingNewAccount() {
+    await routes.setupFinished.selectors.startUsingTheAppButton().click();
+    await util.expectRoute(RoutePath.onboardingWelcome);
+  }
+
   function addTimeTests(newAccount: boolean) {
     test('Should respond to time added', async () => {
       await page.clock.fastForward('02:00');
@@ -92,7 +103,7 @@ test.describe('Account expiry', () => {
 
       if (newAccount) {
         await routes.setupFinished.waitForRoute();
-        await routes.setupFinished.startUsingTheApp();
+        await startUsingNewAccount();
       } else {
         await routes.main.waitForRoute();
       }
@@ -119,7 +130,7 @@ test.describe('Account expiry', () => {
 
       if (newAccount) {
         await routes.setupFinished.waitForRoute();
-        await routes.setupFinished.startUsingTheApp();
+        await startUsingNewAccount();
       } else {
         await routes.main.waitForRoute();
       }
@@ -145,20 +156,23 @@ test.describe('Account expiry', () => {
       await routes.login.waitForRoute();
     };
 
+    // A new wallet reaches the buy-plan screen only once its recovery phrase
+    // has been backed up and checked.
     test.beforeEach(async () => {
       await logout();
-      await util.ipc.account.create.handle('1234213412341234');
+      await util.ipc.account.create.handle(NEW_PUBKEY);
+      await util.ipc.account.getWarrenMnemonic.handle(RECOVERY_PHRASE);
       await routes.login.createNewAccount();
       await util.ipc.account[''].notify({ expiry: START_DATE.toISOString() });
       await util.ipc.account.device.notify({
         type: 'logged in',
         deviceState: {
           type: 'logged in',
-          warrenIdentity: {
-            pubkey: '1234213413241234123421341324123412342134132412341234213413241234',
-          },
+          warrenIdentity: { pubkey: NEW_PUBKEY },
         },
       });
+      await routes.login.confirmBackup();
+      await routes.login.answerBackupCheck(RECOVERY_PHRASE);
       await page.clock.fastForward(1000);
       await routes.expired.waitForRoute();
     });
