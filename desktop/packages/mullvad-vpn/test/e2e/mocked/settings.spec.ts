@@ -21,9 +21,11 @@ test('Account button should be displayed correctly', async () => {
   await expect(accountButton).toBeVisible();
 });
 
-test('Headerbar account info should be displayed correctly', async () => {
-  const expiryText = page.getByText(/^Time left:/);
-  await expect(expiryText).toContainText(/Time left: 29 days/i);
+// The main view carries the remaining time in its footer; the header only
+// shows it on the views that have no footer.
+test('Footer time left should be displayed correctly', async () => {
+  const timeLeft = page.getByTestId('time-left');
+  await expect(timeLeft).toHaveText(/^29 days left$/i);
 
   /**
    * 729 days left
@@ -32,7 +34,7 @@ test('Headerbar account info should be displayed correctly', async () => {
   await util.ipc.account[''].notify({
     expiry: new Date(Date.now() + 730 * 24 * 60 * 60 * 1000 - 1000).toISOString(),
   });
-  await expect(expiryText).toContainText(/Time left: 729 days/i);
+  await expect(timeLeft).toHaveText(/^729 days left$/i);
 
   /**
    * 2 years left
@@ -40,7 +42,7 @@ test('Headerbar account info should be displayed correctly', async () => {
   await util.ipc.account[''].notify({
     expiry: new Date(Date.now() + 731 * 24 * 60 * 60 * 1000).toISOString(),
   });
-  await expect(expiryText).toContainText(/Time left: 2 years/i);
+  await expect(timeLeft).toHaveText(/^2 years left$/i);
 
   /**
    * Expiry 1 day ago should show 'out of time'
@@ -48,7 +50,7 @@ test('Headerbar account info should be displayed correctly', async () => {
   await util.ipc.account[''].notify({
     expiry: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
   });
-  await expect(expiryText).not.toBeVisible();
+  await expect(timeLeft).not.toBeVisible();
 });
 
 test('Settings Page', async () => {
