@@ -97,6 +97,26 @@ Hardware Dev Center account, and the source it would be built from is the same
 Wintun (`wintun.dll`, signed by WireGuard LLC) is in the same position, with no
 known name collision.
 
+## Inherited names: what gets renamed, and when
+
+A name is renamed when the user or an administrator can see it; an internal
+name stays, because the cherry-picks above apply by path.
+
+| family | policy |
+|---|---|
+| crates `talpid-*` | never renamed |
+| crates `mullvad-*` | renamed only if the upstream review is given up |
+| protobuf packages `mullvad_daemon.*` | never renamed: a GUI and a daemon of two versions talk across an update |
+| environment variables read by the daemon and the GUI | each has a `WARREN_*` name that wins, and its `MULLVAD_*` name stays read until the first production release, then goes: `WARREN_SETTINGS_DIR`, `_LOG_DIR`, `_CACHE_DIR`, `_RPC_SOCKET_PATH`, `_RESOURCE_DIR`, `_MANAGEMENT_SOCKET_GROUP`, `WARREN_BACKTRACE_ON_FAULT`, and the GUI's `WARREN_PATH`, `WARREN_DISABLE_UPDATE_NOTIFICATION` |
+| `MULLVAD_API_HOST`, `_ADDR`, `_FORCE_DIRECT`, `_DISABLE_TLS` | no alias: release builds ignore them, so no administrator override exists to carry over |
+| `TALPID_*` variables | never renamed |
+| npm package `mullvad-vpn` | renamed only in a campaign shared with warren-extension, whose `pnpm design:sync` copies by path |
+| Swift modules and types | finished before the first iOS store submission |
+| Linux cgroup | renamed and scoped by environment, with a migration of the processes already excluded |
+| private WFP objects of `winfw` | renamed with the Windows firewall migration; the two shared sublayers keep Mullvad's names while the 1.2 driver is supported |
+| split-tunnel driver service, device and file | kept, see above: renaming needs a driver of Warren's own |
+| paths, socket, launchd label, pf anchor, nft table | renamed and scoped by environment |
+
 ## Reversibility
 
 Reversible: the remote and tag remain. If upstream ships something large that
