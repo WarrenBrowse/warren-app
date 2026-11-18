@@ -168,11 +168,20 @@ Linux `.deb`/`.rpm` are unsigned by convention (users verify via SHA-256 checksu
 7. Required secrets:
     - `IOS_DISTRIBUTION_CERT_BASE64`: base64 of `.p12`
     - `IOS_DISTRIBUTION_PASSWORD`: passphrase
-    - `IOS_PROVISIONING_PROFILE_BASE64`: base64 of `.mobileprovision`
+    - `IOS_APP_PROVISIONING_PROFILE_BASE64`, `IOS_TUNNEL_PROVISIONING_PROFILE_BASE64`: base64 of the
+      `.mobileprovision` of the app (`com.warrenbrowse.vpn.ios`) and of its packet tunnel extension
+      (`com.warrenbrowse.vpn.ios.PacketTunnel`)
+    - `IOS_APP_PROVISIONING_PROFILE_BASE64_BETA`, `IOS_TUNNEL_PROVISIONING_PROFILE_BASE64_BETA`: the
+      same two for the beta app (`com.warrenbrowse.vpn.ios.beta`, App Group
+      `group.com.warrenbrowse.vpn.beta`)
     - `APPSTORECONNECT_API_KEY_BASE64`: base64 of `.p8`
     - `APPSTORECONNECT_API_KEY_ID`: key id (e.g. `ABCD123XYZ`)
     - `APPSTORECONNECT_API_ISSUER_ID`: issuer id (UUID shown next to the key)
     - `APPLE_DEVELOPER_TEAM_ID`: 10-char team id
+
+   The iOS release job runs once the repository variable `WARREN_ENABLE_IOS` is `true`. A beta tag
+   whose certificate, team id or two beta profiles are missing skips the iOS build with a notice;
+   a production tag missing its own set fails the iOS job (`ci/ios-signing-ready.sh`).
 
 ## Android: Upload keystore + Play Console
 
