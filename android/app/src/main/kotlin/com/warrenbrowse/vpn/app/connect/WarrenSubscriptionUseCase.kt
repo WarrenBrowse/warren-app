@@ -14,7 +14,6 @@ import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,12 +34,11 @@ class WarrenSubscriptionUseCase(
     private val localSettings: WarrenLocalSettingsRepository,
     private val standing: WarrenAccountStandingState,
     private val purchases: PurchaseVoucherKeeper,
-) : WarrenSubscriptionInvoker {
-
     // App-scoped (not tied to any screen) so the purchase poll survives the
     // user navigating away while they pay in the browser, mirroring the desktop
     // poll that lives on the AppRenderer. The network calls move to IO inside.
-    private val pollScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val pollScope: CoroutineScope,
+) : WarrenSubscriptionInvoker {
 
     override suspend fun fetch(): WarrenSubscriptionOutcome {
         // A Locked wallet is fine: unlock() decrypts from disk regardless of

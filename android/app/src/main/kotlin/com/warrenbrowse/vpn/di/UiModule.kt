@@ -1,14 +1,13 @@
 package com.warrenbrowse.vpn.di
 
 import kotlinx.coroutines.flow.map
+import com.warrenbrowse.vpn.lib.common.util.AppDispatchers
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import android.content.ComponentName
 import android.content.pm.PackageManager
 import android.os.Build
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.MainActivity
 import com.warrenbrowse.vpn.app.connect.holdLockedApps
@@ -217,7 +216,7 @@ val uiModule = module {
     // LastKnownLocationUseCase is referenced by ConnectViewModel.
     single { LastKnownLocationUseCase(get()) }
 
-    single { InAppNotificationController(getAll(), MainScope()) }
+    single { InAppNotificationController(getAll(), get<ApplicationScope>()) }
 
     single { ChangelogDataProvider(get()) }
 
@@ -282,7 +281,7 @@ val uiModule = module {
             // ConnectivityManager.getConnectionOwnerUid, which names the app
             // behind a flow, exists from Android 10.
             countryPerAppSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q,
-            dispatcher = Dispatchers.IO,
+            dispatcher = get<AppDispatchers>().io,
             tunnelConnected =
                 get<ConnectionProxy>().tunnelState.map { it is TunnelState.Connected },
         )

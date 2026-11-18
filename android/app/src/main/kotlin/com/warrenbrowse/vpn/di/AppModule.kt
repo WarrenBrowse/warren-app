@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.core.app.NotificationManagerCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
+import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.announcements.WarrenAnnouncementPoller
 import com.warrenbrowse.vpn.app.connect.HeldVoucherRedeemer
@@ -34,6 +35,8 @@ import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
 import com.warrenbrowse.vpn.app.standing.WarrenAccountStandingPoller
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
 import com.warrenbrowse.vpn.jni.WarrenJniBridgeImpl
+import com.warrenbrowse.vpn.lib.common.util.AppDispatchers
+import com.warrenbrowse.vpn.lib.common.util.processScope
 import com.warrenbrowse.vpn.lib.model.BuildVersion
 import com.warrenbrowse.vpn.lib.model.NotificationChannel
 import com.warrenbrowse.vpn.lib.model.STRIKE_DISMISSAL_PREFIX
@@ -100,9 +103,6 @@ import com.warrenbrowse.vpn.lib.usecase.DeviceRevocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.WarrenLogoutUseCase
 import com.warrenbrowse.vpn.repository.UserPreferences
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.map
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.createdAtStart
@@ -112,7 +112,8 @@ import org.koin.dsl.binds
 import org.koin.dsl.module
 
 val appModule = module {
-    single { ApplicationScope.createDoNotCallUseDiInstead() }
+    single { AppDispatchers.Standard }
+    single { ApplicationScope.createDoNotCallUseDiInstead(get()) }
 
     single { androidContext().resources }
     single { androidContext().userPreferencesStore }
@@ -171,7 +172,7 @@ val appModule = module {
             connectivityManager =
                 androidContext().getSystemService(Context.CONNECTIVITY_SERVICE)
                     as android.net.ConnectivityManager,
-            scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+            scope = CoroutineScope(get<ApplicationScope>().coroutineContext + get<AppDispatchers>().io),
         )
     } bind WarrenHostOfflineProvider::class
 
@@ -217,6 +218,7 @@ val appModule = module {
             localSettings = get(),
             standing = get(),
             purchases = get(),
+            pollScope = get<ApplicationScope>(),
         )
     } bind
         WarrenSubscriptionInvoker::class
@@ -227,7 +229,7 @@ val appModule = module {
 
     // Community-forum wallet login: the deep-link consent controller and
     // the sign + POST use case. `WarrenJni.forumLogin` signs AND sends in Rust.
-    single { ForumLoginController() }
+    single { ForumLoginController(scope = get<ApplicationScope>()) }
     single<ForumIdentityRepository> { SharedPreferencesForumIdentityRepository(androidContext()) }
     // Erasing the wallet erases the forum name learnt under it. Resolved by
     // the application's IO warm-up rather than at Koin start: both
@@ -258,7 +260,7 @@ val appModule = module {
     }
     // The forum's "attach your logs" page: the deep-link consent
     // controller and the collect + gzip + sign + POST use case.
-    single { ForumAttachController() }
+    single { ForumAttachController(scope = get<ApplicationScope>()) }
     single {
         WarrenForumAttachUseCase(
             walletRepository = get(),
@@ -367,7 +369,7 @@ val appModule = module {
     single { NotificationChannel.AccountStanding } bind NotificationChannel::class
     single { NotificationChannelFactory(get(), get(), getAll()) } withOptions { createdAtStart() }
     single { NotificationManagerCompat.from(androidContext()) }
-    single { NotificationManager(get(), getAll(), get(), MainScope()) } withOptions
+    single { NotificationManager(get(), getAll(), get(), get<ApplicationScope>()) } withOptions
         {
             createdAtStart()
         }
@@ -378,7 +380,7 @@ val appModule = module {
             get(),
             get(),
             get<NotificationChannel.TunnelUpdates>().id,
-            MainScope(),
+            get<ApplicationScope>(),
             lockedApps =
                 get<WarrenLocalSettingsRepository>().lockedApps.map { apps ->
                     val packageManager = androidContext().packageManager
@@ -405,7 +407,7 @@ val appModule = module {
 
     // Public /v1/network descriptor feed (display data: the beta banner
     // reads the live bandwidth cap from it).
-    single { WarrenNetworkInfoUseCase(bridge = get(), scope = MainScope()) } bind
+    single { WarrenNetworkInfoUseCase(bridge = get(), scope = get<ApplicationScope>()) } bind
         WarrenNetworkInfoProvider::class
 
     // Public /v1/network/stats feed. It polls only while a surface collects it, so nothing starts
@@ -431,6 +433,11 @@ private val Context.userPreferencesStore: DataStore<UserPreferences> by
 
 class ApplicationScope private constructor(private val cs: CoroutineScope) : CoroutineScope by cs {
     companion object {
-        fun createDoNotCallUseDiInstead(): ApplicationScope = ApplicationScope(MainScope())
+        fun createDoNotCallUseDiInstead(dispatchers: AppDispatchers): ApplicationScope =
+            ApplicationScope(
+                processScope(dispatchers.main) { throwable ->
+                    Logger.e(throwable) { "Uncaught exception in an application-scoped job" }
+                }
+            )
     }
 }
