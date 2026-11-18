@@ -30,7 +30,7 @@ use talpid_types::{
     tunnel::ErrorStateCause,
 };
 use talpid_windows::{
-    io::Overlapped,
+    io::{Overlapped, PendingIo},
     net::{AddressFamily, get_ip_address_for_interface},
     sync::Event,
 };
@@ -558,19 +558,20 @@ impl InitializedSplitTunnelState {
         }
 
         data_buffer.resize(DRIVER_EVENT_BUFFER_SIZE, 0u8);
+        let buffer = &mut data_buffer[..];
+        let buffer_len = u32::try_from(buffer.len()).expect("buffer must be smaller than u32");
 
-        // SAFETY: the output pointer and length describe `data_buffer`, and `overlapped` carries
-        // an event (set in `spawn_event_listener`). Both are owned by the event thread and are
-        // not touched again until the request completes on the event path below. On the quit
-        // path the request is still pending when this returns, and the thread then drops both;
-        // nothing here cancels the request and waits for it before they are freed.
+        // SAFETY: the output pointer and length describe `buffer`, and `overlapped` carries an
+        // event (set in `spawn_event_listener`). On success both are handed to a `PendingIo`
+        // right below, which keeps them borrowed until the request completes and, on every
+        // early return, cancels the request and waits for it before they can be freed.
         unsafe {
             driver::device_io_control_buffer_async(
                 device,
                 driver::DriverIoctlCode::DequeEvent as u32,
                 None,
-                data_buffer.as_mut_ptr(),
-                u32::try_from(data_buffer.len()).expect("buffer must be smaller than u32"),
+                buffer.as_mut_ptr(),
+                buffer_len,
                 overlapped.as_mut_ptr(),
             )
         }
@@ -580,14 +581,14 @@ impl InitializedSplitTunnelState {
                 error.display_chain_with_msg("DeviceIoControl failed to deque event")
             );
         })?;
+        // SAFETY: the request was started just above on `device` with `overlapped`, writing into
+        // `buffer`, and `device_io_control_buffer_async` only returns Ok on `ERROR_IO_PENDING`.
+        let pending = unsafe { PendingIo::new(&**device, overlapped, buffer) };
 
-        let event_objects = [
-            overlapped.get_event().unwrap().as_raw_handle(),
-            quit_event.as_raw_handle(),
-        ];
+        let event_objects = [pending.event().as_raw_handle(), quit_event.as_raw_handle()];
 
         // SAFETY: both handles are event objects, the overlapped event and `quit_event`, kept
-        // open by `overlapped` and `quit_event`, which outlive the wait.
+        // open by `pending` and `quit_event`, which outlive the wait.
         let signaled_object =
             unsafe { driver::wait_for_multiple_objects(&event_objects[..], false) }.inspect_err(
                 |error| {
@@ -599,21 +600,19 @@ impl InitializedSplitTunnelState {
             )?;
 
         if signaled_object == quit_event.as_raw_handle() {
-            // Quit event was signaled
+            // Dropping `pending` cancels the request and waits for the driver to release the
+            // buffer, which the event thread frees once it stops.
             return Ok(EventResult::Quit);
         }
 
-        let returned_bytes =
-            driver::get_overlapped_result(device, overlapped).inspect_err(|error| {
-                if error.raw_os_error() != Some(ERROR_OPERATION_ABORTED as i32) {
-                    log::error!(
-                        "{}",
-                        error.display_chain_with_msg(
-                            "get_overlapped_result failed for dequeued event"
-                        ),
-                    );
-                }
-            })?;
+        let returned_bytes = pending.finish().inspect_err(|error| {
+            if error.raw_os_error() != Some(ERROR_OPERATION_ABORTED as i32) {
+                log::error!(
+                    "{}",
+                    error.display_chain_with_msg("get_overlapped_result failed for dequeued event"),
+                );
+            }
+        })?;
 
         data_buffer
             .truncate(usize::try_from(returned_bytes).expect("usize must be no smaller than u32"));

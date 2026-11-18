@@ -22,7 +22,11 @@ use std::{
     time::Duration,
 };
 use talpid_types::ErrorExt;
-use talpid_windows::{io::Overlapped, process::ProcessSnapshot, sync::Event};
+use talpid_windows::{
+    io::{Overlapped, PendingIo},
+    process::ProcessSnapshot,
+    sync::Event,
+};
 use windows_sys::Win32::{
     Foundation::{
         ERROR_ACCESS_DENIED, ERROR_FILE_NOT_FOUND, ERROR_INVALID_FUNCTION, ERROR_INVALID_PARAMETER,
@@ -32,7 +36,7 @@ use windows_sys::Win32::{
     Storage::FileSystem::FILE_FLAG_OVERLAPPED,
     System::{
         Diagnostics::ToolHelp::TH32CS_SNAPPROCESS,
-        IO::{DeviceIoControl, GetOverlappedResult, OVERLAPPED},
+        IO::{DeviceIoControl, OVERLAPPED},
         Ioctl::{FILE_ANY_ACCESS, METHOD_BUFFERED, METHOD_NEITHER},
         Threading::{INFINITE, WaitForMultipleObjects, WaitForSingleObject},
     },
@@ -923,11 +927,15 @@ pub fn device_io_control_buffer(
             "the output buffer is too large",
         )
     })?;
-    let out_ptr = match output {
-        Some(output) => output as *mut _ as *mut _,
-        None => ptr::null_mut(),
+    let output = output.unwrap_or_default();
+    let out_ptr = if output.is_empty() {
+        ptr::null_mut()
+    } else {
+        output.as_mut_ptr()
     };
-    // SAFETY: `out_ptr` will be valid until the result has been obtained.
+    // SAFETY: `out_ptr` is null or points to `output`, `output_len` bytes long. The guard below
+    // keeps `output` and `overlapped` borrowed until the request completes, and cancels it and
+    // waits on any early return.
     unsafe {
         device_io_control_buffer_async(
             device,
@@ -938,7 +946,9 @@ pub fn device_io_control_buffer(
             overlapped.as_mut_ptr(),
         )?;
     }
-    get_overlapped_result(device, overlapped)
+    // SAFETY: the request was started just above on `device` with `overlapped`, writing into
+    // `output`, and `device_io_control_buffer_async` only returns Ok on `ERROR_IO_PENDING`.
+    unsafe { PendingIo::new(device, overlapped, output) }.finish()
 }
 
 /// Send an IOCTL code to the given device handle.
@@ -946,7 +956,7 @@ pub fn device_io_control_buffer(
 /// `input` specifies an optional buffer for sending data.
 /// `output_ptr` specifies an optional buffer for receiving data.
 ///
-/// Obtain the result using [get_overlapped_result].
+/// Hand the request to a [PendingIo] to obtain its result.
 ///
 /// # Safety
 ///
@@ -970,7 +980,6 @@ pub unsafe fn device_io_control_buffer_async(
     // the same slice (or are null and 0); `device_io_control_buffer` waits for completion while
     // that slice is still borrowed, and the event loop, which does not wait, passes no input.
     // The caller guarantees that `output_ptr` is null or valid for `output_len` bytes
-
     // until the operation completes, and must keep `overlapped` (a raw pointer, so not covered by
     // a borrow) alive and unused by another request for that same duration.
     let result = unsafe {
@@ -998,40 +1007,6 @@ pub unsafe fn device_io_control_buffer_async(
     }
 
     Ok(())
-}
-
-/// Retrieves the result of an overlapped operation. On success, this returns
-/// the number of bytes transferred. For device I/O, this is the number of bytes
-/// written to the output buffer.
-///
-/// # Panics
-///
-/// This function will panic if `overlapped` does not contain an event.
-pub fn get_overlapped_result(
-    device: &DeviceHandle,
-    overlapped: &mut Overlapped,
-) -> io::Result<u32> {
-    let event = overlapped.get_event().unwrap();
-
-    // SAFETY: This is a valid event object.
-    unsafe { wait_for_single_object(event, None) }?;
-
-    let mut returned_bytes = 0u32;
-    // SAFETY: the device handle is borrowed for the call, `overlapped` is an exclusive borrow of
-    // the `OVERLAPPED` that started the operation, and the operation has completed (its event was
-    // signaled above), so Windows no longer writes to it. The byte count is a local `u32`.
-    let result = unsafe {
-        GetOverlappedResult(
-            device.as_raw_handle(),
-            overlapped.as_mut_ptr(),
-            &raw mut returned_bytes,
-            0,
-        )
-    };
-    if result == 0 {
-        return Err(io::Error::last_os_error());
-    }
-    Ok(returned_bytes)
 }
 
 /// Waits for an object to be signaled, or until a timeout interval has elapsed.
