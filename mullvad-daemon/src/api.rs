@@ -106,13 +106,13 @@ pub(crate) fn forward_offline_state(
     mut offline_state_rx: mpsc::UnboundedReceiver<Connectivity>,
     online_edge_tx: tokio::sync::watch::Sender<u64>,
     warren_status_cache: crate::warren_status::WarrenStatusCache,
-) {
+) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
-        let mut was_offline = offline_state_rx
-            .next()
-            .await
-            .expect("missing initial offline state")
-            .is_offline();
+        let Some(initial) = offline_state_rx.next().await else {
+            log::debug!("The offline monitor closed before reporting a state");
+            return;
+        };
+        let mut was_offline = initial.is_offline();
         log::info!(
             "Initial offline state - {state}",
             state = if was_offline { "offline" } else { "online" },
@@ -134,5 +134,28 @@ pub(crate) fn forward_offline_state(
             // so this flag is the user's only immediate signal.
             warren_status_cache.set_host_offline(is_offline);
         }
-    });
+    })
+}
+
+#[cfg(test)]
+mod offline_state_tests {
+    use super::*;
+
+    /// The offline monitor can go away before it reports anything (a failed start, a
+    /// shutdown): the forwarder then ends quietly instead of panicking in a detached task.
+    #[tokio::test]
+    async fn a_monitor_that_closes_before_its_first_state_ends_the_forwarder() {
+        let (tx, rx) = mpsc::unbounded();
+        drop(tx);
+        let (online_edge_tx, _online_edge_rx) = tokio::sync::watch::channel(0);
+
+        let forwarder = forward_offline_state(
+            ApiAvailability::default(),
+            rx,
+            online_edge_tx,
+            crate::warren_status::WarrenStatusCache::default(),
+        );
+
+        assert!(forwarder.await.is_ok(), "the forwarder panicked");
+    }
 }
