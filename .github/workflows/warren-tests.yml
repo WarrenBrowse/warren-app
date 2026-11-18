@@ -220,12 +220,14 @@ jobs:
       - name: Linux firewall against the kernel (root)
         # Same packages and features as the test step above, so nothing is
         # rebuilt; the target runner only changes who executes the binaries.
+        # A proc-macro test binary links libstd dynamically, and sudo drops the
+        # LD_LIBRARY_PATH it needs, so that crate stays out of the root run.
         timeout-minutes: 20
         env:
           CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: sudo -E
         run: |
           cargo nextest run --locked --profile warren-ci --run-ignored only \
-            --test-threads 1 --workspace \
+            --test-threads 1 --workspace --exclude intersection-derive \
             --features mullvad-update/sign,mullvad-update/client \
             -E 'test(/^firewall::linux::/) | test(/^split_tunnel::linux::/) | test(/^early_boot_firewall::/)'
 

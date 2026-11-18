@@ -568,7 +568,12 @@ mod tests {
         settings.app_routing.split_mode = SplitMode::Off;
         settings.app_routing.app_exits_enabled = true;
         settings.app_routing.set_app_exit(
-            AppId::parse("/usr/bin/curl").unwrap(),
+            AppId::parse(if cfg!(windows) {
+                r"C:\Windows\curl.exe"
+            } else {
+                "/usr/bin/curl"
+            })
+            .unwrap(),
             ExitChoice::new("se", None).unwrap(),
         );
         let shown = compute_feature_indicators(&settings, &endpoint, false);
