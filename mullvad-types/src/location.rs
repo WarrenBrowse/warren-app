@@ -137,8 +137,9 @@ fn haversine_dist_rad(lat: f64, lon: f64, other_lat: f64, other_lon: f64) -> f64
     haversine.sqrt().asin() * 2.0 * RAIDUS_OF_EARTH
 }
 
-/// The response from the am.i.mullvad.net location service.
+/// The response from the conncheck location service.
 #[derive(Debug, Deserialize)]
+#[serde(try_from = "ConncheckResponse")]
 pub struct AmIMullvad {
     pub ip: IpAddr,
     pub country: String,
@@ -146,6 +147,40 @@ pub struct AmIMullvad {
     pub latitude: f64,
     pub longitude: f64,
     pub mullvad_exit_ip: bool,
+}
+
+/// The service is moving its exit flag from `mullvad_exit_ip` to `warren_exit_ip`: either
+/// is accepted, and the Warren name wins while both are sent.
+#[derive(Deserialize)]
+struct ConncheckResponse {
+    ip: IpAddr,
+    country: String,
+    city: Option<String>,
+    latitude: f64,
+    longitude: f64,
+    #[serde(default)]
+    warren_exit_ip: Option<bool>,
+    #[serde(default)]
+    mullvad_exit_ip: Option<bool>,
+}
+
+impl TryFrom<ConncheckResponse> for AmIMullvad {
+    type Error = &'static str;
+
+    fn try_from(response: ConncheckResponse) -> Result<Self, Self::Error> {
+        let exit_ip = response
+            .warren_exit_ip
+            .or(response.mullvad_exit_ip)
+            .ok_or("the response does not say whether the address is an exit")?;
+        Ok(AmIMullvad {
+            ip: response.ip,
+            country: response.country,
+            city: response.city,
+            latitude: response.latitude,
+            longitude: response.longitude,
+            mullvad_exit_ip: exit_ip,
+        })
+    }
 }
 
 /// GeoIP information exposed from the daemon to frontends.
@@ -190,6 +225,45 @@ pub struct LocationEventData {
     pub request_id: usize,
     /// New location information
     pub location: GeoIpLocation,
+}
+
+#[cfg(test)]
+mod conncheck_tests {
+    use super::AmIMullvad;
+
+    fn response(exit_keys: &str) -> String {
+        format!(
+            r#"{{"ip":"192.0.2.7","country":"Romania","city":"Bucharest","latitude":44.4,"longitude":26.1{exit_keys}}}"#
+        )
+    }
+
+    #[test]
+    fn the_legacy_exit_key_is_read() {
+        let parsed: AmIMullvad =
+            serde_json::from_str(&response(r#","mullvad_exit_ip":true"#)).unwrap();
+        assert!(parsed.mullvad_exit_ip);
+    }
+
+    #[test]
+    fn the_warren_exit_key_is_read() {
+        let parsed: AmIMullvad =
+            serde_json::from_str(&response(r#","warren_exit_ip":true"#)).unwrap();
+        assert!(parsed.mullvad_exit_ip);
+    }
+
+    #[test]
+    fn the_warren_key_wins_while_the_service_sends_both() {
+        let parsed: AmIMullvad = serde_json::from_str(&response(
+            r#","mullvad_exit_ip":false,"warren_exit_ip":true"#,
+        ))
+        .unwrap();
+        assert!(parsed.mullvad_exit_ip);
+    }
+
+    #[test]
+    fn a_response_without_either_key_is_refused() {
+        assert!(serde_json::from_str::<AmIMullvad>(&response("")).is_err());
+    }
 }
 
 #[cfg(test)]

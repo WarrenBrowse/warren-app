@@ -266,7 +266,9 @@ class Networking {
                 let jsonObject = try JSONSerialization.jsonObject(with: data)
 
                 if let dictionary = jsonObject as? [String: Any] {
-                    guard let isConnectedThroughWarren = dictionary["mullvad_exit_ip"] as? Bool else {
+                    // The service is renaming the flag; the Warren name wins while both are sent.
+                    let exitFlag = dictionary["warren_exit_ip"] ?? dictionary["mullvad_exit_ip"]
+                    guard let isConnectedThroughWarren = exitFlag as? Bool else {
                         XCTFail("Unexpected JSON format")
                         return
                     }
