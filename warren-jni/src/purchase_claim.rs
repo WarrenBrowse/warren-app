@@ -112,6 +112,46 @@ impl PulledVouchers {
 }
 
 /// Compares two secrets in time independent of where they first differ.
+/// The error a purchase poll answers while its payment has queued no voucher.
+pub(crate) const PURCHASE_PENDING: &str = "purchase pending";
+
+/// Why `redeemVoucher` did not credit the wallet.
+pub(crate) enum RedeemError {
+    /// The wallet is banned: the voucher was not consumed and stays the
+    /// user's, and a pulled secret stays cached for after the ban.
+    Banned(warren_standing::Ban),
+    /// A verdict on the voucher itself: unknown, spent, cancelled or expired.
+    VoucherRejected,
+    /// The purchase's payment has queued no voucher yet: the poll keeps trying.
+    PurchasePending,
+    /// Any other failure, with a loggable class and no secret in it.
+    Failed(String),
+}
+
+impl RedeemError {
+    /// The envelope Kotlin decodes: the refusal of a ban, or
+    /// `{"ok":false,"error":..}` whose `error` names a pending purchase and a
+    /// rejected voucher exactly.
+    pub(crate) fn envelope(&self) -> serde_json::Value {
+        match self {
+            RedeemError::Banned(ban) => warren_standing::ban_refusal_envelope(ban),
+            RedeemError::VoucherRejected => {
+                serde_json::json!({ "ok": false, "error": "voucher rejected" })
+            }
+            RedeemError::PurchasePending => {
+                serde_json::json!({ "ok": false, "error": PURCHASE_PENDING })
+            }
+            RedeemError::Failed(error) => serde_json::json!({ "ok": false, "error": error }),
+        }
+    }
+}
+
+impl From<String> for RedeemError {
+    fn from(message: String) -> Self {
+        Self::Failed(message)
+    }
+}
+
 fn same_secret(a: &str, b: &str) -> bool {
     a.len() == b.len()
         && a.bytes()
@@ -122,7 +162,42 @@ fn same_secret(a: &str, b: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{PulledVouchers, RegisterFailure, classify_register_failure, parse};
+    use super::{PulledVouchers, RedeemError, RegisterFailure, classify_register_failure, parse};
+
+    /// Kotlin tells a purchase still being paid, and a voucher the server
+    /// refused, from any other failure by these two exact error strings.
+    #[test]
+    fn each_redeem_failure_answers_the_error_kotlin_decodes() {
+        let cases = [
+            (RedeemError::PurchasePending, "purchase pending"),
+            (RedeemError::VoucherRejected, "voucher rejected"),
+            (
+                RedeemError::Failed("register failed: timeout".to_owned()),
+                "register failed: timeout",
+            ),
+        ];
+        for (error, expected) in cases {
+            assert_eq!(
+                error.envelope(),
+                serde_json::json!({ "ok": false, "error": expected })
+            );
+        }
+    }
+
+    /// A ban answers the standing refusal the app's ban screen reads.
+    #[test]
+    fn a_ban_answers_the_standing_refusal() {
+        let ban = warren_standing::Ban {
+            reason: warren_standing::BanReasonCode::Other,
+            banned_at_unix_secs: None,
+            lapses_at_unix_secs: Some(1_700_000_000),
+        };
+
+        assert_eq!(
+            RedeemError::Banned(ban).envelope(),
+            warren_standing::ban_refusal_envelope(&ban)
+        );
+    }
 
     fn claim(wpid_char: char, secret_char: char) -> super::PurchaseClaim {
         parse(&format!(

@@ -1224,6 +1224,7 @@ fn fetch_multihop_directory_raw() -> String {
 // The API URL + server pubkey live in the host-compiled `crate::product`
 // module (per product environment, drift-gated against the contract).
 use crate::product::{PRODUCT_API_URL, SERVER_PUBKEY_HEX};
+use crate::purchase_claim::RedeemError;
 
 /// Empty relay catalogue. Returned when no relay list is available (the live
 /// fetch failed AND nothing was cached yet). An empty list makes the connect
@@ -2267,24 +2268,21 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_redeemVoucher<'lo
     let voucher_secret = String::from_java(&jnix_env, voucher);
     let json = match redeem_voucher_inner(&phrase, &voucher_secret) {
         Ok(expires_at) => serde_json::json!({"ok": true, "expires_at": expires_at}).to_string(),
-        Err(RedeemError::Banned(ban)) => {
-            log::warn!("redeemVoucher: the account is banned; the voucher is kept");
-            warren_standing::ban_refusal_envelope(&ban).to_string()
-        }
-        Err(RedeemError::VoucherRejected) => {
-            log::warn!("redeemVoucher: the voucher is unknown, spent or expired");
-            serde_json::json!({"ok": false, "error": VOUCHER_REJECTED}).to_string()
-        }
-        Err(RedeemError::Failed(e)) => {
-            // "purchase pending" is the expected steady state of a purchase poll
-            // (webhook not landed yet), not a failure: keep it at debug so the
-            // 5s poll does not spam warnings for the whole 10-minute window.
-            if e == "purchase pending" {
-                log::debug!("redeemVoucher: purchase pending");
-            } else {
-                log::warn!("redeemVoucher failed");
+        Err(error) => {
+            match &error {
+                RedeemError::Banned(_) => {
+                    log::warn!("redeemVoucher: the account is banned; the voucher is kept");
+                }
+                RedeemError::VoucherRejected => {
+                    log::warn!("redeemVoucher: the voucher is unknown, spent or expired");
+                }
+                // The expected steady state of a purchase poll (webhook not
+                // landed yet), not a failure: at debug, so the 5s poll does not
+                // spam warnings for the whole 10-minute window.
+                RedeemError::PurchasePending => log::debug!("redeemVoucher: purchase pending"),
+                RedeemError::Failed(_) => log::warn!("redeemVoucher failed"),
             }
-            serde_json::json!({"ok": false, "error": e}).to_string()
+            error.envelope().to_string()
         }
     };
     match jnix_env.new_string(json) {
@@ -2301,11 +2299,6 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_redeemVoucher<'lo
 #[cfg(target_os = "android")]
 static PULLED_UNREGISTERED: crate::purchase_claim::PulledVouchers =
     crate::purchase_claim::PulledVouchers::new();
-
-/// The error `redeemVoucher` answers for a verdict on the voucher itself
-/// (unknown, spent, cancelled or expired): the only refusal after which a
-/// held voucher is worth nothing.
-const VOUCHER_REJECTED: &str = "voucher rejected";
 
 /// Collect the voucher an app-initiated purchase paid for, WITHOUT redeeming
 /// it: `claim` is the purchase's claim code (wpid then pull secret). Returns
@@ -2324,9 +2317,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_pullPurchaseVouch
         Ok(Some(voucher)) => {
             Zeroizing::new(serde_json::json!({"ok": true, "voucher": voucher.as_str()}).to_string())
         }
-        Ok(None) => Zeroizing::new(
-            serde_json::json!({"ok": false, "error": "purchase pending"}).to_string(),
-        ),
+        Ok(None) => Zeroizing::new(RedeemError::PurchasePending.envelope().to_string()),
         Err(e) => {
             log::warn!("pullPurchaseVoucher failed");
             Zeroizing::new(serde_json::json!({"ok": false, "error": e}).to_string())
@@ -2403,7 +2394,7 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_claim: &str) -> Result<u64, R
                 // The request DTO owns a plain String; this copy leaves with it.
                 Some(secret) => (*secret).clone(),
                 // Webhook not landed yet (or id expired): keep polling.
-                None => return Err("purchase pending".to_owned().into()),
+                None => return Err(RedeemError::PurchasePending),
             },
             None => voucher_or_claim.to_owned(),
         };
@@ -2478,23 +2469,6 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_claim: &str) -> Result<u64, R
 #[allow(dead_code)]
 fn redeem_voucher_inner(_mnemonic: &str, _voucher_secret: &str) -> Result<u64, RedeemError> {
     Err("redeemVoucher is Android-only".to_owned().into())
-}
-
-/// Why `redeemVoucher` did not credit the wallet.
-enum RedeemError {
-    /// The wallet is banned: the voucher was not consumed and stays the
-    /// user's, and a pulled secret stays cached for after the ban.
-    Banned(warren_standing::Ban),
-    /// A verdict on the voucher itself: unknown, spent, cancelled or expired.
-    VoucherRejected,
-    /// Any other failure, with a loggable class and no secret in it.
-    Failed(String),
-}
-
-impl From<String> for RedeemError {
-    fn from(message: String) -> Self {
-        Self::Failed(message)
-    }
 }
 
 // ---------------------------------------------------------------------------
