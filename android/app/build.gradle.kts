@@ -558,6 +558,7 @@ play {
 
 dependencies {
     implementation(projects.lib.common)
+    implementation(projects.lib.jni)
     implementation(project(":lib:common-compose"))
     // lib.grpc dropped (Mullvad daemon gRPC bridge dead).
     // account/addtime/deleteaccount/redeemvoucher
