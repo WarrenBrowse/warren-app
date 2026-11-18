@@ -64,7 +64,6 @@ on:
       - "mullvad-nsis/**"
       - "warren-incidents/**"
       - "warren-nm-vpn-service/**"
-      - "android/translations-converter/**"
       # The Windows leg (warren-tests.yml `windows-daemon`) builds winfw from
       # windows/ and links every Windows test binary against it, then lints
       # and tests these Windows-bearing crates. None of them was in this
@@ -77,6 +76,7 @@ on:
       - "talpid-tunnel/**"
       - "talpid-platform-metadata/**"
       - "windows-installer/**"
+      - "desktop/packages/windows-utils/**"
       - "mullvad-paths/**"
       - "mullvad-setup/**"
       - "mullvad-problem-report/**"

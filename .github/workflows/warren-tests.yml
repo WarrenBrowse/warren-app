@@ -678,6 +678,15 @@ jobs:
           bash ci/codemagic/watchdog.sh cargo clippy --locked --no-deps --all-targets \
             $WINDOWS_CRATES -- -D warnings
 
+      # The installer's NSIS plugin and the GUI's native Windows module are
+      # Windows code no other job compiles. Linted apart so the test set above
+      # does not grow.
+      - name: cargo clippy (Windows-only crates)
+        timeout-minutes: 15
+        run: |
+          bash ci/codemagic/watchdog.sh cargo clippy --locked --no-deps --all-targets \
+            -p mullvad-nsis -p windows-utils -- -D warnings
+
       - name: cargo nextest (Windows)
         timeout-minutes: 40
         run: |
