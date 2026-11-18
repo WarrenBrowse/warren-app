@@ -23,7 +23,6 @@ mod account;
 mod api;
 mod cancellation;
 mod completion;
-mod device;
 pub(super) mod helpers;
 #[cfg(feature = "api-mock")]
 mod mock;
@@ -257,8 +256,7 @@ pub extern "C" fn mullvad_api_init_new(
 /// to proceed in a meaningful way anyway.
 ///
 /// This function is safe.
-#[unsafe(no_mangle)]
-pub extern "C" fn mullvad_api_init_inner(
+fn mullvad_api_init_inner(
     host: *const c_char,
     address: *const c_char,
     #[cfg(feature = "api-override")] disable_tls: bool,

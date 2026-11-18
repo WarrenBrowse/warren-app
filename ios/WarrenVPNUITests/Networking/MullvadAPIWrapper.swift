@@ -6,7 +6,6 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import CryptoKit
 import Foundation
 import WarrenRustRuntime
 import XCTest
@@ -77,15 +76,6 @@ class MullvadAPIWrapper: @unchecked Sendable {
         return port
     }
 
-    /// Generate a mock public WireGuard key
-    private func generateMockWireGuardKey() -> Data {
-        let privateKey = Curve25519.KeyAgreement.PrivateKey()
-        let publicKey = privateKey.publicKey
-        let publicKeyData = publicKey.rawRepresentation
-
-        return publicKeyData
-    }
-
     func createAccount() -> String {
         nonisolated(unsafe) var accountNumber = String()
         let requestCompletedExpectation = XCTestExpectation(description: "Create account request completed")
@@ -123,34 +113,6 @@ class MullvadAPIWrapper: @unchecked Sendable {
         XCTAssertEqual(waitResult, .completed, "Delete account request completed")
     }
 
-    /// Add another device to specified account. A dummy WireGuard key will be generated.
-    func addDevice(_ account: String) {
-        let requestCompletedExpectation = XCTestExpectation(description: "Add device request completed")
-
-        throttle {
-            let devicePublicKey = self.generateMockWireGuardKey()
-
-            do {
-                try self.warrenAPI.addDevice(forAccount: account, publicKey: devicePublicKey)
-            } catch {
-                XCTFail("Failed to add device with error: \(error.localizedDescription)")
-            }
-
-            requestCompletedExpectation.fulfill()
-        }
-
-        let waitResult = XCTWaiter().wait(for: [requestCompletedExpectation], timeout: throttleWaitTimeout)
-        XCTAssertEqual(waitResult, .completed, "Add device request completed")
-    }
-
-    /// Add multiple devices to specified account. Dummy WireGuard keys will be generated.
-    func addDevices(_ numberOfDevices: Int, account: String) {
-        for i in 0..<numberOfDevices {
-            self.addDevice(account)
-            print("Created \(i + 1) devices")
-        }
-    }
-
     func getAccountExpiry(_ account: String) throws -> Date {
         nonisolated(unsafe) var accountExpiryDate: Date = .distantPast
         let requestCompletedExpectation = XCTestExpectation(description: "Get account expiry request completed")
@@ -170,25 +132,5 @@ class MullvadAPIWrapper: @unchecked Sendable {
         XCTAssertEqual(waitResult, .completed, "Get account expiry request completed")
 
         return accountExpiryDate
-    }
-
-    func getDevices(_ account: String) throws -> [Device] {
-        nonisolated(unsafe) var devices: [Device] = []
-        let requestCompletedExpectation = XCTestExpectation(description: "Get devices request completed")
-
-        throttle {
-            do {
-                devices = try self.warrenAPI.listDevices(forAccount: account)
-            } catch {
-                XCTFail("Failed to get devices with error: \(error.localizedDescription)")
-            }
-
-            requestCompletedExpectation.fulfill()
-        }
-
-        let waitResult = XCTWaiter.wait(for: [requestCompletedExpectation], timeout: throttleWaitTimeout)
-        XCTAssertEqual(waitResult, .completed, "Get devices request completed")
-
-        return devices
     }
 }

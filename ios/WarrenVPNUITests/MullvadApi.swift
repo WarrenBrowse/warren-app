@@ -14,17 +14,8 @@ struct MullvadApiError: Error {
     let description: String
 }
 
-struct Device {
-    let name: String
-    let id: UUID
-}
-
 private struct NewAccountResponse: Decodable { let number: String }
 private struct AccountResponse: Decodable { let expiry: Date }
-private struct DeviceResponse: Decodable {
-    let id: String
-    let name: String
-}
 
 /// - Warning: Do not change the `apiAddress` or the `hostname` after the time `MullvadApi.init` has been invoked.
 class MullvadApi {
@@ -38,14 +29,7 @@ class MullvadApi {
             UUID().uuidString, "Direct", true, UInt8(KindDirect.rawValue), nil
         )
         let settingsWrapper = init_access_method_settings_wrapper(directRaw, nil, 0)
-        context = mullvad_api_init_inner(
-            hostname,
-            apiAddress,
-            false,
-            settingsWrapper,
-            nil,
-            nil
-        )
+        context = mullvad_api_init_new(hostname, apiAddress, settingsWrapper, nil, nil)
     }
 
     func createAccount() throws -> String {
@@ -62,20 +46,6 @@ class MullvadApi {
         }
     }
 
-    func addDevice(forAccount: String, publicKey: Data) throws {
-        _ = try publicKey.withUnsafeBytes { ptr -> MullvadApiResponse in
-            try makeRequest { cookie, strategy in
-                mullvad_ios_create_device(
-                    context,
-                    cookie,
-                    strategy,
-                    forAccount,
-                    ptr.baseAddress!.assumingMemoryBound(to: UInt8.self)
-                )
-            }
-        }
-    }
-
     func getExpiry(forAccount: String) throws -> UInt64 {
         let response = try makeRequest { cookie, strategy in
             mullvad_ios_get_account(context, cookie, strategy, forAccount)
@@ -85,18 +55,6 @@ class MullvadApi {
         decoder.dateDecodingStrategy = .iso8601
         let decoded = try decoder.decode(AccountResponse.self, from: data)
         return UInt64(decoded.expiry.timeIntervalSince1970)
-    }
-
-    func listDevices(forAccount: String) throws -> [Device] {
-        let response = try makeRequest { cookie, strategy in
-            mullvad_ios_get_devices(context, cookie, strategy, forAccount)
-        }
-        let data = try requireBody(response)
-        let deviceResponses = try JSONDecoder().decode([DeviceResponse].self, from: data)
-        return deviceResponses.compactMap { d in
-            guard let uuid = UUID(uuidString: d.id) else { return nil }
-            return Device(name: d.name, id: uuid)
-        }
     }
 
     private func requireBody(_ response: MullvadApiResponse) throws -> Data {

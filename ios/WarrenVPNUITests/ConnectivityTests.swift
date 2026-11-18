@@ -33,7 +33,7 @@ class ConnectivityTests: LoggedOutUITestCase {
             .verifyDeviceLabelShown()
     }
 
-    /// Verifies that after connecting to a relay, the app can still communicate by logging out and verifying that the device was successfully removed
+    /// Verifies that after connecting to a relay, the app can still reach the API to log out
     func testAPIReachableWhenBlocked() throws {
         let hasTimeAccountNumber = getAccountWithTime()
         addTeardownBlock {
@@ -60,18 +60,14 @@ class ConnectivityTests: LoggedOutUITestCase {
         SelectLocationPage(app)
             .tapDoneButton()
 
-        // Get device name, log out and make sure device was removed as a a way of verifying that the API can be reached
+        // Log out as a way of verifying that the API can be reached
         HeaderBar(app)
             .tapAccountButton()
-
-        let deviceName = try AccountPage(app).getDeviceName()
 
         AccountPage(app)
             .tapLogOutButton()
 
         LoginPage(app)
-
-        verifyDeviceHasBeenRemoved(deviceName: deviceName, accountNumber: hasTimeAccountNumber)
     }
 
     /// Test that the app is functioning when API is down. To simulate API being down we create a dummy access method
@@ -186,18 +182,6 @@ class ConnectivityTests: LoggedOutUITestCase {
             .waitForConnectedLabel()
 
         try Networking.verifyCanAccessLocalNetwork()
-    }
-
-    private func verifyDeviceHasBeenRemoved(deviceName: String, accountNumber: String) {
-        do {
-            let devices = try MullvadAPIWrapper().getDevices(accountNumber)
-
-            for device in devices where device.name == deviceName {
-                XCTFail("Device has not been removed which tells us that the logout was not successful")
-            }
-        } catch {
-            XCTFail("Failed to get devices from app API")
-        }
     }
 
     /// Toggle enabled switch for all existing access methods.
