@@ -1787,8 +1787,9 @@ impl WarrenTunnelMonitor {
         // `warrenguard_config::TUNNEL_POOL_CIDR` (`10.66.0.0/16`).
         //
         // Derivation: octet C, D = pubkey[0], pubkey[1].max(2). Skips
-        // `10.66.X.0` (network) and `10.66.X.1` (gateway). Collision
-        // odds across two clients on the same exit are ~1/65 000.
+        // `10.66.X.0` (network), `10.66.X.1` (gateway) and the content-blocking
+        // resolvers. Collision odds across two clients on the same exit are
+        // ~1/65 000.
         // A future revision will replace this with a coordinated allocator
         // (subscription-bound, persisted exit-side).
         let pubkey_bytes = params.signing_key.verifying_key().to_bytes();
@@ -3721,12 +3722,18 @@ fn reassignment_escalation(
 /// likely land on different IPs (~1/65 000 collision odds).
 ///
 /// Skips the network address `10.66.X.0` and the gateway `10.66.X.1`
-/// to avoid reserved values.
+/// to avoid reserved values, and the exit's content-blocking resolvers,
+/// which a tunnel address would shadow with a local one.
 #[must_use]
 fn derive_multi_hop_tun_ip(pubkey_bytes: &[u8; 32]) -> std::net::Ipv4Addr {
     let octet_c = pubkey_bytes[0];
     let octet_d = pubkey_bytes[1].max(2);
-    std::net::Ipv4Addr::new(10, 66, octet_c, octet_d)
+    let derived = std::net::Ipv4Addr::new(10, 66, octet_c, octet_d);
+    if talpid_types::net::CONTENT_BLOCKING_RESOLVERS.contains(derived) {
+        // The block is the /26 at `.0`, so the next 64 addresses are free.
+        return std::net::Ipv4Addr::new(10, 66, octet_c, octet_d + 64);
+    }
+    derived
 }
 
 /// Builds a `TunConfig` for the multi-hop path with the given IPv4 and

@@ -956,6 +956,38 @@ fn derive_multi_hop_tun_ip_skips_network_and_gateway_slots() {
     assert_ne!(ip.octets()[3], 1, "must not land on the gateway slot");
 }
 
+/// A tunnel address on a content-blocking resolver would make that
+/// resolver local: the member's DNS would never leave the host.
+#[test]
+fn derive_multi_hop_tun_ip_never_lands_on_a_content_blocking_resolver() {
+    use talpid_types::net::CONTENT_BLOCKING_RESOLVERS;
+    for second in 0..=u8::MAX {
+        let mut pubkey = [0u8; 32];
+        pubkey[0] = CONTENT_BLOCKING_RESOLVERS.network().octets()[2];
+        pubkey[1] = second;
+        let ip = derive_multi_hop_tun_ip(&pubkey);
+        assert!(
+            !CONTENT_BLOCKING_RESOLVERS.contains(ip),
+            "second byte {second} lands on a resolver"
+        );
+    }
+}
+
+/// The exit serves the content-blocking resolvers inside its own pool,
+/// away from the gateway.
+#[test]
+fn the_content_blocking_resolvers_sit_inside_the_exits_pool() {
+    use talpid_types::net::CONTENT_BLOCKING_RESOLVERS;
+    let pool = ipnetwork::Ipv4Network::new(
+        warrenguard_config::TUNNEL_POOL_NETWORK,
+        warrenguard_config::TUNNEL_POOL_PREFIX,
+    )
+    .unwrap();
+    assert!(pool.contains(CONTENT_BLOCKING_RESOLVERS.network()));
+    assert!(pool.contains(CONTENT_BLOCKING_RESOLVERS.broadcast()));
+    assert!(!CONTENT_BLOCKING_RESOLVERS.contains(warrenguard_config::TUNNEL_GATEWAY_IP));
+}
+
 /// A black-holed BIND is not yet grounds to spend the circuit: its own
 /// remedy has not been tried, the next connect pre-installs the `/32`
 /// escape, and burning the entry relay first would trade the leak-free
