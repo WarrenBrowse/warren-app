@@ -11,7 +11,6 @@ use talpid_warren_tunnel::{
 };
 use tokio::sync::Mutex;
 
-use mullvad_relay_selector::RelaySelector;
 use mullvad_types::{
     location::GeoIpLocation,
     relay_constraints::RelaySettings,
@@ -35,9 +34,6 @@ use crate::warren_tunnel_params::{self, AssembleError};
 pub enum Error {
     #[error("Not logged in on a valid device")]
     NoAuthDetails,
-
-    #[error("Failed to select a matching relay")]
-    SelectRelay(#[from] mullvad_relay_selector::Error),
 
     #[error("Failed to resolve hostname for custom relay")]
     ResolveCustomHostname,
@@ -104,7 +100,6 @@ fn warren_now_unix_secs() -> u64 {
 pub(crate) struct ParametersGenerator(Arc<Mutex<InnerParametersGenerator>>);
 
 struct InnerParametersGenerator {
-    relay_selector: RelaySelector,
     relay_settings: RelaySettings,
     tunnel_options: TunnelOptions,
 
@@ -421,10 +416,9 @@ impl ParametersGenerator {
     /// drives.
     #[expect(
         clippy::too_many_arguments,
-        reason = "Constructor for the daemon-side params generator: the inputs are all required (3 upstream + 7 Warren). Bundling them into a config struct just to satisfy clippy would obscure the call site at lib.rs."
+        reason = "Constructor for the daemon-side params generator: the inputs are all required (2 upstream + 7 Warren). Bundling them into a config struct just to satisfy clippy would obscure the call site at lib.rs."
     )]
     pub fn new_with_optional_warren(
-        relay_selector: RelaySelector,
         relay_settings: RelaySettings,
         tunnel_options: TunnelOptions,
         warren_relay_selector: Option<DaemonWarrenRelaySelector>,
@@ -437,7 +431,6 @@ impl ParametersGenerator {
     ) -> Self {
         Self(Arc::new(Mutex::new(InnerParametersGenerator {
             tunnel_options,
-            relay_selector,
             relay_settings,
             warren_relay_selector,
             warren_signing_key,
@@ -1666,11 +1659,10 @@ impl ParametersGenerator {
         self.0.lock().await.tunnel_options = tunnel_options.clone();
     }
 
-    /// Updates generator state from full settings and keeps relay-selector config in sync.
+    /// Updates generator state from full settings.
     pub async fn set_settings(&self, settings: Settings) {
         let mut inner = self.0.lock().await;
         inner.relay_settings = settings.relay_settings.clone();
-        inner.relay_selector.set_config(&settings);
         // Rehydrate the in-memory pin table from the
         // persisted settings snapshot. Merging strategy: the on-disk
         // table is authoritative when it carries an entry, otherwise
@@ -1845,24 +1837,10 @@ fn subscription_status_from(
 impl From<Error> for ParameterGenerationError {
     fn from(error: Error) -> Self {
         match error {
-            Error::SelectRelay(mullvad_relay_selector::Error::NoBridge) => {
-                ParameterGenerationError::NoMatchingBridgeRelay
-            }
             Error::ResolveCustomHostname => {
                 ParameterGenerationError::CustomTunnelHostResolutionError
             }
-            Error::SelectRelay(mullvad_relay_selector::Error::IpVersionUnavailable { family }) => {
-                ParameterGenerationError::IpVersionUnavailable { family }
-            }
-            Error::SelectRelay(mullvad_relay_selector::Error::NoRelayEntry(_)) => {
-                ParameterGenerationError::NoMatchingRelayEntry
-            }
-            Error::SelectRelay(mullvad_relay_selector::Error::NoRelayExit(_)) => {
-                ParameterGenerationError::NoMatchingRelayExit
-            }
-            Error::NoAuthDetails | Error::SelectRelay(_) | Error::Device(_) => {
-                ParameterGenerationError::NoMatchingRelay
-            }
+            Error::NoAuthDetails | Error::Device(_) => ParameterGenerationError::NoMatchingRelay,
             // Warren-generic errors map to `NoMatchingRelay`: they are
             // configuration or transient failures that should cause the
             // state machine to stop trying with the current constraints.

@@ -8,8 +8,7 @@
 use std::sync::Arc;
 
 use mullvad_management_interface::{
-    Bytes, CallExtensions, Code, PeerCredentials, RpcGate, Status,
-    types::{management_service_server, relay_selector_service_server},
+    Bytes, CallExtensions, Code, PeerCredentials, RpcGate, Status, types::management_service_server,
 };
 
 use crate::wallet_access::{Admission, Refusal, RpcClass, WalletAccessControl};
@@ -73,7 +72,6 @@ rpc_classes! {
         GetRelayLocations => ReadPublic,
         SetRelaySettings => ControlMachine,
         SetObfuscationSettings => ControlMachine,
-        GetBridges => ReadPublic,
         SetRelayOverride => ControlMachine,
         ClearAllRelayOverrides => ControlMachine,
         DisableRelay => ControlMachine,
@@ -213,13 +211,6 @@ rpc_classes! {
     }
 }
 
-rpc_classes! {
-    /// Every method of `RelaySelectorService`.
-    RelaySelectorRpc {
-        PartitionRelays => ReadPublic,
-    }
-}
-
 /// The class of the method at a full gRPC path, `None` for a method this
 /// daemon does not know.
 #[must_use]
@@ -228,9 +219,6 @@ pub fn classify(path: &str) -> Option<RpcClass> {
     match service {
         management_service_server::SERVICE_NAME => {
             ManagementRpc::from_method(method).map(ManagementRpc::class)
-        }
-        relay_selector_service_server::SERVICE_NAME => {
-            RelaySelectorRpc::from_method(method).map(RelaySelectorRpc::class)
         }
         _ => None,
     }
@@ -357,21 +345,6 @@ mod tests {
             "ManagementService",
             &table,
             management_service_server::SERVICE_NAME,
-        );
-    }
-
-    #[test]
-    fn every_relay_selector_method_has_a_class() {
-        let table: Vec<String> = RelaySelectorRpc::ALL
-            .iter()
-            .map(|m| format!("{m:?}"))
-            .collect();
-        let table: Vec<&str> = table.iter().map(String::as_str).collect();
-        assert_table_matches(
-            include_str!("../../mullvad-management-interface/proto/relay_selector.proto"),
-            "RelaySelectorService",
-            &table,
-            relay_selector_service_server::SERVICE_NAME,
         );
     }
 

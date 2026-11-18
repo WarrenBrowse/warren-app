@@ -12,7 +12,6 @@ mod logging;
 mod net;
 pub mod relay_constraints;
 mod relay_list;
-mod relay_selector;
 mod settings;
 pub use settings::custom_lan_networks;
 #[cfg(target_os = "windows")]

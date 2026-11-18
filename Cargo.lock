@@ -2816,7 +2816,6 @@ dependencies = [
  "mullvad-logging",
  "mullvad-management-interface",
  "mullvad-paths",
- "mullvad-relay-selector",
  "mullvad-types",
  "mullvad-update",
  "mullvad-version",
@@ -2975,24 +2974,6 @@ dependencies = [
  "warren-product-env",
  "windows-sys 0.61.2",
  "winres",
-]
-
-[[package]]
-name = "mullvad-relay-selector"
-version = "0.0.0"
-dependencies = [
- "either",
- "insta",
- "ipnetwork",
- "itertools",
- "log",
- "mullvad-types",
- "proptest",
- "rand 0.9.5",
- "serde_json",
- "talpid-types",
- "thiserror 2.0.21",
- "vec1",
 ]
 
 [[package]]

@@ -62,7 +62,8 @@ established. The API requests can also be blocked when in the offline state or w
 that the user hasn't used our client for a period of time.
 
 ### Selecting relays
-See [this document](relay-selector.md).
+The daemon picks a Warren exit from the signed exit list, see
+[warren-architecture.md](warren-architecture.md).
 
 ### Problem reports
 

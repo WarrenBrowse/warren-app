@@ -7,6 +7,7 @@ use error::Error;
 use mullvad_types::relay_constraints::RelayOverride;
 
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use futures::channel::mpsc;
@@ -17,8 +18,7 @@ use tokio::fs::File;
 use mullvad_api::{
     CachedRelayList, ETag, RelayListProxy, availability::ApiAvailability, rest::MullvadRestHandle,
 };
-use mullvad_relay_selector::RelaySelector;
-use mullvad_types::relay_list::{BridgeList, RelayList};
+use mullvad_types::relay_list::RelayList;
 use talpid_future::retry::{ExponentialBackoff, Jittered, retry_future};
 use talpid_types::ErrorExt;
 
@@ -35,6 +35,36 @@ const DOWNLOAD_RETRY_STRATEGY: Jittered<ExponentialBackoff> = Jittered::jitter(
 
 /// Where the relay list is cached on disk.
 const RELAYS_FILENAME: &str = "relays.json";
+
+/// The inherited relay list, with IP overrides applied, as the debug relay
+/// toggle and the default-location lookup read it. The GUI is served the
+/// Warren view instead whenever one exists.
+#[derive(Clone, Default)]
+pub struct RelayListStore(Arc<Mutex<RelayList>>);
+
+impl RelayListStore {
+    pub fn new(relays: RelayList) -> Self {
+        Self(Arc::new(Mutex::new(relays)))
+    }
+
+    pub fn set(&self, relays: RelayList) {
+        *self
+            .0
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner) = relays;
+    }
+
+    pub fn get(&self) -> RelayList {
+        self.with(RelayList::clone)
+    }
+
+    pub fn with<T>(&self, f: impl FnOnce(&RelayList) -> T) -> T {
+        f(&self
+            .0
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner))
+    }
+}
 
 #[derive(Clone)]
 pub struct RelayListUpdaterHandle {
@@ -84,24 +114,23 @@ pub(crate) struct RelayListUpdater {
     // Use [RelayListUpdater::get_final_relay_list] when exposing the relay list to other parts of
     // the app.
     relay_list: RelayList,
-    bridge_list: BridgeList,
     overrides: Vec<RelayOverride>,
-    // The relay selector will only ever see the relay list with IP overrides applied.
-    relay_selector: RelaySelector,
+    // The store only ever holds the relay list with IP overrides applied.
+    store: RelayListStore,
     /// When `false`, the updater never hits the network to
     /// download the upstream Mullvad relay list. On this fork Warren is the
     /// only tunnel mode and the Mullvad list is never consumed (the tunnel
     /// uses `warren-relays.json` via `DaemonWarrenRelaySelector`, the GUI
     /// gets the Warren view). The download endpoint does not even exist on
     /// warren-api, so every fetch would 404 - disabling it is
-    /// behaviour-preserving (the selector stays empty either way) and
+    /// behaviour-preserving (the store stays empty either way) and
     /// removes the recurring 404 log noise. Overrides still apply locally.
     downloads_enabled: bool,
 }
 
 impl RelayListUpdater {
     pub fn spawn(
-        selector: RelaySelector,
+        store: RelayListStore,
         api_handle: MullvadRestHandle,
         cache_dir: &Path,
         overrides: Vec<RelayOverride>,
@@ -113,24 +142,23 @@ impl RelayListUpdater {
         let api_availability = api_handle.availability.clone();
         let api_client = RelayListProxy::new(api_handle);
 
-        let (relay_list, bridge_list, etag) = cached_relay_list
+        let (relay_list, etag) = cached_relay_list
             .map(|cached_relay_list| {
                 let etag = cached_relay_list.etag().cloned();
-                let (relay_list, bridge_list) = cached_relay_list.into_internal_repr();
-                (relay_list, bridge_list, etag)
+                let (relay_list, _bridges) = cached_relay_list.into_internal_repr();
+                (relay_list, etag)
             })
             .unwrap_or_default();
         let updater = RelayListUpdater {
             api_client,
             cache_path: cache_dir.join(RELAYS_FILENAME),
-            relay_selector: selector,
+            store,
             on_update: Box::new(on_update),
             last_check: UNIX_EPOCH,
             etag,
             overrides,
             api_availability,
             relay_list,
-            bridge_list,
             downloads_enabled,
         };
 
@@ -180,7 +208,7 @@ impl RelayListUpdater {
                         // Only update the relay list with new overrides if they are actually new.
                         Event::Override(overrides) if self.overrides != overrides => {
                             self.overrides = overrides;
-                            self.update_relay_selector();
+                            self.update_store();
                         }
                         Event::Override(overrides) => {
                             log::trace!("New overrides match the old overrides.");
@@ -257,22 +285,16 @@ impl RelayListUpdater {
         }
         // Cache the ETag so that we send the correct one in the next request
         self.etag = new_relay_list.etag().cloned();
-        // Propagate the new relay list to the relay selector
-        let (relay_list, bridge_list) = new_relay_list.into_internal_repr();
+        let (relay_list, _bridges) = new_relay_list.into_internal_repr();
         self.relay_list = relay_list;
-        self.bridge_list = bridge_list;
-        self.update_relay_selector();
+        self.update_store();
     }
 
-    /// Update the relay selector state, applying IP overrides.
-    fn update_relay_selector(&self) {
+    /// Store the relay list with IP overrides applied, then announce it.
+    fn update_store(&self) {
         let relay_list = self.get_final_relay_list();
-        let bridge_list = self.bridge_list.clone();
-        // Announce new relay list
-        self.relay_selector.set_relays(relay_list.clone());
-        self.relay_selector.set_bridges(bridge_list);
-        // Note: It is important that dependants are updated after relay selector state has been
-        // updated, since they might depend on the relay selector's state ..
+        // Dependants may read the store, so it is updated before they hear of it.
+        self.store.set(relay_list.clone());
         (self.on_update)(&relay_list);
     }
 
@@ -295,5 +317,35 @@ impl RelayListUpdater {
         self.relay_list
             .clone()
             .apply_overrides(self.overrides.clone())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mullvad_types::relay_list::RelayListCountry;
+
+    fn list_of(code: &str) -> RelayList {
+        RelayList {
+            countries: vec![RelayListCountry {
+                name: code.to_uppercase(),
+                code: code.to_owned(),
+                cities: vec![],
+            }],
+            ..RelayList::empty()
+        }
+    }
+
+    /// Every clone reads what any clone stored last: the updater writes
+    /// through its own copy and the daemon reads through another.
+    #[test]
+    fn a_clone_sees_what_another_clone_stored() {
+        let reader = RelayListStore::new(list_of("se"));
+        let writer = reader.clone();
+
+        writer.set(list_of("de"));
+
+        assert_eq!(reader.get().countries[0].code, "de");
+        assert_eq!(reader.with(|list| list.countries.len()), 1);
     }
 }

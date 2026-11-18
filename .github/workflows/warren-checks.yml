@@ -60,7 +60,6 @@ on:
       - "mullvad-fs/**"
       - "mullvad-logging/**"
       - "mullvad-version/**"
-      - "mullvad-relay-selector/**"
       - "mullvad-nsis/**"
       - "warren-incidents/**"
       - "warren-nm-vpn-service/**"

@@ -3191,11 +3191,6 @@ mod tests {
     fn generator_on(circuit: &MultiHopConfig) -> crate::tunnel::ParametersGenerator {
         let settings = mullvad_types::settings::Settings::default();
         crate::tunnel::ParametersGenerator::new_with_optional_warren(
-            mullvad_relay_selector::RelaySelector::from_settings(
-                &settings,
-                mullvad_types::relay_list::RelayList::empty(),
-                mullvad_types::relay_list::BridgeList::default(),
-            ),
             settings.relay_settings.clone(),
             settings.tunnel_options.clone(),
             None,

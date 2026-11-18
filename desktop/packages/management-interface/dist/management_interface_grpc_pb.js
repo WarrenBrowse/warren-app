@@ -184,17 +184,6 @@ function deserialize_mullvad_daemon_management_interface_AppVersionInfo(buffer_a
   return management_interface_pb.AppVersionInfo.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
-function serialize_mullvad_daemon_management_interface_BridgeList(arg) {
-  if (!(arg instanceof management_interface_pb.BridgeList)) {
-    throw new Error('Expected argument of type mullvad_daemon.management_interface.BridgeList');
-  }
-  return Buffer.from(arg.serializeBinary());
-}
-
-function deserialize_mullvad_daemon_management_interface_BridgeList(buffer_arg) {
-  return management_interface_pb.BridgeList.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
 function serialize_mullvad_daemon_management_interface_CustomList(arg) {
   if (!(arg instanceof management_interface_pb.CustomList)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.CustomList');
@@ -1979,18 +1968,8 @@ addApiAccessMethod: {
     responseDeserialize: deserialize_google_protobuf_BoolValue,
   },
   // Bridges (Used for reaching the API)
-getBridges: {
-    path: '/mullvad_daemon.management_interface.ManagementService/GetBridges',
-    requestStream: false,
-    responseStream: false,
-    requestType: google_protobuf_empty_pb.Empty,
-    responseType: management_interface_pb.BridgeList,
-    requestSerialize: serialize_google_protobuf_Empty,
-    requestDeserialize: deserialize_google_protobuf_Empty,
-    responseSerialize: serialize_mullvad_daemon_management_interface_BridgeList,
-    responseDeserialize: deserialize_mullvad_daemon_management_interface_BridgeList,
-  },
-  // Split tunneling (Linux)
+//
+// Split tunneling (Linux)
 getSplitTunnelProcesses: {
     path: '/mullvad_daemon.management_interface.ManagementService/GetSplitTunnelProcesses',
     requestStream: false,

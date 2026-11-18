@@ -103,7 +103,6 @@ mullvad-fs = { path = "../mullvad-fs" }
 mullvad-logging = { path = "../mullvad-logging" }
 mullvad-management-interface = { path = "../mullvad-management-interface" }
 mullvad-paths = { path = "../mullvad-paths" }
-mullvad-relay-selector = { path = "../mullvad-relay-selector" }
 mullvad-types = { path = "../mullvad-types" }
 mullvad-version = { path = "../mullvad-version" }
 rand = { workspace = true }
@@ -149,7 +148,7 @@ zeroize = { version = "1", default-features = false, features = ["alloc"] }
 # secret storage). `zeroize` feature so `bip39::Mnemonic` is wiped on
 # drop.
 bip39 = { version = "2", features = ["rand", "zeroize"] }
-# Warren exit selector (equivalent to `mullvad-relay-selector` for the
+# Warren exit selector (the relay selection for the
 # Warren backend). Does not depend on `talpid-warren-tunnel` API: it
 # just returns `(WarrenPubkey, WarrenExitAddr)`; the caller assembles
 # the full `WarrenTunnelParameters` downstream. Neutral home: the
@@ -328,7 +327,6 @@ api-override = ["mullvad-api/api-override", "mullvad-update/api-override", "talp
 cgroup2 = ["talpid-core/cgroup2"]
 # Use jemalloc as the global allocator. Only takes effect on Linux.
 default-allocator = ["dep:tikv-jemallocator"]
-staggered-obfuscation = ["mullvad-relay-selector/staggered-obfuscation"]
 
 # Warren rebrand Level A: installed binary `warren-daemon` instead of
 # `mullvad-daemon`. The Cargo package name (`mullvad-daemon`) is kept

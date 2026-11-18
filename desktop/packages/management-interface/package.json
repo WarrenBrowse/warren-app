@@ -15,14 +15,6 @@
     "./management-interface/grpc-types": {
       "default": "./dist/management_interface_pb.js",
       "types": "./dist/management_interface_pb.d.ts"
-    },
-    "./relay-selector": {
-      "default": "./dist/relay-selector.js",
-      "types": "./dist/relay-selector.d.ts"
-    },
-    "./relay-selector/grpc-types": {
-      "default": "./dist/relay-selector.js",
-      "types": "./dist/relay-selector.d.ts"
     }
   },
   "scripts": {

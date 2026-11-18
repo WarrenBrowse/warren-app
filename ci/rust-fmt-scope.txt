@@ -30,7 +30,6 @@ mullvad-fs
 mullvad-logging
 mullvad-nsis
 mullvad-problem-report
-mullvad-relay-selector
 mullvad-version
 nseventforwarder
 talpid-future

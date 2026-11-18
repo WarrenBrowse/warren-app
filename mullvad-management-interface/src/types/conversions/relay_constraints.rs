@@ -525,12 +525,6 @@ impl TryFrom<proto::RelayOverride> for mullvad_types::relay_constraints::RelayOv
     }
 }
 
-impl From<proto::relay_selector::Provider> for mullvad_types::relay_constraints::Provider {
-    fn from(provider: proto::relay_selector::Provider) -> Self {
-        provider.name
-    }
-}
-
 pub fn providers_constraint_from_proto(
     providers: &[impl Into<String> + Clone],
 ) -> Constraint<mullvad_types::relay_constraints::Providers> {

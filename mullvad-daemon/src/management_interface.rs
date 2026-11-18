@@ -1,7 +1,4 @@
-use crate::{
-    DaemonCommand, DaemonCommandSender, account_history, device,
-    relay_selector::RelaySelectorServiceImpl,
-};
+use crate::{DaemonCommand, DaemonCommandSender, account_history, device};
 use futures::{
     StreamExt,
     channel::{mpsc, oneshot},
@@ -790,18 +787,6 @@ impl ManagementService for ManagementServiceImpl {
         self.wait_for_result(rx)
             .await
             .map(|relays| Response::new(types::RelayList::from(relays)))
-    }
-
-    async fn get_bridges(&self, request: Request<()>) -> ServiceResult<types::BridgeList> {
-        let call = Self::call_of(&request);
-        log::debug!("get_bridges");
-
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(&call, DaemonCommand::GetBridges(tx))?;
-        self.wait_for_result(rx)
-            .await
-            .map(types::BridgeList::from)
-            .map(Response::new)
     }
 
     async fn set_obfuscation_settings(
@@ -2913,7 +2898,6 @@ impl ManagementInterfaceServer {
         rpc_socket_path: PathBuf,
         app_upgrade_broadcast: AppUpgradeBroadcast,
         log_reload_handle: crate::logging::LogHandle,
-        relay_selector: mullvad_relay_selector::RelaySelector,
         warren_status_cache: crate::warren_status::WarrenStatusCache,
         warren_network_stats: crate::warren_network_stats::WarrenNetworkStats,
         settings_dir: &std::path::Path,
@@ -2945,14 +2929,12 @@ impl ManagementInterfaceServer {
             wallet_access: wallet_access.clone(),
         };
 
-        let relay_selector_service = RelaySelectorServiceImpl::new(relay_selector);
         let gate =
             crate::rpc_access::DaemonRpcGate::new(wallet_access.clone(), warren_status_cache);
 
         let (rpc_server_join_handle, socket_security) =
             mullvad_management_interface::spawn_rpc_server(
                 management_service,
-                relay_selector_service,
                 gate,
                 async move {
                     StreamExt::into_future(server_abort_rx).await;

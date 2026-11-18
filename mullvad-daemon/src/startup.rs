@@ -44,18 +44,13 @@ impl Daemon {
                 log::debug!("relays.json unavailable (Warren tunnel active, list unused): {err}");
             })
             .ok();
-        let relay_selector = {
-            let (initial_relay_list, initial_bridge_list) = initial_relay_list
+        let relay_list_store = {
+            let (initial_relay_list, _bridges) = initial_relay_list
                 .clone()
                 .map(CachedRelayList::into_internal_repr)
                 .unwrap_or_default();
-            // TODO: This should preferably be done once, by the relay list updater.
-            let initial_relay_list =
-                initial_relay_list.apply_overrides(settings.relay_overrides.clone());
-            RelaySelector::from_settings(
-                &settings,
-                initial_relay_list.clone(),
-                initial_bridge_list.clone(),
+            RelayListStore::new(
+                initial_relay_list.apply_overrides(settings.relay_overrides.clone()),
             )
         };
 
@@ -90,7 +85,6 @@ impl Daemon {
             config.rpc_socket_path,
             app_upgrade_broadcast.clone(),
             config.log_handle,
-            relay_selector.clone(),
             warren_status_cache.clone(),
             warren_network_stats.clone(),
             &config.settings_dir,
@@ -484,7 +478,6 @@ impl Daemon {
         // exit-down report.
         let warren_api_url_for_params: Option<String> = Some(warren_api_url.clone());
         let parameters_generator = tunnel::ParametersGenerator::new_with_optional_warren(
-            relay_selector.clone(),
             settings.relay_settings.clone(),
             settings.tunnel_options.clone(),
             warren_relay_selector,
@@ -820,7 +813,7 @@ impl Daemon {
         // override-application path and the handle wiring; only the futile
         // network fetch is disabled.
         let mut relay_list_updater = RelayListUpdater::spawn(
-            relay_selector.clone(),
+            relay_list_store.clone(),
             api_handle.clone(),
             &config.cache_dir,
             settings.relay_overrides.clone(),
@@ -832,7 +825,7 @@ impl Daemon {
         // Notify the relay list updater when new relay IP overrides are available.
         let relay_list_updater_handle = relay_list_updater.clone();
         settings.register_change_listener(move |settings| {
-            // Notify relay selector of changes to the settings/selector config
+            // Hand the relay list updater the new IP overrides.
             let mut relay_list_updater = relay_list_updater_handle.clone();
             let overrides = settings.relay_overrides.clone();
             tokio::spawn(async move {
@@ -1192,7 +1185,7 @@ impl Daemon {
             api_runtime,
             api_handle,
             version_handle,
-            relay_selector,
+            relay_list_store,
             relay_list_updater,
             parameters_generator,
             warren_relay_list_view,

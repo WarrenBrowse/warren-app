@@ -25,7 +25,6 @@ mod nm_vpn_indicator;
 /// backend.
 pub mod os_secret_storage;
 mod relay_list;
-mod relay_selector;
 /// The class of every management RPC, and the gate that admits each call.
 pub mod rpc_access;
 pub mod rpc_uniqueness_check;
@@ -161,9 +160,11 @@ use futures::{
 use geoip::GeoIpHandler;
 use management_interface::ManagementInterfaceServer;
 use mullvad_api::{ApiEndpoint, CachedRelayList, access_mode::AccessMethodEvent};
-use mullvad_relay_selector::RelaySelector;
 use mullvad_types::app_routing::{
     AppId, AppRouteStatus, AppRoutingError, AppRoutingSettings, ExitChoice, SplitMode,
+};
+use mullvad_types::relay_constraints::{
+    GeographicLocationConstraint, LocationConstraint, RelayConstraints, WireguardConstraints,
 };
 use mullvad_types::wireguard::DaitaSettings;
 use mullvad_types::{
@@ -184,14 +185,8 @@ use mullvad_types::{
     version::AppVersionInfo,
     wireguard::QuantumResistantState,
 };
-use mullvad_types::{
-    relay_constraints::{
-        GeographicLocationConstraint, LocationConstraint, RelayConstraints, WireguardConstraints,
-    },
-    relay_list::BridgeList,
-};
 use mullvad_update::version::rollout::Rollout;
-use relay_list::{RelayListUpdater, RelayListUpdaterHandle};
+use relay_list::{RelayListStore, RelayListUpdater, RelayListUpdaterHandle};
 use settings::SettingsPersister;
 use std::collections::BTreeSet;
 use std::{
@@ -632,8 +627,6 @@ pub enum DaemonCommand {
     /// Trigger an asynchronous relay list update. This returns before the relay list is actually
     /// updated.
     UpdateRelayLocations,
-    /// Get the list of bridges.
-    GetBridges(oneshot::Sender<BridgeList>),
     /// Log in with a given account and create a new device.
     LoginAccount(ResponseTx<(), Error>, AccountNumber),
     /// Log out of the current account and remove the device, if they exist.
@@ -1176,7 +1169,7 @@ pub struct Daemon {
     api_runtime: mullvad_api::Runtime,
     api_handle: mullvad_api::rest::MullvadRestHandle,
     version_handle: version::router::VersionRouterHandle,
-    relay_selector: RelaySelector,
+    relay_list_store: RelayListStore,
     relay_list_updater: RelayListUpdaterHandle,
     parameters_generator: tunnel::ParametersGenerator,
     /// Live Mullvad-format view of the `WarrenRelayList`. Seeded at boot
@@ -2338,7 +2331,6 @@ impl Daemon {
             AppUpgradeAbort(tx) => self.on_app_upgrade_abort(tx).await,
             GetAppUpgradeCacheDir(tx) => self.on_get_app_upgrade_cache_dir(tx).await,
             AppUpgradeInstall(tx) => self.on_app_upgrade_install(tx),
-            GetBridges(tx) => self.on_get_bridges(tx),
         }
     }
 
@@ -3154,12 +3146,8 @@ impl Daemon {
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .clone()
-            .unwrap_or_else(|| self.relay_selector.get_relays());
+            .unwrap_or_else(|| self.relay_list_store.get());
         Self::oneshot_send(tx, relays, "relay locations");
-    }
-
-    fn on_get_bridges(&mut self, tx: oneshot::Sender<BridgeList>) {
-        Self::oneshot_send(tx, self.relay_selector.get_bridges(), "bridges");
     }
 
     async fn on_update_relay_locations(&mut self) {
@@ -3174,7 +3162,7 @@ impl Daemon {
 
         if self.settings.update_default_location
             && let Some(location) = self.tunnel_state.get_location()
-            && let Some(country_code) = self.relay_selector.relay_list(|relays| {
+            && let Some(country_code) = self.relay_list_store.with(|relays| {
                 relays
                     .lookup_country_code_by_name(&location.country)
                     .or_else(|| relays.get_nearest_country_with_relay(location))
@@ -4339,7 +4327,7 @@ impl Daemon {
     fn on_toggle_relay(&mut self, relay: String, active: bool, tx: oneshot::Sender<()>) {
         use mullvad_types::relay_list::RelayList;
         let relays = {
-            let relay_list = self.relay_selector.get_relays();
+            let relay_list = self.relay_list_store.get();
             let countries = {
                 let mut countries = relay_list.countries;
                 for country in &mut countries {
@@ -4362,7 +4350,7 @@ impl Daemon {
             }
         };
 
-        self.relay_selector.set_relays(relays.clone());
+        self.relay_list_store.set(relays.clone());
 
         self.management_interface
             .notifier()

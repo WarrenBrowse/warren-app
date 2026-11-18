@@ -27,8 +27,6 @@ pub type ManagementServiceClient =
     types::management_service_client::ManagementServiceClient<Channel>;
 pub use types::management_service_server::{ManagementService, ManagementServiceServer};
 
-pub use types::{RelaySelectorService, RelaySelectorServiceClient, RelaySelectorServiceServer};
-
 pub const API_ACCESS_METHOD_EXISTS_DETAILS: &[u8] = b"api_access_method_exists";
 pub const CUSTOM_LIST_LIST_NOT_FOUND_DETAILS: &[u8] = b"custom_list_list_not_found";
 pub const CUSTOM_LIST_LIST_EXISTS_DETAILS: &[u8] = b"custom_list_list_exists";
@@ -537,11 +535,10 @@ pub const MAX_RPC_MESSAGE_BYTES: usize = MAX_FORUM_LOG_GZ_BYTES + MAX_RPC_MESSAG
 /// caller can make the daemon serve in parallel; past it HTTP/2 clients queue their calls.
 const MAX_STREAMS_PER_CONNECTION: u32 = 128;
 
-/// Serve both management services on `rpc_socket_path`, every RPC admitted by
+/// Serve the management service on `rpc_socket_path`, every RPC admitted by
 /// `gate` before its request body is read.
 pub fn spawn_rpc_server(
     management_service: impl ManagementService,
-    relay_selector_service: impl RelaySelectorService,
     gate: impl RpcGate,
     abort_rx: impl Future<Output = ()> + Send + 'static,
     rpc_socket_path: PathBuf,
@@ -553,10 +550,6 @@ pub fn spawn_rpc_server(
         .add_service(Gated::new(
             ManagementServiceServer::new(management_service)
                 .max_decoding_message_size(MAX_RPC_MESSAGE_BYTES),
-            gate.clone(),
-        ))
-        .add_service(Gated::new(
-            RelaySelectorServiceServer::new(relay_selector_service),
             gate,
         ))
         .serve_with_incoming_shutdown(incoming, abort_rx);
@@ -1045,20 +1038,28 @@ mod peer_credential_tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// Counts the calls that reach it.
-    #[derive(Default)]
-    struct CountingSelector(std::sync::Arc<std::sync::atomic::AtomicUsize>);
+    /// Stands in for a generated tonic server: counts the calls that reach it.
+    #[derive(Clone, Default)]
+    struct CountingService(std::sync::Arc<std::sync::atomic::AtomicUsize>);
 
-    #[async_trait]
-    impl RelaySelectorService for CountingSelector {
-        async fn partition_relays(
-            &self,
-            _: Request<types::relay_selector::Predicate>,
-        ) -> Result<Response<types::relay_selector::RelayPartitions>, Status> {
+    impl tonic::server::NamedService for CountingService {
+        const NAME: &'static str = "pkg.Service";
+    }
+
+    impl tower::Service<tonic::codegen::http::Request<tonic::body::Body>> for CountingService {
+        type Response = tonic::codegen::http::Response<tonic::body::Body>;
+        type Error = std::convert::Infallible;
+        type Future = std::future::Ready<Result<Self::Response, Self::Error>>;
+
+        fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+            Poll::Ready(Ok(()))
+        }
+
+        fn call(&mut self, _: tonic::codegen::http::Request<tonic::body::Body>) -> Self::Future {
             self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-            Ok(Response::new(
-                types::relay_selector::RelayPartitions::default(),
-            ))
+            std::future::ready(Ok(tonic::codegen::http::Response::new(
+                tonic::body::Body::empty(),
+            )))
         }
     }
 
@@ -1091,19 +1092,25 @@ mod peer_credential_tests {
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("m.sock");
         let (incoming, _) = build_incoming(path.clone()).unwrap();
-        let selector = CountingSelector::default();
-        let calls = selector.0.clone();
+        let service = CountingService::default();
+        let calls = service.0.clone();
         let gate = RefuseAll::default();
         let seen = gate.0.clone();
         tokio::spawn(
             Server::builder()
-                .add_service(Gated::new(RelaySelectorServiceServer::new(selector), gate))
+                .add_service(Gated::new(service, gate))
                 .serve_with_incoming(incoming),
         );
 
         let channel = grpc_transport_channel_at(path).await.unwrap();
-        let refused = RelaySelectorServiceClient::new(channel)
-            .partition_relays(types::relay_selector::Predicate::default())
+        let mut client = tonic::client::Grpc::new(channel);
+        client.ready().await.unwrap();
+        let refused = client
+            .unary::<(), (), _>(
+                Request::new(()),
+                tonic::codegen::http::uri::PathAndQuery::from_static("/pkg.Service/Method"),
+                tonic::codec::ProstCodec::default(),
+            )
             .await
             .unwrap_err();
 

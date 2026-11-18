@@ -43,14 +43,11 @@ impl Daemon {
             .await
             .map_err(Error::SettingsError);
 
-        if let Ok(true) = settings_changed {
-            self.relay_selector
-                .set_custom_lists(self.settings.custom_lists.clone());
-
-            if self.change_should_cause_reconnect(Some(id)) {
-                log::info!("Initiating tunnel restart because a selected custom list was deleted");
-                self.reconnect_tunnel();
-            }
+        if let Ok(true) = settings_changed
+            && self.change_should_cause_reconnect(Some(id))
+        {
+            log::info!("Initiating tunnel restart because a selected custom list was deleted");
+            self.reconnect_tunnel();
         }
 
         settings_changed?;
@@ -70,14 +67,11 @@ impl Daemon {
             .await
             .map_err(Error::SettingsError);
 
-        if let Ok(true) = settings_changed {
-            self.relay_selector
-                .set_custom_lists(self.settings.custom_lists.clone());
-
-            if self.change_should_cause_reconnect(Some(list_id)) {
-                log::info!("Initiating tunnel restart because a selected custom list changed");
-                self.reconnect_tunnel();
-            }
+        if let Ok(true) = settings_changed
+            && self.change_should_cause_reconnect(Some(list_id))
+        {
+            log::info!("Initiating tunnel restart because a selected custom list changed");
+            self.reconnect_tunnel();
         }
 
         settings_changed?;
@@ -94,14 +88,11 @@ impl Daemon {
             .await
             .map_err(Error::SettingsError);
 
-        if let Ok(true) = settings_changed {
-            self.relay_selector
-                .set_custom_lists(self.settings.custom_lists.clone());
-
-            if self.change_should_cause_reconnect(None) {
-                log::info!("Initiating tunnel restart because a selected custom list was deleted");
-                self.reconnect_tunnel();
-            }
+        if let Ok(true) = settings_changed
+            && self.change_should_cause_reconnect(None)
+        {
+            log::info!("Initiating tunnel restart because a selected custom list was deleted");
+            self.reconnect_tunnel();
         }
 
         settings_changed?;

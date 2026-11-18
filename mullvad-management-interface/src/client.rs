@@ -14,7 +14,6 @@ use mullvad_types::{
     device::DeviceState,
     features::FeatureIndicators,
     relay_constraints::{AllowedIps, ObfuscationSettings, RelayOverride, RelaySettings},
-    relay_list::BridgeList,
     settings::DnsOptions,
     wireguard::QuantumResistantState,
 };
@@ -219,11 +218,6 @@ impl MullvadProxyClient {
     pub async fn get_relay_locations(&mut self) -> Result<RelayList> {
         let list = self.0.get_relay_locations(()).await?.into_inner();
         mullvad_types::relay_list::RelayList::try_from(list).map_err(Error::InvalidResponse)
-    }
-
-    pub async fn get_bridges(&mut self) -> Result<BridgeList> {
-        let list = self.0.get_bridges(()).await?.into_inner();
-        mullvad_types::relay_list::BridgeList::try_from(list).map_err(Error::InvalidResponse)
     }
 
     pub async fn get_api_access_methods(&mut self) -> Result<Vec<AccessMethodSetting>> {
@@ -1043,24 +1037,6 @@ impl TryFrom<types::LeakInfo> for LeakInfo {
             interface: leak.interface,
             reachable_nodes,
         })
-    }
-}
-
-pub struct RelaySelectorClient(crate::RelaySelectorServiceClient);
-
-impl RelaySelectorClient {
-    pub async fn new() -> Result<Self> {
-        let channel = crate::grpc_transport_channel().await?;
-        let client = crate::RelaySelectorServiceClient::new(channel);
-        Ok(Self(client))
-    }
-
-    pub async fn partition_relays(
-        &mut self,
-        predicate: crate::types::relay_selector::Predicate,
-    ) -> Result<crate::types::relay_selector::RelayPartitions> {
-        let result = self.0.partition_relays(predicate).await?.into_inner();
-        Ok(result)
     }
 }
 
