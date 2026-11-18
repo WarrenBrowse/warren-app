@@ -152,9 +152,13 @@ for (const locale of LOCALES) {
       page.screenshot({ path: `${SCREENSHOTS}/${locale}/${name}.png` });
 
     test.beforeAll(async () => {
+      // The fixtures are macOS apps, and the rules a platform keeps differ (Linux keeps no
+      // list of apps outside the VPN), so the screens are the same on every host.
       process.env.WARREN_E2E_LOCALE = locale;
+      process.env.WARREN_E2E_PLATFORM = 'darwin';
       ({ page, util } = await startMockedApp());
       delete process.env.WARREN_E2E_LOCALE;
+      delete process.env.WARREN_E2E_PLATFORM;
       await util.expectRoute(RoutePath.main);
 
       await util.ipc.relays[''].notify({
