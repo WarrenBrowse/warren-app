@@ -74,6 +74,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -162,6 +163,9 @@ import org.koin.compose.koinInject
 import com.warrenbrowse.vpn.lib.common.util.runCatchingCancellable
 
 @Preview("Initial|Connected|Disconnected|Connecting|Error.VpnPermissionDenied")
+// Every state again at each system font scale, up to 200 %: the home controls
+// and the banner button grow with the text rather than clipping it.
+@PreviewFontScale
 @Composable
 private fun PreviewAccountScreen(
     @PreviewParameter(ConnectUiStatePreviewParameterProvider::class) state: ConnectUiState

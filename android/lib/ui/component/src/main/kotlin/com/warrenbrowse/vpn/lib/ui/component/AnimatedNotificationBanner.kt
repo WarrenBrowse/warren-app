@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -273,7 +274,7 @@ private fun NotificationTone.color(surfaces: WarrenSurfaces): Color =
 private fun BannerButton(button: NotificationButton, surfaces: WarrenSurfaces) {
     Box(
         modifier =
-            Modifier.height(notice.ButtonHeight)
+            Modifier.heightIn(min = notice.ButtonHeight)
                 .clip(RoundedCornerShape(notice.ButtonRadius))
                 .background(surfaces.homeText)
                 .clickable(role = Role.Button, onClick = button.onClick)

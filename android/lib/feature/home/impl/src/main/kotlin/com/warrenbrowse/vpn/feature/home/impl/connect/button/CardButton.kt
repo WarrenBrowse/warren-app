@@ -10,7 +10,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
@@ -130,7 +130,9 @@ fun CardButton(
     Box(
         modifier =
             modifier
-                .height(height)
+                // A floor, not a fixed size: a large font scale grows the control
+                // instead of clipping its label.
+                .heightIn(min = height)
                 .alpha(if (enabled) 1f else DISABLED_ALPHA)
                 .clip(shape)
                 .background(fill)
