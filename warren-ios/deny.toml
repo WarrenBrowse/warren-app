@@ -39,7 +39,6 @@ exceptions = [
   { crate = "warren-ios", allow = ["GPL-3.0-or-later"] },
   { crate = "warren-product-env", allow = ["GPL-3.0-or-later"] },
   { crate = "warren-standing", allow = ["GPL-3.0-or-later"] },
-  { crate = "intersection-derive", allow = ["GPL-3.0-or-later"] },
   { crate = "mullvad-api", allow = ["GPL-3.0-or-later"] },
   { crate = "mullvad-api-constants", allow = ["GPL-3.0-or-later"] },
   { crate = "mullvad-fs", allow = ["GPL-3.0-or-later"] },

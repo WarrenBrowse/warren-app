@@ -2173,15 +2173,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "intersection-derive"
-version = "0.0.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.119",
-]
-
-[[package]]
 name = "ioctl-sys"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3026,7 +3017,6 @@ dependencies = [
  "chrono",
  "clap",
  "either",
- "intersection-derive",
  "ipnetwork",
  "log",
  "mullvad-version",

@@ -3,33 +3,12 @@
 use serde::{Deserialize, Serialize};
 use std::{fmt, str::FromStr};
 
-use crate::Intersection;
-
-/// Limits the set of [`crate::relay_list::Relay`]s that a `RelaySelector` may select.
+/// Limits a setting to one value, or leaves it open.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Constraint<T> {
     Any,
     Only(T),
-}
-
-impl<T: Intersection> Intersection for Constraint<T> {
-    /// Define the intersection between two arbitrary [`Constraint`]s.
-    ///
-    /// This operation may be compared to the set operation with the same name.
-    /// In contrast to the general set intersection, this function represents a
-    /// very specific case where [`Constraint::Any`] is equivalent to the set
-    /// universe and [`Constraint::Only`] represents a singleton set. Notable is
-    /// that the representation of any empty set is [`Option::None`].
-    fn intersection(self, other: Constraint<T>) -> Option<Constraint<T>> {
-        use Constraint::*;
-        match (self, other) {
-            (Any, Any) => Some(Any),
-            (Only(t), Any) | (Any, Only(t)) => Some(Only(t)),
-            // Pick any of `left` or `right` if they are the same.
-            (Only(left), Only(right)) => left.intersection(right).map(Only),
-        }
-    }
 }
 
 impl<T: fmt::Display> fmt::Display for Constraint<T> {

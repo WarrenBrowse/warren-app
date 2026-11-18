@@ -235,7 +235,7 @@ jobs:
           CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: sudo -E
         run: |
           cargo nextest run --locked --profile warren-ci --run-ignored only \
-            --test-threads 1 --workspace --exclude intersection-derive \
+            --test-threads 1 --workspace \
             --features mullvad-update/sign,mullvad-update/client \
             -E 'test(/^firewall::linux::/) | test(/^split_tunnel::linux::/) | test(/^early_boot_firewall::/)'
 

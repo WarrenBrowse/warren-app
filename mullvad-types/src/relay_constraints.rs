@@ -2,7 +2,7 @@
 //! updated as well.
 
 use crate::{
-    CustomTunnelEndpoint, Intersection,
+    CustomTunnelEndpoint,
     constraints::{Constraint, Match},
     custom_list::{CustomListsSettings, Id},
     location::{CityCode, CountryCode, Hostname},
@@ -368,7 +368,7 @@ impl fmt::Display for GeographicLocationConstraint {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Deserialize, Serialize, Intersection)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Deserialize, Serialize)]
 pub struct TransportPort {
     pub protocol: TransportProtocol,
     pub port: Constraint<u16>,
@@ -565,21 +565,6 @@ pub enum SelectedObfuscation {
     Lwo,
 }
 
-impl Intersection for SelectedObfuscation {
-    fn intersection(self, other: Self) -> Option<Self>
-    where
-        Self: PartialEq,
-        Self: Sized,
-    {
-        match (self, other) {
-            (left, SelectedObfuscation::Auto) => Some(left),
-            (SelectedObfuscation::Auto, right) => Some(right),
-            (left, right) if left == right => Some(left),
-            _ => None,
-        }
-    }
-}
-
 impl fmt::Display for SelectedObfuscation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -594,7 +579,7 @@ impl fmt::Display for SelectedObfuscation {
     }
 }
 
-#[derive(Default, Debug, Clone, Eq, PartialEq, Deserialize, Serialize, Intersection)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct Udp2TcpObfuscationSettings {
     pub port: Constraint<u16>,
@@ -609,7 +594,7 @@ impl fmt::Display for Udp2TcpObfuscationSettings {
     }
 }
 
-#[derive(Default, Debug, Clone, Eq, PartialEq, Deserialize, Serialize, Intersection)]
+#[derive(Default, Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct ShadowsocksSettings {
     pub port: Constraint<u16>,
@@ -624,7 +609,7 @@ impl fmt::Display for ShadowsocksSettings {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize, Intersection)]
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct WireguardPortSettings {
     port: Constraint<u16>,
@@ -663,7 +648,7 @@ impl fmt::Display for WireguardPortSettings {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize, Intersection)]
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct LwoSettings {
     pub port: Constraint<u16>,
@@ -694,7 +679,7 @@ pub struct ObfuscationSettings {
 ///
 /// This enum does *not* have an `Auto` variant - that role is played by
 /// `Constraint::Any` on the wrapping `Constraint<ObfuscationMode>`.
-#[derive(Debug, Clone, Eq, PartialEq, Intersection)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ObfuscationMode {
     Off,
     Port(WireguardPortSettings),

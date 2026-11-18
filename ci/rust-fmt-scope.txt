@@ -24,7 +24,6 @@ warren-product-env
 warren-standing
 mullvad-update
 mullvad-release
-intersection-derive
 mullvad-api-constants
 mullvad-fs
 mullvad-logging

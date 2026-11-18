@@ -26,6 +26,3 @@ pub use crate::custom_tunnel::*;
 pub const TUNNEL_TABLE_ID: u32 = warren_product_env::CURRENT.linux_tunnel_fwmark();
 #[cfg(target_os = "linux")]
 pub const TUNNEL_FWMARK: u32 = warren_product_env::CURRENT.linux_tunnel_fwmark();
-
-pub use constraints::Intersection;
-pub use intersection_derive::Intersection;

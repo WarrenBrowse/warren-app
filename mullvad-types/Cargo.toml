@@ -16,7 +16,6 @@ either = "1.11"
 # single source of truth for the codec, also re-exported as
 # `warren_identity::ss58` on the backend. No duplicated checksum logic.
 warren-contract = { path = "../../warren-contract" }
-intersection-derive = { path = "intersection-derive" }
 ipnetwork = { workspace = true }
 log = { workspace = true }
 mullvad-version = { path = "../mullvad-version", features = ["serde"] }

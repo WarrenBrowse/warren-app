@@ -16,7 +16,6 @@ members = [
   "mullvad-problem-report",
   "mullvad-setup",
   "mullvad-types",
-  "mullvad-types/intersection-derive",
   "mullvad-update",
   "mullvad-update/mullvad-release",
   "mullvad-version",

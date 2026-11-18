@@ -3,12 +3,10 @@ use serde::{Deserialize, Serialize};
 use std::{fmt, str::FromStr};
 use talpid_types::net::wireguard;
 
-use crate::Intersection;
-
 // `QuantumResistantState`, `DaitaSettings` and `TunnelOptions` feed the
 // Quinn tunnel's MTU/DAITA/quantum-resistant settings.
 
-#[derive(Serialize, Deserialize, Default, Copy, Clone, Debug, PartialEq, Eq, Intersection)]
+#[derive(Serialize, Deserialize, Default, Copy, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 pub enum QuantumResistantState {
