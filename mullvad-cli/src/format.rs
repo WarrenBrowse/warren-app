@@ -243,11 +243,7 @@ fn format_relay_connection(
     let first_hop = endpoint.entry_endpoint.as_ref().map(|entry| {
         let endpoint = format_endpoints(
             location.and_then(|l| l.entry_hostname.as_deref()),
-            // Check if we *actually* want to print an obfuscator endpoint ..
-            match endpoint.obfuscation {
-                Some(ref info) => info.get_endpoints(),
-                _ => vec![*entry],
-            },
+            [*entry],
             verbose,
         );
         // If DAITA has automatically selected a multihop entry endpoint, we should clarify that
@@ -270,12 +266,7 @@ fn format_relay_connection(
 
     let exit_endpoint = format_endpoints(
         location.and_then(|l| l.hostname.as_deref()),
-        // Check if we *actually* want to print an obfuscator endpoint ..
-        // The obfuscator information should be printed for the exit relay if multihop is disabled
-        match (&endpoint.obfuscation, &first_hop) {
-            (Some(obfuscation), None) => obfuscation.get_endpoints(),
-            _ => vec![endpoint.endpoint],
-        },
+        [endpoint.endpoint],
         verbose,
     );
 
@@ -413,7 +404,6 @@ mod tests {
                 protocol: TransportProtocol::Udp,
             },
             quantum_resistant: false,
-            obfuscation: None,
             entry_endpoint: None,
             tunnel_interface: None,
             // `talpid-types` enables the `daita` cfg unconditionally, so the

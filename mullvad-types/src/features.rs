@@ -5,7 +5,7 @@ use std::{
 
 use crate::settings::{DnsState, Settings};
 use serde::{Deserialize, Serialize};
-use talpid_types::net::{ObfuscationInfo, ObfuscationType, TunnelEndpoint};
+use talpid_types::net::TunnelEndpoint;
 
 /// Feature indicators are active settings that should be shown to the user to make them aware of
 /// what is affecting their connection at any given time.
@@ -87,10 +87,6 @@ pub enum FeatureIndicator {
     Multihop,
     SplitTunneling,
     LockdownMode,
-    Udp2Tcp,
-    Shadowsocks,
-    Quic,
-    Lwo,
     LanSharing,
     DnsContentBlockers,
     CustomDns,
@@ -144,10 +140,6 @@ impl FeatureIndicator {
             FeatureIndicator::Multihop => "Multihop",
             FeatureIndicator::SplitTunneling => "Split Tunneling",
             FeatureIndicator::LockdownMode => "Lockdown Mode",
-            FeatureIndicator::Udp2Tcp => "Udp2Tcp",
-            FeatureIndicator::Shadowsocks => "Shadowsocks",
-            FeatureIndicator::Quic => "Quic",
-            FeatureIndicator::Lwo => "LWO",
             FeatureIndicator::LanSharing => "LAN Sharing",
             FeatureIndicator::DnsContentBlockers => "Dns Content Blocker",
             FeatureIndicator::CustomDns => "Custom Dns",
@@ -200,18 +192,6 @@ pub fn compute_feature_indicators(
 
     let quantum_resistant = endpoint.quantum_resistant;
 
-    let has_obfuscation = |obfs| match &endpoint.obfuscation {
-        Some(ObfuscationInfo::Single(endpoint)) => endpoint.obfuscation_type == obfs,
-        Some(ObfuscationInfo::Multiplexer { obfuscators, .. }) => obfuscators
-            .iter()
-            .any(|single| single.obfuscation_type == obfs),
-        None => false,
-    };
-    let udp_tcp = has_obfuscation(ObfuscationType::Udp2Tcp);
-    let shadowsocks = has_obfuscation(ObfuscationType::Shadowsocks);
-    let quic = has_obfuscation(ObfuscationType::Quic);
-    let lwo = has_obfuscation(ObfuscationType::Lwo);
-
     let mut daita_multihop = false;
     let mut multihop = false;
 
@@ -261,10 +241,6 @@ pub fn compute_feature_indicators(
         (lockdown_mode, FeatureIndicator::LockdownMode),
         (quantum_resistant, FeatureIndicator::QuantumResistance),
         (multihop, FeatureIndicator::Multihop),
-        (udp_tcp, FeatureIndicator::Udp2Tcp),
-        (shadowsocks, FeatureIndicator::Shadowsocks),
-        (quic, FeatureIndicator::Quic),
-        (lwo, FeatureIndicator::Lwo),
         (daita, FeatureIndicator::Daita),
         (daita_multihop, FeatureIndicator::DaitaMultihop),
         (daita_unavailable, FeatureIndicator::DaitaUnavailable),
@@ -285,7 +261,7 @@ pub fn compute_feature_indicators(
 mod tests {
     use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
-    use talpid_types::net::{Endpoint, ObfuscationEndpoint, TransportProtocol};
+    use talpid_types::net::{Endpoint, TransportProtocol};
 
     use crate::relay_constraints::RelaySettings;
 
@@ -300,7 +276,6 @@ mod tests {
                 protocol: TransportProtocol::Udp,
             },
             quantum_resistant: Default::default(),
-            obfuscation: Default::default(),
             entry_endpoint: Default::default(),
             tunnel_interface: Default::default(),
             daita: Default::default(),
@@ -382,28 +357,6 @@ mod tests {
             expected_indicators
         );
 
-        endpoint.obfuscation = Some(ObfuscationInfo::Single(ObfuscationEndpoint {
-            endpoint: Endpoint {
-                address: SocketAddr::from(([1, 2, 3, 4], 443)),
-                protocol: TransportProtocol::Tcp,
-            },
-            obfuscation_type: ObfuscationType::Udp2Tcp,
-        }));
-        expected_indicators.0.insert(FeatureIndicator::Udp2Tcp);
-        assert_eq!(
-            compute_feature_indicators(&settings, &endpoint, false),
-            expected_indicators
-        );
-        let Some(ObfuscationInfo::Single(ref mut obfs)) = endpoint.obfuscation else {
-            unreachable!()
-        };
-        obfs.obfuscation_type = ObfuscationType::Shadowsocks;
-        expected_indicators.0.remove(&FeatureIndicator::Udp2Tcp);
-        expected_indicators.0.insert(FeatureIndicator::Shadowsocks);
-        assert_eq!(
-            compute_feature_indicators(&settings, &endpoint, false),
-            expected_indicators
-        );
         {
             endpoint.daita = true;
             expected_indicators.0.insert(FeatureIndicator::Daita);
@@ -468,10 +421,6 @@ mod tests {
             FeatureIndicator::Multihop => {}
             FeatureIndicator::SplitTunneling => {}
             FeatureIndicator::LockdownMode => {}
-            FeatureIndicator::Udp2Tcp => {}
-            FeatureIndicator::Shadowsocks => {}
-            FeatureIndicator::Quic => {}
-            FeatureIndicator::Lwo => {}
             FeatureIndicator::LanSharing => {}
             FeatureIndicator::DnsContentBlockers => {}
             FeatureIndicator::CustomDns => {}
@@ -498,7 +447,6 @@ mod tests {
                 protocol: TransportProtocol::Udp,
             },
             quantum_resistant: Default::default(),
-            obfuscation: Default::default(),
             entry_endpoint: Default::default(),
             tunnel_interface: Default::default(),
             daita: Default::default(),
@@ -552,7 +500,6 @@ mod tests {
                 protocol: TransportProtocol::Udp,
             },
             quantum_resistant: Default::default(),
-            obfuscation: Default::default(),
             entry_endpoint: Default::default(),
             tunnel_interface: Default::default(),
             daita,
@@ -604,7 +551,6 @@ mod tests {
                 protocol: TransportProtocol::Udp,
             },
             quantum_resistant: Default::default(),
-            obfuscation: Default::default(),
             entry_endpoint: Default::default(),
             tunnel_interface: Default::default(),
             daita: Default::default(),
@@ -640,7 +586,6 @@ mod tests {
                 protocol: TransportProtocol::Udp,
             },
             quantum_resistant: Default::default(),
-            obfuscation: Default::default(),
             entry_endpoint: Default::default(),
             tunnel_interface: Default::default(),
             daita: Default::default(),

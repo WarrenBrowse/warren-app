@@ -282,7 +282,6 @@ mod tests {
         TunnelEndpoint {
             endpoint: endpoint("198.51.100.9:443"),
             quantum_resistant: false,
-            obfuscation: None,
             entry_endpoint: entry.map(endpoint),
             tunnel_interface: interface.map(str::to_owned),
             daita: false,

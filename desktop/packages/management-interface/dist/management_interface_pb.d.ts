@@ -830,11 +830,6 @@ export class TunnelEndpoint extends jspb.Message {
     getQuantumResistant(): boolean;
     setQuantumResistant(value: boolean): TunnelEndpoint;
 
-    hasObfuscation(): boolean;
-    clearObfuscation(): void;
-    getObfuscation(): ObfuscationInfo | undefined;
-    setObfuscation(value?: ObfuscationInfo): TunnelEndpoint;
-
     hasEntryEndpoint(): boolean;
     clearEntryEndpoint(): void;
     getEntryEndpoint(): Endpoint | undefined;
@@ -879,7 +874,6 @@ export namespace TunnelEndpoint {
         address: string,
         protocol: TransportProtocol,
         quantumResistant: boolean,
-        obfuscation?: ObfuscationInfo.AsObject,
         entryEndpoint?: Endpoint.AsObject,
         tunnelMetadata?: TunnelMetadata.AsObject,
         daita: boolean,
@@ -1021,106 +1015,6 @@ export namespace FeatureIndicators {
     export type AsObject = {
         activeFeaturesList: Array<FeatureIndicator>,
     }
-}
-
-export class ObfuscationInfo extends jspb.Message { 
-
-    hasSingle(): boolean;
-    clearSingle(): void;
-    getSingle(): ObfuscationEndpoint | undefined;
-    setSingle(value?: ObfuscationEndpoint): ObfuscationInfo;
-
-    hasMultiple(): boolean;
-    clearMultiple(): void;
-    getMultiple(): MultiplexObfuscation | undefined;
-    setMultiple(value?: MultiplexObfuscation): ObfuscationInfo;
-
-    getTypeCase(): ObfuscationInfo.TypeCase;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): ObfuscationInfo.AsObject;
-    static toObject(includeInstance: boolean, msg: ObfuscationInfo): ObfuscationInfo.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: ObfuscationInfo, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): ObfuscationInfo;
-    static deserializeBinaryFromReader(message: ObfuscationInfo, reader: jspb.BinaryReader): ObfuscationInfo;
-}
-
-export namespace ObfuscationInfo {
-    export type AsObject = {
-        single?: ObfuscationEndpoint.AsObject,
-        multiple?: MultiplexObfuscation.AsObject,
-    }
-
-    export enum TypeCase {
-        TYPE_NOT_SET = 0,
-        SINGLE = 1,
-        MULTIPLE = 2,
-    }
-
-}
-
-export class MultiplexObfuscation extends jspb.Message { 
-
-    hasDirect(): boolean;
-    clearDirect(): void;
-    getDirect(): Endpoint | undefined;
-    setDirect(value?: Endpoint): MultiplexObfuscation;
-    clearObfuscatorsList(): void;
-    getObfuscatorsList(): Array<ObfuscationEndpoint>;
-    setObfuscatorsList(value: Array<ObfuscationEndpoint>): MultiplexObfuscation;
-    addObfuscators(value?: ObfuscationEndpoint, index?: number): ObfuscationEndpoint;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): MultiplexObfuscation.AsObject;
-    static toObject(includeInstance: boolean, msg: MultiplexObfuscation): MultiplexObfuscation.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: MultiplexObfuscation, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): MultiplexObfuscation;
-    static deserializeBinaryFromReader(message: MultiplexObfuscation, reader: jspb.BinaryReader): MultiplexObfuscation;
-}
-
-export namespace MultiplexObfuscation {
-    export type AsObject = {
-        direct?: Endpoint.AsObject,
-        obfuscatorsList: Array<ObfuscationEndpoint.AsObject>,
-    }
-}
-
-export class ObfuscationEndpoint extends jspb.Message { 
-
-    hasEndpoint(): boolean;
-    clearEndpoint(): void;
-    getEndpoint(): Endpoint | undefined;
-    setEndpoint(value?: Endpoint): ObfuscationEndpoint;
-    getObfuscationType(): ObfuscationEndpoint.ObfuscationType;
-    setObfuscationType(value: ObfuscationEndpoint.ObfuscationType): ObfuscationEndpoint;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): ObfuscationEndpoint.AsObject;
-    static toObject(includeInstance: boolean, msg: ObfuscationEndpoint): ObfuscationEndpoint.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: ObfuscationEndpoint, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): ObfuscationEndpoint;
-    static deserializeBinaryFromReader(message: ObfuscationEndpoint, reader: jspb.BinaryReader): ObfuscationEndpoint;
-}
-
-export namespace ObfuscationEndpoint {
-    export type AsObject = {
-        endpoint?: Endpoint.AsObject,
-        obfuscationType: ObfuscationEndpoint.ObfuscationType,
-    }
-
-    export enum ObfuscationType {
-    UDP2TCP = 0,
-    SHADOWSOCKS = 1,
-    QUIC = 2,
-    LWO = 3,
-    }
-
 }
 
 export class Endpoint extends jspb.Message { 
@@ -4705,10 +4599,6 @@ export enum FeatureIndicator {
     MULTIHOP = 1,
     SPLIT_TUNNELING = 2,
     LOCKDOWN_MODE = 3,
-    UDP_2_TCP = 5,
-    SHADOWSOCKS = 6,
-    QUIC = 7,
-    LWO = 8,
     LAN_SHARING = 9,
     DNS_CONTENT_BLOCKERS = 10,
     CUSTOM_DNS = 11,

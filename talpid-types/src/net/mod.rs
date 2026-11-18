@@ -1,18 +1,14 @@
-use crate::net::obfuscation::ObfuscatorConfig;
-
 #[cfg(target_os = "android")]
 use jnix::FromJava;
-use obfuscation::Obfuscators;
 use serde::{Deserialize, Serialize};
 #[cfg(windows)]
 use std::path::PathBuf;
 use std::{
-    fmt, iter,
+    fmt,
     net::{IpAddr, SocketAddr},
     str::FromStr,
 };
 
-pub mod obfuscation;
 pub mod proxy;
 pub mod wireguard;
 
@@ -50,7 +46,6 @@ pub struct TunnelEndpoint {
     #[serde(flatten)]
     pub endpoint: Endpoint,
     pub quantum_resistant: bool,
-    pub obfuscation: Option<ObfuscationInfo>,
     pub entry_endpoint: Option<Endpoint>,
     pub tunnel_interface: Option<String>,
     pub daita: bool,
@@ -86,139 +81,7 @@ impl fmt::Display for TunnelEndpoint {
         if let Some(ref entry_endpoint) = self.entry_endpoint {
             write!(f, " via {entry_endpoint}")?;
         }
-        if let Some(ref obfuscation) = self.obfuscation {
-            write!(f, " via {obfuscation}")?;
-        }
         Ok(())
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename = "obfuscation_type")]
-pub enum ObfuscationType {
-    #[serde(rename = "udp2tcp")]
-    Udp2Tcp,
-    Shadowsocks,
-    Quic,
-    Lwo,
-}
-
-impl fmt::Display for ObfuscationType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        match self {
-            ObfuscationType::Udp2Tcp => "Udp2Tcp".fmt(f),
-            ObfuscationType::Shadowsocks => "Shadowsocks".fmt(f),
-            ObfuscationType::Quic => "QUIC".fmt(f),
-            ObfuscationType::Lwo => "LWO".fmt(f),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename = "obfuscation_info")]
-pub enum ObfuscationInfo {
-    /// Single obfuscator
-    Single(ObfuscationEndpoint),
-    /// Multiplexer obfuscator
-    Multiplexer {
-        /// Direct endpoint, without obfuscation, if set
-        direct: Option<Endpoint>,
-        /// All other obfuscators
-        obfuscators: Vec<ObfuscationEndpoint>,
-    },
-}
-
-impl ObfuscationInfo {
-    pub fn get_endpoints(&self) -> Vec<Endpoint> {
-        match self {
-            ObfuscationInfo::Single(ep) => vec![ep.endpoint],
-            ObfuscationInfo::Multiplexer {
-                direct,
-                obfuscators,
-            } => {
-                let mut v = vec![];
-                if let Some(direct) = direct {
-                    v.push(*direct);
-                }
-                obfuscators.iter().for_each(|obfs| v.push(obfs.endpoint));
-                v
-            }
-        }
-    }
-}
-
-impl fmt::Display for ObfuscationInfo {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        match self {
-            ObfuscationInfo::Single(obfs) => obfs.fmt(f),
-            ObfuscationInfo::Multiplexer {
-                direct,
-                obfuscators,
-            } => {
-                write!(f, "multiplex ")?;
-
-                write!(f, "{{ ")?;
-                if let Some(direct) = direct {
-                    write!(f, "direct {direct}")?;
-                } else {
-                    write!(f, "no direct")?;
-                }
-                for obfuscator in obfuscators {
-                    write!(f, " | {obfuscator}")?;
-                }
-                write!(f, " }}")
-            }
-        }
-    }
-}
-
-impl From<&Obfuscators> for ObfuscationInfo {
-    fn from(config: &Obfuscators) -> Self {
-        match config {
-            Obfuscators::Multiplexer {
-                direct,
-                configs: (first_obfs, remaining_obfs),
-            } => ObfuscationInfo::Multiplexer {
-                direct: direct.map(|direct| Endpoint {
-                    address: direct,
-                    protocol: TransportProtocol::Udp,
-                }),
-                obfuscators: iter::once(first_obfs)
-                    .chain(remaining_obfs)
-                    .map(ObfuscationEndpoint::from)
-                    .collect(),
-            },
-            Obfuscators::Single(obfs) => ObfuscationInfo::Single(ObfuscationEndpoint::from(obfs)),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename = "obfuscation_endpoint")]
-pub struct ObfuscationEndpoint {
-    pub endpoint: Endpoint,
-    pub obfuscation_type: ObfuscationType,
-}
-
-impl From<&ObfuscatorConfig> for ObfuscationEndpoint {
-    fn from(config: &ObfuscatorConfig) -> ObfuscationEndpoint {
-        let obfuscation_type = match config {
-            ObfuscatorConfig::Udp2Tcp { .. } => ObfuscationType::Udp2Tcp,
-            ObfuscatorConfig::Shadowsocks { .. } => ObfuscationType::Shadowsocks,
-            ObfuscatorConfig::Quic { .. } => ObfuscationType::Quic,
-            ObfuscatorConfig::Lwo { .. } => ObfuscationType::Lwo,
-        };
-
-        ObfuscationEndpoint {
-            endpoint: config.endpoint(),
-            obfuscation_type,
-        }
-    }
-}
-
-impl fmt::Display for ObfuscationEndpoint {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{} {}", self.obfuscation_type, self.endpoint)
     }
 }
 
@@ -611,7 +474,6 @@ mod tests {
                 TransportProtocol::Udp,
             ),
             quantum_resistant: false,
-            obfuscation: None,
             entry_endpoint: None,
             tunnel_interface: None,
             daita: false,

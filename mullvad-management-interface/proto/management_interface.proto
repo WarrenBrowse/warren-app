@@ -606,7 +606,7 @@ message TunnelEndpoint {
   string address = 1;
   TransportProtocol protocol = 2;
   bool quantum_resistant = 3;
-  ObfuscationInfo obfuscation = 4;
+  reserved 4; // was obfuscation (WireGuard-era, removed)
   Endpoint entry_endpoint = 5;
   TunnelMetadata tunnel_metadata = 6;
   bool daita = 7;
@@ -685,11 +685,7 @@ enum FeatureIndicator {
   MULTIHOP = 1;
   SPLIT_TUNNELING = 2;
   LOCKDOWN_MODE = 3;
-  reserved 4; // was WIREGUARD_PORT (WireGuard-era, removed)
-  UDP_2_TCP = 5;
-  SHADOWSOCKS = 6;
-  QUIC = 7;
-  LWO = 8;
+  reserved 4 to 8; // were WIREGUARD_PORT, UDP_2_TCP, SHADOWSOCKS, QUIC, LWO (WireGuard-era, removed)
   LAN_SHARING = 9;
   DNS_CONTENT_BLOCKERS = 10;
   CUSTOM_DNS = 11;
@@ -711,31 +707,6 @@ enum FeatureIndicator {
   INCLUDE_ONLY = 20;
   // At least one app leaves through an exit of its own.
   APP_EXITS = 21;
-}
-
-message ObfuscationInfo {
-  oneof type {
-    ObfuscationEndpoint single = 1;
-    MultiplexObfuscation multiple = 2;
-  }
-}
-
-message MultiplexObfuscation {
-  // optional direct endpoint
-  Endpoint direct = 1;
-  repeated ObfuscationEndpoint obfuscators = 2;
-}
-
-message ObfuscationEndpoint {
-  enum ObfuscationType {
-    UDP2TCP = 0;
-    SHADOWSOCKS = 1;
-    QUIC = 2;
-    LWO = 3;
-  }
-
-  Endpoint endpoint = 1;
-  ObfuscationType obfuscation_type = 2;
 }
 
 message Endpoint {

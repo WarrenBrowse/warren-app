@@ -486,7 +486,6 @@ mod tests {
                 talpid_types::net::TransportProtocol::Udp,
             ),
             quantum_resistant: false,
-            obfuscation: None,
             entry_endpoint: None,
             tunnel_interface: None,
             daita: false,
