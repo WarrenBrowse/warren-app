@@ -359,6 +359,8 @@ pub type WarrenTunnelIpAssignCallback =
 
 const RC_OK: c_int = 0;
 const RC_INVALID_INPUT: c_int = -1;
+/// The body panicked; nothing it would have done can be relied on.
+const RC_INTERNAL_ERROR: c_int = -2;
 // RC_NOT_CONNECTED is used only on the `tunnel` feature path ; on the
 // `not(tunnel)` path it is dead code (the FFI returns the disabled
 // sentinel instead). `cfg_attr(...expect(dead_code))` triggers the
@@ -2160,7 +2162,9 @@ fn reset_path_health() {
 /// poll: one relaxed atomic load, no allocation and no lock.
 #[unsafe(no_mangle)]
 pub extern "C" fn warren_tunnel_path_health() -> i32 {
-    PATH_HEALTH.load(std::sync::atomic::Ordering::Relaxed)
+    crate::ffi_guard(PATH_HEALTH_HEALTHY, || {
+        PATH_HEALTH.load(std::sync::atomic::Ordering::Relaxed)
+    })
 }
 
 /// Whether the live session carries a granted DAITA machine.
@@ -2198,7 +2202,9 @@ fn install_daita_watch(mut sessions: warrenguard_transport::supervisor::ClientWa
 /// asked, this says what is running. `false` while no session is up.
 #[unsafe(no_mangle)]
 pub extern "C" fn warren_tunnel_daita_active() -> bool {
-    DAITA_ACTIVE.load(std::sync::atomic::Ordering::Relaxed)
+    crate::ffi_guard(false, || {
+        DAITA_ACTIVE.load(std::sync::atomic::Ordering::Relaxed)
+    })
 }
 
 /// The mapping a session asks the exit for, read once off the C ABI and
@@ -2504,101 +2510,103 @@ pub unsafe extern "C" fn warren_tunnel_start(
     parameters: *const WarrenTunnelParametersC,
     _packet_fd: i32,
 ) -> *mut WarrenTunnelHandle {
-    if parameters.is_null() {
-        return std::ptr::null_mut();
-    }
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    {
-        // SAFETY: caller upholds the precondition that `parameters`
-        // points to a valid `WarrenTunnelParametersC` for the duration
-        // of this call. We re-borrow with the explicit-lifetime &.
-        let Some(params) = (unsafe { parameters.as_ref() }) else {
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        if parameters.is_null() {
             return std::ptr::null_mut();
-        };
+        }
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
+        {
+            // SAFETY: caller upholds the precondition that `parameters`
+            // points to a valid `WarrenTunnelParametersC` for the duration
+            // of this call. We re-borrow with the explicit-lifetime &.
+            let Some(params) = (unsafe { parameters.as_ref() }) else {
+                return std::ptr::null_mut();
+            };
 
-        // Wallet signing key, the node key derived from the wallet seed.
-        // Zeroize on drop is provided by `ed25519-dalek` via the `zeroize`
-        // feature already enabled in `warren-ios/Cargo.toml`.
-        let signing_key = tunnel_signing_key(&params.wallet_signing_seed);
-        // The session-token batch is blinded from the wallet seed, as every
-        // other client of the wallet blinds it, so the issuer serves each of
-        // them the same batch.
-        let session_blinding = warren_api::BlindingKey::session(&params.wallet_signing_seed);
-        // The port-entitlement batch likewise, so a restarted extension is
-        // served the entitlements the account holds.
-        let entitlement_blinding =
-            warren_api::BlindingKey::port_entitlement(&params.wallet_signing_seed);
+            // Wallet signing key, the node key derived from the wallet seed.
+            // Zeroize on drop is provided by `ed25519-dalek` via the `zeroize`
+            // feature already enabled in `warren-ios/Cargo.toml`.
+            let signing_key = tunnel_signing_key(&params.wallet_signing_seed);
+            // The session-token batch is blinded from the wallet seed, as every
+            // other client of the wallet blinds it, so the issuer serves each of
+            // them the same batch.
+            let session_blinding = warren_api::BlindingKey::session(&params.wallet_signing_seed);
+            // The port-entitlement batch likewise, so a restarted extension is
+            // served the entitlements the account holds.
+            let entitlement_blinding =
+                warren_api::BlindingKey::port_entitlement(&params.wallet_signing_seed);
 
-        // Client opt-in for NAT-PMP port forwarding. The multi-hop reassign
-        // task binds the refresh loop to the exit-assigned inner IPv4 once it
-        // is known.
-        let nat_pmp = NatPmpConfig {
-            enabled: params.nat_pmp_enabled != 0,
-            external_port: params.nat_pmp_external_port,
-            is_tcp: params.nat_pmp_is_tcp != 0,
-            lifetime_secs: params.nat_pmp_lifetime_secs,
-        };
+            // Client opt-in for NAT-PMP port forwarding. The multi-hop reassign
+            // task binds the refresh loop to the exit-assigned inner IPv4 once it
+            // is known.
+            let nat_pmp = NatPmpConfig {
+                enabled: params.nat_pmp_enabled != 0,
+                external_port: params.nat_pmp_external_port,
+                is_tcp: params.nat_pmp_is_tcp != 0,
+                lifetime_secs: params.nat_pmp_lifetime_secs,
+            };
 
-        // The production fleet is multi-hop only: a supplied verified directory
-        // drives a MultiHopClient circuit (2-hop when multihop_two_hop, else a
-        // 1-hop circuit collapsed onto one node). A null directory is a
-        // malformed config, never a valid request, so fail closed with a null
-        // handle.
-        // SAFETY: every string field of `params` is null or a valid
-        // null-terminated C string for this call (caller precondition), and
-        // the same holds for the three reads below.
-        let Some(json) = (unsafe { cstr_to_str(params.multihop_directory_json) }) else {
-            return std::ptr::null_mut();
-        };
-        let directory_json = json.to_owned();
-        let two_hop = params.multihop_two_hop != 0;
-        let require_pq = params.require_post_quantum != 0;
-        // SAFETY: as above.
-        let entry_country = unsafe { cstr_to_str(params.multihop_entry_country) }
-            .unwrap_or("")
-            .to_owned();
-        // SAFETY: as above.
-        let exit_country = unsafe { cstr_to_str(params.multihop_exit_country) }
-            .unwrap_or("")
-            .to_owned();
-        // SAFETY: as above.
-        let generation_state_path =
-            unsafe { cstr_to_str(params.multihop_generation_state_path) }.map(str::to_owned);
-        // SAFETY: `params.pin_store_path` is null or a valid
-        // null-terminated C string (caller precondition).
-        let pin_store_path = unsafe { cstr_to_str(params.pin_store_path) }.map(str::to_owned);
+            // The production fleet is multi-hop only: a supplied verified directory
+            // drives a MultiHopClient circuit (2-hop when multihop_two_hop, else a
+            // 1-hop circuit collapsed onto one node). A null directory is a
+            // malformed config, never a valid request, so fail closed with a null
+            // handle.
+            // SAFETY: every string field of `params` is null or a valid
+            // null-terminated C string for this call (caller precondition), and
+            // the same holds for the three reads below.
+            let Some(json) = (unsafe { cstr_to_str(params.multihop_directory_json) }) else {
+                return std::ptr::null_mut();
+            };
+            let directory_json = json.to_owned();
+            let two_hop = params.multihop_two_hop != 0;
+            let require_pq = params.require_post_quantum != 0;
+            // SAFETY: as above.
+            let entry_country = unsafe { cstr_to_str(params.multihop_entry_country) }
+                .unwrap_or("")
+                .to_owned();
+            // SAFETY: as above.
+            let exit_country = unsafe { cstr_to_str(params.multihop_exit_country) }
+                .unwrap_or("")
+                .to_owned();
+            // SAFETY: as above.
+            let generation_state_path =
+                unsafe { cstr_to_str(params.multihop_generation_state_path) }.map(str::to_owned);
+            // SAFETY: `params.pin_store_path` is null or a valid
+            // null-terminated C string (caller precondition).
+            let pin_store_path = unsafe { cstr_to_str(params.pin_store_path) }.map(str::to_owned);
 
-        let Ok(impl_) = handle_impl::WarrenTunnelHandleImpl::new() else {
-            return std::ptr::null_mut();
-        };
-        let arc = std::sync::Arc::new(impl_);
-        arc.spawn_outbound_dispatcher();
-        // An extension process can outlive a tunnel. A revocation an earlier
-        // tunnel of this process ended on is already the app's to keep (it
-        // persists the revoked device state, which refuses a tunnel start
-        // until a new login), so it must not end this one at once.
-        crate::warren_devices_ffi::registry().forget_revocation();
-        spawn_multi_hop(
-            std::sync::Arc::clone(&arc),
-            directory_json,
-            two_hop,
-            entry_country,
-            exit_country,
-            generation_state_path,
-            pin_store_path,
-            nat_pmp,
-            signing_key,
-            session_blinding,
-            entitlement_blinding,
-            require_pq,
-        );
-        into_ffi_handle(arc)
-    }
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    {
-        let _ = parameters;
-        std::ptr::null_mut()
-    }
+            let Ok(impl_) = handle_impl::WarrenTunnelHandleImpl::new() else {
+                return std::ptr::null_mut();
+            };
+            let arc = std::sync::Arc::new(impl_);
+            arc.spawn_outbound_dispatcher();
+            // An extension process can outlive a tunnel. A revocation an earlier
+            // tunnel of this process ended on is already the app's to keep (it
+            // persists the revoked device state, which refuses a tunnel start
+            // until a new login), so it must not end this one at once.
+            crate::warren_devices_ffi::registry().forget_revocation();
+            spawn_multi_hop(
+                std::sync::Arc::clone(&arc),
+                directory_json,
+                two_hop,
+                entry_country,
+                exit_country,
+                generation_state_path,
+                pin_store_path,
+                nat_pmp,
+                signing_key,
+                session_blinding,
+                entitlement_blinding,
+                require_pq,
+            );
+            into_ffi_handle(arc)
+        }
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+        {
+            let _ = parameters;
+            std::ptr::null_mut()
+        }
+    })
 }
 
 /// Stops the tunnel and releases all resources. Idempotent : safe to
@@ -2609,32 +2617,34 @@ pub unsafe extern "C" fn warren_tunnel_start(
 /// not have been stopped already.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn warren_tunnel_stop(handle: *mut WarrenTunnelHandle) {
-    if handle.is_null() {
-        return;
-    }
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    {
-        // Stop feeding the watchdog before anything else: the closed source is
-        // how `run_watchdog` exits on its own, and it must not outlive the
-        // session it probes.
-        clear_path_change_channel();
-        // The verdict describes the session that is ending; leaving it set
-        // would tell the next screen the new tunnel is already degraded.
-        reset_path_health();
-        // SAFETY: caller upholds the precondition that `handle` came
-        // from `warren_tunnel_start` and has not been stopped yet.
-        let boxed = unsafe {
-            Box::from_raw(handle as *mut std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>)
-        };
-        // Dropping the box alone would not end the session: the session's
-        // tasks hold the handle too. Shutting the runtime down drops them.
-        boxed.shut_down();
-        drop(boxed);
-    }
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    {
-        let _ = handle;
-    }
+    crate::ffi_guard((), || {
+        if handle.is_null() {
+            return;
+        }
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
+        {
+            // Stop feeding the watchdog before anything else: the closed source is
+            // how `run_watchdog` exits on its own, and it must not outlive the
+            // session it probes.
+            clear_path_change_channel();
+            // The verdict describes the session that is ending; leaving it set
+            // would tell the next screen the new tunnel is already degraded.
+            reset_path_health();
+            // SAFETY: caller upholds the precondition that `handle` came
+            // from `warren_tunnel_start` and has not been stopped yet.
+            let boxed = unsafe {
+                Box::from_raw(handle as *mut std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>)
+            };
+            // Dropping the box alone would not end the session: the session's
+            // tasks hold the handle too. Shutting the runtime down drops them.
+            boxed.shut_down();
+            drop(boxed);
+        }
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+        {
+            let _ = handle;
+        }
+    })
 }
 
 /// Called on iOS `sleep()`. Deliberately does not stop the pump: iOS suspends
@@ -2651,23 +2661,25 @@ pub unsafe extern "C" fn warren_tunnel_stop(handle: *mut WarrenTunnelHandle) {
 /// `handle` must be a valid pointer from [`warren_tunnel_start`].
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn warren_tunnel_pause(handle: *mut WarrenTunnelHandle) -> c_int {
-    if handle.is_null() {
-        return RC_INVALID_INPUT;
-    }
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    {
-        // SAFETY: caller upholds the handle invariant (non-null, live).
-        let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+    crate::ffi_guard(RC_INTERNAL_ERROR, || {
+        if handle.is_null() {
             return RC_INVALID_INPUT;
-        };
-        let _ = arc;
-        RC_OK
-    }
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    {
-        let _ = handle;
-        RC_TUNNEL_FEATURE_DISABLED
-    }
+        }
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
+        {
+            // SAFETY: caller upholds the handle invariant (non-null, live).
+            let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+                return RC_INVALID_INPUT;
+            };
+            let _ = arc;
+            RC_OK
+        }
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+        {
+            let _ = handle;
+            RC_TUNNEL_FEATURE_DISABLED
+        }
+    })
 }
 
 /// Resumes after a [`warren_tunnel_pause`]. Health-checked: it never reports
@@ -2682,30 +2694,32 @@ pub unsafe extern "C" fn warren_tunnel_pause(handle: *mut WarrenTunnelHandle) ->
 /// `handle` must be a valid pointer from [`warren_tunnel_start`].
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn warren_tunnel_resume(handle: *mut WarrenTunnelHandle) -> c_int {
-    if handle.is_null() {
-        return RC_INVALID_INPUT;
-    }
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    {
-        // SAFETY: caller upholds the handle invariant (non-null, live).
-        let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+    crate::ffi_guard(RC_INTERNAL_ERROR, || {
+        if handle.is_null() {
             return RC_INVALID_INPUT;
-        };
-        if arc.has_live_session() {
-            arc.set_state(WarrenTunnelStateC::Connected);
-            arc.fire_event(WarrenTunnelEventTagC::EventConnected);
-        } else {
-            arc.set_state(WarrenTunnelStateC::Reconnecting);
-            arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
-            arc.force_reconnect();
         }
-        RC_OK
-    }
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    {
-        let _ = handle;
-        RC_TUNNEL_FEATURE_DISABLED
-    }
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
+        {
+            // SAFETY: caller upholds the handle invariant (non-null, live).
+            let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+                return RC_INVALID_INPUT;
+            };
+            if arc.has_live_session() {
+                arc.set_state(WarrenTunnelStateC::Connected);
+                arc.fire_event(WarrenTunnelEventTagC::EventConnected);
+            } else {
+                arc.set_state(WarrenTunnelStateC::Reconnecting);
+                arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
+                arc.force_reconnect();
+            }
+            RC_OK
+        }
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+        {
+            let _ = handle;
+            RC_TUNNEL_FEATURE_DISABLED
+        }
+    })
 }
 
 /// Triggers a tunnel reconnect (e.g. on Wi-Fi <-> cellular handover): forces
@@ -2718,27 +2732,29 @@ pub unsafe extern "C" fn warren_tunnel_resume(handle: *mut WarrenTunnelHandle) -
 /// `handle` must be a valid pointer from [`warren_tunnel_start`].
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn warren_tunnel_reconnect(handle: *mut WarrenTunnelHandle) -> c_int {
-    if handle.is_null() {
-        return RC_INVALID_INPUT;
-    }
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    {
-        // SAFETY: caller upholds the handle invariant (non-null, live).
-        let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+    crate::ffi_guard(RC_INTERNAL_ERROR, || {
+        if handle.is_null() {
             return RC_INVALID_INPUT;
-        };
-        if arc.state_snapshot() == WarrenTunnelStateC::Disconnected {
-            return RC_NOT_CONNECTED;
         }
-        arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
-        let _ = arc.force_reconnect();
-        RC_OK
-    }
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    {
-        let _ = handle;
-        RC_TUNNEL_FEATURE_DISABLED
-    }
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
+        {
+            // SAFETY: caller upholds the handle invariant (non-null, live).
+            let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+                return RC_INVALID_INPUT;
+            };
+            if arc.state_snapshot() == WarrenTunnelStateC::Disconnected {
+                return RC_NOT_CONNECTED;
+            }
+            arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
+            let _ = arc.force_reconnect();
+            RC_OK
+        }
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+        {
+            let _ = handle;
+            RC_TUNNEL_FEATURE_DISABLED
+        }
+    })
 }
 
 /// Reports a network path change (Wi-Fi to cellular and back) from the Swift
@@ -2751,8 +2767,10 @@ pub unsafe extern "C" fn warren_tunnel_reconnect(handle: *mut WarrenTunnelHandle
 /// tunnel handle. A no-op when no tunnel session is running.
 #[unsafe(no_mangle)]
 pub extern "C" fn warren_tunnel_notify_path_change() {
-    #[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
-    notify_path_change();
+    crate::ffi_guard((), || {
+        #[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
+        notify_path_change();
+    })
 }
 
 /// Reads the current tunnel status into `out_status`.
@@ -2768,61 +2786,63 @@ pub unsafe extern "C" fn warren_tunnel_status(
     handle: *mut WarrenTunnelHandle,
     out_status: *mut WarrenTunnelStatusC,
 ) -> c_int {
-    if out_status.is_null() {
-        return RC_INVALID_INPUT;
-    }
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    let status = if handle.is_null() {
-        WarrenTunnelStatusC {
-            state: WarrenTunnelStateC::Disconnected,
-            bytes_in: 0,
-            bytes_out: 0,
-            connected_duration_seconds: 0,
-            failover_count: 0,
+    crate::ffi_guard(RC_INTERNAL_ERROR, || {
+        if out_status.is_null() {
+            return RC_INVALID_INPUT;
         }
-    } else {
-        // SAFETY: caller upholds the handle invariant (non-null, live).
-        // `clone_arc_from_raw` returns None only on null, which the
-        // outer `if handle.is_null()` already excluded, so unwrap is
-        // unreachable in practice.
-        let arc = unsafe { clone_arc_from_raw(handle) }.unwrap_or_else(|| {
-            unreachable!("handle non-null but clone_arc_from_raw returned None")
-        });
-        let state = arc.state_snapshot();
-        let connected_at = arc
-            .connected_at_secs
-            .load(std::sync::atomic::Ordering::Relaxed);
-        let duration = if connected_at == 0 || state != WarrenTunnelStateC::Connected {
-            0
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
+        let status = if handle.is_null() {
+            WarrenTunnelStatusC {
+                state: WarrenTunnelStateC::Disconnected,
+                bytes_in: 0,
+                bytes_out: 0,
+                connected_duration_seconds: 0,
+                failover_count: 0,
+            }
         } else {
-            now_secs().saturating_sub(connected_at)
+            // SAFETY: caller upholds the handle invariant (non-null, live).
+            // `clone_arc_from_raw` returns None only on null, which the
+            // outer `if handle.is_null()` already excluded, so unwrap is
+            // unreachable in practice.
+            let arc = unsafe { clone_arc_from_raw(handle) }.unwrap_or_else(|| {
+                unreachable!("handle non-null but clone_arc_from_raw returned None")
+            });
+            let state = arc.state_snapshot();
+            let connected_at = arc
+                .connected_at_secs
+                .load(std::sync::atomic::Ordering::Relaxed);
+            let duration = if connected_at == 0 || state != WarrenTunnelStateC::Connected {
+                0
+            } else {
+                now_secs().saturating_sub(connected_at)
+            };
+            WarrenTunnelStatusC {
+                state,
+                bytes_in: arc.bytes_in.load(std::sync::atomic::Ordering::Relaxed),
+                bytes_out: arc.bytes_out.load(std::sync::atomic::Ordering::Relaxed),
+                connected_duration_seconds: duration,
+                failover_count: arc
+                    .failover_count
+                    .load(std::sync::atomic::Ordering::Relaxed),
+            }
         };
-        WarrenTunnelStatusC {
-            state,
-            bytes_in: arc.bytes_in.load(std::sync::atomic::Ordering::Relaxed),
-            bytes_out: arc.bytes_out.load(std::sync::atomic::Ordering::Relaxed),
-            connected_duration_seconds: duration,
-            failover_count: arc
-                .failover_count
-                .load(std::sync::atomic::Ordering::Relaxed),
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+        let status = {
+            let _ = handle;
+            WarrenTunnelStatusC {
+                state: WarrenTunnelStateC::Disconnected,
+                bytes_in: 0,
+                bytes_out: 0,
+                connected_duration_seconds: 0,
+                failover_count: 0,
+            }
+        };
+        // SAFETY: caller-provided writable buffer (precondition).
+        unsafe {
+            std::ptr::write(out_status, status);
         }
-    };
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    let status = {
-        let _ = handle;
-        WarrenTunnelStatusC {
-            state: WarrenTunnelStateC::Disconnected,
-            bytes_in: 0,
-            bytes_out: 0,
-            connected_duration_seconds: 0,
-            failover_count: 0,
-        }
-    };
-    // SAFETY: caller-provided writable buffer (precondition).
-    unsafe {
-        std::ptr::write(out_status, status);
-    }
-    RC_OK
+        RC_OK
+    })
 }
 
 /// Registers a callback invoked on tunnel events (connected,
@@ -2844,37 +2864,40 @@ pub unsafe extern "C" fn warren_tunnel_set_event_callback(
     callback: WarrenTunnelEventCallback,
     context: *mut c_void,
 ) -> c_int {
-    if handle.is_null() {
-        return RC_INVALID_INPUT;
-    }
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    {
-        // SAFETY: caller upholds the handle invariant (non-null, live).
-        let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+    crate::ffi_guard(RC_INTERNAL_ERROR, || {
+        if handle.is_null() {
             return RC_INVALID_INPUT;
-        };
+        }
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
         {
-            let Ok(mut slot) = arc.event_callback.lock() else {
+            // SAFETY: caller upholds the handle invariant (non-null, live).
+            let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
                 return RC_INVALID_INPUT;
             };
-            *slot = Some(handle_impl::CallbackEntry { callback, context });
+            {
+                let Ok(mut slot) = arc.event_callback.lock() else {
+                    return RC_INVALID_INPUT;
+                };
+                *slot = Some(handle_impl::CallbackEntry { callback, context });
+            }
+            // A wallet known to be banned is refused before the session task's
+            // first await, which can run before Swift registers this callback:
+            // the ban event would then reach nobody, and Swift would show the
+            // state with neither the reason nor the lapse. Replayed here; a second
+            // copy of the same event is harmless.
+            if arc.state.load(std::sync::atomic::Ordering::Relaxed)
+                == WarrenTunnelStateC::Banned as u8
+            {
+                arc.fire_ban_event();
+            }
+            RC_OK
         }
-        // A wallet known to be banned is refused before the session task's
-        // first await, which can run before Swift registers this callback:
-        // the ban event would then reach nobody, and Swift would show the
-        // state with neither the reason nor the lapse. Replayed here; a second
-        // copy of the same event is harmless.
-        if arc.state.load(std::sync::atomic::Ordering::Relaxed) == WarrenTunnelStateC::Banned as u8
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
         {
-            arc.fire_ban_event();
+            let _ = (handle, callback, context);
+            RC_TUNNEL_FEATURE_DISABLED
         }
-        RC_OK
-    }
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    {
-        let _ = (handle, callback, context);
-        RC_TUNNEL_FEATURE_DISABLED
-    }
+    })
 }
 
 /// Registers a callback that ships outbound IP packets to Swift for
@@ -2891,26 +2914,28 @@ pub unsafe extern "C" fn warren_tunnel_set_outbound_callback(
     callback: WarrenTunnelOutboundCallback,
     context: *mut c_void,
 ) -> c_int {
-    if handle.is_null() {
-        return RC_INVALID_INPUT;
-    }
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    {
-        // SAFETY: caller upholds the handle invariant (non-null, live).
-        let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+    crate::ffi_guard(RC_INTERNAL_ERROR, || {
+        if handle.is_null() {
             return RC_INVALID_INPUT;
-        };
-        let Ok(mut slot) = arc.outbound_callback.lock() else {
-            return RC_INVALID_INPUT;
-        };
-        *slot = Some(handle_impl::CallbackEntry { callback, context });
-        RC_OK
-    }
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    {
-        let _ = (handle, callback, context);
-        RC_TUNNEL_FEATURE_DISABLED
-    }
+        }
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
+        {
+            // SAFETY: caller upholds the handle invariant (non-null, live).
+            let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+                return RC_INVALID_INPUT;
+            };
+            let Ok(mut slot) = arc.outbound_callback.lock() else {
+                return RC_INVALID_INPUT;
+            };
+            *slot = Some(handle_impl::CallbackEntry { callback, context });
+            RC_OK
+        }
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+        {
+            let _ = (handle, callback, context);
+            RC_TUNNEL_FEATURE_DISABLED
+        }
+    })
 }
 
 /// Registers a callback invoked when the multi-hop circuit reports a
@@ -2929,26 +2954,28 @@ pub unsafe extern "C" fn warren_tunnel_set_ip_assign_callback(
     callback: WarrenTunnelIpAssignCallback,
     context: *mut c_void,
 ) -> c_int {
-    if handle.is_null() {
-        return RC_INVALID_INPUT;
-    }
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    {
-        // SAFETY: caller upholds the handle invariant (non-null, live).
-        let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+    crate::ffi_guard(RC_INTERNAL_ERROR, || {
+        if handle.is_null() {
             return RC_INVALID_INPUT;
-        };
-        let Ok(mut slot) = arc.ip_assign_callback.lock() else {
-            return RC_INVALID_INPUT;
-        };
-        *slot = Some(handle_impl::CallbackEntry { callback, context });
-        RC_OK
-    }
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    {
-        let _ = (handle, callback, context);
-        RC_TUNNEL_FEATURE_DISABLED
-    }
+        }
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
+        {
+            // SAFETY: caller upholds the handle invariant (non-null, live).
+            let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+                return RC_INVALID_INPUT;
+            };
+            let Ok(mut slot) = arc.ip_assign_callback.lock() else {
+                return RC_INVALID_INPUT;
+            };
+            *slot = Some(handle_impl::CallbackEntry { callback, context });
+            RC_OK
+        }
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+        {
+            let _ = (handle, callback, context);
+            RC_TUNNEL_FEATURE_DISABLED
+        }
+    })
 }
 
 /// Pushes an inbound IP packet onto the tunnel uplink queue. Called
@@ -2969,29 +2996,31 @@ pub unsafe extern "C" fn warren_tunnel_inject_inbound_packet(
     data: *const u8,
     len: usize,
 ) -> c_int {
-    if handle.is_null() || data.is_null() || len == 0 {
-        return RC_INVALID_INPUT;
-    }
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    {
-        // SAFETY: caller upholds the handle invariant (non-null, live)
-        // and the data buffer invariant (non-null, `len` bytes readable).
-        let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+    crate::ffi_guard(RC_INTERNAL_ERROR, || {
+        if handle.is_null() || data.is_null() || len == 0 {
             return RC_INVALID_INPUT;
-        };
-        // SAFETY: `data` is non-null and points to `len` readable bytes for
-        // this call (caller precondition); the bytes are copied at once.
-        let packet = unsafe { std::slice::from_raw_parts(data, len) }.to_vec();
-        arc.bytes_in
-            .fetch_add(len as u64, std::sync::atomic::Ordering::Relaxed);
-        arc.tun.inject_inbound(packet);
-        RC_OK
-    }
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    {
-        let _ = (handle, data, len);
-        RC_TUNNEL_FEATURE_DISABLED
-    }
+        }
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
+        {
+            // SAFETY: caller upholds the handle invariant (non-null, live)
+            // and the data buffer invariant (non-null, `len` bytes readable).
+            let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+                return RC_INVALID_INPUT;
+            };
+            // SAFETY: `data` is non-null and points to `len` readable bytes for
+            // this call (caller precondition); the bytes are copied at once.
+            let packet = unsafe { std::slice::from_raw_parts(data, len) }.to_vec();
+            arc.bytes_in
+                .fetch_add(len as u64, std::sync::atomic::Ordering::Relaxed);
+            arc.tun.inject_inbound(packet);
+            RC_OK
+        }
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+        {
+            let _ = (handle, data, len);
+            RC_TUNNEL_FEATURE_DISABLED
+        }
+    })
 }
 
 /// Verifies a freshly fetched multi-hop directory and returns its trusted
@@ -3014,30 +3043,35 @@ pub unsafe extern "C" fn warren_multihop_check_generation(
     directory_json: *const c_char,
     generation_state_path: *const c_char,
 ) -> i64 {
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    {
-        // SAFETY: caller upholds the null-termination + UTF-8 invariant.
-        let Some(json) = (unsafe { cstr_to_str(directory_json) }) else {
-            return -1;
-        };
-        // SAFETY: `generation_state_path` is null or a valid null-terminated
-        // C string for this call (caller precondition).
-        let min_generation = unsafe { cstr_to_str(generation_state_path) }
-            .map(std::path::PathBuf::from)
-            .as_deref()
-            .map(crate::warren_multihop_generation::read_high_water)
-            .unwrap_or(0);
-        match crate::warren_multihop_directory::verify_generation(json, now_secs(), min_generation)
+    crate::ffi_guard(-1, || {
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
         {
-            Ok(generation) => i64::try_from(generation).unwrap_or(i64::MAX),
-            Err(_) => -1,
+            // SAFETY: caller upholds the null-termination + UTF-8 invariant.
+            let Some(json) = (unsafe { cstr_to_str(directory_json) }) else {
+                return -1;
+            };
+            // SAFETY: `generation_state_path` is null or a valid null-terminated
+            // C string for this call (caller precondition).
+            let min_generation = unsafe { cstr_to_str(generation_state_path) }
+                .map(std::path::PathBuf::from)
+                .as_deref()
+                .map(crate::warren_multihop_generation::read_high_water)
+                .unwrap_or(0);
+            match crate::warren_multihop_directory::verify_generation(
+                json,
+                now_secs(),
+                min_generation,
+            ) {
+                Ok(generation) => i64::try_from(generation).unwrap_or(i64::MAX),
+                Err(_) => -1,
+            }
         }
-    }
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    {
-        let _ = (directory_json, generation_state_path);
-        -1
-    }
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+        {
+            let _ = (directory_json, generation_state_path);
+            -1
+        }
+    })
 }
 
 /// Take (and clear) the JSON details of the last exit-pubkey TOFU mismatch
@@ -3054,28 +3088,30 @@ pub unsafe extern "C" fn warren_multihop_check_generation(
 pub unsafe extern "C" fn warren_tunnel_take_pin_mismatch(
     handle: *mut WarrenTunnelHandle,
 ) -> *mut c_char {
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    {
-        if handle.is_null() {
-            return std::ptr::null_mut();
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
+        {
+            if handle.is_null() {
+                return std::ptr::null_mut();
+            }
+            // SAFETY: caller upholds the handle invariant (non-null, live).
+            let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
+                return std::ptr::null_mut();
+            };
+            match arc.take_pin_mismatch() {
+                Some(json) => match std::ffi::CString::new(json) {
+                    Ok(c) => c.into_raw(),
+                    Err(_) => std::ptr::null_mut(),
+                },
+                None => std::ptr::null_mut(),
+            }
         }
-        // SAFETY: caller upholds the handle invariant (non-null, live).
-        let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
-            return std::ptr::null_mut();
-        };
-        match arc.take_pin_mismatch() {
-            Some(json) => match std::ffi::CString::new(json) {
-                Ok(c) => c.into_raw(),
-                Err(_) => std::ptr::null_mut(),
-            },
-            None => std::ptr::null_mut(),
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+        {
+            let _ = handle;
+            std::ptr::null_mut()
         }
-    }
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    {
-        let _ = handle;
-        std::ptr::null_mut()
-    }
+    })
 }
 
 /// Trust a (possibly new) exit pubkey for `exit_id`, overwriting any
@@ -3093,36 +3129,38 @@ pub unsafe extern "C" fn warren_pin_trust(
     pubkey_hex: *const c_char,
     country_code: *const c_char,
 ) -> c_int {
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    {
-        // SAFETY: each pointer is null or a valid null-terminated C string
-        // (caller precondition); `cstr_to_str` returns None on null.
-        let (path, exit_id, pubkey, country) = unsafe {
-            (
-                cstr_to_str(pin_store_path),
-                cstr_to_str(exit_id_hex),
-                cstr_to_str(pubkey_hex),
-                cstr_to_str(country_code),
-            )
-        };
-        let (Some(path), Some(exit_id), Some(pubkey)) = (path, exit_id, pubkey) else {
-            return RC_INVALID_INPUT;
-        };
-        let country = country.unwrap_or("");
-        crate::warren_pin_store::trust(
-            std::path::Path::new(path),
-            exit_id,
-            pubkey,
-            country,
-            now_secs(),
-        );
-        RC_OK
-    }
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    {
-        let _ = (pin_store_path, exit_id_hex, pubkey_hex, country_code);
-        RC_INVALID_INPUT
-    }
+    crate::ffi_guard(RC_INTERNAL_ERROR, || {
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
+        {
+            // SAFETY: each pointer is null or a valid null-terminated C string
+            // (caller precondition); `cstr_to_str` returns None on null.
+            let (path, exit_id, pubkey, country) = unsafe {
+                (
+                    cstr_to_str(pin_store_path),
+                    cstr_to_str(exit_id_hex),
+                    cstr_to_str(pubkey_hex),
+                    cstr_to_str(country_code),
+                )
+            };
+            let (Some(path), Some(exit_id), Some(pubkey)) = (path, exit_id, pubkey) else {
+                return RC_INVALID_INPUT;
+            };
+            let country = country.unwrap_or("");
+            crate::warren_pin_store::trust(
+                std::path::Path::new(path),
+                exit_id,
+                pubkey,
+                country,
+                now_secs(),
+            );
+            RC_OK
+        }
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+        {
+            let _ = (pin_store_path, exit_id_hex, pubkey_hex, country_code);
+            RC_INVALID_INPUT
+        }
+    })
 }
 
 /// Clear all exit-pubkey pins in the App Group store at `pin_store_path`.
@@ -3133,20 +3171,22 @@ pub unsafe extern "C" fn warren_pin_trust(
 /// `pin_store_path` must be a valid null-terminated C string.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn warren_pin_reset(pin_store_path: *const c_char) -> i64 {
-    #[cfg(all(target_os = "ios", feature = "tunnel"))]
-    {
-        // SAFETY: caller upholds the null-termination + UTF-8 invariant.
-        let Some(path) = (unsafe { cstr_to_str(pin_store_path) }) else {
-            return -1;
-        };
-        i64::try_from(crate::warren_pin_store::reset(std::path::Path::new(path)))
-            .unwrap_or(i64::MAX)
-    }
-    #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
-    {
-        let _ = pin_store_path;
-        -1
-    }
+    crate::ffi_guard(-1, || {
+        #[cfg(all(target_os = "ios", feature = "tunnel"))]
+        {
+            // SAFETY: caller upholds the null-termination + UTF-8 invariant.
+            let Some(path) = (unsafe { cstr_to_str(pin_store_path) }) else {
+                return -1;
+            };
+            i64::try_from(crate::warren_pin_store::reset(std::path::Path::new(path)))
+                .unwrap_or(i64::MAX)
+        }
+        #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
+        {
+            let _ = pin_store_path;
+            -1
+        }
+    })
 }
 
 // ---- Internal helpers (private) ----
@@ -3228,6 +3268,103 @@ fn now_secs() -> u64 {
 
 #[cfg(test)]
 mod tests {
+    // ---- Panics: an entry point answers one with its failure value ----
+
+    unsafe extern "C" fn ignore_event(
+        _: *const super::WarrenTunnelEventC,
+        _: *mut std::ffi::c_void,
+    ) {
+    }
+    unsafe extern "C" fn ignore_packet(_: *const u8, _: usize, _: *mut std::ffi::c_void) {}
+    unsafe extern "C" fn ignore_assign(
+        _: *const super::WarrenTunnelIpAssignC,
+        _: *mut std::ffi::c_void,
+    ) {
+    }
+
+    /// A panic in a body called by the packet tunnel extension used to abort
+    /// the extension, and the tunnel with it.
+    #[test]
+    fn every_tunnel_entry_point_returns_its_failure_value_when_its_body_panics() {
+        use crate::panic_probe::panicking;
+        use std::ptr::{null, null_mut};
+
+        let handle = null_mut();
+        // SAFETY: under the probe each body panics before reading a pointer.
+        unsafe {
+            assert_eq!(
+                panicking(|| super::warren_tunnel_path_health()),
+                (super::PATH_HEALTH_HEALTHY, true)
+            );
+            assert_eq!(
+                panicking(|| super::warren_tunnel_daita_active()),
+                (false, true)
+            );
+            let (started, caught) = panicking(|| super::warren_tunnel_start(null(), -1));
+            assert!(started.is_null() && caught);
+            assert_eq!(panicking(|| super::warren_tunnel_stop(handle)), ((), true));
+            assert_eq!(
+                panicking(|| super::warren_tunnel_pause(handle)),
+                (super::RC_INTERNAL_ERROR, true)
+            );
+            assert_eq!(
+                panicking(|| super::warren_tunnel_resume(handle)),
+                (super::RC_INTERNAL_ERROR, true)
+            );
+            assert_eq!(
+                panicking(|| super::warren_tunnel_reconnect(handle)),
+                (super::RC_INTERNAL_ERROR, true)
+            );
+            assert_eq!(
+                panicking(|| super::warren_tunnel_notify_path_change()),
+                ((), true)
+            );
+            assert_eq!(
+                panicking(|| super::warren_tunnel_status(handle, null_mut())),
+                (super::RC_INTERNAL_ERROR, true)
+            );
+            assert_eq!(
+                panicking(|| super::warren_tunnel_set_event_callback(
+                    handle,
+                    ignore_event,
+                    null_mut()
+                )),
+                (super::RC_INTERNAL_ERROR, true)
+            );
+            assert_eq!(
+                panicking(|| super::warren_tunnel_set_outbound_callback(
+                    handle,
+                    ignore_packet,
+                    null_mut()
+                )),
+                (super::RC_INTERNAL_ERROR, true)
+            );
+            assert_eq!(
+                panicking(|| super::warren_tunnel_set_ip_assign_callback(
+                    handle,
+                    ignore_assign,
+                    null_mut()
+                )),
+                (super::RC_INTERNAL_ERROR, true)
+            );
+            assert_eq!(
+                panicking(|| super::warren_tunnel_inject_inbound_packet(handle, null(), 0)),
+                (super::RC_INTERNAL_ERROR, true)
+            );
+            assert_eq!(
+                panicking(|| super::warren_multihop_check_generation(null(), null())),
+                (-1, true)
+            );
+            let (mismatch, caught) = panicking(|| super::warren_tunnel_take_pin_mismatch(handle));
+            assert!(mismatch.is_null() && caught);
+            assert_eq!(
+                panicking(|| super::warren_pin_trust(null(), null(), null(), null())),
+                (super::RC_INTERNAL_ERROR, true)
+            );
+            assert_eq!(panicking(|| super::warren_pin_reset(null())), (-1, true));
+        }
+    }
+
     // ---- Wallet identity: the tunnel signs as the address the app shows ----
 
     #[test]

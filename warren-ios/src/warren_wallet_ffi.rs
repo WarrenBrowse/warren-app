@@ -29,6 +29,8 @@ const SIGNATURE_LEN: usize = 64;
 
 const RC_OK: c_int = 0;
 const RC_INVALID_INPUT: c_int = -1;
+/// The body panicked; no output buffer can be relied on.
+const RC_INTERNAL_ERROR: c_int = -2;
 
 /// Generates a new BIP39 mnemonic with `word_count` words (12 or 24).
 ///
@@ -42,20 +44,22 @@ const RC_INVALID_INPUT: c_int = -1;
 /// freeing is undefined behaviour.
 #[unsafe(no_mangle)]
 pub extern "C" fn warren_wallet_generate_mnemonic(word_count: u32) -> *mut c_char {
-    // BIP39 supports 12, 15, 18, 21, 24 words. Warren UI offers only 12
-    // (default) and 24 (advanced).
-    let count = match word_count {
-        12 | 15 | 18 | 21 | 24 => word_count as usize,
-        _ => return std::ptr::null_mut(),
-    };
-    let mnemonic = match Mnemonic::generate_in(Language::English, count) {
-        Ok(m) => m.to_string(),
-        Err(_) => return std::ptr::null_mut(),
-    };
-    match CString::new(mnemonic) {
-        Ok(s) => s.into_raw(),
-        Err(_) => std::ptr::null_mut(),
-    }
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        // BIP39 supports 12, 15, 18, 21, 24 words. Warren UI offers only 12
+        // (default) and 24 (advanced).
+        let count = match word_count {
+            12 | 15 | 18 | 21 | 24 => word_count as usize,
+            _ => return std::ptr::null_mut(),
+        };
+        let mnemonic = match Mnemonic::generate_in(Language::English, count) {
+            Ok(m) => m.to_string(),
+            Err(_) => return std::ptr::null_mut(),
+        };
+        match CString::new(mnemonic) {
+            Ok(s) => s.into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        }
+    })
 }
 
 /// Frees a mnemonic string previously returned by
@@ -66,12 +70,14 @@ pub extern "C" fn warren_wallet_generate_mnemonic(word_count: u32) -> *mut c_cha
 /// and must not have been freed already.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn warren_wallet_free_mnemonic(ptr: *mut c_char) {
-    if ptr.is_null() {
-        return;
-    }
-    // Reconstitute the CString to drop it (frees the heap allocation).
-    // SAFETY: `ptr` came from `CString::into_raw` and is not yet freed (fn precondition).
-    drop(unsafe { CString::from_raw(ptr) });
+    crate::ffi_guard((), || {
+        if ptr.is_null() {
+            return;
+        }
+        // Reconstitute the CString to drop it (frees the heap allocation).
+        // SAFETY: `ptr` came from `CString::into_raw` and is not yet freed (fn precondition).
+        drop(unsafe { CString::from_raw(ptr) });
+    })
 }
 
 /// Derives the Warren identity 32-byte seed from a BIP39 mnemonic.
@@ -90,25 +96,27 @@ pub unsafe extern "C" fn warren_wallet_seed_from_mnemonic(
     mnemonic: *const c_char,
     out_seed: *mut u8,
 ) -> c_int {
-    if mnemonic.is_null() || out_seed.is_null() {
-        return RC_INVALID_INPUT;
-    }
-    // SAFETY: `mnemonic` is a valid null-terminated C string (fn precondition).
-    let cstr = unsafe { CStr::from_ptr(mnemonic) };
-    let s = match cstr.to_str() {
-        Ok(s) => s,
-        Err(_) => return RC_INVALID_INPUT,
-    };
-    let seed = match seed_from_mnemonic(s) {
-        Ok(seed) => seed,
-        Err(_) => return RC_INVALID_INPUT,
-    };
-    // Safety: out_seed is at least SEED_LEN bytes (precondition).
-    unsafe {
-        std::ptr::copy_nonoverlapping(seed.as_ptr(), out_seed, SEED_LEN);
-    }
-    // seed Zeroizing drop wipes the internal buffer.
-    RC_OK
+    crate::ffi_guard(RC_INTERNAL_ERROR, || {
+        if mnemonic.is_null() || out_seed.is_null() {
+            return RC_INVALID_INPUT;
+        }
+        // SAFETY: `mnemonic` is a valid null-terminated C string (fn precondition).
+        let cstr = unsafe { CStr::from_ptr(mnemonic) };
+        let s = match cstr.to_str() {
+            Ok(s) => s,
+            Err(_) => return RC_INVALID_INPUT,
+        };
+        let seed = match seed_from_mnemonic(s) {
+            Ok(seed) => seed,
+            Err(_) => return RC_INVALID_INPUT,
+        };
+        // Safety: out_seed is at least SEED_LEN bytes (precondition).
+        unsafe {
+            std::ptr::copy_nonoverlapping(seed.as_ptr(), out_seed, SEED_LEN);
+        }
+        // seed Zeroizing drop wipes the internal buffer.
+        RC_OK
+    })
 }
 
 /// Derives the Ed25519 public key from a 32-byte seed.
@@ -127,24 +135,26 @@ pub unsafe extern "C" fn warren_wallet_derive_pubkey(
     seed: *const u8,
     out_pubkey: *mut u8,
 ) -> c_int {
-    if seed.is_null() || out_pubkey.is_null() {
-        return RC_INVALID_INPUT;
-    }
-    // Safety: seed is at least SEED_LEN bytes (precondition).
-    // `Zeroizing` ensures the stack copy is wiped on drop so the secret
-    // seed material does not linger in memory after this function returns.
-    let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
-    // SAFETY: `seed` points to at least SEED_LEN readable bytes (fn precondition).
-    unsafe {
-        std::ptr::copy_nonoverlapping(seed, seed_arr.as_mut_ptr(), SEED_LEN);
-    }
-    let signing_key = derive_node_key(&seed_arr);
-    let pubkey = signing_key.verifying_key().to_bytes();
-    // Safety: out_pubkey is at least PUBKEY_LEN bytes (precondition).
-    unsafe {
-        std::ptr::copy_nonoverlapping(pubkey.as_ptr(), out_pubkey, PUBKEY_LEN);
-    }
-    RC_OK
+    crate::ffi_guard(RC_INTERNAL_ERROR, || {
+        if seed.is_null() || out_pubkey.is_null() {
+            return RC_INVALID_INPUT;
+        }
+        // Safety: seed is at least SEED_LEN bytes (precondition).
+        // `Zeroizing` ensures the stack copy is wiped on drop so the secret
+        // seed material does not linger in memory after this function returns.
+        let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
+        // SAFETY: `seed` points to at least SEED_LEN readable bytes (fn precondition).
+        unsafe {
+            std::ptr::copy_nonoverlapping(seed, seed_arr.as_mut_ptr(), SEED_LEN);
+        }
+        let signing_key = derive_node_key(&seed_arr);
+        let pubkey = signing_key.verifying_key().to_bytes();
+        // Safety: out_pubkey is at least PUBKEY_LEN bytes (precondition).
+        unsafe {
+            std::ptr::copy_nonoverlapping(pubkey.as_ptr(), out_pubkey, PUBKEY_LEN);
+        }
+        RC_OK
+    })
 }
 
 /// Derives the **Warren SS58 address** (`wb…`, network prefix 13295)
@@ -171,22 +181,24 @@ pub unsafe extern "C" fn warren_wallet_derive_pubkey(
 /// exactly once.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn warren_wallet_pubkey_ss58(seed: *const u8) -> *mut c_char {
-    if seed.is_null() {
-        return std::ptr::null_mut();
-    }
-    // `Zeroizing` wipes the stack copy of the secret seed on drop.
-    let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
-    // SAFETY: `seed` points to at least SEED_LEN readable bytes (fn precondition).
-    unsafe {
-        std::ptr::copy_nonoverlapping(seed, seed_arr.as_mut_ptr(), SEED_LEN);
-    }
-    let signing_key = derive_node_key(&seed_arr);
-    let pubkey = signing_key.verifying_key().to_bytes();
-    let address = warren_identity::ss58::encode(&pubkey);
-    match CString::new(address) {
-        Ok(s) => s.into_raw(),
-        Err(_) => std::ptr::null_mut(),
-    }
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        if seed.is_null() {
+            return std::ptr::null_mut();
+        }
+        // `Zeroizing` wipes the stack copy of the secret seed on drop.
+        let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
+        // SAFETY: `seed` points to at least SEED_LEN readable bytes (fn precondition).
+        unsafe {
+            std::ptr::copy_nonoverlapping(seed, seed_arr.as_mut_ptr(), SEED_LEN);
+        }
+        let signing_key = derive_node_key(&seed_arr);
+        let pubkey = signing_key.verifying_key().to_bytes();
+        let address = warren_identity::ss58::encode(&pubkey);
+        match CString::new(address) {
+            Ok(s) => s.into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        }
+    })
 }
 
 /// Signs an arbitrary payload with the Ed25519 signing key derived
@@ -210,31 +222,33 @@ pub unsafe extern "C" fn warren_wallet_sign(
     payload_len: usize,
     out_signature: *mut u8,
 ) -> c_int {
-    if seed.is_null() || (payload.is_null() && payload_len != 0) || out_signature.is_null() {
-        return RC_INVALID_INPUT;
-    }
-    // Safety: seed is SEED_LEN bytes (precondition).
-    // `Zeroizing` ensures the stack copy is wiped on drop so the secret
-    // seed material does not linger in memory after this function returns.
-    let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
-    // SAFETY: `seed` points to at least SEED_LEN readable bytes (fn precondition).
-    unsafe {
-        std::ptr::copy_nonoverlapping(seed, seed_arr.as_mut_ptr(), SEED_LEN);
-    }
-    let signing_key: SigningKey = derive_node_key(&seed_arr);
-    let payload_slice: &[u8] = if payload_len == 0 {
-        &[]
-    } else {
-        // Safety: payload has at least payload_len bytes (precondition).
-        unsafe { std::slice::from_raw_parts(payload, payload_len) }
-    };
-    let signature = signing_key.sign(payload_slice);
-    let sig_bytes = signature.to_bytes();
-    // Safety: out_signature is at least SIGNATURE_LEN bytes (precondition).
-    unsafe {
-        std::ptr::copy_nonoverlapping(sig_bytes.as_ptr(), out_signature, SIGNATURE_LEN);
-    }
-    RC_OK
+    crate::ffi_guard(RC_INTERNAL_ERROR, || {
+        if seed.is_null() || (payload.is_null() && payload_len != 0) || out_signature.is_null() {
+            return RC_INVALID_INPUT;
+        }
+        // Safety: seed is SEED_LEN bytes (precondition).
+        // `Zeroizing` ensures the stack copy is wiped on drop so the secret
+        // seed material does not linger in memory after this function returns.
+        let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
+        // SAFETY: `seed` points to at least SEED_LEN readable bytes (fn precondition).
+        unsafe {
+            std::ptr::copy_nonoverlapping(seed, seed_arr.as_mut_ptr(), SEED_LEN);
+        }
+        let signing_key: SigningKey = derive_node_key(&seed_arr);
+        let payload_slice: &[u8] = if payload_len == 0 {
+            &[]
+        } else {
+            // Safety: payload has at least payload_len bytes (precondition).
+            unsafe { std::slice::from_raw_parts(payload, payload_len) }
+        };
+        let signature = signing_key.sign(payload_slice);
+        let sig_bytes = signature.to_bytes();
+        // Safety: out_signature is at least SIGNATURE_LEN bytes (precondition).
+        unsafe {
+            std::ptr::copy_nonoverlapping(sig_bytes.as_ptr(), out_signature, SIGNATURE_LEN);
+        }
+        RC_OK
+    })
 }
 
 #[cfg(test)]
@@ -264,6 +278,38 @@ mod tests {
             *b = i as u8;
         }
         s
+    }
+
+    // ---- Panics: an entry point answers one with its failure value ----
+
+    #[test]
+    fn every_wallet_entry_point_returns_its_failure_value_when_its_body_panics() {
+        use crate::panic_probe::panicking;
+        use std::ptr::{null, null_mut};
+
+        // SAFETY: under the probe each body panics before reading a pointer.
+        unsafe {
+            let (mnemonic, caught) = panicking(|| warren_wallet_generate_mnemonic(12));
+            assert!(mnemonic.is_null() && caught);
+            assert_eq!(
+                panicking(|| warren_wallet_free_mnemonic(null_mut())),
+                ((), true)
+            );
+            assert_eq!(
+                panicking(|| warren_wallet_seed_from_mnemonic(null(), null_mut())),
+                (RC_INTERNAL_ERROR, true)
+            );
+            assert_eq!(
+                panicking(|| warren_wallet_derive_pubkey(null(), null_mut())),
+                (RC_INTERNAL_ERROR, true)
+            );
+            let (address, caught) = panicking(|| warren_wallet_pubkey_ss58(null()));
+            assert!(address.is_null() && caught);
+            assert_eq!(
+                panicking(|| warren_wallet_sign(null(), null(), 0, null_mut())),
+                (RC_INTERNAL_ERROR, true)
+            );
+        }
     }
 
     // ---- Functional tests ----

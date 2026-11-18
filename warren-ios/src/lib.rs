@@ -169,14 +169,69 @@ unsafe fn get_string(ptr: *const c_char) -> String {
 }
 
 /// Runs an FFI body under `catch_unwind` so a panic fails closed by
-/// returning `sentinel` instead of unwinding across the C ABI, which is
-/// undefined behaviour. Used at Warren `extern "C"` entry points whose
-/// bodies do non-trivial work (network, serde) where a future regression
-/// could panic.
-#[cfg(target_os = "ios")]
+/// returning `sentinel` instead of unwinding across the C ABI: since Rust
+/// 1.81 an unwind out of an `extern "C"` fn aborts the process, which in the
+/// packet tunnel extension drops the tunnel. Every Warren `extern "C"` entry
+/// point runs its body through it.
+#[cfg(any(target_os = "ios", test))]
 pub(crate) fn ffi_guard<R>(sentinel: R, body: impl FnOnce() -> R) -> R {
-    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(body)) {
+    let guarded = std::panic::AssertUnwindSafe(|| {
+        #[cfg(test)]
+        panic_probe::fire_if_armed();
+        body()
+    });
+    match std::panic::catch_unwind(guarded) {
         Ok(value) => value,
-        Err(_) => sentinel,
+        Err(_) => {
+            #[cfg(test)]
+            panic_probe::record_caught();
+            sentinel
+        }
+    }
+}
+
+/// Lets a test make the body of a real entry point panic, and tell whether
+/// the guard caught it: an entry point that skips [`ffi_guard`] never panics
+/// under the probe and never records a catch, and one whose guard stopped
+/// catching aborts the test binary.
+#[cfg(test)]
+pub(crate) mod panic_probe {
+    use std::cell::Cell;
+
+    thread_local! {
+        static ARMED: Cell<bool> = const { Cell::new(false) };
+        static CAUGHT: Cell<bool> = const { Cell::new(false) };
+    }
+
+    pub(crate) fn fire_if_armed() {
+        if ARMED.with(Cell::get) {
+            panic!("panic injected into an FFI body");
+        }
+    }
+
+    pub(crate) fn record_caught() {
+        CAUGHT.with(|caught| caught.set(true));
+    }
+
+    /// Runs `call` with the next guarded body set to panic, and returns what
+    /// it returned with whether a guard caught the panic.
+    pub(crate) fn panicking<R>(call: impl FnOnce() -> R) -> (R, bool) {
+        CAUGHT.with(|caught| caught.set(false));
+        ARMED.with(|armed| armed.set(true));
+        let value = call();
+        ARMED.with(|armed| armed.set(false));
+        (value, CAUGHT.with(Cell::get))
+    }
+
+    #[test]
+    fn a_panic_in_a_guarded_body_returns_the_sentinel() {
+        let (value, caught) = panicking(|| super::ffi_guard(-2, || 0));
+        assert_eq!(value, -2);
+        assert!(caught);
+    }
+
+    #[test]
+    fn a_guarded_body_that_returns_passes_its_value_through() {
+        assert_eq!(super::ffi_guard(-2, || 7), 7);
     }
 }
