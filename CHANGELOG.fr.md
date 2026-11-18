@@ -13,33 +13,7 @@ version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
 ## [Unreleased]
-
-## [1.1.58] - 2026-11-18
 ### Ajouté
-- [Windows, macOS, Linux] Un écran Licences dans Réglages, Infos sur l'application : le texte de la
-  GPL livré avec l'application, la licence du moteur du tunnel, la mention de Mullvad VPN AB, et des
-  liens vers le code source de la version installée. Chaque paquet desktop contient désormais le
-  texte de la GPL.
-- [Android, iOS] Un écran Licences avec le texte de la GPL, la licence du moteur du tunnel, la
-  mention de Mullvad VPN AB et le code source de la version installée.
-- [Windows, macOS, Linux, Android, iOS] Demander trois mots d'une nouvelle phrase de récupération
-  avant d'utiliser le nouveau compte, pour qu'une phrase non notée soit repérée tant qu'elle est
-  encore lisible.
-- [Windows, macOS, Linux, Android, iOS] Afficher chaque serveur sous son nom sur l'écran d'accueil
-  et dans la liste des lieux. Un serveur sans nom garde l'étiquette tirée de sa clé.
-- [Windows, macOS, Linux, Android, iOS] Bloquer la connexion et indiquer que l'horloge de cet
-  appareil est décalée quand deux serveurs refusent son heure.
-- [Android] Afficher la puce de résistance quantique quand la connexion est protégée par l'échange
-  de clés post-quantique.
-- [Android] Conseiller d'activer le VPN permanent et « Bloquer les connexions sans VPN » quand l'un
-  des deux est désactivé, pour que le trafic reste bloqué pendant une mise à jour de Warren ou s'il
-  s'arrête.
-- [Windows, macOS, Linux] Un lien vers la politique de confidentialité dans la vue Assistance, comme
-  sur Android et iOS.
-- [Windows, macOS, Linux] Lister le split tunneling en mode inclusion seule et les sorties par
-  application parmi les fonctions actives dans `warren status`.
-- [Windows, macOS, Linux] Signaler une plage d'adresses publique parmi les réseaux locaux partagés
-  avec `warren lan`, et avertir que le trafic vers elle sort hors du tunnel.
 - [iOS] Un thème clair pour l'écran de connexion, et un réglage Thème : Système, Sombre ou Clair.
   Système suit l'apparence de l'appareil, et reste sombre quand l'appareil n'en indique aucune.
 - [iOS] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est fermé
@@ -52,21 +26,91 @@ par l'application, gardez-le tel quel.
   session.
 - [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
   automatiquement au lieu de s'arrêter au premier refus.
+
 ### Modifié
-- [Windows, macOS, Linux, Android, iOS] Refonte de l'écran d'accueil autour d'un paysage encadré
+- [iOS] Confirmer la suppression d'un compte avec les quatre derniers caractères de son adresse de
+  portefeuille, et appeler la ligne du compte adresse du portefeuille, comme l'application desktop.
+
+### Corrigé
+- [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
+  plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
+- [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
+  issue de la même phrase de récupération mais différente de l'adresse affichée, si bien que les
+  serveurs n'y voyaient pas l'abonnement.
+- [iOS] Afficher la révocation quand un bon ou un achat App Store est refusé pour un compte révoqué.
+  Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une fois la
+  révocation terminée.
+- [iOS] Indiquer que le compte utilise déjà son nombre maximal d'appareils simultanés quand ses
+  autres appareils occupent toutes les connexions auxquelles il a droit, au lieu d'une simple
+  déconnexion.
+- [iOS] Déconnecter le VPN et retirer sa configuration à la déconnexion du compte ou à l'effacement
+  du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
+  portefeuille qui a quitté l'appareil.
+- [iOS] Garder le port forwarding, les jetons de session et l'écran du compte en état de marche sur
+  un appareil dont l'horloge a plus d'une minute d'écart : chaque requête signée prend désormais
+  l'horloge des serveurs dès le premier refus rencontré.
+- [iOS] Indiquer que l'horloge de cet appareil est décalée, de combien de secondes et dans quel
+  sens, quand les serveurs refusent le port forwarding pour cette raison, au lieu d'annoncer que les
+  droits de port sont épuisés.
+- [iOS] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce qui, sur un réseau en
+  IPv6 seulement, veut dire un serveur qui répond en IPv6.
+- [iOS] Garder la même identité de session d'un démarrage du VPN au suivant, pour que le tunnel
+  retrouve son adresse et le port choisi après un redémarrage.
+- [iOS] Afficher la protection post-quantique que la connexion utilise réellement au lieu du
+  réglage.
+- [iOS] Démarrer le VPN quand le système le lance à la demande, réessayer de charger la liste des
+  serveurs au démarrage en se rabattant sur la dernière copie vérifiée, et terminer la session quand
+  le VPN s'arrête.
+- [iOS] Signaler une erreur au lieu de se fermer quand le moteur du tunnel ou le portefeuille
+  échoue, et afficher la phrase de récupération avec Face ID.
+
+### Sécurité
+- [iOS] Refuser les claviers tiers et masquer la phrase de récupération pendant un enregistrement ou
+  une recopie de l'écran.
+- [iOS] Garder App Transport Security activé, et ne partager avec l'extension VPN que la graine du
+  portefeuille.
+
+## [1.1.58] - 2026-11-18
+### Ajouté
+- [Windows, macOS, Linux] Un écran Licences dans Réglages, Infos sur l'application : le texte de la
+  GPL livré avec l'application, la licence du moteur du tunnel, la mention de Mullvad VPN AB, et des
+  liens vers le code source de la version installée. Chaque paquet desktop contient désormais le
+  texte de la GPL.
+- [Android] Un écran Licences avec le texte de la GPL, la licence du moteur du tunnel, la
+  mention de Mullvad VPN AB et le code source de la version installée.
+- [Windows, macOS, Linux, Android] Demander trois mots d'une nouvelle phrase de récupération
+  avant d'utiliser le nouveau compte, pour qu'une phrase non notée soit repérée tant qu'elle est
+  encore lisible.
+- [Windows, macOS, Linux, Android] Afficher chaque serveur sous son nom sur l'écran d'accueil
+  et dans la liste des lieux. Un serveur sans nom garde l'étiquette tirée de sa clé.
+- [Windows, macOS, Linux, Android] Bloquer la connexion et indiquer que l'horloge de cet
+  appareil est décalée quand deux serveurs refusent son heure.
+- [Android] Afficher la puce de résistance quantique quand la connexion est protégée par l'échange
+  de clés post-quantique.
+- [Android] Conseiller d'activer le VPN permanent et « Bloquer les connexions sans VPN » quand l'un
+  des deux est désactivé, pour que le trafic reste bloqué pendant une mise à jour de Warren ou s'il
+  s'arrête.
+- [Windows, macOS, Linux] Un lien vers la politique de confidentialité dans la vue Assistance, comme
+  sur Android et iOS.
+- [Windows, macOS, Linux] Lister le split tunneling en mode inclusion seule et les sorties par
+  application parmi les fonctions actives dans `warren status`.
+- [Windows, macOS, Linux] Signaler une plage d'adresses publique parmi les réseaux locaux partagés
+  avec `warren lan`, et avertir que le trafic vers elle sort hors du tunnel.
+### Modifié
+- [Windows, macOS, Linux, Android] Refonte de l'écran d'accueil autour d'un paysage encadré
   sous une barre d'outils flottante, avec l'état de la connexion, les commandes, les puces de
   fonctions et le pied de page du compte, en thème sombre et clair. La ligne du lieu affiche le
   drapeau rond du pays et ouvre les détails de connexion sur place, les bannières de mise à jour et
   d'annonce sont plus compactes, et la limite de débit de la bêta passe dans le pied de page.
-- [Windows, macOS, Linux, Android, iOS] Composer le texte de l'application dans la police Instrument
-  Sans. Sur iOS, il suit la taille de texte de Dynamic Type.
-- [Windows, macOS, Linux, iOS] Ne se connecter qu'à des serveurs qui proposent l'échange de clés
+- [Windows, macOS, Linux, Android] Composer le texte de l'application dans la police Instrument
+  Sans.
+- [Windows, macOS, Linux] Ne se connecter qu'à des serveurs qui proposent l'échange de clés
   post-quantique tant que le réglage Tunnel résistant aux attaques quantiques est activé, ce qui est
   le cas par défaut. Désactivé, l'échange reste utilisé partout où un serveur le propose. Changer le
   réglage relance la connexion.
-- [Windows, macOS, Linux, Android, iOS] Ouvrir le site, les pages d'aide et le paiement de la bêta
+- [Windows, macOS, Linux, Android] Ouvrir le site, les pages d'aide et le paiement de la bêta
   depuis l'application bêta, au lieu de ceux de la version de production.
-- [Windows, macOS, Linux, Android, iOS] Nommer warrenBrowse SRL comme éditeur.
+- [Windows, macOS, Linux, Android] Nommer warrenBrowse SRL comme éditeur.
 - Présenter l'abonnement dans l'accueil comme du temps prépayé, avec un renouvellement mensuel
   facultatif que l'on peut désactiver sans frais. Le texte annonçait l'absence de facturation
   récurrente.
@@ -88,8 +132,6 @@ par l'application, gardez-le tel quel.
   connecter directement depuis elle.
 - [Linux] Sur NixOS, démarrer le service avant que le réseau soit en ligne et bloquer le trafic au
   début du démarrage par défaut, comme les autres paquets Linux.
-- [iOS] Confirmer la suppression d'un compte avec les quatre derniers caractères de son adresse de
-  portefeuille, et appeler la ligne du compte adresse du portefeuille, comme l'application desktop.
 ### Retiré
 - [Windows, macOS, Linux] Les réglages qui ne changeaient rien au tunnel Warren : MTU, remplacement
   d'IP de serveur avec son import, et Animer la carte dans l'application, ainsi que la commande
@@ -174,45 +216,14 @@ par l'application, gardez-le tel quel.
 - [Android] Marquer les titres d'écran et de section comme des titres pour TalkBack, et laisser les
   commandes de l'accueil grandir avec la taille de police.
 - [Android] Saisir dans la recherche de lieux sans que toute la liste se redessine à chaque touche.
-- [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
-  plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
-- [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
-  issue de la même phrase de récupération mais différente de l'adresse affichée, si bien que les
-  serveurs n'y voyaient pas l'abonnement.
-- [iOS] Afficher la révocation quand un bon ou un achat App Store est refusé pour un compte révoqué.
-  Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une fois la
-  révocation terminée.
-- [iOS] Indiquer que le compte utilise déjà son nombre maximal d'appareils simultanés quand ses
-  autres appareils occupent toutes les connexions auxquelles il a droit, au lieu d'une simple
-  déconnexion.
-- [iOS] Déconnecter le VPN et retirer sa configuration à la déconnexion du compte ou à l'effacement
-  du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
-  portefeuille qui a quitté l'appareil.
-- [iOS] Garder le port forwarding, les jetons de session et l'écran du compte en état de marche sur
-  un appareil dont l'horloge a plus d'une minute d'écart : chaque requête signée prend désormais
-  l'horloge des serveurs dès le premier refus rencontré.
-- [iOS] Indiquer que l'horloge de cet appareil est décalée, de combien de secondes et dans quel
-  sens, quand les serveurs refusent le port forwarding pour cette raison, au lieu d'annoncer que les
-  droits de port sont épuisés.
-- [iOS] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce qui, sur un réseau en
-  IPv6 seulement, veut dire un serveur qui répond en IPv6.
-- [iOS] Garder la même identité de session d'un démarrage du VPN au suivant, pour que le tunnel
-  retrouve son adresse et le port choisi après un redémarrage.
-- [iOS] Afficher la protection post-quantique que la connexion utilise réellement au lieu du
-  réglage.
-- [iOS] Démarrer le VPN quand le système le lance à la demande, réessayer de charger la liste des
-  serveurs au démarrage en se rabattant sur la dernière copie vérifiée, et terminer la session quand
-  le VPN s'arrête.
-- [iOS] Signaler une erreur au lieu de se fermer quand le moteur du tunnel ou le portefeuille
-  échoue, et afficher la phrase de récupération avec Face ID.
 ### Sécurité
 - [Windows, macOS, Linux] Passer à Electron 45.3.3 et à ses correctifs de sécurité.
-- [Windows, macOS, Linux, Android, iOS] N'effacer la phrase de récupération de cet appareil, lors
+- [Windows, macOS, Linux, Android] N'effacer la phrase de récupération de cet appareil, lors
   d'une déconnexion depuis un autre appareil, que si le compte l'a signée. Sinon la phrase reste sur
   l'appareil et l'application le dit.
-- [Windows, macOS, Linux, Android, iOS] Lier chaque mise en place de connexion au moment où elle est
+- [Windows, macOS, Linux, Android] Lier chaque mise en place de connexion au moment où elle est
   faite, pour qu'elle ne puisse pas resservir plus tard.
-- [Windows, macOS, Linux, iOS] N'utiliser la clé post-quantique d'un serveur que si la signature du
+- [Windows, macOS, Linux] N'utiliser la clé post-quantique d'un serveur que si la signature du
   serveur la couvre.
 - [Windows, macOS, Linux] Exclure la fenêtre des captures d'écran pendant l'affichage de la phrase
   de récupération, et effacer une phrase copiée du presse-papiers même après la fermeture de son
@@ -223,8 +234,6 @@ par l'application, gardez-le tel quel.
 - [Android] Masquer les mots de récupération tant qu'ils ne sont pas révélés, saisir la phrase sur
   un clavier qui ne l'apprend pas, et effacer une phrase copiée quand l'application revient après
   l'écoulement de sa minute.
-- [iOS] Refuser les claviers tiers et masquer la phrase de récupération pendant un enregistrement ou
-  une recopie de l'écran.
 - [Windows, macOS, Linux] Garder internet bloqué quand le service plante ou que ses règles de
   pare-feu sont retirées : seule une réinitialisation explicite lève le blocage. Sur macOS, les
   règles sont réappliquées quand le système les perd.
@@ -261,12 +270,10 @@ par l'application, gardez-le tel quel.
   enregistrés lisibles par l'utilisateur seul.
 - [Windows, macOS, Linux] Retirer les adresses de portefeuille et les valeurs de la taille d'une clé
   des rapports de problème, y compris celui que collecte un lien de rattachement au forum.
-- [Windows, macOS, Linux, iOS] Garder l'adresse que reçoit le tunnel hors des journaux.
+- [Windows, macOS, Linux] Garder l'adresse que reçoit le tunnel hors des journaux.
 - [Android] Ne journaliser les erreurs du moteur que par leur type, et garder hors du journal les
   liens et les applications ou sites qu'ils nomment.
 - [Android] Ne plus laisser un ordinateur connecté en débogage USB profiler l'application publiée.
-- [iOS] Garder App Transport Security activé, et ne partager avec l'extension VPN que la graine du
-  portefeuille.
 
 ## [1.1.57] - 2026-11-09
 ### Modifié

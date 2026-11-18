@@ -22,29 +22,7 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
-
-## [1.1.58] - 2026-11-18
 ### Added
-- [Windows, macOS, Linux] Add a Licenses screen under Settings, App info: the GPL text the app ships
-  with, the license of the tunnel engine, the credit to Mullvad VPN AB, and links to the source code
-  of the installed version. Every desktop package now carries the GPL text.
-- [Android, iOS] Add a Licenses screen with the GPL text, the license of the tunnel engine, the
-  credit to Mullvad VPN AB, and the source code of the installed version.
-- [Windows, macOS, Linux, Android, iOS] Ask for three words of a new recovery phrase before the new
-  account is used, so a phrase that was not written down is caught while it can still be read.
-- [Windows, macOS, Linux, Android, iOS] Show each server by its name on the home screen and in the
-  location list. A server without a name keeps the label made from its key.
-- [Windows, macOS, Linux, Android, iOS] Block the connection and say that the clock of this device
-  is off when two servers refuse its time.
-- [Android] Show the quantum-resistance chip while the connection is protected by the post-quantum
-  key exchange.
-- [Android] Advise turning on Always-on VPN and "Block connections without VPN" when either is off,
-  so traffic stays blocked while Warren is updated or if it stops.
-- [Windows, macOS, Linux] Link the privacy policy from the Support view, as on Android and iOS.
-- [Windows, macOS, Linux] List include-only split tunneling and per-app exits among the active
-  features in `warren status`.
-- [Windows, macOS, Linux] Mark a public address range among the local networks shared with `warren
-  lan`, and warn that traffic to it leaves outside the tunnel.
 - [iOS] Add a light theme for the connect screen, and a Theme setting: System, Dark or Light. System
   follows the appearance of the device, and stays dark when the device states none.
 - [iOS] Show the warnings recorded against your account when a forwarded port is closed after an
@@ -55,20 +33,80 @@ Line wrap the file at 100 chars.                                              Th
   disconnection, and stop the connection when the revocation is learned during a session.
 - [iOS] Say when the server refuses a forwarded port for want of an entitlement, and ask again
   automatically instead of stopping on the first refusal.
+
 ### Changed
-- [Windows, macOS, Linux, Android, iOS] Redesign the home screen around a framed landscape under a
+- [iOS] Confirm the deletion of an account with the last four characters of its wallet address, and
+  call the account row the wallet address, as the desktop app does.
+
+### Fixed
+- [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
+  the servers that require one grant the port instead of refusing it.
+- [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
+  recovery phrase but different from the displayed address, so the servers did not see the
+  subscription on it.
+- [iOS] Show the revocation when a voucher or an App Store purchase is refused for a revoked
+  account. No purchase starts, and a purchase already paid stays pending, to be credited once the
+  revocation ends.
+- [iOS] Say that the account already uses its maximum number of simultaneous devices when its other
+  devices hold every connection it is entitled to, instead of showing a plain disconnection.
+- [iOS] Disconnect and remove the VPN configuration when logging out or erasing the wallet, so the
+  tunnel can neither stay up nor come back on demand for a wallet that left the device.
+- [iOS] Keep port forwarding, session tokens and the account screen working on a device whose clock
+  is more than a minute off: every signed request now takes the servers' clock from the first
+  refusal any request meets.
+- [iOS] Say that the clock of this device is off, by how many seconds and in which direction, when
+  the servers refuse port forwarding for it, instead of saying that the port entitlements are used
+  up.
+- [iOS] Choose an entry server the network in use can reach, which on an IPv6-only network means one
+  that answers on IPv6.
+- [iOS] Keep the same session identity from one start of the VPN to the next, so the tunnel gets its
+  address and its chosen forwarded port back after a restart.
+- [iOS] Show the post-quantum protection the connection actually uses instead of the setting.
+- [iOS] Start the VPN when the system starts it on demand, retry the server list at start and fall
+  back to the last verified copy, and end the session when the VPN stops.
+- [iOS] Report an error instead of closing when the tunnel engine or the wallet fails, and reveal
+  the recovery phrase with Face ID.
+
+### Security
+- [iOS] Refuse third-party keyboards and hide the recovery phrase while the screen is recorded or
+  mirrored.
+- [iOS] Keep App Transport Security on, and share only the wallet seed with the VPN extension.
+
+## [1.1.58] - 2026-11-18
+### Added
+- [Windows, macOS, Linux] Add a Licenses screen under Settings, App info: the GPL text the app ships
+  with, the license of the tunnel engine, the credit to Mullvad VPN AB, and links to the source code
+  of the installed version. Every desktop package now carries the GPL text.
+- [Android] Add a Licenses screen with the GPL text, the license of the tunnel engine, the
+  credit to Mullvad VPN AB, and the source code of the installed version.
+- [Windows, macOS, Linux, Android] Ask for three words of a new recovery phrase before the new
+  account is used, so a phrase that was not written down is caught while it can still be read.
+- [Windows, macOS, Linux, Android] Show each server by its name on the home screen and in the
+  location list. A server without a name keeps the label made from its key.
+- [Windows, macOS, Linux, Android] Block the connection and say that the clock of this device
+  is off when two servers refuse its time.
+- [Android] Show the quantum-resistance chip while the connection is protected by the post-quantum
+  key exchange.
+- [Android] Advise turning on Always-on VPN and "Block connections without VPN" when either is off,
+  so traffic stays blocked while Warren is updated or if it stops.
+- [Windows, macOS, Linux] Link the privacy policy from the Support view, as on Android and iOS.
+- [Windows, macOS, Linux] List include-only split tunneling and per-app exits among the active
+  features in `warren status`.
+- [Windows, macOS, Linux] Mark a public address range among the local networks shared with `warren
+  lan`, and warn that traffic to it leaves outside the tunnel.
+### Changed
+- [Windows, macOS, Linux, Android] Redesign the home screen around a framed landscape under a
   floating toolbar, with the connection status, the controls, the feature chips and the account
   footer, in the dark and light themes. The location row shows the country's round flag and opens
   the connection details in place, the update and announcement banners are more compact, and the
   beta speed cap moves to the footer.
-- [Windows, macOS, Linux, Android, iOS] Set the app's text in the Instrument Sans typeface. On iOS
-  it follows the Dynamic Type text size.
-- [Windows, macOS, Linux, iOS] Connect only through servers that offer the post-quantum key exchange
+- [Windows, macOS, Linux, Android] Set the app's text in the Instrument Sans typeface.
+- [Windows, macOS, Linux] Connect only through servers that offer the post-quantum key exchange
   while the Quantum-resistant setting is on, which is the default. With it off, the exchange is
   still used wherever a server offers it. Changing the setting reconnects.
-- [Windows, macOS, Linux, Android, iOS] Open the website, the help pages and the checkout of the
+- [Windows, macOS, Linux, Android] Open the website, the help pages and the checkout of the
   beta from the beta app, instead of those of the production release.
-- [Windows, macOS, Linux, Android, iOS] Name warrenBrowse SRL as the publisher.
+- [Windows, macOS, Linux, Android] Name warrenBrowse SRL as the publisher.
 - Describe the subscription in the onboarding as prepaid time with an optional monthly renewal that
   can be turned off at no cost. It said there was no recurring billing.
 - In French, give the recovery phrase one name in every app, keep the term kill switch in English,
@@ -87,8 +125,6 @@ Line wrap the file at 100 chars.                                              Th
 - [Android] Show blocking and connecting on the quick settings tile, and connect from it directly.
 - [Linux] On NixOS, start the service before the network is online and block traffic during early
   boot by default, as the other Linux packages do.
-- [iOS] Confirm the deletion of an account with the last four characters of its wallet address, and
-  call the account row the wallet address, as the desktop app does.
 ### Removed
 - [Windows, macOS, Linux] Remove the settings that changed nothing in the Warren tunnel: MTU, server
   IP override with its import, and Animate map in the app, and the `anti-censorship` command and the
@@ -158,41 +194,14 @@ Line wrap the file at 100 chars.                                              Th
 - [Android] Mark screen and section titles as headings for TalkBack, and let the home controls grow
   with the font size.
 - [Android] Type in the location search without the whole list redrawing at each key.
-- [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
-  the servers that require one grant the port instead of refusing it.
-- [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
-  recovery phrase but different from the displayed address, so the servers did not see the
-  subscription on it.
-- [iOS] Show the revocation when a voucher or an App Store purchase is refused for a revoked
-  account. No purchase starts, and a purchase already paid stays pending, to be credited once the
-  revocation ends.
-- [iOS] Say that the account already uses its maximum number of simultaneous devices when its other
-  devices hold every connection it is entitled to, instead of showing a plain disconnection.
-- [iOS] Disconnect and remove the VPN configuration when logging out or erasing the wallet, so the
-  tunnel can neither stay up nor come back on demand for a wallet that left the device.
-- [iOS] Keep port forwarding, session tokens and the account screen working on a device whose clock
-  is more than a minute off: every signed request now takes the servers' clock from the first
-  refusal any request meets.
-- [iOS] Say that the clock of this device is off, by how many seconds and in which direction, when
-  the servers refuse port forwarding for it, instead of saying that the port entitlements are used
-  up.
-- [iOS] Choose an entry server the network in use can reach, which on an IPv6-only network means one
-  that answers on IPv6.
-- [iOS] Keep the same session identity from one start of the VPN to the next, so the tunnel gets its
-  address and its chosen forwarded port back after a restart.
-- [iOS] Show the post-quantum protection the connection actually uses instead of the setting.
-- [iOS] Start the VPN when the system starts it on demand, retry the server list at start and fall
-  back to the last verified copy, and end the session when the VPN stops.
-- [iOS] Report an error instead of closing when the tunnel engine or the wallet fails, and reveal
-  the recovery phrase with Face ID.
 ### Security
 - [Windows, macOS, Linux] Move to Electron 45.3.3 and its security fixes.
-- [Windows, macOS, Linux, Android, iOS] Erase this device's recovery phrase on a disconnection from
+- [Windows, macOS, Linux, Android] Erase this device's recovery phrase on a disconnection from
   another device only when the account signed it. Otherwise the phrase stays on the device and the
   app says so.
-- [Windows, macOS, Linux, Android, iOS] Bind each connection setup to the time it is made, so it
+- [Windows, macOS, Linux, Android] Bind each connection setup to the time it is made, so it
   cannot be used again later.
-- [Windows, macOS, Linux, iOS] Use a server's post-quantum key only when the server's signature
+- [Windows, macOS, Linux] Use a server's post-quantum key only when the server's signature
   covers it.
 - [Windows, macOS, Linux] Keep the window out of screen captures while the recovery phrase is shown,
   and wipe a copied phrase from the clipboard even after its screen closes.
@@ -200,8 +209,6 @@ Line wrap the file at 100 chars.                                              Th
   never as an argument, and print a phrase only to a terminal unless asked.
 - [Android] Hide the recovery words until they are revealed, type the phrase on a keyboard that does
   not learn it, and wipe a copied phrase when the app comes back after its minute ran out.
-- [iOS] Refuse third-party keyboards and hide the recovery phrase while the screen is recorded or
-  mirrored.
 - [Windows, macOS, Linux] Keep the internet blocked when the service crashes or its firewall rules
   are dropped: the block is lifted only by an explicit reset. On macOS the rules are applied again
   when the system loses them.
@@ -233,11 +240,10 @@ Line wrap the file at 100 chars.                                              Th
   desktop entry, and the GUI settings written readable by the user alone.
 - [Windows, macOS, Linux] Remove wallet addresses and key-sized values from problem reports,
   including the one a forum attach link collects.
-- [Windows, macOS, Linux, iOS] Keep the address the tunnel receives out of the logs.
+- [Windows, macOS, Linux] Keep the address the tunnel receives out of the logs.
 - [Android] Log engine errors by their kind only, and keep links and the apps or sites they name out
   of the log.
 - [Android] Stop letting a computer connected over USB debugging profile the released app.
-- [iOS] Keep App Transport Security on, and share only the wallet seed with the VPN extension.
 
 ## [1.1.57] - 2026-11-09
 ### Changed

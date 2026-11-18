@@ -2,14 +2,14 @@
 - [Windows, macOS, Linux] Un ecran Licențe în Setări, Informații despre aplicație: textul GPL livrat
   cu aplicația, licența motorului tunelului, mențiunea Mullvad VPN AB și linkuri către codul sursă
   al versiunii instalate. Fiecare pachet desktop conține acum textul GPL.
-- [Android, iOS] Un ecran Licențe cu textul GPL, licența motorului tunelului, mențiunea Mullvad VPN
+- [Android] Un ecran Licențe cu textul GPL, licența motorului tunelului, mențiunea Mullvad VPN
   AB și codul sursă al versiunii instalate.
-- [Windows, macOS, Linux, Android, iOS] Aplicația cere trei cuvinte dintr-o frază de recuperare nouă
+- [Windows, macOS, Linux, Android] Aplicația cere trei cuvinte dintr-o frază de recuperare nouă
   înainte de a folosi contul nou, ca o frază nenotată să fie observată cât timp încă poate fi
   citită.
-- [Windows, macOS, Linux, Android, iOS] Fiecare server apare cu numele lui pe ecranul principal și
+- [Windows, macOS, Linux, Android] Fiecare server apare cu numele lui pe ecranul principal și
   în lista de locații. Un server fără nume păstrează eticheta derivată din cheia lui.
-- [Windows, macOS, Linux, Android, iOS] Aplicația blochează conexiunea și spune că ceasul acestui
+- [Windows, macOS, Linux, Android] Aplicația blochează conexiunea și spune că ceasul acestui
   dispozitiv nu e corect când două servere îi refuză ora.
 - [Android] Cipul de rezistență cuantică apare cât timp conexiunea e protejată de schimbul de chei
   post-cuantic.
@@ -22,32 +22,20 @@
   ieșirile pe aplicații printre funcțiile active.
 - [Windows, macOS, Linux] `warren lan` marchează o plajă de adrese publică printre rețelele locale
   partajate și avertizează că traficul către ea iese în afara tunelului.
-- [iOS] O temă luminoasă pentru ecranul de conectare și o setare Temă: Sistem, Întunecată sau
-  Luminoasă. Sistem urmează aspectul dispozitivului și rămâne întunecată când dispozitivul nu indică
-  niciunul.
-- [iOS] Vezi avertismentele înregistrate pe contul tău când un port redirecționat e închis după o
-  raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului care
-  deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la care
-  să scrii. Avertismentele apar imediat ce actualizarea de server corespunzătoare e activă.
-- [iOS] Vezi revocarea contului, cu ziua în care se încheie când există una, în loc de o simplă
-  deconectare, iar conexiunea se oprește când revocarea e aflată în timpul unei sesiuni.
-- [iOS] Află când serverul refuză un port redirecționat din lipsă de drept de port, iar aplicația
-  cere din nou automat în loc să se oprească la primul refuz.
 ### Modificat
-- [Windows, macOS, Linux, Android, iOS] Ecranul principal e reproiectat în jurul unui peisaj
+- [Windows, macOS, Linux, Android] Ecranul principal e reproiectat în jurul unui peisaj
   încadrat sub o bară de instrumente plutitoare, cu starea conexiunii, comenzile, cipurile de
   funcții și subsolul contului, în tema întunecată și în cea luminoasă. Rândul locației arată
   steagul rotund al țării și deschide detaliile conexiunii pe loc, bannerele de actualizare și de
   anunț sunt mai compacte, iar limita de viteză a versiunii beta trece în subsol.
-- [Windows, macOS, Linux, Android, iOS] Textul aplicației folosește fontul Instrument Sans. Pe iOS
-  urmează dimensiunea textului din Dynamic Type.
-- [Windows, macOS, Linux, iOS] Cât timp setarea Tunel rezistent la atacuri cuantice e activă, ceea
+- [Windows, macOS, Linux, Android] Textul aplicației folosește fontul Instrument Sans.
+- [Windows, macOS, Linux] Cât timp setarea Tunel rezistent la atacuri cuantice e activă, ceea
   ce e implicit, conexiunea trece doar prin servere care oferă schimbul de chei post-cuantic. Cu
   setarea oprită, schimbul e folosit în continuare oriunde un server îl oferă. Schimbarea setării
   reconectează.
-- [Windows, macOS, Linux, Android, iOS] Aplicația beta deschide site-ul, paginile de ajutor și
+- [Windows, macOS, Linux, Android] Aplicația beta deschide site-ul, paginile de ajutor și
   pagina de plată ale versiunii beta, în locul celor ale versiunii de producție.
-- [Windows, macOS, Linux, Android, iOS] warrenBrowse SRL apare ca editor.
+- [Windows, macOS, Linux, Android] warrenBrowse SRL apare ca editor.
 - Abonamentul este descris la prima pornire ca timp plătit în avans, cu o reînnoire lunară opțională
   care poate fi oprită fără costuri. Textul spunea că nu există facturare recurentă.
 - În franceză, fraza de recuperare are un singur nume în toate aplicațiile, termenul kill switch
@@ -68,8 +56,6 @@
   direct din el.
 - [Linux] Pe NixOS, serviciul pornește înainte ca rețeaua să fie online, iar traficul e blocat
   implicit la începutul pornirii, ca la celelalte pachete Linux.
-- [iOS] Ștergerea unui cont se confirmă cu ultimele patru caractere ale adresei portofelului, iar
-  rândul contului se numește adresa portofelului, ca în aplicația desktop.
 ### Eliminat
 - [Windows, macOS, Linux] Setările care nu schimbau nimic în tunelul Warren: MTU, înlocuirea IP-ului
   serverului cu importul ei și Animarea hărții în aplicație, precum și comanda `anti-censorship` și
@@ -148,43 +134,14 @@
 - [Android] Titlurile de ecran și de secțiune sunt marcate ca titluri pentru TalkBack, iar comenzile
   ecranului principal cresc odată cu dimensiunea fontului.
 - [Android] Căutarea de locații nu mai redesenează toată lista la fiecare tastă.
-- [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
-  platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
-- [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași
-  frază de recuperare, dar diferită de adresa afișată, așa că serverele nu vedeau abonamentul pe ea.
-- [iOS] Vezi revocarea când un voucher sau o achiziție App Store e refuzată pentru un cont revocat.
-  Nicio achiziție nu pornește, iar o achiziție deja plătită rămâne în așteptare, ca să fie creditată
-  după încheierea revocării.
-- [iOS] Aplicația spune că acest cont folosește deja numărul maxim de dispozitive simultane când
-  celelalte dispozitive ale lui ocupă toate conexiunile la care are dreptul, în loc de o simplă
-  deconectare.
-- [iOS] Deconectează VPN-ul și elimină configurația lui la ieșirea din cont sau la ștergerea
-  portofelului, ca tunelul să nu poată nici rămâne deschis, nici reporni la cerere pentru un
-  portofel care a părăsit dispozitivul.
-- [iOS] Port forwarding-ul, tokenurile de sesiune și ecranul contului funcționează și pe un
-  dispozitiv al cărui ceas are o abatere de peste un minut: fiecare cerere semnată ia acum ceasul
-  serverelor de la primul refuz întâlnit.
-- [iOS] Aplicația spune că ceasul acestui dispozitiv nu e corect, cu câte secunde și în ce sens,
-  când serverele refuză port forwarding-ul din acest motiv, în loc să spună că drepturile de port
-  s-au epuizat.
-- [iOS] Aplicația alege un server de intrare pe care rețeaua folosită îl poate atinge, adică pe o
-  rețea doar IPv6 un server care răspunde pe IPv6.
-- [iOS] Păstrarea aceleiași identități de sesiune de la o pornire a VPN-ului la următoarea, astfel
-  încât tunelul își regăsește adresa și portul ales după o repornire.
-- [iOS] Aplicația arată protecția post-cuantică pe care conexiunea o folosește efectiv, în locul
-  setării.
-- [iOS] VPN-ul pornește când sistemul îl pornește la cerere, lista de servere e cerută din nou la
-  pornire cu revenire la ultima copie verificată, iar sesiunea se încheie când VPN-ul se oprește.
-- [iOS] Aplicația semnalează o eroare în loc să se închidă când motorul tunelului sau portofelul
-  eșuează, iar fraza de recuperare poate fi afișată cu Face ID.
 ### Securitate
 - [Windows, macOS, Linux] Trecerea la Electron 45.3.3 și la corecțiile lui de securitate.
-- [Windows, macOS, Linux, Android, iOS] Fraza de recuperare a acestui dispozitiv e ștearsă la o
+- [Windows, macOS, Linux, Android] Fraza de recuperare a acestui dispozitiv e ștearsă la o
   deconectare făcută de pe alt dispozitiv doar dacă contul a semnat-o. Altfel fraza rămâne pe
   dispozitiv, iar aplicația spune asta.
-- [Windows, macOS, Linux, Android, iOS] Fiecare inițiere de conexiune e legată de momentul în care e
+- [Windows, macOS, Linux, Android] Fiecare inițiere de conexiune e legată de momentul în care e
   făcută, ca să nu poată fi folosită din nou mai târziu.
-- [Windows, macOS, Linux, iOS] Cheia post-cuantică a unui server e folosită doar dacă semnătura
+- [Windows, macOS, Linux] Cheia post-cuantică a unui server e folosită doar dacă semnătura
   serverului o acoperă.
 - [Windows, macOS, Linux] Fereastra nu apare în capturile de ecran cât timp fraza de recuperare e
   afișată, iar o frază copiată e ștearsă din clipboard chiar și după închiderea ecranului ei.
@@ -194,8 +151,6 @@
 - [Android] Cuvintele de recuperare rămân ascunse până sunt dezvăluite, fraza se tastează pe o
   tastatură care nu o învață, iar o frază copiată e ștearsă când aplicația revine după ce minutul ei
   a expirat.
-- [iOS] Tastaturile terțe sunt refuzate, iar fraza de recuperare e ascunsă cât timp ecranul e
-  înregistrat sau oglindit.
 - [Windows, macOS, Linux] Internetul rămâne blocat când serviciul se blochează sau regulile lui de
   firewall sunt eliminate: blocarea se ridică doar printr-o resetare explicită. Pe macOS regulile
   sunt aplicate din nou când sistemul le pierde.
@@ -231,9 +186,7 @@
   utilizatorul le poate citi.
 - [Windows, macOS, Linux] Adresele de portofel și valorile de mărimea unei chei sunt eliminate din
   rapoartele de problemă, inclusiv din cel colectat de un link de atașare la forum.
-- [Windows, macOS, Linux, iOS] Adresa primită de tunel nu mai apare în jurnale.
+- [Windows, macOS, Linux] Adresa primită de tunel nu mai apare în jurnale.
 - [Android] Erorile motorului sunt jurnalizate doar după tipul lor, iar linkurile și aplicațiile sau
   site-urile pe care le numesc nu apar în jurnal.
 - [Android] Un computer conectat prin depanare USB nu mai poate profila aplicația publicată.
-- [iOS] App Transport Security rămâne activ, iar cu extensia VPN se partajează doar sămânța
-  portofelului.
