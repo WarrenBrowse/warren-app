@@ -111,7 +111,7 @@ export function noticeForForumLoginResult(result: ForumLoginResult): string | un
     case 'subscription-required':
       return messages.pgettext(
         'forum-login',
-        'Forum access requires a Warren subscription. This wallet has never subscribed.',
+        'Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead.',
       );
     case 'clock-skew':
       return messages.pgettext(

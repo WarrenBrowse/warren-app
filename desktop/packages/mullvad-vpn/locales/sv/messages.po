@@ -4831,3 +4831,19 @@ msgstr "Servern säger att den här enheten kopplades från ditt konto, men ditt
 msgctxt "support-view"
 msgid "Privacy policy"
 msgstr "Sekretesspolicy"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "Blockerar internet: din åtkomst har återkallats på grund av ett brott mot användarvillkoren. Om du tror att det är ett misstag kan du skriva till oss från hjälpsidan på %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "Blockerar internet: din åtkomst har återkallats fram till %(date)s på grund av ett brott mot användarvillkoren. Om du tror att det är ett misstag kan du skriva till oss från hjälpsidan på %(url)s"
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: write to us from the help page at %(url)s"
+msgstr "En ånger med en annan återbetalningsadress är redan registrerad: skriv till oss från hjälpsidan på %(url)s"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "Åtkomst till forumet kräver en Warren-prenumeration. Den här plånboken har aldrig prenumererat: använd hjälpformuläret på webbplatsen i stället."

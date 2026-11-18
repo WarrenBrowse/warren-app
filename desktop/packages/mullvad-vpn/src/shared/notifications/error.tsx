@@ -247,18 +247,24 @@ export class ErrorNotificationProvider
               const until = this.banLapseDay();
               if (until !== undefined) {
                 return sprintf(
-                  // TRANSLATORS: Available placeholder:
+                  // TRANSLATORS: Available placeholders:
                   // TRANSLATORS: %(date)s - the day the revocation ends, e.g. 24 September 2027
+                  // TRANSLATORS: %(url)s - the public help page, open to every wallet
                   messages.pgettext(
                     'auth-failure',
-                    'Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake.',
+                    'Blocking internet: your access has been revoked until %(date)s for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s',
                   ),
-                  { date: until },
+                  { date: until, url: urls.help },
                 );
               }
-              return messages.pgettext(
-                'auth-failure',
-                'Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake.',
+              return sprintf(
+                // TRANSLATORS: Available placeholder:
+                // TRANSLATORS: %(url)s - the public help page, open to every wallet
+                messages.pgettext(
+                  'auth-failure',
+                  'Blocking internet: your access has been revoked for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s',
+                ),
+                { url: urls.help },
               );
             }
 

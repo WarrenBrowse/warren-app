@@ -4831,3 +4831,19 @@ msgstr "Il server indica che questo dispositivo è stato disconnesso dal tuo acc
 msgctxt "support-view"
 msgid "Privacy policy"
 msgstr "Informativa sulla privacy"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "Blocco di Internet: il tuo accesso è stato revocato per una violazione delle condizioni d'uso. Se ritieni che si tratti di un errore, scrivici dalla pagina di aiuto all'indirizzo %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "Blocco di Internet: il tuo accesso è stato revocato fino al %(date)s per una violazione delle condizioni d'uso. Se ritieni che si tratti di un errore, scrivici dalla pagina di aiuto all'indirizzo %(url)s"
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: write to us from the help page at %(url)s"
+msgstr "Un recesso con un altro indirizzo di rimborso è già registrato: scrivici dalla pagina di aiuto all'indirizzo %(url)s"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "L'accesso al forum richiede un abbonamento Warren. Questo portafoglio non si è mai abbonato: usa invece il modulo di aiuto del sito web."

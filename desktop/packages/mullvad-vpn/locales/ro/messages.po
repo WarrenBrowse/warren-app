@@ -4859,3 +4859,19 @@ msgstr "Serverul spune că acest dispozitiv a fost deconectat de la contul tău,
 msgctxt "support-view"
 msgid "Privacy policy"
 msgstr "Politica de confidențialitate"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "Blocarea accesului la internet: accesul dvs. a fost revocat pentru încălcarea regulilor de utilizare. Dacă considerați că este o greșeală, scrieți-ne de pe pagina de ajutor de la %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "Blocarea accesului la internet: accesul dvs. a fost revocat până la %(date)s pentru încălcarea regulilor de utilizare. Dacă considerați că este o greșeală, scrieți-ne de pe pagina de ajutor de la %(url)s"
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: write to us from the help page at %(url)s"
+msgstr "O retragere cu altă adresă de rambursare este deja înregistrată: scrie-ne de pe pagina de ajutor de la %(url)s"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "Accesul la forum necesită un abonament Warren. Acest portofel nu a avut niciodată unul: folosește în schimb formularul de ajutor de pe site."

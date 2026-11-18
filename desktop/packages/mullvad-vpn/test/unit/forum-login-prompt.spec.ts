@@ -96,6 +96,14 @@ describe('the inline notice of a non-approved outcome', () => {
     );
   });
 
+  // The forum stays closed to that wallet, so the notice names the door that
+  // is open to it, in the words the report form already uses.
+  it('sends a wallet that never subscribed to the help form', () => {
+    expect(noticeForForumLoginResult('subscription-required')).toBe(
+      'Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead.',
+    );
+  });
+
   it('has its own words for every refusal and one generic line for the rest', () => {
     expect(noticeForForumLoginResult('subscription-required')).toMatch(/subscription/);
     expect(noticeForForumLoginResult('clock-skew')).toMatch(/clock/);

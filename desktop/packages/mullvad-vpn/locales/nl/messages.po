@@ -4831,3 +4831,19 @@ msgstr "De server meldt dat dit apparaat is losgekoppeld van je account, maar je
 msgctxt "support-view"
 msgid "Privacy policy"
 msgstr "Privacybeleid"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "Internet geblokkeerd: je toegang is ingetrokken wegens schending van het gebruiksbeleid. Als je denkt dat dit een vergissing is, schrijf ons dan via de hulppagina op %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "Internet geblokkeerd: je toegang is tot %(date)s ingetrokken wegens schending van het gebruiksbeleid. Als je denkt dat dit een vergissing is, schrijf ons dan via de hulppagina op %(url)s"
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: write to us from the help page at %(url)s"
+msgstr "Er is al een herroeping met een ander terugbetalingsadres geregistreerd: schrijf ons via de hulppagina op %(url)s"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "Toegang tot het forum vereist een Warren-abonnement. Deze wallet heeft er nooit een gehad: gebruik het hulpformulier op de website."

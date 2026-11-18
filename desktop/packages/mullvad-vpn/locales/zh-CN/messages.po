@@ -4818,3 +4818,19 @@ msgstr "服务器称此设备已与您的账户断开连接，但您的账户并
 msgctxt "support-view"
 msgid "Privacy policy"
 msgstr "隐私政策"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "正在阻止网络：因违反使用政策，您的访问权限已被撤销。如果您认为这是误判，请通过帮助页面 %(url)s 联系我们。"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "正在阻止网络：因违反使用政策，您的访问权限已被撤销，直至 %(date)s。如果您认为这是误判，请通过帮助页面 %(url)s 联系我们。"
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: write to us from the help page at %(url)s"
+msgstr "已有使用其他退款地址的撤回记录：请通过帮助页面 %(url)s 联系我们。"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "访问论坛需要 Warren 订阅。此钱包从未订阅过，请改用网站上的帮助表单。"

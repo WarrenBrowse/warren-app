@@ -4818,3 +4818,19 @@ msgstr "サーバーはこのデバイスがアカウントから接続解除さ
 msgctxt "support-view"
 msgid "Privacy policy"
 msgstr "プライバシーポリシー"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "インターネットをブロック中: 利用ポリシー違反により、アクセスが取り消されました。誤りだと思われる場合は、ヘルプページ (%(url)s) からご連絡ください。"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "インターネットをブロック中: 利用ポリシー違反により、%(date)s までアクセスが取り消されました。誤りだと思われる場合は、ヘルプページ (%(url)s) からご連絡ください。"
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: write to us from the help page at %(url)s"
+msgstr "別の返金先アドレスで撤回がすでに記録されています。ヘルプページ (%(url)s) からご連絡ください。"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "フォーラムへのアクセスには Warren のサブスクリプションが必要です。このウォレットは一度も登録していません。代わりにウェブサイトのヘルプフォームをご利用ください。"

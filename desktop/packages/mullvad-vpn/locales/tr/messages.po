@@ -4831,3 +4831,19 @@ msgstr "Sunucu bu cihazın hesabınızla bağlantısının kesildiğini söylüy
 msgctxt "support-view"
 msgid "Privacy policy"
 msgstr "Gizlilik politikası"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "İnternet bağlantısı engelleniyor: kullanım kurallarını ihlal ettiğiniz için erişiminiz iptal edildi. Bunun bir hata olduğunu düşünüyorsanız %(url)s adresindeki yardım sayfasından bize yazın"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "İnternet bağlantısı engelleniyor: kullanım kurallarını ihlal ettiğiniz için erişiminiz %(date)s tarihine kadar iptal edildi. Bunun bir hata olduğunu düşünüyorsanız %(url)s adresindeki yardım sayfasından bize yazın"
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: write to us from the help page at %(url)s"
+msgstr "Başka bir iade adresiyle bir cayma zaten kayıtlı: %(url)s adresindeki yardım sayfasından bize yaz"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "Foruma erişim için Warren aboneliği gerekir. Bu cüzdan hiç abone olmadı: bunun yerine web sitesindeki yardım formunu kullanın."

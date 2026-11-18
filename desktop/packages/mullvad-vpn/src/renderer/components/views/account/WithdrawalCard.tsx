@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
+import { urls } from '../../../../shared/constants';
 import { messages } from '../../../../shared/gettext';
 import {
   WithdrawablePurchase,
@@ -20,17 +21,22 @@ const Card = styled.div`
   padding: 16px;
 `;
 
-function failureText(reason: WithdrawalFailure): string {
+export function withdrawalFailureText(reason: WithdrawalFailure): string {
   switch (reason) {
     case 'not-proven':
       // TRANSLATORS: Shown when the server refuses a withdrawal because the
       // TRANSLATORS: purchase was not redeemed by this account.
       return messages.pgettext('account-view', 'This purchase was not credited to this account.');
     case 'already-filed':
-      return messages.pgettext(
-        'account-view',
-        // TRANSLATORS: A withdrawal for this purchase already exists with another refund address.
-        'A withdrawal with another refund address is already recorded: contact support.',
+      return sprintf(
+        messages.pgettext(
+          'account-view',
+          // TRANSLATORS: A withdrawal for this purchase already exists with another refund address.
+          // TRANSLATORS: Available placeholder:
+          // TRANSLATORS: %(url)s - the public help page, open to every wallet
+          'A withdrawal with another refund address is already recorded: write to us from the help page at %(url)s',
+        ),
+        { url: urls.help },
       );
     case 'invalid':
       // TRANSLATORS: The refund address typed for a crypto payment is not valid.
@@ -162,7 +168,7 @@ function WithdrawablePurchaseRow(props: {
           </Flex>
           {failure !== undefined && (
             <Text variant="labelTiny" color="whiteAlpha60">
-              {failureText(failure)}
+              {withdrawalFailureText(failure)}
             </Text>
           )}
         </FlexColumn>

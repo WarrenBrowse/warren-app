@@ -4818,3 +4818,19 @@ msgstr "ဤစက်ကို သင့်အကောင့်မှ ချိ�
 msgctxt "support-view"
 msgid "Privacy policy"
 msgstr "ကိုယ်ပိုင်အချက်အလက် မူဝါဒ"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "အင်တာနက် ပိတ်ဆို့နေပါသည်: အသုံးပြုမှု မူဝါဒကို ချိုးဖောက်သောကြောင့် သင့်ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားပါသည်။ မှားယွင်းနေသည်ဟု ယူဆပါက %(url)s ရှိ အကူအညီစာမျက်နှာမှ ကျွန်ုပ်တို့ထံ စာရေးပါ။"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
+msgstr "အင်တာနက် ပိတ်ဆို့နေပါသည်: အသုံးပြုမှု မူဝါဒကို ချိုးဖောက်သောကြောင့် သင့်ဝင်ရောက်ခွင့်ကို %(date)s အထိ ရုပ်သိမ်းထားပါသည်။ မှားယွင်းနေသည်ဟု ယူဆပါက %(url)s ရှိ အကူအညီစာမျက်နှာမှ ကျွန်ုပ်တို့ထံ စာရေးပါ။"
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: write to us from the help page at %(url)s"
+msgstr "အခြား ငွေပြန်အမ်းလိပ်စာဖြင့် ပယ်ဖျက်မှု မှတ်တမ်းရှိပြီးဖြစ်သည်: %(url)s ရှိ အကူအညီစာမျက်နှာမှ ကျွန်ုပ်တို့ထံ စာရေးပါ။"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "ဖိုရမ်သို့ ဝင်ရောက်ရန် Warren စာရင်းသွင်းမှု လိုအပ်သည်။ ဤပိုက်ဆံအိတ်သည် ဘယ်တော့မှ စာရင်းမသွင်းခဲ့ပါ။ ဝက်ဘ်ဆိုက်ရှိ အကူအညီဖောင်ကို အစားသုံးပါ။"

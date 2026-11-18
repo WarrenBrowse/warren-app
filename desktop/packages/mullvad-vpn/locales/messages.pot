@@ -458,7 +458,7 @@ msgid "Select location. Current location is %(location)s"
 msgstr ""
 
 msgctxt "account-view"
-msgid "A withdrawal with another refund address is already recorded: contact support."
+msgid "A withdrawal with another refund address is already recorded: write to us from the help page at %(url)s"
 msgstr ""
 
 #. Title label in navigation bar
@@ -1054,8 +1054,10 @@ msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
 msgstr ""
 
+#. Available placeholder:
+#. %(url)s - the public help page, open to every wallet
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
+msgid "Blocking internet: your access has been revoked for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
 msgstr ""
 
 #. Available placeholders:
@@ -1065,10 +1067,11 @@ msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
 msgstr ""
 
-#. Available placeholder:
+#. Available placeholders:
 #. %(date)s - the day the revocation ends, e.g. 24 September 2027
+#. %(url)s - the public help page, open to every wallet
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. If you believe this is a mistake, write to us from the help page at %(url)s"
 msgstr ""
 
 msgctxt "auth-failure"
@@ -1797,7 +1800,7 @@ msgid "Finishing the sign-in in your browser"
 msgstr ""
 
 msgctxt "forum-login"
-msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr ""
 
 msgctxt "forum-login"
