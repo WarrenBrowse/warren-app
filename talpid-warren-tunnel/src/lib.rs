@@ -1812,6 +1812,7 @@ impl WarrenTunnelMonitor {
                          not a silent fallback."
                     );
                 }
+                // no-log: the line names no address, see tun_address_line
                 log::info!("{}", tun_address_line(&spec));
                 if let Some((assigning_exit, assigned)) = *placement_rx.borrow() {
                     session_placement::SESSION_PLACEMENT.remember(assigning_exit, assigned);

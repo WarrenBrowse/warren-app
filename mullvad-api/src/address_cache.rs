@@ -268,6 +268,7 @@ impl<T: AddressCacheBacking> AddressCache<T> {
 
     fn new_inner(address: SocketAddr, hostname: String, backing: Arc<T>) -> Self {
         let cache = AddressCacheInner::from_address(address);
+        // no-log: the API server's public address, not the user's
         log::debug!("Using API address: {}", cache.address);
 
         Self {

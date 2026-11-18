@@ -66,6 +66,7 @@ async fn main() {
     let server =
         mullvad_masque_proxy::server::Server::bind(args.bind_addr, tls_config.into(), params)
             .expect("Failed to initialize server");
+    // no-log: an example tool's own socket
     log::info!("Listening on {}", args.bind_addr);
     server.run().await.expect("Server failed.")
 }

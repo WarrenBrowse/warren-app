@@ -447,6 +447,7 @@ impl LocalResolver {
             // This drop guard will clean up the loopback IP addr alias when the task exits.
             let _cleanup_ifconfig = cleanup_ifconfig;
 
+            // no-log: the local resolver's loopback address, the same on every machine
             log::info!("Running DNS resolver on {resolver_addr}");
 
             loop {
@@ -467,6 +468,7 @@ impl LocalResolver {
                 let socket = match net::UdpSocket::bind(resolver_addr).await {
                     Ok(socket) => socket,
                     Err(e) => {
+                        // no-log: the local resolver's loopback address, the same on every machine
                         log::error!("Failed to bind DNS server to {resolver_addr}: {e}");
                         break;
                     }
@@ -538,10 +540,12 @@ impl LocalResolver {
             talpid_macos::net::add_alias(LOOPBACK, IpAddr::from(addr))
                 .await
                 .inspect_err(|e| {
+                    // no-log: the local resolver's loopback address, the same on every machine
                     log::warn!("Failed to add loopback {LOOPBACK} alias {addr}: {e}");
                 })
                 .ok()?;
 
+            // no-log: the local resolver's loopback address, the same on every machine
             log::debug!("Created loopback address {addr}");
 
             let detect_removed_alias_task =
@@ -552,10 +556,12 @@ impl LocalResolver {
                 tokio::task::spawn(async move {
                     detect_removed_alias_task.abort();
 
+                    // no-log: the local resolver's loopback address, the same on every machine
                     log::debug!("Cleaning up loopback address {addr}");
                     if let Err(e) =
                         talpid_macos::net::remove_alias(LOOPBACK, IpAddr::from(addr)).await
                     {
+                        // no-log: the local resolver's loopback address, the same on every machine
                         log::warn!("Failed to clean up {LOOPBACK} alias {addr}: {e}");
                     }
                 });
@@ -603,7 +609,7 @@ impl LocalResolver {
                         net::UdpSocket::from_std(sock.into()).expect("socket is non-blocking");
                     return Ok((socket, on_drop));
                 }
-                Err(err) => log::warn!("Failed to bind DNS server to {socket_addr}: {err}"),
+                Err(err) => log::warn!("Failed to bind DNS server to {socket_addr}: {err}"), // no-log: the local resolver's loopback address, the same on every machine
             }
         }
 
@@ -799,11 +805,13 @@ async fn detect_loopback_address_removal(addr: IpAddr) -> Result<(), talpid_rout
         // Sleep for a bit so we do not spin if something weird is going on
         tokio::time::sleep(Duration::from_secs(1)).await;
 
+        // no-log: the local resolver's loopback address, the same on every machine
         log::debug!("Detected possible removal of loopback address {addr}. Adding it back");
 
         talpid_macos::net::add_alias(LOOPBACK, addr)
             .await
             .inspect_err(|e| {
+                // no-log: the local resolver's loopback address, the same on every machine
                 log::warn!("Failed to add loopback {LOOPBACK} alias {addr}: {e}");
             })
             .ok();

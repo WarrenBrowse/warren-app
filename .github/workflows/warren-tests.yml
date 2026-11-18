@@ -97,6 +97,14 @@ jobs:
           bash ci/test-check-comment-markers.sh
           bash ci/check-comment-markers.sh '*.rs' '*.toml' '*.proto'
 
+      # A public key, an address, a nonce or a seed never reaches a log in
+      # clear. The gate reads the Rust log calls; a deliberate exception says
+      # why in a no-log: comment.
+      - name: Identity material in log calls
+        run: |
+          bash ci/test-check-no-log-identity.sh
+          bash ci/check-no-log-identity.sh
+
       # Sub-second, and it guards the release notes every surface shows: the
       # GitHub release body, the in-app what's-new (changes.txt) and the signed
       # manifests all read CHANGELOG.md, and the test pins the bash reader

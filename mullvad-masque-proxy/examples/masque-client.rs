@@ -84,6 +84,7 @@ async fn main() {
         .expect("Failed to bind address");
     let local_addr = local_socket.local_addr().unwrap();
 
+    // no-log: an example tool's own socket
     log::info!("Listening on {local_addr}");
 
     let endpoint_socket = UdpSocket::bind((Ipv4Addr::UNSPECIFIED, 0)).await.unwrap();

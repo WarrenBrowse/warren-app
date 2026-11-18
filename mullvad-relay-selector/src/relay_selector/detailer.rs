@@ -154,6 +154,7 @@ pub fn bridge_endpoint(data: &BridgeEndpointData, relay: &Bridge) -> Option<Shad
     data.shadowsocks
         .choose(&mut rand::rng())
         .inspect(|shadowsocks_endpoint| {
+            // no-log: a relay's published address, from the public relay list
             log::info!(
                 "Selected Shadowsocks bridge {} at {}:{}/{}",
                 relay.hostname,

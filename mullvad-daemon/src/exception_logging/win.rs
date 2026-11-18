@@ -195,6 +195,7 @@ unsafe extern "system" fn logging_exception_filter(info_ptr: *const EXCEPTION_PO
 
     match find_address_module(record.ExceptionAddress) {
         Ok(Some(mod_info)) => log::error!(
+            // no-log: a code address inside the daemon image, not a network address
             "Unhandled exception at RVA {:#x?} in {}: {}\n{}",
             record.ExceptionAddress as usize - mod_info.base_address as usize,
             mod_info.name,

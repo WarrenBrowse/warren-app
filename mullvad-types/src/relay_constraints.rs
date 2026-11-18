@@ -803,6 +803,7 @@ impl RelayOverride {
 
     pub fn apply_to_relay(&self, relay: &mut WireguardRelay) {
         if let Some(ipv4_addr_in) = self.ipv4_addr_in {
+            // no-log: a relay's published address, from the public relay list
             log::debug!(
                 "Overriding ipv4_addr_in for {}: {ipv4_addr_in}",
                 relay.hostname
@@ -810,6 +811,7 @@ impl RelayOverride {
             relay.override_ipv4(ipv4_addr_in);
         }
         if let Some(ipv6_addr_in) = self.ipv6_addr_in {
+            // no-log: a relay's published address, from the public relay list
             log::debug!(
                 "Overriding ipv6_addr_in for {}: {ipv6_addr_in}",
                 relay.hostname

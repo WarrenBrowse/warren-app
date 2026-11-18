@@ -1355,6 +1355,7 @@ impl ParametersGenerator {
                     {
                         Ok(v) => v,
                         Err(e) => {
+                            // no-log: an exit's published key, from the public exit list
                             log::debug!(
                                 "exit-down report suppressed: failed to wrap pubkey \
                                      {hex_pubkey} into PubkeyHex ({e})"

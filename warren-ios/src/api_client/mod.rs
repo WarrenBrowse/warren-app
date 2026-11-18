@@ -151,6 +151,7 @@ pub unsafe extern "C" fn mullvad_api_update_address_cache(swift_api_context: Swi
         match api_proxy.get_api_addrs().await {
             Ok(new_addrs) => {
                 if let Some(addr) = new_addrs.first() {
+                    // no-log: the API server's public address, not the user's
                     log::debug!("Fetched new API address {:?}", addr,);
                     if let Err(err) = api_context.address_cache().set_address(*addr).await {
                         log::error!("Failed to save newly updated API address: {}", err);

@@ -144,6 +144,7 @@ impl ApiEndpoint {
             (None, None) => {}
             (Some(host), None) => {
                 use std::net::ToSocketAddrs;
+                // no-log: the names of environment variables
                 log::debug!(
                     "{api_addr} not found. Resolving API IP address from {api_host}={host}",
                     api_addr = env::API_ADDR_VAR,
@@ -174,6 +175,7 @@ impl ApiEndpoint {
 
         if api.host.is_none() && api.address.is_none() {
             if disable_tls_var.is_some() {
+                // no-log: the names of environment variables
                 log::warn!(
                     "{disable_tls} is ignored since {api_host} and {api_addr} are not set",
                     disable_tls = env::DISABLE_TLS_VAR,
@@ -187,6 +189,7 @@ impl ApiEndpoint {
                 .map(|disable_tls| disable_tls != "0")
                 .unwrap_or(api.disable_tls);
 
+            // no-log: a developer API override, the API server's public address, not the user's
             log::debug!(
                 "Overriding API. Using {host} at {scheme}{addr} (force direct={direct})",
                 host = api.host(),
@@ -406,6 +409,7 @@ async fn seed_pinned_or_dns_fallback<T: address_cache::AddressCacheBacking>(
                 a.port()
             };
             let dns_addr = SocketAddr::new(a.ip(), port);
+            // no-log: the API server's public address, not the user's
             log::warn!(
                 "pinned API IP {seeded} unreachable at startup; falling back to DNS-resolved {dns_addr}"
             );

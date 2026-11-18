@@ -430,6 +430,7 @@ impl DnsSettings {
         store: &SCDynamicStore,
         path: S,
     ) -> Result<()> {
+        // no-log: the DNS servers being applied, at trace level
         log::trace!("Setting DNS to [{}] for {}", self.format_addresses(), path);
         if store.set(path, self.dict.clone()) {
             Ok(())

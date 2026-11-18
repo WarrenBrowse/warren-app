@@ -1387,6 +1387,7 @@ impl ManagementService for ManagementServiceImpl {
     ) -> ServiceResult<types::TrustNewExitKeyResponse> {
         let call = Self::call_of(&request);
         let body = request.into_inner();
+        // no-log: an exit's published key, from the public exit list
         log::debug!(
             "trust_new_exit_key(exit_id={}, new_pubkey={})",
             body.exit_id_hex,
@@ -1911,6 +1912,7 @@ impl ManagementService for ManagementServiceImpl {
     ) -> ServiceResult<()> {
         let call = Self::call_of(&request);
         let allowed_ips_str = request.into_inner().values;
+        // no-log: the allowed-IPs setting the user just set, not traffic
         log::debug!("set_wireguard_allowed_ips({:?})", allowed_ips_str);
 
         let (tx, rx) = oneshot::channel();

@@ -77,13 +77,14 @@ pub fn sweep_stale_exit_routes(exits: &[Ipv4Addr]) {
             .args(["-n", "delete", "-host", &address.to_string()])
             .output()
         {
-            // The address is deliberately logged: it is a Warren exit's public
-            // address, taken from the exit list the client publishes, not user
-            // identity material.
             Ok(result) if result.status.success() => {
+                // no-log: the address is deliberately logged: it is a Warren exit's
+                // public address, taken from the exit list the client publishes, not
+                // user identity material.
                 log::info!("Removed a stale Warren host route to exit {address}");
             }
             Ok(_) | Err(_) => {
+                // no-log: same exit address as above
                 log::debug!("Could not remove the stale host route to exit {address}");
             }
         }

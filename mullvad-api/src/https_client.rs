@@ -417,6 +417,7 @@ impl Service<Uri> for HttpsConnector {
                             Ok(stream) => return Ok(stream),
                             Err(err) => {
                                 if addrs.len() > 1 {
+                                    // no-log: the API server's public address, not the user's
                                     log::debug!("API connect to {addr} failed: {err}");
                                 }
                                 last_err = Some(err);
