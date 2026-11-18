@@ -9,6 +9,7 @@ license.workspace = true
 [dependencies]
 chrono = { workspace = true }
 futures = { workspace = true }
+http-body-util = "0.1.5"
 hyper-util = { workspace = true }
 ipnetwork = { workspace = true }
 log = { workspace = true }
@@ -27,6 +28,7 @@ vec1 = { workspace = true }
 warren-standing = { path = "../warren-standing" }
 
 [dev-dependencies]
+bytes = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt"] }
 
 [build-dependencies]

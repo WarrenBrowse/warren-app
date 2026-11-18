@@ -2907,8 +2907,10 @@ dependencies = [
 name = "mullvad-management-interface"
 version = "0.0.0"
 dependencies = [
+ "bytes",
  "chrono",
  "futures",
+ "http-body-util",
  "hyper-util",
  "ipnetwork",
  "log",

@@ -44,6 +44,20 @@ pub trait RpcGate: Clone + Send + Sync + 'static {
     ) -> Result<(), Status>;
 }
 
+/// The request size every method but the two below is held to: tonic's own default. The service
+/// decodes up to [`crate::MAX_RPC_MESSAGE_BYTES`] because a signed forum request carries a
+/// gzipped log, and without a per-method limit any caller admitted to a read-only method could
+/// make the daemon buffer that much.
+pub(crate) const SMALL_REQUEST_BYTES: usize = 4 * 1024 * 1024;
+
+/// The most a request to the method at `path` may carry.
+fn request_byte_limit(path: &str) -> usize {
+    match path.rsplit('/').next() {
+        Some("SignForumReport" | "SignForumAttachLogs") => crate::MAX_RPC_MESSAGE_BYTES,
+        _ => SMALL_REQUEST_BYTES,
+    }
+}
+
 /// A tonic service whose every call is first put to an [`RpcGate`].
 #[derive(Clone)]
 pub(crate) struct Gated<S, G> {
@@ -88,6 +102,8 @@ where
         {
             Ok(()) => {
                 head.extensions.extend(admitted);
+                let limit = request_byte_limit(head.uri.path());
+                let body = Body::new(http_body_util::Limited::new(body, limit));
                 Either::Right(self.inner.call(http::Request::from_parts(head, body)))
             }
             Err(status) => Either::Left(ready(Ok(status.into_http()))),
@@ -216,6 +232,83 @@ mod tests {
             *service.inner.admitted_as.lock().unwrap(),
             Some(AdmittedAs("listed"))
         );
+    }
+
+    /// Reads the body the method was handed, as far as it lets itself be read.
+    #[derive(Clone, Default)]
+    struct ReadingMethod {
+        read: Arc<Mutex<Option<Result<usize, String>>>>,
+    }
+
+    impl Service<http::Request<Body>> for ReadingMethod {
+        type Response = http::Response<Body>;
+        type Error = Infallible;
+        type Future = futures::future::BoxFuture<'static, Result<Self::Response, Infallible>>;
+
+        fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Infallible>> {
+            Poll::Ready(Ok(()))
+        }
+
+        fn call(&mut self, request: http::Request<Body>) -> Self::Future {
+            let read = self.read.clone();
+            Box::pin(async move {
+                use http_body_util::BodyExt;
+                let outcome = request
+                    .into_body()
+                    .collect()
+                    .await
+                    .map(|body| body.to_bytes().len())
+                    .map_err(|error| error.to_string());
+                *read.lock().unwrap() = Some(outcome);
+                Ok(http::Response::new(Body::empty()))
+            })
+        }
+    }
+
+    async fn read_through_gate(path: &'static str, bytes: usize) -> Result<usize, String> {
+        let gate = ListGate {
+            admitted: Box::leak(Box::new([path])),
+            seen: Seen::default(),
+        };
+        let method = ReadingMethod::default();
+        let mut service = Gated::new(method.clone(), gate);
+        let mut request = http::Request::builder()
+            .uri(path)
+            .body(Body::new(http_body_util::Full::new(bytes::Bytes::from(
+                vec![0u8; bytes],
+            ))))
+            .unwrap();
+        request
+            .extensions_mut()
+            .insert::<ManagementConnectInfo>(Some(user(1000)));
+        service.call(request).await.unwrap();
+        method.read.lock().unwrap().take().expect("the method ran")
+    }
+
+    #[tokio::test]
+    async fn an_ordinary_request_is_held_to_the_small_limit() {
+        let path = "/mullvad_daemon.management_interface.ManagementService/SetAllowLan";
+        assert_eq!(
+            read_through_gate(path, SMALL_REQUEST_BYTES).await,
+            Ok(SMALL_REQUEST_BYTES)
+        );
+        assert!(
+            read_through_gate(path, SMALL_REQUEST_BYTES + 1)
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn a_request_that_carries_a_log_gets_the_whole_cap() {
+        for method in ["SignForumReport", "SignForumAttachLogs"] {
+            let path: &'static str = Box::leak(
+                format!("/mullvad_daemon.management_interface.ManagementService/{method}")
+                    .into_boxed_str(),
+            );
+            let bytes = crate::MAX_RPC_MESSAGE_BYTES;
+            assert_eq!(read_through_gate(path, bytes).await, Ok(bytes), "{method}");
+        }
     }
 
     /// The gate decides from the method path and from the identity the

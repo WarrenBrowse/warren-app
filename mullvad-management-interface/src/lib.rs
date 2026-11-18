@@ -532,6 +532,11 @@ pub const MAX_RPC_MESSAGE_OVERHEAD_BYTES: usize = 1024 * 1024;
 /// can make the daemon hold, and the daemon owns the kill switch.
 pub const MAX_RPC_MESSAGE_BYTES: usize = MAX_FORUM_LOG_GZ_BYTES + MAX_RPC_MESSAGE_OVERHEAD_BYTES;
 
+/// Calls one connection may have in flight at once. Far above what the GUI's startup burst and
+/// its event stream use, so a client is never held back, and it bounds what a single local
+/// caller can make the daemon serve in parallel; past it HTTP/2 clients queue their calls.
+const MAX_STREAMS_PER_CONNECTION: u32 = 128;
+
 /// Serve both management services on `rpc_socket_path`, every RPC admitted by
 /// `gate` before its request body is read.
 pub fn spawn_rpc_server(
@@ -544,6 +549,7 @@ pub fn spawn_rpc_server(
     let (incoming, security) = build_incoming(rpc_socket_path)?;
 
     let grpc_server = Server::builder()
+        .max_concurrent_streams(Some(MAX_STREAMS_PER_CONNECTION))
         .add_service(Gated::new(
             ManagementServiceServer::new(management_service)
                 .max_decoding_message_size(MAX_RPC_MESSAGE_BYTES),
@@ -974,7 +980,10 @@ mod peer_credential_tests {
             "a daemon started by hand under the developer's own account"
         );
         assert!(!daemon_peer_admitted(1001, 501));
-        assert!(!daemon_peer_admitted(501, 0), "root never talks to a user's socket");
+        assert!(
+            !daemon_peer_admitted(501, 0),
+            "root never talks to a user's socket"
+        );
     }
 
     /// The client reads the server's uid off the connection it holds, so a
