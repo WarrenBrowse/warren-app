@@ -2407,7 +2407,7 @@ msgstr "Auf diesem System nicht verfügbar"
 
 msgctxt "split-tunneling-view"
 msgid "Open outside the VPN"
-msgstr "Außerhalb des VPN öffnen"
+msgstr "Ohne VPN öffnen"
 
 msgctxt "split-tunneling-view"
 msgid "Open through the VPN"
@@ -2419,15 +2419,15 @@ msgstr "Andere Apps verbinden sich"
 
 msgctxt "split-tunneling-view"
 msgid "Outside the VPN"
-msgstr "Außerhalb des VPN"
+msgstr "Ohne VPN"
 
 msgctxt "split-tunneling-view"
 msgid "Outside the VPN needs a signed build of Warren VPN."
-msgstr "„Außerhalb des VPN“ benötigt eine signierte Version von Warren VPN."
+msgstr "„Ohne VPN“ benötigt eine signierte Version von Warren VPN."
 
 msgctxt "split-tunneling-view"
 msgid "Outside the VPN needs macOS 13 or newer."
-msgstr "„Außerhalb des VPN“ benötigt macOS 13 oder neuer."
+msgstr "„Ohne VPN“ benötigt macOS 13 oder neuer."
 
 msgctxt "split-tunneling-view"
 msgid "Remove %(application)s from the list"
