@@ -159,7 +159,11 @@ test.describe.configure({ mode: 'serial' });
 
 test.describe('App routing', () => {
   test.beforeAll(async () => {
+    // The fixtures are macOS apps, and the rules a platform keeps differ (Linux keeps no list of
+    // apps outside the VPN), so the view is driven as macOS on every host.
+    process.env.WARREN_E2E_PLATFORM = 'darwin';
     ({ app: electronApp, page, util } = await startMockedApp());
+    delete process.env.WARREN_E2E_PLATFORM;
     routes = new RoutesObjectModel(page, util);
     await util.expectRoute(RoutePath.main);
 
@@ -399,7 +403,6 @@ test.describe('App routing', () => {
   });
 
   test('keeps "Outside the VPN" out of reach of a build that cannot run it', async () => {
-    test.skip(process.platform !== 'darwin', 'the signed-build state is macOS only');
     await pushState({ appExits: [{ app: FIREFOX.absolutepath, exit: { country: 'nl' } }] });
     await util.ipc.splitTunneling.isSupported.notify(false);
 
