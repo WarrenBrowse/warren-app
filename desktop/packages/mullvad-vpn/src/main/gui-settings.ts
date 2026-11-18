@@ -21,7 +21,6 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   browsedForSplitTunnelingApplications: 'Array<string>',
   changelogDisplayedForVersion: 'string',
   updateDismissedForVersion: 'string',
-  animateMap: 'boolean',
   theme: 'string',
   onboardingPending: 'boolean',
   backupPending: 'boolean',
@@ -44,7 +43,6 @@ const defaultSettings: IGuiSettingsState = {
   browsedForSplitTunnelingApplications: [],
   changelogDisplayedForVersion: '',
   updateDismissedForVersion: '',
-  animateMap: true,
   theme: DEFAULT_THEME_PREFERENCE,
   onboardingPending: false,
   backupPending: false,
@@ -191,14 +189,6 @@ export default class GuiSettings {
     return this.stateValue.updateDismissedForVersion === ''
       ? undefined
       : this.stateValue.updateDismissedForVersion;
-  }
-
-  set animateMap(newValue: boolean) {
-    this.changeStateAndNotify({ ...this.stateValue, animateMap: newValue });
-  }
-
-  get animateMap(): boolean {
-    return this.stateValue.animateMap;
   }
 
   // Onboarding gate. Set when an identity is minted and by the Settings

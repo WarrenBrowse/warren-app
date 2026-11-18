@@ -40,7 +40,6 @@ async function start(locale: string) {
     browsedForSplitTunnelingApplications: [],
     changelogDisplayedForVersion: '',
     updateDismissedForVersion: '',
-    animateMap: false,
     onboardingPending: false,
   });
   await routes.main.waitForRoute();

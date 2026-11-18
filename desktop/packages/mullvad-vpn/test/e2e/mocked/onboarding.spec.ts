@@ -22,7 +22,6 @@ const guiSettings = (onboardingPending: boolean): IGuiSettingsState => ({
   browsedForSplitTunnelingApplications: [],
   changelogDisplayedForVersion: '',
   updateDismissedForVersion: '',
-  animateMap: false,
   onboardingPending,
 });
 

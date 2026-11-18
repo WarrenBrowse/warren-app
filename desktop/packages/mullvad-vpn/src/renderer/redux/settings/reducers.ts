@@ -156,7 +156,6 @@ const initialState: ISettingsReduxState = {
     browsedForSplitTunnelingApplications: [],
     changelogDisplayedForVersion: '',
     updateDismissedForVersion: '',
-    animateMap: true,
     theme: 'system',
   },
   relaySettings: {

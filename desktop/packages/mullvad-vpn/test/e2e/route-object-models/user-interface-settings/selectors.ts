@@ -13,5 +13,4 @@ export const createSelectors = (page: Page) => ({
   monochromaticTrayIconSwitch: () => page.getByRole('switch', { name: 'Monochromatic tray icon' }),
   unpinnedWindowSwitch: () => page.getByRole('switch', { name: 'Unpin app from taskbar' }),
   startMinimizedSwitch: () => page.getByRole('switch', { name: 'Start minimized' }),
-  animateMapSwitch: () => page.getByRole('switch', { name: 'Animate map' }),
 });

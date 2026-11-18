@@ -64,9 +64,6 @@ export interface IGuiSettingsState {
   // whether to show the update notification.
   updateDismissedForVersion: string;
 
-  // Tells the app whether or not to show the map in the main view.
-  animateMap: boolean;
-
   // The palette of the screens: the operating system's, or a fixed one.
   // Optional so settings files written before the setting existed keep
   // validating; absent means following the system.

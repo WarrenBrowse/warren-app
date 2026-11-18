@@ -50,7 +50,6 @@ test.describe('Login view', () => {
       browsedForSplitTunnelingApplications: [],
       changelogDisplayedForVersion: '',
       updateDismissedForVersion: '',
-      animateMap: false,
       onboardingPending: false,
     });
     await routes.main.waitForRoute();

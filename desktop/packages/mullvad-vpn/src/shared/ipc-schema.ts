@@ -479,7 +479,6 @@ export const ipcSchema = {
     setMonochromaticIcon: send<boolean>(),
     setPreferredLocale: invoke<string, ILocaleChange>(),
     setUnpinnedWindow: send<boolean>(),
-    setAnimateMap: send<boolean>(),
     setTheme: send<ThemePreference>(),
     // Onboarding wizard gate. Set true when a fresh identity is minted
     // and by the Settings "Replay onboarding" entry, cleared when the

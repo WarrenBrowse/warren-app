@@ -21,7 +21,6 @@ const state: IGuiSettingsState = {
   browsedForSplitTunnelingApplications: ['/usr/bin/firefox'],
   changelogDisplayedForVersion: '1.2.0',
   updateDismissedForVersion: '',
-  animateMap: true,
 };
 
 describe('the GUI settings the renderer is given', () => {

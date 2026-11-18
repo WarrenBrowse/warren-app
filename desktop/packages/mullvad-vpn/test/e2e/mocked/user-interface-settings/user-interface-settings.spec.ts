@@ -25,7 +25,6 @@ test.describe('User interface settings', () => {
       enableSystemNotifications: false,
       monochromaticIcon: false,
       startMinimized: false,
-      animateMap: false,
       autoConnect: false,
       unpinnedWindow: false,
       browsedForSplitTunnelingApplications: [],
@@ -162,42 +161,6 @@ test.describe('User interface settings', () => {
 
       await setGuiSettings({ unpinnedWindow: true, startMinimized: true });
       await expect(startMinimizedSwitch).toBeChecked();
-    });
-  });
-
-  test.describe('Animate map setting', () => {
-    test.describe('With reduced motion', () => {
-      test.beforeEach(async () => {
-        await util.setReducedMotion('reduce');
-      });
-
-      test('Should not display animate map setting', async () => {
-        const animateMapSwitch = routes.userInterfaceSettings.selectors.animateMapSwitch();
-        await expect(animateMapSwitch).not.toBeVisible();
-      });
-    });
-
-    test.describe('Without reduced motion', () => {
-      test.beforeEach(async () => {
-        await util.setReducedMotion('no-preference');
-      });
-
-      test('Should display animate map setting', async () => {
-        const animateMapSwitch = routes.userInterfaceSettings.selectors.animateMapSwitch();
-
-        await expect(animateMapSwitch).toBeVisible();
-      });
-
-      test('Should toggle animate map setting', async () => {
-        const animateMapSwitch = routes.userInterfaceSettings.selectors.animateMapSwitch();
-        await expect(animateMapSwitch).toBeVisible();
-        await expect(animateMapSwitch).not.toBeChecked();
-
-        await Promise.all([animateMapSwitch.click(), util.ipc.guiSettings.setAnimateMap.expect()]);
-
-        await setGuiSettings({ animateMap: true });
-        await expect(animateMapSwitch).toBeChecked();
-      });
     });
   });
 

@@ -32,7 +32,6 @@ class ApplicationMain {
     browsedForSplitTunnelingApplications: [],
     changelogDisplayedForVersion: '',
     updateDismissedForVersion: '',
-    animateMap: true,
   };
 
   private settings = getDefaultSettings();
