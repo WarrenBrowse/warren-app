@@ -3464,10 +3464,6 @@ msgid "Multihop"
 msgstr "မာလ်တီဟော့ပ်"
 
 msgctxt "warren-multi-hop-view"
-msgid "Restart the Warren daemon after changing this setting."
-msgstr "ဤဆက်တင်ကို ပြောင်းလဲပြီးနောက် Warren daemon ကို ပြန်လည်စတင်ပါ။"
-
-msgctxt "warren-multi-hop-view"
 msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
 msgstr "HPKE အစမှအဆုံး ကုဒ်ဝှက်စနစ်ကို အသုံးပြု၍ သင့်ကူးလူးမှုကို Warren ရီလေး နှစ်ခုမှတစ်ဆင့် လမ်းကြောင်းပေးပါသည်။ အဝင် ရီလေးသည် ကုဒ်ဝှက်ထားသော ဒေတာကိုသာ မြင်ရပြီး ထွက်ပေါက်ဆာဗာသည် ကုဒ်ဖြည်ပြီးသော ဒေတာကိုသာ မြင်ရကာ သင့် IP ကို ဘယ်တော့မှ မမြင်ရပါ။ Apple Private Relay ကို စံနမူနာယူထားသော ပုံစံ ဖြစ်ပါသည်။"
 

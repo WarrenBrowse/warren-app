@@ -3509,10 +3509,6 @@ msgid "Multihop"
 msgstr "تعدد القفزات"
 
 msgctxt "warren-multi-hop-view"
-msgid "Restart the Warren daemon after changing this setting."
-msgstr "أعد تشغيل خدمة Warren بعد تغيير هذا الإعداد."
-
-msgctxt "warren-multi-hop-view"
 msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
 msgstr "يوجّه حركة مرورك عبر مُرحِّلَي Warren باستخدام تشفير HPKE من طرف إلى طرف. لا يرى مُرحِّل الدخول سوى النص المشفَّر؛ ولا ترى عقدة الخروج سوى الحمولة المفكوكة التشفير، ولا ترى عنوان IP الخاص بك أبدًا. نمط مستوحى من Apple Private Relay."
 

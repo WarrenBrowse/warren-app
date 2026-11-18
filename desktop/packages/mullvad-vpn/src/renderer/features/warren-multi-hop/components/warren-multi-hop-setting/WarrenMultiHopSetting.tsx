@@ -5,10 +5,9 @@ import { SettingsListItem } from '../../../../components/settings-list-item';
 import { ListItemProps } from '../../../../lib/components/list-item';
 import { WarrenMultiHopSwitch } from '../WarrenMultiHopSwitch';
 
-// Toggle entry for `Settings::warren_multi_hop` (two-relayed
-// QUIC). Surfaces in the dedicated Warren multi-hop view. A daemon
-// restart is required for a change to take effect (the supervisor is
-// wired at boot from the settings file + WARREN_MULTI_HOP env var).
+// Toggle entry for `Settings::warren_multi_hop` (two-relayed QUIC). The
+// daemon applies a change live: its settings listener hands the toggle to the
+// circuit updater, which reconnects.
 export type WarrenMultiHopSettingProps = Omit<ListItemProps, 'children'>;
 
 export function WarrenMultiHopSetting(props: WarrenMultiHopSettingProps) {
@@ -31,12 +30,6 @@ export function WarrenMultiHopSetting(props: WarrenMultiHopSettingProps) {
                 {messages.pgettext(
                   'warren-multi-hop-view',
                   'Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy.',
-                )}
-              </ModalMessage>
-              <ModalMessage>
-                {messages.pgettext(
-                  'warren-multi-hop-view',
-                  'Restart the Warren daemon after changing this setting.',
                 )}
               </ModalMessage>
             </InfoButton>

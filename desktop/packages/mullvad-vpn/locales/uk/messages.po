@@ -3007,10 +3007,6 @@ msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkabilit
 msgstr "Очікуйте приблизно половину пропускної здатності одиночного переходу в обмін на неможливість пов'язати IP користувача з IP призначення. За замовчуванням вимкнено; вмикається опціонально для приватності."
 
 msgctxt "warren-multi-hop-view"
-msgid "Restart the Warren daemon after changing this setting."
-msgstr "Перезапустіть демон Warren після зміни цього параметра."
-
-msgctxt "warren-multi-hop-view"
 msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
 msgstr "Маршрутизує ваш трафік через два реле Warren з використанням наскрізного шифрування HPKE. Вхідне реле бачить лише зашифрований текст; вихідне бачить лише розшифроване корисне навантаження, ніколи вашу IP. Схема натхненна Apple Private Relay."
 

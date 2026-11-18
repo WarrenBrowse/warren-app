@@ -3072,10 +3072,6 @@ msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkabilit
 msgstr "Expectați că lățimea de bandă va fi aproximativ la jumătate, în schimbul imposibilității de a face legătura între adresa IP a utilizatorului și cea a destinației. Opțiunea este dezactivată în mod implicit; activați-o pentru a vă proteja confidențialitatea."
 
 msgctxt "warren-multi-hop-view"
-msgid "Restart the Warren daemon after changing this setting."
-msgstr "Reporniți serviciul Warren după ce modificați această setare."
-
-msgctxt "warren-multi-hop-view"
 msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
 msgstr "Direcționează traficul prin două relee Warren, utilizând criptarea end-to-end HPKE. Releul de intrare vede doar textul cifrat, iar cel de ieșire vede doar încărcătura utilă decriptată, fără a avea acces la adresa dvs. IP. Model inspirat de Apple Private Relay."
 

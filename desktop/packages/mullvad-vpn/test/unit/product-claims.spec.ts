@@ -60,3 +60,14 @@ describe('the French glossary', () => {
     });
   }
 });
+
+// The daemon applies a multi-hop toggle live: a settings listener hands it to
+// the circuit updater, which reconnects. Asking for a restart sent people to a
+// step that does nothing.
+describe('the multi-hop setting', () => {
+  it('never asks for a daemon restart', () => {
+    expect(read(CATALOGUES[0])).not.toContain(
+      'Restart the Warren daemon after changing this setting.',
+    );
+  });
+});

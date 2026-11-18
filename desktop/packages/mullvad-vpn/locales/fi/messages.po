@@ -2989,10 +2989,6 @@ msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkabilit
 msgstr "Odota suunnilleen puolet single-hop-kaistanleveydestä vastineeksi siitä, ettei käyttäjän IP:tä ja kohde-IP:tä voida yhdistää. Oletuksena pois päältä; valinnainen yksityisyyden vuoksi."
 
 msgctxt "warren-multi-hop-view"
-msgid "Restart the Warren daemon after changing this setting."
-msgstr "Käynnistä Warren-demoni uudelleen tämän asetuksen muuttamisen jälkeen."
-
-msgctxt "warren-multi-hop-view"
 msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
 msgstr "Reitittää liikenteesi kahden Warren-releen kautta käyttäen HPKE-päästä-päähän-salausta. Tulorele näkee vain salatekstin; lähtörele näkee vain salauksen purkukuorman, ei koskaan IP:täsi. Malli innoittanut Apple Private Relay -palvelusta."
 
