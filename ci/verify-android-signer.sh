@@ -49,9 +49,15 @@ if ! report=$("$apksigner" verify --print-certs "$apk" 2>&1); then
   echo "::error::$(basename "$apk") is not a validly signed APK; AGP names an unsigned release output *-unsigned.apk, and nothing unsigned may ship" >&2
   exit 1
 fi
-echo "$report" | grep -E "^Signer #[0-9]+ certificate (DN|SHA-256 digest):"
-signers=$(echo "$report" | grep -c "^Signer #[0-9]* certificate SHA-256 digest:" || true)
-actual=$(echo "$report" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | tr -d '[:space:]')
+# Older build-tools number the signers ("Signer #1 certificate ..."); build-tools 37
+# prints one line per signature scheme ("V2 Signer: certificate ..."), so one
+# key signing under two schemes appears twice. Count distinct keys.
+digests=$(echo "$report" \
+  | sed -nE 's/^(Signer #[0-9]+|V[0-9]+(\.[0-9]+)? Signer:) certificate SHA-256 digest: *//p' \
+  | tr -d ' \t\r' | sed '/^$/d' | sort -u)
+echo "$report" | grep -E "certificate (DN|SHA-256 digest):" || true
+signers=$(printf '%s\n' "$digests" | sed '/^$/d' | wc -l | tr -d ' ')
+actual=$(printf '%s\n' "$digests" | head -1)
 if [ -z "$actual" ]; then
   echo "::error::apksigner printed no signer certificate for $(basename "$apk")" >&2
   exit 1

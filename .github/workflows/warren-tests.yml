@@ -561,6 +561,13 @@ jobs:
         shell: bash
         run: bash ci/test-release-without-identities.sh
 
+      # The beta APK's signer check reads apksigner's report, whose format
+      # changed with build-tools 37 and failed a release once.
+      - name: Android signer check (shell tests)
+        working-directory: .
+        shell: bash
+        run: bash ci/test-verify-android-signer.sh
+
       # `ci/git-config-global.sh` fronts the build-env action's remaining
       # `git config --global` writes (`safe.directory`), on every OS. A
       # regression in its retry loop, its lock grep or its stale-lock removal
