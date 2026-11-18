@@ -174,6 +174,20 @@ fn nat_pmp_error_reason_to_i32(reason: &talpid_warren_tunnel::NatPmpFailureReaso
     r as i32
 }
 
+/// The demand a GUI reported. A value this build does not know reads as no
+/// demand: a newer GUI must never make an older daemon poll harder.
+fn forum_digest_demand_from_proto(
+    value: i32,
+) -> crate::warren_forum_digest_updater::ForumDigestDemand {
+    use crate::warren_forum_digest_updater::ForumDigestDemand;
+    use types::warren_forum_digest_demand::Demand;
+    match Demand::try_from(value) {
+        Ok(Demand::Foreground) => ForumDigestDemand::Foreground,
+        Ok(Demand::Background) => ForumDigestDemand::Background,
+        Ok(Demand::None) | Err(_) => ForumDigestDemand::None,
+    }
+}
+
 /// The diagnostic line of a clock refusal. The renderer words its own advice
 /// from the reason and the offset; this is what logs and older clients show.
 fn clock_refusal_message(offset_secs: Option<i64>) -> String {
@@ -1341,6 +1355,16 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(
             Box::new(Box::pin(stream)) as Self::WarrenStatusUpdatesStream
         ))
+    }
+
+    async fn set_warren_forum_digest_demand(
+        &self,
+        request: Request<types::WarrenForumDigestDemand>,
+    ) -> ServiceResult<()> {
+        let demand = forum_digest_demand_from_proto(request.into_inner().demand);
+        log::debug!("set_warren_forum_digest_demand({demand:?})");
+        self.warren_status_cache.set_forum_digest_demand(demand);
+        Ok(Response::new(()))
     }
 
     async fn get_nat_pmp_settings(
@@ -3562,6 +3586,25 @@ mod session_gate_status_tests {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_forum_digest_demand_this_build_does_not_know_polls_nothing() {
+        use crate::warren_forum_digest_updater::ForumDigestDemand;
+
+        assert_eq!(
+            super::forum_digest_demand_from_proto(2),
+            ForumDigestDemand::Foreground
+        );
+        assert_eq!(
+            super::forum_digest_demand_from_proto(1),
+            ForumDigestDemand::Background
+        );
+        assert_eq!(
+            super::forum_digest_demand_from_proto(7),
+            ForumDigestDemand::None,
+            "a newer GUI must never make an older daemon poll harder"
+        );
+    }
+
     #[test]
     fn a_voucher_submitted_without_a_device_is_not_read_as_an_invalid_voucher() {
         // The GUI drops a held purchase voucher on NOT_FOUND, the code of an

@@ -45,6 +45,7 @@ import { ExitHostname } from '../shared/network-stats';
 import { WithdrawalRequest, WithdrawalResult } from '../shared/withdrawal';
 import { daemonRpcPath } from './daemon-rpc-path';
 import { convertFromDeviceList, deviceFailureOfError } from './devices';
+import { ForumDigestDemand } from './forum-digest-demand';
 import { ConnectionObserver, GrpcClient, noConnectionError } from './grpc-client';
 import {
   convertFromApiAccessMethodSetting,
@@ -75,6 +76,15 @@ import {
 } from './grpc-type-convertions';
 import { pullFailureOfStatus, voucherFailureOfStatus } from './voucher-response';
 import { withdrawalFailureOfStatus } from './withdrawable-purchases';
+
+const FORUM_DIGEST_DEMAND_TO_PROTO: Record<
+  ForumDigestDemand,
+  grpcTypes.WarrenForumDigestDemand.Demand
+> = {
+  none: grpcTypes.WarrenForumDigestDemand.Demand.NONE,
+  background: grpcTypes.WarrenForumDigestDemand.Demand.BACKGROUND,
+  foreground: grpcTypes.WarrenForumDigestDemand.Demand.FOREGROUND,
+};
 
 const DAEMON_RPC_PATH = daemonRpcPath(
   process.platform,
@@ -628,6 +638,15 @@ export class DaemonRpc extends GrpcClient {
     const proto = convertToWarrenMultiHopSettings(settings);
     await this.call<grpcTypes.WarrenMultiHopSettings, Empty>(
       this.client.setWarrenMultiHopSettings,
+      proto,
+    );
+  }
+
+  public async setWarrenForumDigestDemand(demand: ForumDigestDemand): Promise<void> {
+    const proto = new grpcTypes.WarrenForumDigestDemand();
+    proto.setDemand(FORUM_DIGEST_DEMAND_TO_PROTO[demand]);
+    await this.call<grpcTypes.WarrenForumDigestDemand, Empty>(
+      this.client.setWarrenForumDigestDemand,
       proto,
     );
   }

@@ -701,6 +701,17 @@ function deserialize_mullvad_daemon_management_interface_WarrenDiagnostics(buffe
   return management_interface_pb.WarrenDiagnostics.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_WarrenForumDigestDemand(arg) {
+  if (!(arg instanceof management_interface_pb.WarrenForumDigestDemand)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenForumDigestDemand');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_WarrenForumDigestDemand(buffer_arg) {
+  return management_interface_pb.WarrenForumDigestDemand.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_WarrenMultiHopSettings(arg) {
   if (!(arg instanceof management_interface_pb.WarrenMultiHopSettings)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenMultiHopSettings');
@@ -1440,6 +1451,22 @@ warrenStatusUpdates: {
     requestDeserialize: deserialize_google_protobuf_Empty,
     responseSerialize: serialize_mullvad_daemon_management_interface_WarrenStatus,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenStatus,
+  },
+  // What the GUI does with WarrenStatus.forum_digest, which sets how often
+// the daemon fetches it: never while nothing reads it, on a slow cadence
+// while the window is hidden, every minute while it is on screen. The
+// daemon starts at NONE and counts the demand only while a status stream
+// is open, so a GUI resends it after every reconnect.
+setWarrenForumDigestDemand: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenForumDigestDemand',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.WarrenForumDigestDemand,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_mullvad_daemon_management_interface_WarrenForumDigestDemand,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_WarrenForumDigestDemand,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
   },
   // Manual re-enable after this build stood down for a higher-priority
 // product environment: restores the `auto_connect` and `lockdown_mode` the

@@ -101,6 +101,7 @@ import {
   parseForumAttachUrl,
   resolveApprovedReport,
 } from './forum-attach';
+import { forumDigestDemand, ForumDigestDemandReporter } from './forum-digest-demand';
 import {
   approveForumLogin,
   cancelForumLogin,
@@ -330,6 +331,9 @@ class ApplicationMain
   private forumIdentityStore = new SafeStorageForumIdentityStore();
   private mnemonicClipboardGuard = new MnemonicClipboardGuard(clipboard);
   private forumActivityMonitor = new ForumActivityMonitor(this);
+  private forumDigestDemand = new ForumDigestDemandReporter((demand) =>
+    this.daemonRpc.setWarrenForumDigestDemand(demand),
+  );
   // Last count the monitor published, replayed in the initial state: the
   // renderer boots after the first digest has already been matched.
   private forumUnread = 0;
@@ -785,7 +789,23 @@ class ApplicationMain
       this.forumIdentityStore.set(identity);
       this.forumActivityMonitor.setSlot(identity.notifySlot);
       IpcMainEventChannel.forumLogin.notifyIdentity?.(identity);
+      this.reportForumDigestDemand();
     }
+  }
+
+  // Tells the daemon how often the forum digest is worth fetching, from the
+  // three facts that decide whether anything here shows it.
+  private reportForumDigestDemand() {
+    if (!this.daemonRpc.isConnected) {
+      return;
+    }
+    this.forumDigestDemand.update(
+      forumDigestDemand({
+        notificationsEnabled: this.settings.gui.forumNotifications,
+        hasForumAccount: this.forumIdentityStore.get() !== undefined,
+        windowVisible: this.userInterface?.isWindowVisible() ?? false,
+      }),
+    );
   }
 
   private overrideAppPaths() {
@@ -1137,6 +1157,7 @@ class ApplicationMain
       const error = e as Error;
       log.warn(`Failed to subscribe to Warren status events: ${error.message}`);
     }
+    this.reportForumDigestDemand();
 
     // The ports seen by the previous GUI process are the baseline of the
     // first snapshot, so a port the daemon got at boot, before this process
@@ -1306,6 +1327,7 @@ class ApplicationMain
   private onDaemonDisconnected = (wasConnected: boolean, error?: Error, planned?: boolean) => {
     clearTimeout(this.daemonAccessRetry);
     this.daemonAccessRetry = undefined;
+    this.forumDigestDemand.reset();
     if (this.daemonEventListener) {
       this.daemonRpc.unsubscribeDaemonEventListener(this.daemonEventListener);
     }
@@ -2296,6 +2318,7 @@ class ApplicationMain
   };
 
   // UserInterfaceDelegate
+  public windowVisibilityChanged = () => this.reportForumDigestDemand();
   public dismissActiveNotifications = () =>
     this.notificationController.dismissActiveNotifications();
   public isUnpinnedWindow = () => this.settings.gui.unpinnedWindow;
@@ -2334,8 +2357,10 @@ class ApplicationMain
   };
 
   // SettingsDelegate
-  public handleForumNotificationsChange = (value: boolean) =>
+  public handleForumNotificationsChange = (value: boolean) => {
     this.forumActivityMonitor.setEnabled(value);
+    this.reportForumDigestDemand();
+  };
   public handleMonochromaticIconChange = (value: boolean) =>
     this.userInterface?.setMonochromaticIcon(value) ?? Promise.resolve();
   public handleUnpinnedWindowChange = () =>
@@ -2404,6 +2429,7 @@ class ApplicationMain
       this.forumIdentityStore.set(undefined);
       this.forumActivityMonitor.setSlot(null);
       IpcMainEventChannel.forumLogin.notifyIdentity?.(undefined);
+      this.reportForumDigestDemand();
     }
 
     if (this.isPerformingPostUpgrade) {

@@ -320,6 +320,15 @@ resume, not at once. A tunnel between states defers a fetch (the resolver is
 the tunnel's, or absent under the kill switch) and counts as unreachable for the
 retry cadence.
 
+**Desktop poll model.** The daemon owns the loop there, and the GUI tells it
+what it does with the digest (`SetWarrenForumDigestDemand`): nothing without a
+forum account or with the setting off, a fetch every 10 minutes while the
+window is hidden (the tray dot and its banner, so a banner can lag a reply by
+that much), a fetch every minute while the window is on screen, with a fetch at
+once when the window comes back after more than a minute. The daemon starts at
+no demand and counts it only while a GUI holds a status stream, so a headless
+daemon and a GUI that quit fetch nothing.
+
 ## Reading a failed attempt
 
 - Device: `adb logcat -s WarrenJni:V` for the live run;

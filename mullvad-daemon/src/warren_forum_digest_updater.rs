@@ -18,25 +18,41 @@
 //! changes: a server that stops answering must let the badge lapse, and
 //! an envelope whose expiry passes while nothing changes would otherwise
 //! stay on screen until the next edit.
+//!
+//! The cadence follows what the frontend reports it shows
+//! ([`ForumDigestDemand`]): nothing is fetched while no frontend is attached
+//! or none reads the digest (no forum account, or the forum notifications
+//! setting off), a slow cadence carries the tray dot and its banner while
+//! the window is hidden, and the minute cadence runs only while the window
+//! is on screen.
 
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
+use tokio::sync::watch;
 use warren_discovery_core::{ForumDigestError, VerifiedForumDigest, verify_forum_digest_any};
 
 use crate::warren_artifact_refresh::{
     FETCH_TIMEOUT, FetchResponse, TransportRetryBackoff, conditional_get, now_unix, split_pins,
 };
 
-/// How often the digest is re-fetched: how long a reply takes to raise a
-/// badge, and how long a badge cleared elsewhere takes to drop here.
+/// How often the digest is re-fetched while the window is on screen: how
+/// long a reply takes to raise a badge, and how long a badge cleared
+/// elsewhere takes to drop here.
 ///
-/// Shorter than the notices cadence it used to share, because this one
-/// carries a number the user checks against the forum and expects to
-/// agree. The cost is bounded by design: the request is a conditional GET
-/// on a document identical for every client, so a quiet forum answers it
-/// with a 304 and a few hundred bytes. Anything the user does in the app
-/// itself corrects the count immediately without waiting for this at all.
+/// The request is a conditional GET on a document identical for every
+/// client, so a quiet forum answers it with a 304 and a few hundred bytes.
+/// Anything the user does in the app itself corrects the count immediately
+/// without waiting for this at all.
 const CHECK_INTERVAL: Duration = Duration::from_secs(60);
+
+/// Cadence while the window is hidden and the tray dot is the only reader:
+/// how late a banner can announce a reply that arrived meanwhile. Showing
+/// the window fetches at once once a minute has passed since the last fetch.
+const BACKGROUND_INTERVAL: Duration = Duration::from_secs(10 * 60);
+
+/// How often the held document's freshness is re-applied while no fetch is
+/// due, so an envelope that expires between fetches still drops its badge.
+const FRESHNESS_TICK: Duration = CHECK_INTERVAL;
 
 /// Fast retry window after a transport failure, so a client that just
 /// woke or just regained a network does not sit a full interval with a
@@ -44,6 +60,62 @@ const CHECK_INTERVAL: Duration = Duration::from_secs(60);
 const RETRY_MIN: Duration = Duration::from_secs(20);
 /// Ceiling for the fast retry, kept under [`CHECK_INTERVAL`].
 const RETRY_MAX: Duration = Duration::from_secs(45);
+
+/// What the attached frontend does with the digest right now.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ForumDigestDemand {
+    /// Nothing reads it: no frontend, no forum account, or the setting off.
+    #[default]
+    None,
+    /// Only the tray dot and its banner read it: the window is hidden.
+    Background,
+    /// The window is on screen.
+    Foreground,
+}
+
+/// What the loop does next.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Plan {
+    FetchNow,
+    WaitFor(Duration),
+    Idle,
+}
+
+/// The next step, from the demand, the armed fast retry, and how long ago
+/// the last fetch ran (`None` before the first one).
+fn plan(
+    demand: ForumDigestDemand,
+    retry: Option<Duration>,
+    since_last_fetch: Option<Duration>,
+) -> Plan {
+    let interval = match demand {
+        ForumDigestDemand::None => return Plan::Idle,
+        ForumDigestDemand::Background => BACKGROUND_INTERVAL,
+        ForumDigestDemand::Foreground => retry.unwrap_or(CHECK_INTERVAL),
+    };
+    match since_last_fetch {
+        Some(elapsed) if elapsed < interval => Plan::WaitFor(interval - elapsed),
+        _ => Plan::FetchNow,
+    }
+}
+
+/// Where the updater reads its demand: the frontend's last word, and
+/// whether a frontend is still attached to hear the result.
+pub struct DemandSource {
+    pub demand: watch::Receiver<ForumDigestDemand>,
+    pub frontend_attached: Box<dyn Fn() -> bool + Send>,
+}
+
+impl DemandSource {
+    pub(crate) fn current(&mut self) -> ForumDigestDemand {
+        let demand = *self.demand.borrow_and_update();
+        if (self.frontend_attached)() {
+            demand
+        } else {
+            ForumDigestDemand::None
+        }
+    }
+}
 
 /// The periodic forum-digest task.
 pub struct WarrenForumDigestUpdater {
@@ -67,6 +139,7 @@ impl WarrenForumDigestUpdater {
     pub fn spawn(
         api_url: String,
         pinned_server_pubkey: Option<String>,
+        demand: DemandSource,
         on_update: impl Fn(Option<String>) + Send + 'static,
     ) {
         let http = build_http_client(&api_url);
@@ -79,25 +152,44 @@ impl WarrenForumDigestUpdater {
             http,
             on_update: Box::new(on_update),
         };
-        tokio::spawn(updater.run());
+        tokio::spawn(updater.run(demand));
     }
 
-    async fn run(mut self) {
+    async fn run(mut self, mut source: DemandSource) {
         let mut retry = TransportRetryBackoff::new(RETRY_MIN, RETRY_MAX);
+        let mut last_fetch: Option<Instant> = None;
         loop {
-            match self.refresh_once().await {
-                RefreshOutcome::Ok | RefreshOutcome::Rejected => retry.clear(),
-                RefreshOutcome::TransportFailure => {
-                    retry.on_transport_failure();
+            let since_last_fetch = last_fetch.map(|at| at.elapsed());
+            let wait = match plan(source.current(), retry.delay(), since_last_fetch) {
+                Plan::FetchNow => {
+                    last_fetch = Some(Instant::now());
+                    match self.refresh_once().await {
+                        RefreshOutcome::Ok | RefreshOutcome::Rejected => retry.clear(),
+                        RefreshOutcome::TransportFailure => {
+                            retry.on_transport_failure();
+                        }
+                    }
+                    None
                 }
-            }
+                Plan::WaitFor(delay) => Some(delay.min(FRESHNESS_TICK)),
+                Plan::Idle => Some(FRESHNESS_TICK),
+            };
             // Re-apply freshness whatever happened. A server answering 503
             // (or nothing at all) must let the badge lapse on its own
             // expiry, and the publish is idempotent, so this costs nothing
             // when the document already stands.
             self.publish();
-            let delay = retry.delay().unwrap_or(CHECK_INTERVAL);
-            tokio::time::sleep(delay).await;
+            let Some(wait) = wait else { continue };
+            // A changed demand is planned again at once: showing the window
+            // fetches without waiting out the background interval.
+            tokio::select! {
+                () = tokio::time::sleep(wait) => {}
+                changed = source.demand.changed() => {
+                    if changed.is_err() {
+                        tokio::time::sleep(wait).await;
+                    }
+                }
+            }
         }
     }
 
@@ -223,7 +315,10 @@ fn describe(e: &ForumDigestError) -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::{Arc, Mutex};
+    use std::sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    };
 
     use ed25519_dalek::SigningKey;
     use warren_discovery_core::{pack_unread_counts, sign_forum_digest};
@@ -263,6 +358,100 @@ mod tests {
                 sink.lock().expect("sink lock").push(counts);
             }),
         }
+    }
+
+    #[test]
+    fn nothing_is_fetched_while_no_frontend_reads_the_digest() {
+        assert_eq!(plan(ForumDigestDemand::None, None, None), Plan::Idle);
+        assert_eq!(
+            plan(
+                ForumDigestDemand::None,
+                Some(RETRY_MIN),
+                Some(BACKGROUND_INTERVAL * 6)
+            ),
+            Plan::Idle,
+            "neither an armed retry nor a long silence may wake a digest nobody shows"
+        );
+    }
+
+    #[test]
+    fn the_first_demand_fetches_at_once() {
+        assert_eq!(
+            plan(ForumDigestDemand::Foreground, None, None),
+            Plan::FetchNow
+        );
+        assert_eq!(
+            plan(ForumDigestDemand::Background, None, None),
+            Plan::FetchNow
+        );
+    }
+
+    #[test]
+    fn a_visible_window_polls_every_minute() {
+        let ten = Duration::from_secs(10);
+        assert_eq!(
+            plan(ForumDigestDemand::Foreground, None, Some(ten)),
+            Plan::WaitFor(CHECK_INTERVAL - ten)
+        );
+        assert_eq!(
+            plan(ForumDigestDemand::Foreground, None, Some(CHECK_INTERVAL)),
+            Plan::FetchNow
+        );
+    }
+
+    #[test]
+    fn a_hidden_window_polls_on_the_slow_cadence_and_ignores_the_fast_retry() {
+        let two_minutes = Duration::from_secs(120);
+        assert_eq!(
+            plan(
+                ForumDigestDemand::Background,
+                Some(RETRY_MIN),
+                Some(two_minutes)
+            ),
+            Plan::WaitFor(BACKGROUND_INTERVAL - two_minutes)
+        );
+    }
+
+    #[test]
+    fn showing_the_window_fetches_at_once_after_a_background_stretch() {
+        let two_minutes = Duration::from_secs(120);
+        assert_eq!(
+            plan(ForumDigestDemand::Foreground, None, Some(two_minutes)),
+            Plan::FetchNow
+        );
+    }
+
+    #[test]
+    fn a_transport_failure_retries_fast_while_the_window_is_visible() {
+        assert_eq!(
+            plan(
+                ForumDigestDemand::Foreground,
+                Some(RETRY_MIN),
+                Some(RETRY_MIN)
+            ),
+            Plan::FetchNow
+        );
+    }
+
+    #[test]
+    fn a_detached_frontend_reads_as_no_demand() {
+        let (tx, rx) = watch::channel(ForumDigestDemand::Foreground);
+        let attached = Arc::new(AtomicBool::new(true));
+        let probe = attached.clone();
+        let mut source = DemandSource {
+            demand: rx,
+            frontend_attached: Box::new(move || probe.load(Ordering::SeqCst)),
+        };
+        assert_eq!(source.current(), ForumDigestDemand::Foreground);
+
+        attached.store(false, Ordering::SeqCst);
+
+        assert_eq!(
+            source.current(),
+            ForumDigestDemand::None,
+            "a GUI that quit or crashed without a word must not leave the poll running"
+        );
+        drop(tx);
     }
 
     #[test]

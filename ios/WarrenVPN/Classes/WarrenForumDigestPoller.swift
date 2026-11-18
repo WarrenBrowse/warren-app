@@ -48,9 +48,8 @@ public enum WarrenForumDigestCadence {
 /// the digest. Without both, the fetch is a periodic handshake with the API
 /// host for a number nobody displays.
 ///
-/// The desktop daemon polls the digest unconditionally, beside its relay-list
-/// and notices refreshes on the channel its own API traffic already uses;
-/// here the loop is the app's own, so the gate costs nothing and is applied.
+/// The desktop applies the same gate: its GUI reports the demand to the
+/// daemon, which fetches nothing without a reader.
 public func warrenForumDigestWanted(notificationsEnabled: Bool, hasAccount: Bool) -> Bool {
     notificationsEnabled && hasAccount
 }

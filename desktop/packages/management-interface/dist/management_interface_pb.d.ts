@@ -2214,6 +2214,33 @@ export namespace ForumReportRequest {
     }
 }
 
+export class WarrenForumDigestDemand extends jspb.Message { 
+    getDemand(): WarrenForumDigestDemand.Demand;
+    setDemand(value: WarrenForumDigestDemand.Demand): WarrenForumDigestDemand;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenForumDigestDemand.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenForumDigestDemand): WarrenForumDigestDemand.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenForumDigestDemand, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenForumDigestDemand;
+    static deserializeBinaryFromReader(message: WarrenForumDigestDemand, reader: jspb.BinaryReader): WarrenForumDigestDemand;
+}
+
+export namespace WarrenForumDigestDemand {
+    export type AsObject = {
+        demand: WarrenForumDigestDemand.Demand,
+    }
+
+    export enum Demand {
+    NONE = 0,
+    BACKGROUND = 1,
+    FOREGROUND = 2,
+    }
+
+}
+
 export class WarrenStatus extends jspb.Message { 
     getReconnectCount(): number;
     setReconnectCount(value: number): WarrenStatus;

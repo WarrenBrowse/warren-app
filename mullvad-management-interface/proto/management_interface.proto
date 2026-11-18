@@ -183,6 +183,12 @@ service ManagementService {
   // changes or the tunnel state machine transitions. The GUI consumes
   // this for live UI updates without polling.
   rpc WarrenStatusUpdates(google.protobuf.Empty) returns (stream WarrenStatus) {}
+  // What the GUI does with WarrenStatus.forum_digest, which sets how often
+  // the daemon fetches it: never while nothing reads it, on a slow cadence
+  // while the window is hidden, every minute while it is on screen. The
+  // daemon starts at NONE and counts the demand only while a status stream
+  // is open, so a GUI resends it after every reconnect.
+  rpc SetWarrenForumDigestDemand(WarrenForumDigestDemand) returns (google.protobuf.Empty) {}
 
   // Manual re-enable after this build stood down for a higher-priority
   // product environment: restores the `auto_connect` and `lockdown_mode` the
@@ -1026,6 +1032,18 @@ message ForumReportRequest {
 // the user when their exit is swapped after an outage.
 // Session H A.4: pubkey_mismatch_pending surfaces a TOFU verify-hook
 // refusal so the renderer can mount the `WarrenPubKeyWarning` modal.
+message WarrenForumDigestDemand {
+  enum Demand {
+    // No forum account, the forum notifications setting off, or no GUI.
+    NONE = 0;
+    // Only the tray indicator and its banner read the digest.
+    BACKGROUND = 1;
+    // The window is on screen.
+    FOREGROUND = 2;
+  }
+  Demand demand = 1;
+}
+
 message WarrenStatus {
   uint32 reconnect_count = 1;
   google.protobuf.Duration last_reconnect_age = 2;

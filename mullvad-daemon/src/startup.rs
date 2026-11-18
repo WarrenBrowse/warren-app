@@ -949,6 +949,7 @@ impl Daemon {
             warren_forum_digest_updater::WarrenForumDigestUpdater::spawn(
                 warren_api_url.clone(),
                 warren_server_pubkey.clone(),
+                warren_status_cache.forum_digest_demand_source(),
                 move |counts| digest_status.set_forum_digest(counts),
             );
         }

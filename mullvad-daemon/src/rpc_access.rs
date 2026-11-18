@@ -111,6 +111,7 @@ rpc_classes! {
         SetWarrenCustomExit => ControlMachine,
         GetWarrenStatus => ReadPublic,
         WarrenStatusUpdates => ReadPublic,
+        SetWarrenForumDigestDemand => ControlMachine,
         TrustNewExitKey => ControlMachine,
         ResetPinnedExitKeys => ControlMachine,
         DismissPubkeyMismatch => ControlMachine,

@@ -129,10 +129,8 @@ class ForumDigestPoller(
  * physical network since the forum flows ride the VpnService-protected
  * transport, for a number nobody displays.
  *
- * The desktop daemon polls the digest unconditionally, beside its relay-list
- * and notices refreshes on the channel its own API traffic already uses, and
- * the GUI setting does not reach it; here the loop is the app's own, so the
- * gate costs nothing and is applied.
+ * The desktop applies the same gate: its GUI reports the demand to the daemon,
+ * which fetches nothing without a reader.
  */
 fun forumDigestWanted(
     disclosureAccepted: Flow<Boolean>,

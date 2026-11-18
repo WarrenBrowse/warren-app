@@ -29,6 +29,8 @@ import WindowController, { WindowControllerDelegate } from './window-controller'
 const execAsync = promisify(exec);
 
 export interface UserInterfaceDelegate {
+  // The window was shown, hidden, minimized or restored.
+  windowVisibilityChanged(): void;
   dismissActiveNotifications(): void;
   updateAccountData(): Promise<void>;
   checkPendingPurchases(): void;
@@ -422,6 +424,12 @@ export default class UserInterface implements WindowControllerDelegate {
   }
 
   private registerWindowListener() {
+    const visibilityChanged = () => this.delegate.windowVisibilityChanged();
+    this.windowController.window?.on('show', visibilityChanged);
+    this.windowController.window?.on('hide', visibilityChanged);
+    this.windowController.window?.on('minimize', visibilityChanged);
+    this.windowController.window?.on('restore', visibilityChanged);
+
     this.windowController.window?.on('focus', () => {
       IpcMainEventChannel.window.notifyFocus?.(true);
 

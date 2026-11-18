@@ -19,6 +19,8 @@ use talpid_warren_tunnel::{
 };
 use tokio::sync::watch;
 
+use crate::warren_forum_digest_updater::{DemandSource, ForumDigestDemand};
+
 /// Snapshot of the NAT-PMP refresh loop, surfaced to the UI alongside
 /// the connection status. `Disabled` is the default (no toggle, no
 /// loop spawned); `Requesting` is set when the daemon-side
@@ -441,6 +443,10 @@ impl Default for InternalState {
 pub struct WarrenStatusCache {
     state: Arc<RwLock<InternalState>>,
     tx: watch::Sender<WarrenStatusSnapshot>,
+    /// What the frontend does with the forum digest, as it last reported.
+    /// Lives here because the frontend that reports it is the one holding
+    /// the status subscription the digest is published on.
+    forum_digest_demand: watch::Sender<ForumDigestDemand>,
 }
 
 impl WarrenStatusCache {
@@ -449,9 +455,27 @@ impl WarrenStatusCache {
     /// always get an immediate read.
     pub fn new() -> Self {
         let (tx, _rx) = watch::channel(WarrenStatusSnapshot::default());
+        let (forum_digest_demand, _demand_rx) = watch::channel(ForumDigestDemand::None);
         Self {
             state: Arc::new(RwLock::new(InternalState::default())),
             tx,
+            forum_digest_demand,
+        }
+    }
+
+    /// Record what the frontend does with the forum digest.
+    pub fn set_forum_digest_demand(&self, demand: ForumDigestDemand) {
+        self.forum_digest_demand.send_replace(demand);
+    }
+
+    /// The demand as the digest updater reads it: the frontend's last word,
+    /// counted only while some frontend still holds a status subscription,
+    /// so a GUI that quit or crashed without a word stops the poll.
+    pub fn forum_digest_demand_source(&self) -> DemandSource {
+        let status = self.tx.clone();
+        DemandSource {
+            demand: self.forum_digest_demand.subscribe(),
+            frontend_attached: Box::new(move || status.receiver_count() > 0),
         }
     }
 
@@ -1163,6 +1187,26 @@ pub fn auto_recovery_step(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_digest_demand_counts_only_while_a_frontend_is_subscribed() {
+        let cache = WarrenStatusCache::new();
+        let mut source = cache.forum_digest_demand_source();
+        cache.set_forum_digest_demand(ForumDigestDemand::Foreground);
+        assert_eq!(
+            source.current(),
+            ForumDigestDemand::None,
+            "no status subscriber means no frontend to show a badge"
+        );
+
+        let frontend = cache.subscribe();
+        assert_eq!(source.current(), ForumDigestDemand::Foreground);
+        cache.set_forum_digest_demand(ForumDigestDemand::Background);
+        assert_eq!(source.current(), ForumDigestDemand::Background);
+
+        drop(frontend);
+        assert_eq!(source.current(), ForumDigestDemand::None);
+    }
 
     #[test]
     fn default_snapshot_matches_v1_doctrine() {
