@@ -501,9 +501,27 @@ fn withhold_forwarded_ports(status: &mut types::NatPmpStatus, may_see_identity: 
     }
 }
 
+/// The ports of the forwarding rules, like those the exit granted: another
+/// account sees whether forwarding is on and how many rules there are, not
+/// which ports the owner forwards.
+fn withhold_nat_pmp_ports(settings: &mut types::NatPmpSettings, may_see_identity: bool) {
+    if may_see_identity {
+        return;
+    }
+    for rule in &mut settings.rules {
+        rule.suggested_external_port = 0;
+        rule.internal_port = 0;
+    }
+    settings.suggested_external_port = 0;
+    settings.internal_port = 0;
+}
+
 fn withhold_settings_secrets(settings: &mut types::Settings, may_see_secrets: bool) {
     if may_see_secrets {
         return;
+    }
+    if let Some(nat_pmp) = settings.warren_nat_pmp.as_mut() {
+        withhold_nat_pmp_ports(nat_pmp, false);
     }
     // The URL may name a host the owner keeps private.
     settings.warren_api_url.clear();
@@ -1334,9 +1352,9 @@ impl ManagementService for ManagementServiceImpl {
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(&call, DaemonCommand::GetSettings(tx))?;
         let settings = self.wait_for_result(rx).await?;
-        Ok(Response::new(types::NatPmpSettings::from(
-            &settings.warren_nat_pmp,
-        )))
+        let mut nat_pmp = types::NatPmpSettings::from(&settings.warren_nat_pmp);
+        withhold_nat_pmp_ports(&mut nat_pmp, self.may_see_identity(&request));
+        Ok(Response::new(nat_pmp))
     }
 
     async fn set_nat_pmp_settings(
@@ -3592,7 +3610,7 @@ mod tests {
 
     use super::{
         daemon_event, types, withhold_account_secrets, withhold_event_identity,
-        withhold_forwarded_ports, withhold_settings_secrets,
+        withhold_forwarded_ports, withhold_nat_pmp_ports, withhold_settings_secrets,
     };
 
     /// The GUI keys "banned" on this code, apart from the four codes a
@@ -3989,6 +4007,47 @@ mod tests {
         assert_eq!(status.external_port, None);
         assert_eq!(status.mappings[0].external_port, None);
         assert_eq!(status.mappings[0].internal_port, 0);
+    }
+
+    fn nat_pmp_with_ports() -> types::NatPmpSettings {
+        types::NatPmpSettings {
+            enabled: true,
+            rules: vec![types::nat_pmp_settings::Rule {
+                suggested_external_port: 41000,
+                internal_port: 8080,
+                ..Default::default()
+            }],
+            suggested_external_port: 41001,
+            internal_port: 8081,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn another_account_reads_the_forwarding_rules_without_their_ports() {
+        let mut settings = types::Settings {
+            warren_nat_pmp: Some(nat_pmp_with_ports()),
+            ..Default::default()
+        };
+
+        withhold_settings_secrets(&mut settings, false);
+
+        let nat_pmp = settings.warren_nat_pmp.unwrap();
+        assert!(nat_pmp.enabled, "whether forwarding is on stays public");
+        assert_eq!(nat_pmp.rules.len(), 1);
+        assert_eq!(nat_pmp.rules[0].suggested_external_port, 0);
+        assert_eq!(nat_pmp.rules[0].internal_port, 0);
+        assert_eq!(nat_pmp.suggested_external_port, 0);
+        assert_eq!(nat_pmp.internal_port, 0);
+    }
+
+    #[test]
+    fn the_owner_reads_the_forwarding_rules_whole() {
+        let mut nat_pmp = nat_pmp_with_ports();
+
+        withhold_nat_pmp_ports(&mut nat_pmp, true);
+
+        assert_eq!(nat_pmp, nat_pmp_with_ports());
     }
 
     #[test]
