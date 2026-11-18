@@ -1,1 +1,1 @@
-export * from './get-obfuscation-label';
+export * from './get-anti-censorship-label';

@@ -3,13 +3,13 @@ import { RoutePath } from '../../../../../../shared/routes';
 import { ListItemProps } from '../../../../../lib/components/list-item';
 import { useSelector } from '../../../../../redux/store';
 import { SettingsNavigationListItem } from '../../../../settings-navigation-list-item';
-import { getObfuscationLabel } from './utils';
+import { getAntiCensorshipLabel } from './utils';
 
 export type AntiCensorshipListItemProps = Omit<ListItemProps, 'children'>;
 
 export function AntiCensorshipListItem(props: AntiCensorshipListItemProps) {
-  const { selectedObfuscation } = useSelector((state) => state.settings.obfuscationSettings);
-  const obfuscationLabel = getObfuscationLabel(selectedObfuscation);
+  const obfuscationActive = useSelector((state) => state.settings.warrenStatus?.obfuscationActive);
+  const obfuscationLabel = getAntiCensorshipLabel(obfuscationActive);
 
   return (
     <SettingsNavigationListItem to={RoutePath.antiCensorship} {...props}>
