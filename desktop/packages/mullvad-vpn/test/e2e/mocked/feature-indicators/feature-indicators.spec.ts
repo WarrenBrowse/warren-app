@@ -41,12 +41,6 @@ const featureIndicatorWithoutOption: FeatureIndicatorTestOption[] = [
     featureIndicatorLabel: 'Bypass VPN',
     skip: process.platform === 'linux',
   },
-  {
-    testId: 'server ip override',
-    featureIndicator: FeatureIndicator.serverIpOverride,
-    route: RoutePath.settingsImport,
-    featureIndicatorLabel: 'Server ip override',
-  },
 ];
 
 const featureIndicatorWithOption: FeatureIndicatorWithOptionTestOption[] = [

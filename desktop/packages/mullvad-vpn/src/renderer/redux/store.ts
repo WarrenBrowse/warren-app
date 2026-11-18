@@ -9,8 +9,6 @@ import connectionActions, { ConnectionAction } from './connection/actions';
 import connectionReducer, { IConnectionReduxState } from './connection/reducers';
 import settingsActions, { SettingsAction } from './settings/actions';
 import settingsReducer, { ISettingsReduxState } from './settings/reducers';
-import { SettingsImportAction } from './settings-import/actions';
-import settingsImportReducer, { SettingsImportReduxState } from './settings-import/reducers';
 import userInterfaceActions, { UserInterfaceAction } from './userinterface/actions';
 import userInterfaceReducer, { IUserInterfaceReduxState } from './userinterface/reducers';
 import versionActions, { VersionAction } from './version/actions';
@@ -23,7 +21,6 @@ export interface IReduxState {
   settings: ISettingsReduxState;
   version: IVersionReduxState;
   userInterface: IUserInterfaceReduxState;
-  settingsImport: SettingsImportReduxState;
 }
 
 export type ReduxAction =
@@ -32,8 +29,7 @@ export type ReduxAction =
   | ConnectionAction
   | SettingsAction
   | VersionAction
-  | UserInterfaceAction
-  | SettingsImportAction;
+  | UserInterfaceAction;
 export type ReduxStore = ReturnType<typeof configureStore>;
 export type ReduxDispatch = Dispatch<ReduxAction>;
 
@@ -45,7 +41,6 @@ export default function configureStore() {
     settings: settingsReducer,
     version: versionReducer,
     userInterface: userInterfaceReducer,
-    settingsImport: settingsImportReducer,
   };
 
   const rootReducer = combineReducers(reducers);

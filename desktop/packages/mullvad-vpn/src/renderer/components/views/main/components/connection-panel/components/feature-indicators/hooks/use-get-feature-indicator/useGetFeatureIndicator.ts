@@ -103,12 +103,6 @@ export const useGetFeatureIndicator = () => {
     history.push(RoutePath.splitTunneling, { transition: TransitionType.show });
   }, [history]);
 
-  const gotoServerIpOverride = React.useCallback(() => {
-    history.push(RoutePath.settingsImport, {
-      transition: TransitionType.show,
-    });
-  }, [history]);
-
   const gotoDnsContentBlockersFeature = React.useCallback(() => {
     history.push(RoutePath.vpnSettings, {
       transition: TransitionType.show,
@@ -248,9 +242,10 @@ export const useGetFeatureIndicator = () => {
       label: messages.pgettext('split-tunneling-view', 'Bypass VPN'),
       onClick: gotoSplitTunnelingFeature,
     },
+    // Overrides only ever applied to the inherited relay list, which the
+    // Warren tunnel does not read, so there is no setting to open.
     [FeatureIndicator.serverIpOverride]: {
       label: messages.pgettext('settings-import', 'Server IP override'),
-      onClick: gotoServerIpOverride,
     },
     [FeatureIndicator.quantumResistance]: {
       label:

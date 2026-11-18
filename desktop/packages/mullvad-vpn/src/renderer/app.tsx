@@ -658,9 +658,6 @@ export default class AppRenderer {
     IpcRendererEventChannel.settings.testApiAccessMethodById(id);
   public testCustomApiAccessMethod = (method: CustomProxy) =>
     IpcRendererEventChannel.settings.testCustomApiAccessMethod(method);
-  public importSettingsFile = (path: string) => IpcRendererEventChannel.settings.importFile(path);
-  public importSettingsText = (text: string) => IpcRendererEventChannel.settings.importText(text);
-  public clearAllRelayOverrides = () => IpcRendererEventChannel.settings.clearAllRelayOverrides();
   public setEnabledRecents = (enabled: boolean) =>
     IpcRendererEventChannel.settings.setEnableRecents(enabled);
   public setTheme = (theme: ThemePreference): void =>

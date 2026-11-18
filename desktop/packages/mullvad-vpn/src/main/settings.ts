@@ -1,5 +1,3 @@
-import fs from 'fs/promises';
-
 import { ISettings } from '../shared/daemon-rpc-types';
 import { guiSettingsForRenderer } from '../shared/gui-settings-state';
 import { ICurrentAppVersionInfo } from '../shared/ipc-types';
@@ -99,18 +97,8 @@ export default class Settings implements Readonly<ISettings> {
       return this.daemonRpc.testCustomApiAccessMethod(method);
     });
 
-    IpcMainEventChannel.settings.handleClearAllRelayOverrides(() => {
-      return this.daemonRpc.clearAllRelayOverrides();
-    });
     IpcMainEventChannel.settings.handleSetEnableRecents((enabled) => {
       return this.daemonRpc.setEnableRecents(enabled);
-    });
-    IpcMainEventChannel.settings.handleImportText((text) => {
-      return this.daemonRpc.applyJsonSettings(text);
-    });
-    IpcMainEventChannel.settings.handleImportFile(async (path) => {
-      const settings = await fs.readFile(path);
-      return this.daemonRpc.applyJsonSettings(settings.toString());
     });
     IpcMainEventChannel.settings.handleSetEnableDaita((value) => {
       return this.daemonRpc.setEnableDaita(value);

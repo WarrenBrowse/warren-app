@@ -1147,14 +1147,6 @@ export class DaemonRpc extends GrpcClient {
     return result.getValue();
   }
 
-  public async applyJsonSettings(settings: string): Promise<void> {
-    await this.callString(this.client.applyJsonSettings, settings);
-  }
-
-  public async clearAllRelayOverrides(): Promise<void> {
-    await this.callEmpty(this.client.clearAllRelayOverrides);
-  }
-
   public async setEnableRecents(enabled: boolean): Promise<void> {
     const boolValue = new BoolValue();
     boolValue.setValue(enabled);

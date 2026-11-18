@@ -43,8 +43,6 @@ import {
   RestoreMnemonicView,
   SelectLanguageView,
   SelectLocationView,
-  SettingsImportView,
-  SettingsTextImportView,
   SettingsView,
   SplitTunnelingView,
   SupportView,
@@ -105,8 +103,6 @@ export default function AppRouter() {
           <Route exact path={RoutePath.daitaSettings} component={DaitaSettingsView} />
           <Route exact path={RoutePath.splitTunneling} component={SplitTunnelingView} />
           <Route exact path={RoutePath.apiAccessMethods} component={ApiAccessView} />
-          <Route exact path={RoutePath.settingsImport} component={SettingsImportView} />
-          <Route exact path={RoutePath.settingsTextImport} component={SettingsTextImportView} />
           <Route exact path={RoutePath.editApiAccessMethods} component={EditApiAccessView} />
           <Route exact path={RoutePath.support} component={SupportView} />
           <Route exact path={RoutePath.forumSignInCode} component={ForumSignInCodeView} />

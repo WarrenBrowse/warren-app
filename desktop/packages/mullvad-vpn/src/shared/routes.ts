@@ -29,8 +29,6 @@ export enum RoutePath {
   daitaSettings = '/settings/daita',
   splitTunneling = '/settings/split-tunneling',
   apiAccessMethods = '/settings/api-access-methods',
-  settingsImport = '/settings/settings-import',
-  settingsTextImport = '/settings/settings-import/text-import',
   editApiAccessMethods = '/settings/api-access-methods/edit/:id?',
   support = '/settings/support',
   // The forum sign-in finished by hand with the code the approval page

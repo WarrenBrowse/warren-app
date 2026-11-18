@@ -1,6 +1,5 @@
 export * from './custom-dns-settings';
 export * from './dns-blocker-settings';
-export * from './ip-override-settings';
 export * from './kill-switch-setting';
 export * from './anti-censorship-list-item';
 export * from './max-rate-setting';

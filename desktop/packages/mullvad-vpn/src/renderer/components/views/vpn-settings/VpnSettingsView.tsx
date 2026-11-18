@@ -26,7 +26,6 @@ import {
   AntiCensorshipListItem,
   CustomDnsSettings,
   DnsBlockerSettings,
-  IpOverrideSettings,
   IpVersionSetting,
   KillSwitchSetting,
   MaxRateSetting,
@@ -78,7 +77,6 @@ export function VpnSettingsView() {
                   <IpVersionSetting />
                   <MtuSetting />
                   <MaxRateSetting />
-                  <IpOverrideSettings position="solo" />
                   <ResetPinnedExitKeys position="solo" />
                   {showCustomExit ? <WarrenCustomExitSetting position="solo" /> : null}
                 </FlexColumn>
