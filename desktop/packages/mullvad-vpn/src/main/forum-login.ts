@@ -16,7 +16,7 @@ import log from '../shared/logging';
 import { DaemonRpc } from './daemon-rpc';
 
 /**
- * Community-forum wallet login (warren-core doc 55).
+ * Community-forum wallet login.
  *
  * The forum (`forum.warrenbrowse.com`) authenticates users through
  * DiscourseConnect against our `warren-connect` provider. When the user

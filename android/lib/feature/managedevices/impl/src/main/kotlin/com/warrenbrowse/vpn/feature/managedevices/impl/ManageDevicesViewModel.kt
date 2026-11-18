@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 private typealias ListState = Lce<Unit, AccountDeviceList, DeviceRegistryError>
 
 /**
- * The account's devices (warren-core doc 115): another device is disconnected by revoking it, this
+ * The account's devices: another device is disconnected by revoking it, this
  * one is logged out the same way, and the registry keeps the names the account gives them.
  */
 class ManageDevicesViewModel(

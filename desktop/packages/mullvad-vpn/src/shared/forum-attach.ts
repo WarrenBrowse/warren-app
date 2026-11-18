@@ -1,4 +1,4 @@
-// Shared types for the community-forum attach-logs flow (warren-core doc 55).
+// Shared types for the community-forum attach-logs flow.
 // A `warren://attach-logs` deep link asks the app to attach its redacted
 // problem report to a forum topic; the app MUST show an explicit consent
 // prompt, with a way to view the exact report, before signing and sending.

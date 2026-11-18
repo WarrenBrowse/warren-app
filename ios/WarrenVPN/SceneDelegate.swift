@@ -193,7 +193,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, @preconcurrency Setting
         addTunnelObserver()
 
         // A `<scheme>://forum-login` deep link that cold-starts the app arrives
-        // here rather than via `openURLContexts` (doc 55).
+        // here rather than via `openURLContexts`.
         forumLogin.presenter = { [weak self] in self?.topViewController() }
         // The launch announcement opens in full over whatever is on screen,
         // resolved at presentation time for the same reason.
@@ -233,7 +233,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, @preconcurrency Setting
 
     func sceneDidEnterBackground(_ scene: UIScene) {}
 
-    // MARK: - Community-forum wallet login deep link (doc 55)
+    // MARK: - Community-forum wallet login deep link
 
     /// The login flow the app delegate owns; this scene supplies where its
     /// prompts are presented.

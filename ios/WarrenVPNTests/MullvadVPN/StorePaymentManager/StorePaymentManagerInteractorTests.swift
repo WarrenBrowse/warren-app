@@ -185,7 +185,7 @@ final class StorePaymentManagerInteractorTests: XCTestCase {
         }
     }
 
-    // MARK: - A banned wallet (warren-core doc 105 section 5.3)
+    // MARK: - A banned wallet
 
     private let ban = WarrenAccountBan(portForwarding: true, lapsesAt: nil, inForce: true)
 

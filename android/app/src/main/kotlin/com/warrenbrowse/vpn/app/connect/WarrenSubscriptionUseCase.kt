@@ -132,7 +132,7 @@ class WarrenSubscriptionUseCase(
     }
 
     /**
-     * App-initiated purchase auto-credit (warren-core doc 35), the Android
+     * App-initiated purchase auto-credit, the Android
      * counterpart of the desktop `buyCredit` poll. The caller opens the
      * checkout bound to the [claim]'s wpid and pull-secret hash; here we read
      * the mnemonic silently (no prompt) and poll the signed

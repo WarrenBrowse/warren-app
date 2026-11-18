@@ -22,10 +22,10 @@ export interface IAccountReduxState {
   pubkeyHistory?: WarrenPubKey;
   expiry?: string; // ISO8601
   status: LoginState;
-  // Mirror of the main-process purchase poll (app-initiated checkout,
-  // doc 35). Drives the "Checking..." labels in the paywall views.
+  // Mirror of the main-process purchase poll (app-initiated checkout).
+  // Drives the "Checking..." labels in the paywall views.
   purchaseInFlight: boolean;
-  // Device-held auto-renewal mandate display state (warren-core doc 65); undefined
+  // Device-held auto-renewal mandate display state; undefined
   // when the logged-in account holds none.
   renewalState?: RenewalUiState;
   // This wallet's community-forum identity: the public handle and the slot

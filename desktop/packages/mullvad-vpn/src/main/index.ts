@@ -601,7 +601,7 @@ class ApplicationMain
     });
   }
 
-  // Community-forum deep links (doc 55): wallet login and attach-logs.
+  // Community-forum deep links: wallet login and attach-logs.
   // Registers the `warren://` scheme and wires the three delivery paths:
   // macOS `open-url`, Windows/Linux argv on the second instance (see above)
   // and on first launch (checked in onReady).
@@ -694,7 +694,7 @@ class ApplicationMain
     fs.promises.unlink(problemReport.getProblemReportPath(reportId)).catch(() => undefined);
   }
 
-  // The in-app report (doc 55). A send with logs always collects afresh: the
+  // The in-app report. A send with logs always collects afresh: the
   // report should describe the moment of the send, not the moment the form
   // was opened. The gzip happens here in main; the renderer never handles the
   // log content. A collection that fails sends the description alone, as the
@@ -2354,8 +2354,8 @@ class ApplicationMain
     return pubkey ? createHash('sha256').update(pubkey).digest('hex').slice(0, 16) : undefined;
   }
 
-  // Monthly merchant-initiated charge through the checkout backend
-  // (warren-core doc 65). Statelessly authenticated by the device-held token; the
+  // Monthly merchant-initiated charge through the checkout backend.
+  // Statelessly authenticated by the device-held token; the
   // response status maps onto the flow's outcome machine.
   private async requestRenew(body: Record<string, unknown>): Promise<RenewOutcome> {
     const res = await fetch(`${urls.purchase}v1/checkout/renew`, {

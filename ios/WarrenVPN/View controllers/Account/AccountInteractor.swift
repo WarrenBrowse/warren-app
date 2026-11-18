@@ -14,7 +14,7 @@ import Operations
 
 final class AccountInteractor: Sendable {
     let tunnelManager: TunnelManager
-    /// The account's devices (warren-core doc 115), for the Devices row and
+    /// The account's devices, for the Devices row and
     /// the list it opens.
     let deviceManaging: any DeviceManaging
 

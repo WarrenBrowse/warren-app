@@ -50,14 +50,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     var apiContext: MullvadApiContext!
     var accessMethodReceiver: MullvadAccessMethodReceiver!
     let breadcrumbsProvider = BreadcrumbsProvider()
-    /// The community-forum wallet login (doc 55), from a deep link or a typed
+    /// The community-forum wallet login, from a deep link or a typed
     /// code; the scene that owns the window supplies its presenter.
     let forumLogin = WarrenForumLoginFlow()
     /// The forum flows' event journal, in the app log container so the
-    /// problem-report collector carries it (doc 55). Lazy so the container is
+    /// problem-report collector carries it. Lazy so the container is
     /// resolved when a forum flow first runs, never at app allocation.
     lazy var forumEvents = WarrenForumEventsJournal(directory: ApplicationConfiguration.containerURL)
-    /// The forum page's attach-logs flow (doc 55); the scene supplies its
+    /// The forum page's attach-logs flow; the scene supplies its
     /// presenter and tunnel state like the login's.
     lazy var forumAttach = WarrenForumAttachFlow(journal: forumEvents)
     /// Places a session id typed under Settings and routes it to the login or
@@ -71,7 +71,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// The launch announcements this installation holds, and the foreground
     /// poll that keeps them current.
     nonisolated(unsafe) private var launchAnnouncements: WarrenLaunchAnnouncements?
-    /// The wallet's port-forward standing (warren-core doc 105), and the
+    /// The wallet's port-forward standing, and the
     /// foreground poll that keeps it current.
     nonisolated(unsafe) private var accountStanding: WarrenAccountStandingFeed?
     /// The view controller the full announcement is presented on, resolved at
@@ -539,7 +539,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         return provider
     }
 
-    /// The port-forward standing feed and its banner (warren-core doc 105).
+    /// The port-forward standing feed and its banner.
     /// Built together so the banner is re-evaluated the moment the standing
     /// moves, and the port-forwarding screen reads the same feed.
     private func makeAccountStrikeNotificationProvider() -> WarrenAccountStrikeNotificationProvider {

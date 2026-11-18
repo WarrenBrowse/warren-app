@@ -33,7 +33,7 @@ function manageDevicesLink(provider: ErrorNotificationProvider) {
   );
 }
 
-// warren-core doc 115, section 7.1: the two blocked states a device of the
+// The two blocked states a device of the
 // account can cause open the account's device list from the banner.
 describe('the blocked-state banner of a device problem', () => {
   it('says why a session has no token, and offers the device list', () => {

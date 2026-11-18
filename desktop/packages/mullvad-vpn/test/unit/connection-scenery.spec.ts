@@ -53,7 +53,7 @@ describe('getConnectionPhase', () => {
   });
 
   it('connected with the exit not forwarding degrades to interrupted, never green', () => {
-    // Doc 62 item 5: a drained/half-swapped exit keeps the QUIC session
+    // A drained or half-swapped exit keeps the QUIC session
     // alive, so the tunnel state stays Connected while nothing flows.
     expect(getConnectionPhase(connected, false, true)).toBe('interrupted');
     expect(getConnectionPhase(connected, false, false)).toBe('protected');

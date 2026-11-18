@@ -15,7 +15,7 @@ interface ExternalPaymentButtonProps {
   'data-testid'?: string;
 }
 
-// The one way to open the external checkout (doc 35). Always
+// The one way to open the external checkout. Always
 // clickable: when the firewall blocks the browser (out-of-time
 // connecting loop, blocking error state, lockdown) the click routes
 // the user through the unblocking step instead of presenting a dead

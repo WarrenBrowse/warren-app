@@ -25,7 +25,7 @@ public enum WarrenPortForwardingState: Equatable, Sendable {
     case failed(portConflict: Bool)
     /// The exit is refusing new allocations for a while longer.
     case rateLimited(remaining: TimeInterval)
-    /// The exit refused the mapping as not authorized (warren-core doc 105):
+    /// The exit refused the mapping as not authorized:
     /// for want of an entitlement, or refusing the one presented. The tunnel
     /// asks again on its own in `retryIn`.
     case refused(noEntitlement: Bool, retryIn: TimeInterval)

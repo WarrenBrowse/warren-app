@@ -198,7 +198,7 @@ public final class AppPreferences: AppPreferencesDataSource {
     public var warrenDismissedAnnouncements: [String] = []
 
     /// Digests of the port-forward strikes whose banner the reader has put
-    /// away (warren-core doc 105). A digest, never the case reference, so the
+    /// away. A digest, never the case reference, so the
     /// preferences name no case; the next strike raises the banner again.
     @CompositeStorage(key: AppStorageKey.warrenDismissedStrikes.rawValue, container: .standard)
     public var warrenDismissedStrikes: [String] = []

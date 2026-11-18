@@ -67,9 +67,9 @@ internal fun parsePullJson(rawJson: String): PurchasePull =
     }
 
 /**
- * Collects the vouchers app-initiated purchases paid for (warren-core doc 35) so that none is
+ * Collects the vouchers app-initiated purchases paid for so that none is
  * ever lost: the server hands a voucher out once, and a ban refuses its redemption for up to a
- * year while leaving it unspent (doc 105 section 5.3). Each pulled voucher is sealed in [store]
+ * year while leaving it unspent. Each pulled voucher is sealed in [store]
  * before its first redemption, and leaves it only once redeemed or refused for good.
  */
 class PurchaseVoucherKeeper(

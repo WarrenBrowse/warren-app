@@ -15,7 +15,7 @@ import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 
 /**
- * The revoked screen (warren-core doc 115): the wallet already left the device when it shows, so
+ * The revoked screen: the wallet already left the device when it shows, so
  * going to login only lifts whatever still holds the traffic and clears the revocation, which the
  * next login must not find.
  */

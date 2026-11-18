@@ -227,7 +227,7 @@ public enum BlockedStateReason: String, Codable, Equatable, Sendable {
     /// Account is expired.
     case accountExpired
 
-    /// The wallet is banned (warren-core doc 105), for any reason but
+    /// The wallet is banned, for any reason but
     /// port-forwarding abuse. A suspension, not an expiry: renewing does not
     /// lift it.
     case accountBanned
@@ -241,8 +241,7 @@ public enum BlockedStateReason: String, Codable, Equatable, Sendable {
 
     /// No session token the exit admits although the subscription is active:
     /// other devices of the account, or an older client on one of them, hold
-    /// this epoch's tokens. The screens offer the account's devices on it
-    /// (warren-core doc 115).
+    /// this epoch's tokens. The screens offer the account's devices on it.
     case noSessionToken
 
     /// Two different exits refused this device's time on the dated session

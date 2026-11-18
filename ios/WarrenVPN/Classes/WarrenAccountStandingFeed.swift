@@ -4,7 +4,7 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The wallet's port-forward abuse standing (warren-core doc 105 §5.4): what
+//  The wallet's port-forward abuse standing: what
 //  this installation last heard, the foreground poll that keeps it current,
 //  and how the app words it. The Android twins are
 //  `WarrenAccountStandingPoller` and `AccountStandingText`.

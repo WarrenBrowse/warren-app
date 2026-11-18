@@ -174,7 +174,7 @@ fun OnboardingSubscriptionScreen(navigator: Navigator) {
         VariantButton(
             modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
             onClick = {
-                // App-initiated purchase (doc 35): mint a purchase claim, open
+                // App-initiated purchase: mint a purchase claim, open
                 // the checkout bound to its wpid and pull-secret hash, arm the
                 // redeem poll for the return.
                 val claim = PurchaseClaim.mint()

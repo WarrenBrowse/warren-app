@@ -4,7 +4,7 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  Gzip framing for the forum attach-logs upload (doc 55). The connect
+//  Gzip framing for the forum attach-logs upload. The connect
 //  broker inflates the `log_gz_b64` field as a gzip member (RFC 1952), the
 //  same encoding the desktop's `zlib.gzipSync` and Android's
 //  `GZIPOutputStream` produce, so a raw deflate or a zlib-wrapped stream

@@ -5,8 +5,8 @@ import { WarrenAccountStanding } from '../shared/daemon-rpc-types';
 const MAX_TIMER_MS = 2 ** 31 - 1;
 
 /**
- * Reports each time a ban on the logged-in account starts or stops holding
- * (warren-core doc 105). A ban stops holding in two ways: a new standing drops
+ * Reports each time a ban on the logged-in account starts or stops holding.
+ * A ban stops holding in two ways: a new standing drops
  * it (an operator's early lift), or its lapse passes, which no new standing
  * announces, so the lapse has a timer of its own.
  */

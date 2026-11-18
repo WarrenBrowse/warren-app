@@ -21,7 +21,7 @@ protocol WarrenStrikeDismissing: AnyObject {
 extension AppPreferences: WarrenStrikeDismissing {}
 
 /// A forwarded port was closed after an abuse report and counted against the
-/// account (warren-core doc 105, desktop `WarrenAccountStrikeNotificationProvider`):
+/// account (desktop `WarrenAccountStrikeNotificationProvider`):
 /// the newest live warning with its case reference, and a tap on it opens the
 /// page on contesting it. It can be put away, keyed on the strike, because it
 /// would otherwise hold the banner for the whole window; the warning stays

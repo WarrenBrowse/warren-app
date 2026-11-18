@@ -51,7 +51,7 @@ private const val PREVIEW_MAX_BYTES = 400_000
 
 /**
  * Consent prompt for attaching the redacted problem report to a forum bug
- * report (doc 55), the mirror of the desktop `ForumAttachPrompt`. The app
+ * report, the mirror of the desktop `ForumAttachPrompt`. The app
  * NEVER uploads silently: the report is collected and sent only after the
  * user approves here, and the exact report can be read first ("View the
  * logs"). Observes [ForumAttachController.pending]; a `warren://attach-logs`

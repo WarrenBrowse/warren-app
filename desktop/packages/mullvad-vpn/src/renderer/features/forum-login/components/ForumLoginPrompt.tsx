@@ -67,7 +67,7 @@ const WarningText = styled.span({
 // `electron` package, which Vite pre-bundles into the (sandboxed, node-less)
 // renderer and crashes it on load with `__dirname is not defined`.
 
-// Consent prompt for the community-forum wallet login (doc 55). Mounts a modal
+// Consent prompt for the community-forum wallet login. Mounts a modal
 // when a `warren://forum-login` deep link arrives (via the `forumLogin.request`
 // IPC push). The app NEVER logs into the forum silently: signing with the
 // wallet key happens only after the user explicitly approves here. Declining

@@ -206,7 +206,7 @@ val appModule = module {
 
     // Subscription-status fetch: biometric unlock + signed GET /v1/subscription.
     // A pulled purchase voucher is sealed with a Keystore key before its redemption, so a
-    // restart during a ban that refuses it cannot lose a paid secret (warren-core doc 105).
+    // restart during a ban that refuses it cannot lose a paid secret.
     single<PendingVoucherStore> {
         SealedPendingVoucherStore(AndroidKeystoreBlobSealer(), SharedPreferencesBlobShelf(androidContext()))
     }
@@ -225,7 +225,7 @@ val appModule = module {
         HeldVoucherRedeemer(standing = get(), wallet = get()) { subscriptions.redeemHeldVouchers() }
     }
 
-    // Community-forum wallet login (doc 55): the deep-link consent controller and
+    // Community-forum wallet login: the deep-link consent controller and
     // the sign + POST use case. `WarrenJni.forumLogin` signs AND sends in Rust.
     single { ForumLoginController() }
     single<ForumIdentityRepository> { SharedPreferencesForumIdentityRepository(androidContext()) }
@@ -256,7 +256,7 @@ val appModule = module {
             tunnelState = get(),
         )
     }
-    // The forum's "attach your logs" page (doc 55): the deep-link consent
+    // The forum's "attach your logs" page: the deep-link consent
     // controller and the collect + gzip + sign + POST use case.
     single { ForumAttachController() }
     single {
@@ -279,7 +279,7 @@ val appModule = module {
             journal = get(),
         )
     }
-    // The forum activity badge (doc 55): one number for the bell, the
+    // The forum activity badge: one number for the bell, the
     // notification and the panel, from the broadcast digest indexed by the
     // wallet's slot, corrected by what the panel itself proved. The alerts
     // surface is the notification provider registered below.
@@ -302,7 +302,7 @@ val appModule = module {
         )
     }
     single { ForumDigestPoller(jni = get(), activity = get(), tunnelState = get()) }
-    // The operator broadcast banner (doc 55): one signed message from the
+    // The operator broadcast banner: one signed message from the
     // operator, verified in Rust and shown above every other banner. The state
     // is in memory only, so an erased notice can never come back off a disk
     // cache.
@@ -331,7 +331,7 @@ val appModule = module {
         )
     }
     single { ForumActivityOpenRequests() }
-    // The wallet's port-forward abuse standing (warren-core doc 105): in
+    // The wallet's port-forward abuse standing: in
     // memory only, re-read on every service start; which strikes were already
     // announced is Rust's to remember, as digests.
     single { WarrenAccountStandingRepository() } bind WarrenAccountStandingState::class

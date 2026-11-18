@@ -37,7 +37,7 @@ enum StorePaymentError: Error {
     /// the API. The receipt can be uploaded again later.
     case receiptUpload
     /// The wallet is banned, so warren-api opened no payment session and
-    /// StoreKit was never asked to charge (warren-core doc 105 section 5.3).
+    /// StoreKit was never asked to charge.
     case bannedBeforePayment(WarrenAccountBan)
     /// The wallet is banned, so warren-api left the paid transaction
     /// unclaimed. It stays unfinished: StoreKit presents it again at every

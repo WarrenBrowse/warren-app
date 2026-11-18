@@ -329,7 +329,7 @@ describe('PurchaseFlow active poll', () => {
   });
 
   it('stops polling on banned and keeps the voucher sealed for after the ban', async () => {
-    // warren-core doc 105 section 5.3: the ban refused the redemption before
+    // The ban refused the redemption before
     // consuming the voucher, so it is still the user's. Polling cannot
     // change the answer, and dropping the entry would lose a paid secret.
     const { delegate, submitted } = makeDelegate({ redeem: () => Promise.resolve(banned) });

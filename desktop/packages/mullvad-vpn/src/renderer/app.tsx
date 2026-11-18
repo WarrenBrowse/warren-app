@@ -539,7 +539,7 @@ export default class AppRenderer {
     IpcRendererEventChannel.account.setWarrenMnemonic(mnemonic);
   public submitVoucher = (code: string) => IpcRendererEventChannel.account.submitVoucher(code);
 
-  // App-initiated purchase flow (warren-core doc 35). The main process
+  // App-initiated purchase flow. The main process
   // owns the whole thing (wpid mint, browser open, auto-redeem poll,
   // persistence across restarts): this renderer runs inside a menubar
   // window that hides and gets background-throttled exactly while the

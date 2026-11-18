@@ -20,7 +20,7 @@ function render(element: React.ReactElement): string {
   }
 }
 
-// warren-core doc 115, section 7.1: a device revoked from another device of
+// A device revoked from another device of
 // the account says so, and what brings it back.
 describe('the revoked screen', () => {
   it('says the device was disconnected from another one, and how to sign in again', () => {

@@ -2,7 +2,7 @@ import { messages } from '../../../shared/gettext';
 import { InAppNotification, InAppNotificationProvider } from '../../../shared/notifications';
 
 interface WarrenExitEgressNotificationContext {
-  // Doc 62 item 5: true while the daemon's in-tunnel egress probe
+  // True while the daemon's in-tunnel egress probe
   // reports the exit not forwarding (a drained or half-swapped exit
   // keeps answering QUIC keep-alives, so the tunnel state stays
   // Connected while zero traffic gets through).

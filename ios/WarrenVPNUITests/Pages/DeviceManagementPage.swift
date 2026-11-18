@@ -8,7 +8,7 @@
 
 import XCTest
 
-/// Page class for the account's "Devices" list (warren-core doc 115), opened from Account and from
+/// Page class for the account's "Devices" list, opened from Account and from
 /// the device-limit and no-session-token banners.
 class DeviceManagementPage: Page {
     override init(_ app: XCUIApplication) {

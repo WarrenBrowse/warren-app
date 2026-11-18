@@ -4,7 +4,7 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The wallet's port-forward abuse standing (warren-core doc 105 §5.4), as the
+//  The wallet's port-forward abuse standing, as the
 //  Rust store answers it, and the signed poll that fetches it. The store, the
 //  envelope and which strikes were already announced live in the shared
 //  `warren-standing` crate, so iOS and Android cannot drift on either; this

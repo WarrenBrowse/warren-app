@@ -823,7 +823,7 @@ export interface WarrenStatus {
   // elapsed yet. The daemon pushes a fresh status when it does, so a
   // banner keyed on this flag self-dismisses.
   maintenanceMigrationActive: boolean;
-  // Docs 59 C5: number of maintenance migrations cancelled because a
+  // Number of maintenance migrations cancelled because a
   // user-pinned forwarded port could not be reserved on any candidate
   // server, and the matching self-expiring display-window flag. The
   // client stays on the draining server with its ports intact.
@@ -834,7 +834,7 @@ export interface WarrenStatus {
   // the immediate "no internet connection" banner in every tunnel
   // state.
   hostOffline: boolean;
-  // Doc 62 item 5: true while the daemon's in-tunnel egress probe
+  // True while the daemon's in-tunnel egress probe
   // reports the exit not forwarding (drained / half-swapped exit that
   // still answers QUIC keep-alives). Drives the "interrupted" phase
   // with the exit-not-forwarding banner while Connected.

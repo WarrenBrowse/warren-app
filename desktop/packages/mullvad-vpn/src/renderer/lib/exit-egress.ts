@@ -1,6 +1,6 @@
 import { useSelector } from '../redux/store';
 
-/// Live view of the daemon's exit-egress verdict (doc 62 item 5): true
+/// Live view of the daemon's exit-egress verdict: true
 /// while the in-tunnel probe reports the exit not forwarding. No
 /// renderer-side debounce: the daemon already debounces (N consecutive
 /// probe failures before the verdict, one success to clear), so both

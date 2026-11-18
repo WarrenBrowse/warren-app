@@ -1,4 +1,4 @@
-// Renderer-visible auto-renewal state (warren-core doc 65): display data only,
+// Renderer-visible auto-renewal state: display data only,
 // never the customer handle nor the bearer token.
 export interface RenewalUiState {
   /** Renewal cycle length; always 1 (decision 12.8: monthly cycles). */
@@ -14,7 +14,7 @@ export interface RenewalUiState {
   /** Last successful renewal charge (receipt display). */
   lastChargeMs?: number;
   /** The account is banned: nothing is charged until the ban ends, since a
-   *  banned wallet cannot credit the time it would buy (warren-core doc 105). */
+   *  banned wallet cannot credit the time it would buy. */
   pausedByBan?: true;
   /** Every pre-renewal notice archived on this device as a PDF, newest first
    *  (the durable medium of the notice, GEO 111/2011 art. 50). */

@@ -26,7 +26,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * The native calls on the account's device registry (warren-core doc 115,
+ * The native calls on the account's device registry (the
  * `warren-jni` `devices` module). Kept apart from [WarrenJniBridge] so a
  * consumer and its fakes carry only these.
  *

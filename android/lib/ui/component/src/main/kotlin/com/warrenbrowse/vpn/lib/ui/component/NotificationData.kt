@@ -513,8 +513,8 @@ private fun errorMessageBannerData(
         title = error.title().formatWithHtml(),
         message =
             if (error.isCausedByAnotherDevice) {
-                // Another device of the account may be what blocks this one
-                // (warren-core doc 115): the banner names the way to see them,
+                // Another device of the account may be what blocks this one:
+                // the banner names the way to see them,
                 // as a link, since an icon alone would carry no reason.
                 ClickableText(
                     text =

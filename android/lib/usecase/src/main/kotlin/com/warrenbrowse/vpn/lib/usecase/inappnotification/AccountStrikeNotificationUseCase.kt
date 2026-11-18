@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
- * The port-forward strike banner (warren-core doc 105, desktop
+ * The port-forward strike banner (desktop
  * `WarrenAccountStrikeNotificationProvider`): the newest live strike, until
  * the reader puts it away. The dismissal is keyed on that strike, so the next
  * one raises the banner again, and it rides the notice dismissals: a digest of

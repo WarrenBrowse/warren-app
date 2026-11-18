@@ -209,7 +209,7 @@ public enum WarrenTunnelEvent: Sendable {
     /// `disconnected`, which is what a refusal used to arrive as, leaving the
     /// app to report a tunnel that simply went down with no reason.
     case unauthorized
-    /// The wallet is banned (warren-core doc 105): the auth-failed `reason`,
+    /// The wallet is banned: the auth-failed `reason`,
     /// opening on its `[BANNED*]` token, and when the ban lapses, `nil` when
     /// the source did not say. Terminal like `unauthorized`.
     case banned(reason: String, lapsesAt: Date?)
@@ -222,8 +222,8 @@ public enum WarrenTunnelEvent: Sendable {
     /// `unauthorized`: the device limit when the subscription is known to be
     /// active, an expiry otherwise.
     case tokensRefused
-    /// This device was revoked from another device of the account
-    /// (warren-core doc 115): its token refresh stopped and its device
+    /// This device was revoked from another device of the account:
+    /// its token refresh stopped and its device
     /// identity is forgotten. Terminal; the app shows its revoked screen.
     case deviceRevoked
     /// No session token the exit admits, for another reason than the device
@@ -252,7 +252,7 @@ public enum WarrenTunnelEvent: Sendable {
     case natPmpRefused(refusal: String, retryIn: UInt32, clockOffset: Int64?)
 }
 
-/// What an auth-failed reason says about a ban (warren-core doc 105), read off
+/// What an auth-failed reason says about a ban, read off
 /// its leading `[TOKEN]`, the form `warren_standing::Ban::auth_failed_reason`
 /// writes and the desktop and Android read.
 public enum WarrenBanReason: Equatable, Sendable {
@@ -730,7 +730,7 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
                 return tupleFrom32(bytes)
             }
 
-        // The install's device (warren-core doc 115) lives beside the pin
+        // The install's device lives beside the pin
         // table, in the App Group container the app reads it from too, so the
         // session tokens and port entitlements register and ask as it.
         if let pinStorePath = config.pinStorePath {

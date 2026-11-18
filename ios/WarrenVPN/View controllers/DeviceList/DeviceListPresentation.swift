@@ -8,8 +8,7 @@
 import Foundation
 import WarrenRustRuntime
 
-/// How the account's devices read on screen (warren-core doc 115 section
-/// 7.1), the same rules the desktop and Android lists apply.
+/// How the account's devices read on screen, the same rules the desktop and Android lists apply.
 enum DeviceListPresentation {
     /// The longest name the registry keeps, in characters.
     static let nameMaxCharacters = 40

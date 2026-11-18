@@ -3,7 +3,7 @@ package com.warrenbrowse.vpn.lib.model
 import java.time.LocalDate
 
 /**
- * One device of the logged-in account, as the registry lists it (warren-core doc 115). It names an
+ * One device of the logged-in account, as the registry lists it. It names an
  * install of the account and the days it was used: it belongs on the account's own screens and
  * never in a log.
  */

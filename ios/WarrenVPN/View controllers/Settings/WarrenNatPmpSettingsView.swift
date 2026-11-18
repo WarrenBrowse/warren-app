@@ -393,7 +393,7 @@ public struct WarrenNatPmpSettingsView: View {
         }
     }
 
-    /// The account's standing (warren-core doc 105): the ban in force with the
+    /// The account's standing: the ban in force with the
     /// day it lapses, every live warning with its case reference, and how to
     /// contest one. The references are shown here and in the strike notice
     /// only, the one place the reader needs them to write to the abuse desk.

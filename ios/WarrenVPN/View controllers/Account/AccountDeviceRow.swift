@@ -8,7 +8,7 @@
 
 import UIKit
 
-/// The Account screen's "Devices" row (warren-core doc 115): the count of the
+/// The Account screen's "Devices" row: the count of the
 /// account's active devices, opening the list. Styled as the backup row since
 /// both navigate. No count while the list is unknown: the list says why.
 final class AccountDeviceRow: UIControl {

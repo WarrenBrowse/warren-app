@@ -84,7 +84,7 @@ const DAEMON_RPC_PATH = daemonRpcPath(
 /**
  * The signed community-forum login material returned by the daemon: the
  * four X-Warren-* header values plus the JSON body to POST to the forum
- * connect host (doc 55). None of these is a long-lived secret.
+ * connect host. None of these is a long-lived secret.
  */
 export interface ForumLoginSignature {
   pubkeySs58: string;
@@ -312,7 +312,7 @@ export class DaemonRpc extends GrpcClient {
   }
 
   /**
-   * Signs a community-forum login challenge (doc 55, DiscourseConnect
+   * Signs a community-forum login challenge (DiscourseConnect
    * wallet SSO). `sid` comes from a `warren://forum-login?sid=..` deep
    * link. The daemon signs the fixed `POST /v1/forum/login` request with
    * the Warren identity key and returns the four X-Warren-* header values
@@ -335,7 +335,7 @@ export class DaemonRpc extends GrpcClient {
   }
 
   /**
-   * Signs a community-forum notification read (doc 55). Takes no argument:
+   * Signs a community-forum notification read. Takes no argument:
    * the account read is derived from the signature, so there is nothing to
    * point at somebody else. Returns the four X-Warren-* header values plus
    * the exact body to POST verbatim. The signing key never leaves the
@@ -376,7 +376,7 @@ export class DaemonRpc extends GrpcClient {
   }
 
   /**
-   * Signs a community-forum attach-logs request (doc 55). `sid` and
+   * Signs a community-forum attach-logs request. `sid` and
    * `topicId` come from a `warren://attach-logs?sid=..&topic=..` deep link
    * and `logGz` is the gzipped redacted problem report. The daemon builds
    * the canonical `POST /v1/forum/attach-logs` JSON body itself, signs it
@@ -408,7 +408,7 @@ export class DaemonRpc extends GrpcClient {
   }
 
   /**
-   * Signs a community-forum in-app report (doc 55). `reportJson` is the
+   * Signs a community-forum in-app report. `reportJson` is the
    * form's fields as one JSON object in the connect contract's names and
    * `logGz` the gzipped redacted problem report (empty for a report filed
    * without logs). The daemon builds the canonical `POST /v1/forum/report`

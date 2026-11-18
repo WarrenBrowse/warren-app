@@ -30,12 +30,11 @@ export interface PurchaseFlowDelegate {
   // initiated it.
   accountTag(): string | undefined;
   // Whether a ban is known on the logged-in account. A banned wallet
-  // redeems nothing (warren-core doc 105 section 5.3) and the refusal leaves
+  // redeems nothing and the refusal leaves
   // the voucher unspent, so a held voucher waits for the ban to end.
   accountBanned(): boolean;
   // Fired once per purchase when its voucher lands on this account; the
-  // renewal flow uses the claim to fetch the opt-in handoff (warren-core
-  // doc 65).
+  // renewal flow uses the claim to fetch the opt-in handoff.
   onRedeemed?(claim: PurchaseClaim): void;
 }
 
@@ -66,7 +65,7 @@ interface PendingPurchase {
 // worth retrying), refused for a ban, or done with (redeemed, or dead).
 type Advance = 'pending' | 'banned' | 'done';
 
-// App-initiated purchase flow (warren-core doc 35): mint a random
+// App-initiated purchase flow: mint a random
 // 128-bit purchase id (wpid) and a pull secret, open the checkout bound
 // to the wpid and the secret's hash, and poll the daemon with the claim
 // code until the payment webhook's voucher is pulled, then seal it and
@@ -112,7 +111,7 @@ export default class PurchaseFlow {
     // purchase to it, and the secret itself never leaves this process
     // except in the pull's body. The account chip rides in the URL
     // FRAGMENT, which the browser never sends to the server; only the
-    // shortened, non-reversible form is passed (doc 35).
+    // shortened, non-reversible form is passed.
     const fragment = acctShort ? `#acct=${encodeURIComponent(acctShort)}` : '';
     const query = `?pid=${claim.wpid}&ph=${pullSecretHash(claim.secret)}`;
     try {
@@ -128,10 +127,10 @@ export default class PurchaseFlow {
 
   // Track a purchase whose checkout happened WITHOUT a browser: the
   // renewal flow already charged it off-session and only needs the
-  // regular poll/redeem machinery (warren-core doc 65). The caller pins the owning
+  // regular poll/redeem machinery. The caller pins the owning
   // account tag (the mandate's, captured before the charge): stamping
   // the CURRENT login here would credit whoever is logged in when the
-  // charge completes, the wrong-wallet class of doc 35.
+  // charge completes, crediting the wrong wallet.
   public trackExternal(claim: PurchaseClaim, accountTag?: string): void {
     if (parseClaimCode(claimCode(claim)) === undefined) {
       return;

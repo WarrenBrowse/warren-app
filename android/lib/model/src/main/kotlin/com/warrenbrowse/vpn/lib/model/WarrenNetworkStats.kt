@@ -1,7 +1,7 @@
 package com.warrenbrowse.vpn.lib.model
 
 /**
- * The public network transparency snapshot (`GET /v1/network/stats`, warren-core doc 106), as the
+ * The public network transparency snapshot (`GET /v1/network/stats`), as the
  * UI reads it.
  *
  * Rust passes the body through untouched after checking it is a version 1 JSON object, so the

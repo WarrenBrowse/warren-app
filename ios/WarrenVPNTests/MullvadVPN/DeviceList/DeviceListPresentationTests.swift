@@ -11,8 +11,7 @@ import XCTest
 
 @testable import WarrenVPN
 
-/// The rules the account's device list reads by on every client
-/// (warren-core doc 115 section 7.1).
+/// The rules the account's device list reads by on every client.
 final class DeviceListPresentationTests: XCTestCase {
     private func device(
         _ id: String,

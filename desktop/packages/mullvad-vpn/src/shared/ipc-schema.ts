@@ -231,7 +231,7 @@ export const ipcSchema = {
     reset: notifyRenderer<void>(),
     setHistory: send<IHistoryObject>(),
   },
-  // Community-forum wallet login (doc 55). `request` is pushed when a
+  // Community-forum wallet login. `request` is pushed when a
   // `warren://forum-login` deep link arrives; the renderer shows a consent
   // prompt and calls `approve` or `cancel`. Never a silent external login.
   forumLogin: {
@@ -259,7 +259,7 @@ export const ipcSchema = {
     identity: notifyRenderer<ForumIdentity | undefined>(),
     getIdentity: invoke<void, ForumIdentity | undefined>(),
   },
-  // Community-forum activity panel (doc 55). One user-initiated read of
+  // Community-forum activity panel. One user-initiated read of
   // the caller's own notifications, signed with the wallet key. Never
   // polled: the header badge comes from the broadcast digest, which asks
   // the server nothing about anybody.
@@ -275,7 +275,7 @@ export const ipcSchema = {
     // banner cannot drift apart.
     unread: notifyRenderer<number>(),
   },
-  // Community-forum attach-logs (doc 55). `request` is pushed when a
+  // Community-forum attach-logs. `request` is pushed when a
   // `warren://attach-logs` deep link arrives; the renderer shows a consent
   // prompt (with a "view the logs" action backed by problemReport.viewLog)
   // and calls `approve` or `cancel`. Logs are never sent silently.
@@ -285,7 +285,7 @@ export const ipcSchema = {
     approve: invoke<IForumAttachRequest, ForumAttachResult>(),
     cancel: invoke<IForumAttachRequest, void>(),
   },
-  // Community-forum in-app report (doc 55): the Settings, Support, "Report a
+  // Community-forum in-app report: the Settings, Support, "Report a
   // problem" form. `collect` writes a redacted problem report for "View the
   // logs" (opened through problemReport.viewLog) and answers its id, or
   // undefined when the collection failed; `discard` deletes one; `send`
@@ -372,7 +372,7 @@ export const ipcSchema = {
   warrenStatus: {
     '': notifyRenderer<WarrenStatus>(),
   },
-  // Public network transparency snapshot (warren-core doc 106). Asked by a
+  // Public network transparency snapshot. Asked by a
   // visible surface only, once per window; the daemon caches per window.
   warrenNetworkStats: {
     get: invoke<void, WarrenNetworkStatsResult>(),
@@ -500,7 +500,7 @@ export const ipcSchema = {
     // its case reference. It stays listed in the port-forwarding view.
     dismissStrike: send<string>(),
   },
-  // The account's devices (warren-core doc 115), through the daemon's wallet.
+  // The account's devices, through the daemon's wallet.
   devices: {
     list: invoke<void, DeviceListResult>(),
     // Revokes the device with this id. Revoking this device is its logout.
@@ -524,7 +524,7 @@ export const ipcSchema = {
     setWarrenMnemonic: invoke<string, MnemonicImportResult>(),
     submitVoucher: invoke<string, VoucherResponse>(),
     updateData: invoke<void, void>(),
-    // Starts an app-initiated purchase (doc 35): the main process
+    // Starts an app-initiated purchase: the main process
     // mints the wpid, opens the checkout in the browser and owns the
     // auto-redeem poll (the renderer is background-throttled while
     // the user pays, so the poll cannot live there).
@@ -536,7 +536,7 @@ export const ipcSchema = {
     // True while the main-process purchase poll is active; drives the
     // "Checking..." labels in the paywall views.
     purchase: notifyRenderer<boolean>(),
-    // Auto-renewal display state (warren-core doc 65): undefined when no mandate
+    // Auto-renewal display state: undefined when no mandate
     // is held for the logged-in account.
     renewal: notifyRenderer<RenewalUiState | undefined>(),
     getRenewalState: invoke<void, RenewalUiState | undefined>(),

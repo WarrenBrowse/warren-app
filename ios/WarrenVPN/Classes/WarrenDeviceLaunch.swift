@@ -8,8 +8,8 @@
 import Foundation
 import WarrenRustRuntime
 
-/// Configures the app process's device in the account's registry
-/// (warren-core doc 115). The extension configures its own process from the
+/// Configures the app process's device in the account's registry.
+/// The extension configures its own process from the
 /// App Group container; the app does the same at launch, so its list marks
 /// this device and "Log out" revokes the identity the extension registered.
 enum WarrenDeviceLaunch {

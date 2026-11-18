@@ -13,7 +13,7 @@ export const urls = {
   purchase: `${checkout}/`,
   pricing: `${checkout}/`,
   // Public account API of the compiled product environment, used by the MAIN
-  // process only for the renewal-handoff pull (warren-core doc 65); every
+  // process only for the renewal-handoff pull; every
   // other API access goes through the daemon and its bootstrap-privacy
   // machinery.
   api: productAnchors.apiBaseUrl,
@@ -22,7 +22,7 @@ export const urls = {
   // The compiled channel's download page, like `api` above.
   download: productAnchors.downloadUrl,
   // Community + support forum. Login is wallet-based (DiscourseConnect wallet
-  // SSO, doc 55); the `warren://forum-login` deep link is handled in the main
+  // SSO); the `warren://forum-login` deep link is handled in the main
   // process. See forum-login.ts.
   forum: 'https://forum.warrenbrowse.com/',
   // Support triage for users without forum access (never-paid wallets).

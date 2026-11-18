@@ -1,4 +1,4 @@
-// The devices of the logged-in account (warren-core doc 115), as the daemon
+// The devices of the logged-in account, as the daemon
 // lists, renames and revokes them through the account's wallet. The list names
 // the account's installs and the days they were used: it belongs on the
 // account's own screens and never in a log.

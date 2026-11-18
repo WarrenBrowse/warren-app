@@ -12,8 +12,7 @@ struct RevokedDeviceView: View {
     @StateObject var viewModel: RevokedDeviceViewModel
     var onLogout: (() -> Void)?
 
-    /// Revocation is the registry's only way to end a device (warren-core
-    /// doc 115), and it always comes from another device of the account.
+    /// Revocation is the registry's only way to end a device, and it always comes from another device of the account.
     static var bodyText: String {
         NSLocalizedString(
             "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again.",

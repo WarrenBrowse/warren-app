@@ -116,7 +116,7 @@ function RenewalNoticeButton(props: {
   );
 }
 
-// Device-held auto-renewal mandate (warren-core doc 65): display data pushed by the
+// Device-held auto-renewal mandate: display data pushed by the
 // main process, turn-off is one click with no extra confirmation
 // (anti-subscription-trap posture: cancelling must be effortless).
 function RenewalCard() {

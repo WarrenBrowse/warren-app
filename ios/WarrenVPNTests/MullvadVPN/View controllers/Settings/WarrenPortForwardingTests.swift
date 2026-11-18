@@ -53,7 +53,7 @@ final class WarrenPortForwardingTests: XCTestCase {
         XCTAssertEqual(state(snapshot()), .requesting)
     }
 
-    /// An exit refusing the mapping as not authorized (warren-core doc 105) is
+    /// An exit refusing the mapping as not authorized is
     /// not a dead end: the tunnel asks again, and the screen says what was
     /// missing and when.
     func testARefusalForWantOfAnEntitlementCountsDownToTheNextTry() {

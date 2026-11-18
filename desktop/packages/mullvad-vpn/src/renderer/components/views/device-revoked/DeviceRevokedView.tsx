@@ -32,7 +32,7 @@ export const StyledMessage = styled.span(smallText, {
 
 /**
  * Why this device is signed out: the daemon lands here only once another
- * device of the account revoked this one (warren-core doc 115).
+ * device of the account revoked this one.
  */
 export function DeviceRevokedMessage({ blocking }: { blocking: boolean }) {
   return (

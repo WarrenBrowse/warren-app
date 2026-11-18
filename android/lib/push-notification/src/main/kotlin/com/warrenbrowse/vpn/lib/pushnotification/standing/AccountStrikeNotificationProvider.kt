@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 
 /**
- * One system notification per port-forward strike (warren-core doc 105), each
+ * One system notification per port-forward strike, each
  * under its own id so a second strike does not replace the first: three of
  * them revoke the account, and each one is a warning the reader must see.
  *

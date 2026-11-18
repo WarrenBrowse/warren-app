@@ -4,7 +4,7 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The community-forum wallet login on iOS (warren-core doc 55): the deep
+//  The community-forum wallet login on iOS: the deep
 //  link classification, the sign-in code typed by hand, the consent prompt,
 //  the signed approval done in Rust, and the identity the broker hands back.
 //  The link rules are the fixture's (`fixtures/client-rules/forum_link.json`),

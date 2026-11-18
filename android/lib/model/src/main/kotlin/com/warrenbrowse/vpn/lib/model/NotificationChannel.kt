@@ -19,7 +19,7 @@ sealed interface NotificationChannel {
     }
 
     /**
-     * Port-forward abuse warnings on the account (warren-core doc 105). Default
+     * Port-forward abuse warnings on the account. Default
      * importance: three of them revoke the account, so the first must be seen,
      * unlike the forum's low band.
      */

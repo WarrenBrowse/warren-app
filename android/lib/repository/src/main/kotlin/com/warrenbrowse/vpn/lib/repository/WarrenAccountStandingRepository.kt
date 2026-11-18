@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * The wallet's port-forward abuse standing as this installation last knew it
- * (warren-core doc 105 §5.4), `null` while nothing is known: no wallet, or an
+ * The wallet's port-forward abuse standing as this installation last knew it,
+ * `null` while nothing is known: no wallet, or an
  * API that does not report it yet.
  *
  * In memory only. The standing is re-read from the API on every resume, and

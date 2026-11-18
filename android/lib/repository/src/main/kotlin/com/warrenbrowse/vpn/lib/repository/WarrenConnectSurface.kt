@@ -120,7 +120,7 @@ sealed interface WarrenConnectedInfo {
      * [flapping] is set when the tunnel dropped too many times in a short window with lockdown mode
      * off: the retry loop stopped and traffic went back to the regular network, outside the VPN.
      *
-     * A [reason] opening on a `[BANNED*]` token is a suspension (warren-core doc 105), which ends
+     * A [reason] opening on a `[BANNED*]` token is a suspension, which ends
      * on its own at [banLapsesAtUnixSecs] when that is known.
      */
     data class Failed(
@@ -360,7 +360,7 @@ sealed interface WarrenVoucherOutcome {
     data object WalletNotReady : WarrenVoucherOutcome
 
     /**
-     * The wallet is banned (warren-core doc 105 §5.3). The server refused before
+     * The wallet is banned. The server refused before
      * consuming anything: the voucher is still worth its time once the ban ends,
      * and a purchase stays claimable.
      */
@@ -379,7 +379,7 @@ interface WarrenSubscriptionInvoker {
     suspend fun redeemVoucher(voucher: String): WarrenVoucherOutcome
 
     /**
-     * Auto-credit an app-initiated purchase (warren-core doc 35): unlock once, then poll the signed
+     * Auto-credit an app-initiated purchase: unlock once, then poll the signed
      * redeem of the purchase [claim] (its wpid and pull secret) until the payment is credited or
      * [deadlineMs] elapses. Fire-and-forget: it runs in an app-scoped coroutine that survives the browser
      * round-trip and screen navigation, and on success writes the credited expiry to

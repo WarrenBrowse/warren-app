@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 /**
- * Consent prompt for the community-forum wallet login (doc 55). The app NEVER
+ * Consent prompt for the community-forum wallet login. The app NEVER
  * signs into the forum silently: signing happens only after the user approves
  * here. Observes [ForumLoginController.pending]; when a `warren://forum-login`
  * link has been captured it shows the prompt, and on approval runs

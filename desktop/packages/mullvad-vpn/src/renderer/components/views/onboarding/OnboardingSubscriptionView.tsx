@@ -14,7 +14,7 @@ import { OnboardingForumHint, OnboardingLayout } from './components';
 
 // Subscription step of the onboarding wizard. Three ways forward, all
 // converging on the account expiry turning valid: the external
-// checkout (auto-credited by the main-process purchase poll, doc 35),
+// checkout (auto-credited by the main-process purchase poll),
 // a voucher code, or "I already have a subscription" for restored
 // wallets (manual re-check).
 export function OnboardingSubscriptionView() {

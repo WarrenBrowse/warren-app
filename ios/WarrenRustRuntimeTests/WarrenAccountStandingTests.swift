@@ -109,7 +109,7 @@ final class WarrenAccountStandingTests: XCTestCase {
         XCTAssertNil(WarrenBanReason.of(authFailedReason: "subscription expired"))
     }
 
-    // MARK: - The ban refusal of an account call (warren-core doc 105 section 5.3)
+    // MARK: - The ban refusal of an account call
 
     func testABanRefusalOfAnAccountCallIsATypedBanWithItsLapse() {
         let envelope =

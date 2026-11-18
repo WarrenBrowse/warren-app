@@ -4,7 +4,7 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The redacted problem report the forum attach-logs flow uploads (doc 55).
+//  The redacted problem report the forum attach-logs flow uploads.
 //  Built on Mullvad's `ConsolidatedApplicationLog`, which consolidates log
 //  files and redacts container paths, the account number, IPv4 and IPv6
 //  addresses, plus any custom strings handed to it (the wallet SS58 address

@@ -55,7 +55,7 @@ private fun PreviewDeviceListItem() {
 }
 
 /**
- * One device of the account (warren-core doc 115): its name, with a badge when it is this device,
+ * One device of the account: its name, with a badge when it is this device,
  * its platform and version, and when it was last active. Tapping the row renames it; the trailing
  * action disconnects it, or logs this device out.
  */

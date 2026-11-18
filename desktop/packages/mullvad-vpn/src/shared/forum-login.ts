@@ -1,4 +1,4 @@
-// Shared types for the community-forum wallet login (warren-core doc 55).
+// Shared types for the community-forum wallet login.
 // A `warren://forum-login` deep link asks the app to sign a login challenge;
 // the app MUST show an explicit consent prompt before signing (never a silent
 // external login).

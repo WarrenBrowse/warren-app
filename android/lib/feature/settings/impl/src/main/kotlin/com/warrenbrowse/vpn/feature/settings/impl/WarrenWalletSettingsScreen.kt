@@ -255,7 +255,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
                     VariantButton(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
-                            // App-initiated purchase (doc 35): mint a purchase claim
+                            // App-initiated purchase: mint a purchase claim
                             // and open the checkout bound to its wpid and pull-secret
                             // hash (short pubkey rides in the fragment for the landing
                             // page only, never sent to the server). The signed redeem
@@ -501,7 +501,7 @@ private fun AccountCard(content: @Composable () -> Unit) {
 }
 
 /**
- * Desktop "Devices" row: the account's devices (warren-core doc 115) with the active count, styled
+ * Desktop "Devices" row: the account's devices with the active count, styled
  * as the backup row since both are navigation.
  */
 @Composable
@@ -588,7 +588,7 @@ internal fun voucherLabel(
         context.getString(R.string.subscription_authorization_cancelled)
     WarrenVoucherOutcome.WalletNotReady ->
         context.getString(R.string.subscription_wallet_not_ready)
-    // The refusal consumed nothing (warren-core doc 105 §5.3): say why, and that
+    // The refusal consumed nothing: say why, and that
     // the voucher is still worth its time once the suspension ends.
     is WarrenVoucherOutcome.Banned ->
         AccountStandingText.ban(context, outcome.ban, locale) + " " +

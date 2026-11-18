@@ -14,7 +14,7 @@ import UIKit
 final class TunnelStatusNotificationProvider: NotificationProvider, InAppNotificationProvider, @unchecked Sendable {
     enum ActionIdentifier: String {
         case showVPNSettings
-        /// The account's devices (warren-core doc 115): another device holds
+        /// The account's devices: another device holds
         /// the tokens this one needs.
         case manageDevices
     }

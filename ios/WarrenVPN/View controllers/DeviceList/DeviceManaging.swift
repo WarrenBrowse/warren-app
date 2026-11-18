@@ -9,7 +9,7 @@
 import Foundation
 import WarrenRustRuntime
 
-/// The account's devices in the registry (warren-core doc 115), signed with
+/// The account's devices in the registry, signed with
 /// the wallet on this device.
 protocol DeviceManaging: Sendable {
     func listDevices() async -> Result<WarrenAccountDeviceList, WarrenDeviceRegistryError>

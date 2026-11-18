@@ -8,7 +8,7 @@
 import SwiftUI
 import WarrenRustRuntime
 
-/// The "Devices" screen (warren-core doc 115 section 7.1): the account's
+/// The "Devices" screen: the account's
 /// devices, renamed by tapping a name, another device disconnected after a
 /// confirmation, and this device logged out through the logout confirmation
 /// the host shows.

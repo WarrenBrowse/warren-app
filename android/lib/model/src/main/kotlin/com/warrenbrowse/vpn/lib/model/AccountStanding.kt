@@ -1,7 +1,7 @@
 package com.warrenbrowse.vpn.lib.model
 
 /**
- * The wallet's port-forward abuse standing (warren-core doc 105 §5.4), as the
+ * The wallet's port-forward abuse standing, as the
  * Rust store answers it: the live strikes, the number that bans the account,
  * and the ban in force.
  *

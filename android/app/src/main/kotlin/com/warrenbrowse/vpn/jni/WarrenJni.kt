@@ -430,7 +430,7 @@ object WarrenJni {
     external fun forgetAccountStanding()
 
     /**
-     * The account's devices (warren-core doc 115), this one marked, as the envelope
+     * The account's devices, this one marked, as the envelope
      * `WarrenDeviceBridge.listDevices` documents. Signed with the wallet derived from [mnemonic]
      * in Rust, over the VpnService-protected transport. Blocks on a network call: invoke off the
      * main thread. Never log the mnemonic nor a listed device.

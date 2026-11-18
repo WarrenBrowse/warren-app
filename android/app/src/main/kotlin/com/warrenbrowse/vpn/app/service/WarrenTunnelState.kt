@@ -75,8 +75,8 @@ sealed class WarrenTunnelState {
      * window with lockdown mode off: the retry loop stopped and the traffic
      * went back to the regular network, outside the VPN, and the UI says so.
      *
-     * A [reason] opening on a `[BANNED*]` token is a suspension (warren-core
-     * doc 105), terminal like an expiry, lapsing at [banLapsesAtUnixSecs] when
+     * A [reason] opening on a `[BANNED*]` token is a suspension,
+     * terminal like an expiry, lapsing at [banLapsesAtUnixSecs] when
      * that is known.
      */
     data class Failed(

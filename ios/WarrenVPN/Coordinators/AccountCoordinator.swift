@@ -107,7 +107,7 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
         )
     }
 
-    /// The account's devices (warren-core doc 115). "Log out" on this
+    /// The account's devices. "Log out" on this
     /// device asks with the account's logout confirmation, then revokes it
     /// before the wallet leaves.
     private func makeDevicesController() -> UIViewController {

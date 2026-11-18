@@ -86,7 +86,7 @@ sealed interface AuthFailedError {
     data object TooManyConnections : AuthFailedError
 
     // Warren: a tokens-only session found no session token the exit admits, for another reason
-    // than the device limit; another device of the account may hold them (warren-core doc 115).
+    // than the device limit; another device of the account may hold them.
     data object NoSessionToken : AuthFailedError
 
     // Warren: two different exits refused this device's time on the dated session setup; the

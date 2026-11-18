@@ -187,7 +187,7 @@ describe('RenewalFlow', () => {
   });
 
   it('charges nothing while the account is banned, and says why', async () => {
-    // warren-core doc 105 section 6: a banned wallet cannot credit time, so a
+    // A banned wallet cannot credit time, so a
     // charge would only buy a voucher left waiting for the ban to end.
     delegate.expiry = new Date(Date.now() + 2 * DAY_MS).toISOString();
     store.state = noticedState(delegate.expiry);
@@ -557,7 +557,7 @@ describe('RenewalFlow', () => {
   it('the tracked renewal purchase carries the mandate tag, not the live login', async () => {
     // Wallet switched while the charge request was in flight: the
     // voucher must be redeemable only by the mandate owner (the
-    // wrong-wallet crediting class of doc 35).
+    // wrong wallet would otherwise be credited).
     delegate.expiry = new Date(Date.now() + 2 * DAY_MS).toISOString();
     store.state = noticedState(delegate.expiry);
     delegate.onRenew = () => {

@@ -14,7 +14,7 @@ export function voucherFailureOfStatus(code: grpc.status | undefined): VoucherRe
       return { type: 'already_used' };
     case grpc.status.FAILED_PRECONDITION:
       return { type: 'expired' };
-    // The account is banned (warren-core doc 105 section 5.3): the voucher
+    // The account is banned: the voucher
     // was not consumed and stays the user's for after the ban.
     case grpc.status.PERMISSION_DENIED:
       return { type: 'banned' };

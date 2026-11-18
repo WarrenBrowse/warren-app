@@ -4,7 +4,7 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The account's devices (warren-core doc 115) as the app lists, renames and
+//  The account's devices as the app lists, renames and
 //  revokes them. The calls are signed and sent in Rust
 //  (`warren_devices_ffi`); this facade decodes the envelopes the shared
 //  `warren_standing::device_registry` defines. The list names the account's

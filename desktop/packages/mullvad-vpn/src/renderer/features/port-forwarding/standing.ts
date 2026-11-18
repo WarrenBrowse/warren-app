@@ -42,7 +42,7 @@ export function standingSection(
 /**
  * What the voucher view says when a ban refused the redemption: the ban, with
  * its end once the standing knows it, and that the voucher is still worth its
- * time, since the refusal consumed nothing (warren-core doc 105 section 5.3).
+ * time, since the refusal consumed nothing.
  */
 export function bannedVoucherLines(
   standing: WarrenAccountStanding | null,

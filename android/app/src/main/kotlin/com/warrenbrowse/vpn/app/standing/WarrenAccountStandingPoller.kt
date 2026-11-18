@@ -38,8 +38,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.longOrNull
 
 /**
- * Keeps the wallet's port-forward abuse standing current (warren-core doc 105
- * §5.4): the Android twin of the desktop daemon's standing monitor, on the
+ * Keeps the wallet's port-forward abuse standing current: the Android twin of the desktop daemon's standing monitor, on the
  * same ten minute cadence as the token refresh, so the request pattern the
  * API sees stays the one it already sees.
  *

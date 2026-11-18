@@ -166,7 +166,7 @@ val uiModule = module {
     // are still legible in the connect card's own status.
     single { OperatorNoticeNotificationUseCase(get(), get()) } bind
         InAppNotificationUseCase::class
-    // A port-forward strike on the account (warren-core doc 105): three revoke
+    // A port-forward strike on the account: three revoke
     // the account, so the newest one holds the slot until it is put away.
     single { AccountStrikeNotificationUseCase(get(), get()) } bind
         InAppNotificationUseCase::class

@@ -63,7 +63,7 @@ sealed interface WarrenForumAttachOutcome {
 }
 
 /**
- * Attaches the redacted problem report to a forum bug report (doc 55), on
+ * Attaches the redacted problem report to a forum bug report, on
  * the user's approval of the consent prompt and never before: collects the
  * report for the send (the live probes run, like the in-app report's own
  * send), gzips it, sizes it against the broker's cap, reads the mnemonic

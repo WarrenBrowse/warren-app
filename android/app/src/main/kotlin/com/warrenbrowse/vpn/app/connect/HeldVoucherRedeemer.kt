@@ -9,8 +9,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
- * Redeems the vouchers a ban left waiting in the pending voucher store (warren-core doc 105
- * section 6): once when it starts and no ban is known (the app may have restarted during the
+ * Redeems the vouchers a ban left waiting in the pending voucher store: once when it starts and no ban is known (the app may have restarted during the
  * ban), again whenever a known ban stops holding, and for each wallet the device switches to.
  */
 class HeldVoucherRedeemer(

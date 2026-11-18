@@ -10,7 +10,7 @@ import { DaemonRpc } from './daemon-rpc';
 import { ALLOWED_CONNECT_HOSTS, FORUM_DEEP_LINK_SCHEME, getForumSession } from './forum-login';
 
 /**
- * Community-forum attach-logs (warren-core doc 55).
+ * Community-forum attach-logs.
  *
  * A forum bug-report page on the connect host opens a
  * `warren://attach-logs?sid=..&topic=..&host=..` deep link. The app collects

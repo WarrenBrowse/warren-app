@@ -193,7 +193,7 @@ class WarrenVpnService : LifecycleVpnService() {
         // nothing of its own on the main thread.
     }
 
-    // The port-forward standing (warren-core doc 105) is polled for as long
+    // The port-forward standing is polled for as long
     // as this service lives: while the app is on screen, which binds it,
     // and while a tunnel is up, which is the only time a forwarded port,
     // and so a strike, can exist. A strike then reaches the shade even
@@ -213,7 +213,7 @@ class WarrenVpnService : LifecycleVpnService() {
         }
     }
 
-    // A revocation from another device of the account (warren-core doc 115) is
+    // A revocation from another device of the account is
     // acted on for as long as this service lives, the app on screen or a
     // tunnel up: the native side ends a running session on it, and the wake of
     // that transition is what brings the wallet's logout and the revoked

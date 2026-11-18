@@ -233,7 +233,7 @@ export default function NotificationArea(props: IProps) {
       deviceRevocationUnconfirmed: warrenStatus?.deviceRevocationUnconfirmed ?? false,
     }),
     // Same rank family, distinct cause: the host network is fine but
-    // the exit stopped forwarding (doc 62 item 5). Only meaningful
+    // the exit stopped forwarding. Only meaningful
     // while the tunnel still claims Connected.
     new WarrenExitEgressNotificationProvider({
       exitEgressDead,

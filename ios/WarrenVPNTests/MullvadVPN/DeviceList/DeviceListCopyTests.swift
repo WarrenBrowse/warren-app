@@ -10,7 +10,7 @@ import XCTest
 
 @testable import WarrenVPN
 
-/// The device list's copy (warren-core doc 115 section 7.1), held to its
+/// The device list's copy, held to its
 /// string catalog: every string in every language the app ships, with its
 /// placeholders, and no em-dash or en-dash in any of them.
 final class DeviceListCopyTests: XCTestCase {

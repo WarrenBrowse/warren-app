@@ -9,7 +9,7 @@ import { MAX_LOG_GZ_BYTES } from './forum-attach';
 import { ALLOWED_CONNECT_HOSTS, getForumSession, parseForumIdentityResponse } from './forum-login';
 
 /**
- * Community-forum in-app report (warren-core doc 55), the desktop twin of
+ * Community-forum in-app report, the desktop twin of
  * the Android "Report a problem" screen.
  *
  * The renderer hands main the form; main collects a fresh redacted problem

@@ -107,7 +107,7 @@ fun OutOfTimeScreen(navigator: Navigator) {
     }
 
     val openCheckout = {
-        // App-initiated purchase (doc 35), same plumbing as the account screen:
+        // App-initiated purchase, same plumbing as the account screen:
         // mint a purchase claim, open the checkout bound to its wpid and
         // pull-secret hash, and arm the signed redeem poll for the return to
         // the app.

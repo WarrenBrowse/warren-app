@@ -152,7 +152,7 @@ fun WarrenPortForwardingSettings(navigator: Navigator) {
 }
 
 /**
- * The account's port-forward standing (warren-core doc 105 §5.4, desktop
+ * The account's port-forward standing (desktop
  * `PortForwardingStanding`): the ban in force with the day it lapses, then
  * every live warning with its case reference, and how to contest one. The
  * references are shown here and in the strike notice only, the one place the

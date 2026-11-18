@@ -89,8 +89,7 @@ class RedeemVoucherOperation: ResultOperation<REST.SubmitVoucherResponse>, @unch
     /// body is never surfaced.
     private static func mapVoucherError(_ error: WarrenWalletInteractorError) -> Error {
         if case let .account(.banned(ban)) = error {
-            // Refused before the voucher was consumed (warren-core doc 105
-            // section 5.3): it is still worth its time once the ban ends.
+            // Refused before the voucher was consumed: it is still worth its time once the ban ends.
             WarrenAccountStandingFeed.current?.didRefuse(for: ban)
             return VoucherRedemptionError(
                 message: WarrenAccountStandingText.ban(ban) + " "

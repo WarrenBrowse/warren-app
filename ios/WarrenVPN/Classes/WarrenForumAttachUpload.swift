@@ -4,7 +4,7 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The attach-logs upload from an approval to the FFI call (doc 55), with
+//  The attach-logs upload from an approval to the FFI call, with
 //  its three system boundaries injected: the wallet store, the report
 //  collector and the signing client. Pure Foundation over WarrenRustRuntime,
 //  so it compiles into the non-hosted test bundle and is exercised with fakes

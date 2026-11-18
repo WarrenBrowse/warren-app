@@ -2,7 +2,7 @@ import { messages } from '../../../../../../shared/gettext';
 import { RoutePath } from '../../../../../../shared/routes';
 import { SettingsNavigationListItem } from '../../../../settings-navigation-list-item';
 
-// The way into the in-app bug report (doc 55): the forum's "Report a bug"
+// The way into the in-app bug report: the forum's "Report a bug"
 // form filed from the app with the wallet signature and the redacted logs, so
 // a person who cannot get through the browser still reaches the support team.
 export function ReportProblemButton() {

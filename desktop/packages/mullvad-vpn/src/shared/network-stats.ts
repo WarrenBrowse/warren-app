@@ -1,5 +1,5 @@
-// The public network transparency snapshot (`GET /v1/network/stats`,
-// warren-core doc 106), as the renderer reads it.
+// The public network transparency snapshot (`GET /v1/network/stats`), as
+// the renderer reads it.
 //
 // The daemon passes the body through untouched after checking its version, so
 // this parser is the only place that knows the wire shape. It follows the
@@ -90,7 +90,7 @@ export type WarrenNetworkStatsResult =
 
 const SUPPORTED_VERSION = 1;
 const EXIT_ID = /^[0-9a-f]{32}$/i;
-// The window range the server accepts (doc 106 knobs). A snapshot claiming
+// The window range the server accepts. A snapshot claiming
 // another window is polled as if it said the nearest bound.
 const MIN_WINDOW_SECS = 30;
 const MAX_WINDOW_SECS = 3600;

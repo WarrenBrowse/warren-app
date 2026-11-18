@@ -23,7 +23,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 
 /**
- * The two account-bound forum calls (warren-core doc 55): the panel read and
+ * The two account-bound forum calls: the panel read and
  * the mark-seen. Both are made only because the user asked to see or clear
  * the content, never on a timer: the badge comes from the broadcast digest,
  * which asks the server nothing about anybody.

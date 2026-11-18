@@ -3,7 +3,7 @@ import log from '../shared/logging';
 import { RenewalNotice, RenewalPrice, RenewalUiState } from '../shared/renewal';
 import { mintPurchaseClaim, pullSecretHash, PurchaseClaim } from './purchase-claim';
 
-// Client-side auto-renewal (warren-core doc 65). The recurring state
+// Client-side auto-renewal. The recurring state
 // lives HERE, on the device: a Stripe customer handle plus a bearer
 // token whose hash sits in the Customer metadata at Stripe. Warren's
 // servers keep nothing between cycles, so this flow is the only thing
@@ -17,7 +17,7 @@ export const RENEWAL_PERIOD_SECS = 30 * 86_400;
 // Fire window: from 3 days before expiry until expiry.
 export const RENEWAL_WINDOW_MS = 3 * 86_400_000;
 // The pre-renewal NOTICE must lead the renewal date (the expiry) by at
-// least this much (OG 21/1992 art. 10 i, doc 77). Every credit lands
+// least this much (OG 21/1992 art. 10 i). Every credit lands
 // with the app open (adopt after the initial redeem, each renewal at
 // charge time), so the notice for the next cycle can always be shown
 // with the full monthly lead. No compliant notice = no charge, ever.
@@ -94,8 +94,7 @@ export type RenewOutcome =
 export interface RenewalFlowDelegate {
   accountTag(): string | undefined;
   // The ban in force on the logged-in account, undefined when none is
-  // known. A banned wallet cannot credit time (warren-core doc 105 section
-  // 5.3), so a charge would only buy a voucher left waiting for the ban.
+  // known. A banned wallet cannot credit time, so a charge would only buy a voucher left waiting for the ban.
   accountBan(): WarrenAccountBan | undefined;
   // ISO 8601 expiry of the logged-in account, undefined when unknown.
   accountExpiry(): string | undefined;

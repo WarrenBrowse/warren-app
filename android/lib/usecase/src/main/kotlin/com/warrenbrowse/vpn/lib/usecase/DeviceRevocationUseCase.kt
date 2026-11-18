@@ -16,8 +16,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * Acts on this device's revocation from another device of the account (warren-core doc 115,
- * decision 1): the tunnel comes down, the wallet leaves the device, and the app shows its revoked
+ * Acts on this device's revocation from another device of the account: the tunnel comes down, the wallet leaves the device, and the app shows its revoked
  * screen. Coming back takes the recovery phrase.
  *
  * Only a revocation the account wallet signed for this device goes that far: whoever answers for

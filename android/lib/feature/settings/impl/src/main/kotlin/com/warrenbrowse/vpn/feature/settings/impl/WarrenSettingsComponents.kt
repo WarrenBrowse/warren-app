@@ -751,7 +751,7 @@ private fun natPmpFailedLabel(context: android.content.Context, json: String): S
         }
 
 /**
- * The exit refused the request as not authorized (warren-core doc 105): what
+ * The exit refused the request as not authorized: what
  * was missing, and when Rust asks again on its own. A refusal for the device
  * clock says how far off it is and what to do instead, since asking again
  * cannot help until the clock is set right.

@@ -6,7 +6,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * The in-app bug report: a form mirroring the forum's "Report a bug" template,
  * filed with the wallet signature and the redacted logs, for the user who
- * cannot complete the browser sign-in (warren-core doc 55).
+ * cannot complete the browser sign-in.
  */
 @Parcelize data object ReportProblemNavKey : NavKey2
 

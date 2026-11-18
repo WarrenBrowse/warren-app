@@ -552,7 +552,7 @@ class WarrenQuinnAdapter(
                     }
                     if (code == STATUS_BANNED) {
                         // Terminal like an expiry: the wallet is suspended
-                        // (warren-core doc 105) and no exit admits it before
+                        // and no exit admits it before
                         // the ban lapses. The verdict says for what and until
                         // when.
                         val verdict = BanVerdict.parse(platform.banVerdict())
@@ -566,8 +566,8 @@ class WarrenQuinnAdapter(
                         break
                     }
                     if (code == STATUS_DEVICE_REVOKED) {
-                        // Another device of the account revoked this one
-                        // (warren-core doc 115). Not a drop: the wallet leaves
+                        // Another device of the account revoked this one.
+                        // Not a drop: the wallet leaves
                         // the device next, so nothing may redial and a kill
                         // switch would hold the phone offline for an app with
                         // no account. The tunnel comes down as on a
@@ -1018,7 +1018,7 @@ class WarrenQuinnAdapter(
     }
 
     /**
-     * Handle a suspended wallet (warren-core doc 105), the way [onSessionExpired]
+     * Handle a suspended wallet, the way [onSessionExpired]
      * handles a lapsed one: never a reconnect, the kill switch kept under
      * lockdown, traffic released otherwise. The state carries the verdict's
      * `[BANNED*]` reason and lapse, which the card reads the suspension from.
@@ -1493,7 +1493,7 @@ class WarrenQuinnAdapter(
             "[CLOCK_SKEW] two exits refused this device's time; set the date and time to automatic"
 
         // Opens on the auth-failed token the desktop daemon blocks with for
-        // the same cause (warren-core doc 115).
+        // the same cause.
         const val NO_SESSION_TOKEN_REASON =
             "[NO_SESSION_TOKEN] no session token the exit admits; other devices of the " +
                 "account hold them"

@@ -15,7 +15,7 @@ export enum RoutePath {
   // rather than a popover: this app opens Account and Settings the same
   // way, and a dropdown over the connect screen exists nowhere else.
   forumActivity = '/forum-activity',
-  // The account's devices (warren-core doc 115): opened from Account and
+  // The account's devices: opened from Account and
   // from the blocked-state banner a device of the account causes.
   devices = '/account/devices',
   keys = '/account/keys',
@@ -36,7 +36,7 @@ export enum RoutePath {
   // The forum sign-in finished by hand with the code the approval page
   // shows when its button did not open the app.
   forumSignInCode = '/settings/support/forum-sign-in-code',
-  // The in-app bug report (doc 55): the forum's "Report a bug" form filed
+  // The in-app bug report: the forum's "Report a bug" form filed
   // with the wallet signature and the redacted logs, without a browser.
   reportProblem = '/settings/support/report-problem',
   debug = '/settings/debug',

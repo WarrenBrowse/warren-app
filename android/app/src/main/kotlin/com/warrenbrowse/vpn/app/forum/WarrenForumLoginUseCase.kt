@@ -66,7 +66,7 @@ sealed interface WarrenForumLoginOutcome {
 }
 
 /**
- * Signs a community-forum login challenge and submits it (warren-core doc 55).
+ * Signs a community-forum login challenge and submits it.
  *
  * Mirrors [WarrenSubscriptionUseCase]: require a wallet, check the tunnel is
  * in a state the connect host can be resolved in ([ForumPreflight]), read the

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { WarrenPortMigrationNotificationProvider } from '../../src/renderer/lib/notifications';
 
-describe('Warren port-conflict migration-cancelled banner (docs 59 C5)', () => {
+describe('Warren port-conflict migration-cancelled banner', () => {
   it('stays hidden in the steady state', () => {
     const provider = new WarrenPortMigrationNotificationProvider({
       portMigrationCancellationActive: false,

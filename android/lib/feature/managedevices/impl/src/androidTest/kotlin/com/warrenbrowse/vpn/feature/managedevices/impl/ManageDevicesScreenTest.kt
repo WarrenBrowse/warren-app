@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
 /**
- * The device list and the surfaces that open it (warren-core doc 115 section 7.1). Run with the
+ * The device list and the surfaces that open it. Run with the
  * instrumentation argument `screenshots=true` to also write each surface as a PNG under the test
  * app's external files directory, for review.
  */

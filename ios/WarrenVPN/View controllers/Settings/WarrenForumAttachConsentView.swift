@@ -4,7 +4,7 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The attach-logs consent prompt (doc 55), the iOS mirror of the desktop
+//  The attach-logs consent prompt, the iOS mirror of the desktop
 //  `ForumAttachPrompt` and Android's `ForumAttachPromptHost`. Names the topic
 //  (or says it is a report still being composed), lets the exact report be
 //  read first ("View the logs"), and uploads only on Approve. Cancel notifies

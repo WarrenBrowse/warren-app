@@ -48,14 +48,14 @@ public enum WarrenAccountError: Error, Equatable {
     /// 410 cancelled, 429 rate-limited). The response body is never
     /// surfaced (a 4xx body can echo request context).
     case server(status: Int, message: String)
-    /// The wallet is banned (warren-core doc 105 section 5.3). The server
+    /// The wallet is banned. The server
     /// refused before consuming anything: a voucher stays unredeemed, no
     /// StoreKit purchase may start after a banned init, and a banned check
     /// leaves the transaction unclaimed, to be presented once the ban ends.
     case banned(WarrenAccountBan)
 }
 
-/// Outcome of a `POST /v1/forum/login` (community-forum wallet login, doc 55):
+/// Outcome of a `POST /v1/forum/login` (community-forum wallet login):
 /// the `login` table of `fixtures/client-rules/forum_outcomes.json`, which the
 /// desktop and Android decoders read from the same crate.
 public enum WarrenForumLoginOutcome: Equatable {
@@ -132,7 +132,7 @@ public struct WarrenForumLoginCompletion: Equatable, Sendable, CustomStringConve
     }
 }
 
-/// What the provider made of a forum attach-logs upload (doc 55): the
+/// What the provider made of a forum attach-logs upload: the
 /// desktop `ForumAttachResult` plus the clock-skew refusal the login already
 /// tells apart. Single-sourced in the Rust `warren-forum` crate
 /// (`attach_envelope`); the tokens are pinned by `WarrenForumAttachOutcomeTests`.
@@ -388,7 +388,7 @@ public enum WarrenAccountClient {
     }
 
     /// Signs and submits a community-forum login challenge for `sid` to the
-    /// connect `host` (`POST /v1/forum/login`, doc 55). Everything
+    /// connect `host` (`POST /v1/forum/login`). Everything
     /// wire-sensitive (the signature, a fresh nonce, and the POST itself)
     /// happens in Rust; only `sid` and `host` cross the boundary, so the wallet
     /// signature never surfaces to Swift. `host` is re-validated against a hard
@@ -470,7 +470,7 @@ public enum WarrenAccountClient {
         }
     }
 
-    // MARK: - Community-forum attach-logs (doc 55)
+    // MARK: - Community-forum attach-logs
 
     /// Signs and submits the attach-logs upload for the forum's "attach your
     /// logs" page (`POST /v1/forum/attach-logs`): `sid` and `host` from the

@@ -67,7 +67,7 @@ function resultNotice(result: ForumAttachResult): string | undefined {
   }
 }
 
-// Consent prompt for the community-forum attach-logs flow (doc 55). Mounts a
+// Consent prompt for the community-forum attach-logs flow. Mounts a
 // modal when a `warren://attach-logs` deep link arrives (via the
 // `forumAttach.request` IPC push). The app NEVER sends logs silently: the
 // user can view the exact redacted report first, and signing with the wallet

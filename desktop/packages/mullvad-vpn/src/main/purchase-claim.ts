@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'crypto';
 
-// What the app keeps to collect a purchase it opened in the browser
-// (warren-core doc 35 section 14). The wpid names the purchase and travels
+// What the app keeps to collect a purchase it opened in the browser.
+// The wpid names the purchase and travels
 // in the checkout URL, so it proves nothing on its own. The pull secret is
 // what warren-api asks for before it hands out the voucher or the renewal
 // handoff: only its SHA-256 goes to the checkout (the `ph` query

@@ -12,7 +12,7 @@ import {
   SystemNotificationSeverityType,
 } from './notification';
 
-// Auto-renewal lifecycle notifications (warren-core doc 65). The reminder is the
+// Auto-renewal lifecycle notifications. The reminder is the
 // legal pre-charge notice (decision 12.2: in-app channel only), sent
 // with a guaranteed lead before the merchant-initiated charge.
 
@@ -53,7 +53,7 @@ export class RenewalUpcomingInAppNotificationProvider implements InAppNotificati
   }
 }
 
-// The 30-day pre-renewal notice (doc 77): the date, the monthly amount and
+// The 30-day pre-renewal notice: the date, the monthly amount and
 // the way out, and a raise names the old and the new price (directive
 // 2018/1972 art. 105(4)). The same notice is archived as a PDF.
 export class RenewalUpcomingNotificationProvider implements SystemNotificationProvider {

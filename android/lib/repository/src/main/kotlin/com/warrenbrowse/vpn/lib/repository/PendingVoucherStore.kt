@@ -25,7 +25,7 @@ data class PendingVoucher(val wallet: String, val voucher: String) {
 }
 
 /**
- * Where a pulled voucher waits for its redemption (warren-core doc 105 section 6). The server
+ * Where a pulled voucher waits for its redemption. The server
  * hands a voucher out once, and a ban refuses its redemption for up to a year while leaving it
  * unspent, so this is the only lasting copy of a paid secret: it is sealed at rest, and a voucher
  * leaves it only once redeemed or refused for good.

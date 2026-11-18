@@ -1,4 +1,4 @@
-// Shared types for the community-forum in-app report (warren-core doc 55):
+// Shared types for the community-forum in-app report:
 // the Settings, Support, "Report a problem" form, filed through the connect
 // broker with the wallet signature and the redacted logs, the way the
 // Android app files it. The description is public under the anonymous forum

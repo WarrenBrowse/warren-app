@@ -107,7 +107,7 @@ export enum SystemNotificationCategory {
   expiry,
   newVersion,
   inconsistentVersion,
-  // Auto-renewal lifecycle (warren-core doc 65): its own category so device-event
+  // Auto-renewal lifecycle: its own category so device-event
   // handling that clears `expiry` notifications leaves these alone.
   renewal,
   // Community-forum activity. Its own category so a fresh count replaces the

@@ -4,7 +4,7 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The forum page's "attach your logs" flow on iOS (doc 55). A
+//  The forum page's "attach your logs" flow on iOS. A
 //  `<scheme>://attach-logs?sid=..&topic=..&host=..` deep link, or a session
 //  id typed under Settings that the broker holds as an attach session, asks
 //  the app to attach its redacted problem report to a forum bug report. The

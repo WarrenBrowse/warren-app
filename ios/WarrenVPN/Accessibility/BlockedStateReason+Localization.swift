@@ -82,7 +82,7 @@ extension BlockedStateReason {
         }
     }
 
-    /// A revocation (warren-core doc 105), with the day it ends when the
+    /// A revocation, with the day it ends when the
     /// extension learned it, and for a port-forwarding ban the page that says
     /// how to contest it: a revocation, unlike an expiry, is not lifted by
     /// renewing.
