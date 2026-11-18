@@ -143,7 +143,7 @@ fun planTunInterface(
     // IPv4 capture. By default the whole internet (0.0.0.0/0) is tunnelled.
     // With "allow LAN", the RFC1918 / link-local ranges are excluded so LAN
     // hosts are reachable directly; the in-tunnel resolver(s) (the exit
-    // resolver 10.66.0.1, inside 10/8, or a content-blocking 100.64.0.x) are
+    // resolver 10.66.0.1 or a content-blocking 10.66.255.x, both inside 10/8) are
     // re-added as /32 routes so DNS still travels through the tunnel and never
     // leaks to the LAN resolver.
     //
@@ -311,9 +311,9 @@ private fun resolveDnsServers(dns: WarrenTunnelConfig.DnsConfig?): List<String> 
         // LAN resolver).
     }
     // Default mode with content blocking on: point DNS at the exit's encoded
-    // per-category resolver (100.64.0.<mask>), which serves the blocklists.
-    // Mirrors mullvad-daemon::dns::addresses_from_options; the exit owns
-    // 100.64.0.x (warren-exit main.rs). No blockers => the vanilla resolver.
+    // per-category resolver (10.66.255.<mask>), which serves the blocklists.
+    // Mirrors talpid_types::net::content_blocking_resolver. No blockers => the
+    // vanilla resolver.
     if (dns != null && dns.state == WarrenTunnelConfig.DnsConfig.STATE_DEFAULT) {
         val mask = contentBlockingMask(dns)
         if (mask != 0) return listOf("$DNS_BLOCKING_IP_PREFIX$mask")
@@ -323,7 +323,7 @@ private fun resolveDnsServers(dns: WarrenTunnelConfig.DnsConfig?): List<String> 
 
 /**
  * OR-together the enabled content-blocking categories into the last byte of
- * the `100.64.0.x` resolver address. Bit layout matches the exit and the
+ * the `10.66.255.x` resolver address. Bit layout matches the exit and the
  * desktop daemon: ads=1, trackers=2, malware=4, adult=8, gambling=16,
  * social=32.
  */
@@ -338,8 +338,12 @@ private fun contentBlockingMask(dns: WarrenTunnelConfig.DnsConfig): Int {
     return mask
 }
 
-/** Base of the exit's per-category blocking resolver range (100.64.0.0/24). */
-private const val DNS_BLOCKING_IP_PREFIX = "100.64.0."
+/**
+ * Base of the exit's per-category blocking resolvers (10.66.255.0/26), inside
+ * the tunnel pool. Never inside 100.64.0.0/10, which Tailscale and other
+ * overlays claim.
+ */
+private const val DNS_BLOCKING_IP_PREFIX = "10.66.255."
 
 /**
  * Minimal IPv4/IPv6 literal validation. Rejects empty, host:port and

@@ -266,6 +266,10 @@ class WarrenTunInterfacePlanTest {
             blocked.coversV4(WarrenTunDefaults.EXIT_DNS_RESOLVER),
             "the exit gateway must stay tunnelled behind a content-blocking resolver"
         )
+        assertTrue(
+            blocked.coversV4("10.66.255.1"),
+            "the content-blocking resolver sits in the excluded 10/8 and must stay tunnelled"
+        )
         val custom = planTunInterface(
             config(
                 allowLan = true,
@@ -302,7 +306,7 @@ class WarrenTunInterfacePlanTest {
     }
 
     @Test
-    fun `content blocking maps to the exit's encoded 100_64_0_x resolver`() {
+    fun `content blocking maps to the exit's encoded 10_66_255_x resolver`() {
         fun blocking(
             ads: Boolean = false,
             trackers: Boolean = false,
@@ -325,15 +329,15 @@ class WarrenTunInterfacePlanTest {
             planTunInterface(config(dns = blocking())).dnsServers,
         )
         // ads=1
-        assertEquals(listOf("100.64.0.1"), planTunInterface(config(dns = blocking(ads = true))).dnsServers)
+        assertEquals(listOf("10.66.255.1"), planTunInterface(config(dns = blocking(ads = true))).dnsServers)
         // ads(1)+trackers(2)=3
         assertEquals(
-            listOf("100.64.0.3"),
+            listOf("10.66.255.3"),
             planTunInterface(config(dns = blocking(ads = true, trackers = true))).dnsServers,
         )
         // all six = 1+2+4+8+16+32 = 63
         assertEquals(
-            listOf("100.64.0.63"),
+            listOf("10.66.255.63"),
             planTunInterface(
                 config(
                     dns = blocking(
