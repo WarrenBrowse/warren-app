@@ -271,7 +271,9 @@ the app verified, never from the exit or the entry that triggered the move.
 On macOS, Linux and Windows, a Tailscale interface present on the machine keeps carrying tailnet
 traffic while the tunnel is [connecting] or [connected]: the firewall lets traffic through that
 interface to and from Tailscale's ranges only (`100.64.0.0/10` and `fd7a:115c:a1e0::/48`), DNS to
-Tailscale's resolver (`100.100.100.100`, inside that range) on that interface included. Traffic entering that
+Tailscale's resolver (`100.100.100.100`, inside that range) on that interface included. The
+content-blocking resolvers (`10.66.255.0/26`) live in the exit's tunnel pool, outside those
+ranges, so this opening never carries the queries meant for them. Traffic entering that
 interface is encrypted by Tailscale, and Tailscale's own sockets are filtered like any other
 program's, so they go through the tunnel. In the blocking states without a tunnel the opening does
 not exist.

@@ -196,21 +196,28 @@ through; queries still egress through the tunnel).
 
 **DNS content blockers.** The optional content blockers (ads, trackers, malware,
 adult content, gambling, social media) are not filtered on the device. The daemon
-encodes the user's selected categories as a bitmask in the last octet of a magic
-resolver IP `100.64.0.X` (CGNAT range, RFC 6598): ads=1, trackers=2, malware=4,
-adult=8, gambling=16, social=32, OR-combined. That address becomes the system DNS.
+encodes the user's selected categories as a bitmask in the last octet of a
+resolver IP `10.66.255.X` (`10.66.255.0/26`, inside the exit's tunnel pool
+`10.66.0.0/16`): ads=1, trackers=2, malware=4, adult=8, gambling=16, social=32,
+OR-combined. That address becomes the system DNS. Every client routes the pool
+into the tunnel and the firewall admits it there only, like the gateway; the
+exit's address allocator never hands out an address in that block. The block
+must stay out of `100.64.0.0/10`, which Tailscale and other overlays claim: the
+coexistence routes and firewall passes for Tailscale would capture the queries.
 On the exit, Warren's resolver (kresd, in the sibling `warren-core` repo) decodes
 the octet and applies the matching public RPZ blocklists, returning NXDOMAIN for a
 blocked name and otherwise resolving normally. With no category selected the octet
 is 0 and nothing is blocked (off by default).
 
-- Client mapping: `mullvad-daemon/src/dns.rs` (`addresses_from_options`),
-  `mullvad-types/src/settings/dns.rs` (`DefaultDnsOptions`, `allow_external_dns`).
+- Client mapping: `talpid-types/src/net/content_blocking.rs` (the block and the
+  encoding), `mullvad-daemon/src/dns.rs` (`addresses_from_options`),
+  `mullvad-types/src/settings/dns.rs` (`DefaultDnsOptions`, `allow_external_dns`);
+  Android `WarrenTunInterfacePlan.kt`, iOS `DNSSettings.swift`.
 - Server side, scope, no-log, and transparency: see `warren-core`
   `docs/37-DNS-CONTENT-BLOCKING.md` and `infra/dns/`.
 
-This mapping is inherited unchanged from upstream Mullvad; the only Warren
-addition here is `allow_external_dns`.
+The category bits are inherited from upstream Mullvad; Warren moved the
+resolver block into its tunnel pool and added `allow_external_dns`.
 
 ### Firewall integration
 
