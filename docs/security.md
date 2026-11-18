@@ -143,6 +143,17 @@ The following network traffic is allowed or blocked independent of state:
    networks of their own (Settings, VPN settings, Local network sharing, or `warren lan networks`),
    and the firewall then permits exactly that list.
 
+   A shared network may be a public range: a user's own routed block, or a provider's that the
+   local network reaches. The firewall opens it like a private one, on any interface, and does not
+   narrow it to destinations on the link. That is deliberate: a network shared behind a router of
+   the LAN is reached through a gateway, never on the link, and a link-scope rule would break the
+   very setups the list exists for, while the routes below already keep a shared network reached
+   through the default gateway inside the tunnel. What the user takes on is that a route more
+   specific than the default one, pushed by a hostile DHCP server (option 121) or set by hand,
+   then sends that range off the tunnel. So `warren lan get` marks every public range and both it
+   and `warren lan networks add` warn when one is shared, and the list can only be changed by the
+   owner or an administrator.
+
    The firewall only permits this traffic; the routes decide where it goes. On Linux the tunnel's
    split-default sends every destination to its own table ahead of `main`, so each shared network
    is also looked up in `main`, ahead of the tunnel, in both address families
