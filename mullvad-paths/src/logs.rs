@@ -7,13 +7,14 @@ pub fn log_dir() -> Result<PathBuf> {
     crate::create_dir(get_log_dir()?, log_dir_permissions())
 }
 
-/// The daemon logs narrate the owner's use of the VPN, so on Unix only root reads them (an
-/// existing directory left open by an older build is replaced, its logs with it); the problem
-/// report collector, run by the user, gets them through the daemon. Windows keeps them readable
-/// by users.
-fn log_dir_permissions() -> Option<crate::UserPermissions> {
+/// The daemon logs narrate the owner's use of the VPN, so only root (Unix) or the administrators
+/// and SYSTEM (Windows) read them; the problem report collector, run by the user, gets them
+/// through the daemon. On Unix an existing directory left open by an older build is replaced, its
+/// logs with it; on Windows its ACL is replaced and the change reaches the files inside. The
+/// Windows crash minidump is written there too, so it is no more readable than the logs.
+pub(crate) fn log_dir_permissions() -> Option<crate::UserPermissions> {
     Some(crate::UserPermissions {
-        read: cfg!(windows),
+        read: false,
         write: false,
         execute: false,
     })

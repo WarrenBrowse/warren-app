@@ -348,7 +348,12 @@ fn apply_security_permissions(
         Trustee: trustee,
     };
 
-    let ea_entries = [admin_ea, authenticated_users_ea];
+    // A directory users may not read gets no entry for them at all, rather than an empty one.
+    let ea_entries: &[EXPLICIT_ACCESS_W] = if user_permissions.flags() == 0 {
+        &[admin_ea]
+    } else {
+        &[admin_ea, authenticated_users_ea]
+    };
     let mut new_dacl = ptr::null_mut();
 
     // SAFETY: `ea_entries` is valid for reads of `ea_entries.len()` elements
@@ -779,6 +784,85 @@ mod tests {
             )
         };
         assert_eq!(result, ERROR_SUCCESS, "SetSecurityInfo failed");
+    }
+
+    /// Whether the DACL of `path` holds an entry for Authenticated Users.
+    fn users_have_an_entry(path: &Path) -> bool {
+        use windows_sys::Win32::Security::{
+            ACCESS_ALLOWED_ACE, ACE_HEADER, ACL, ACL_SIZE_INFORMATION, AclSizeInformation, GetAce,
+            GetAclInformation,
+        };
+        let directory = open_directory_for_security(path).unwrap();
+        let mut dacl: *mut ACL = ptr::null_mut();
+        let mut descriptor: PSECURITY_DESCRIPTOR = ptr::null_mut();
+        // SAFETY: the handle is open with READ_CONTROL; only the DACL is asked for, and it points
+        // into `descriptor`, which is freed after its last use.
+        let result = unsafe {
+            GetSecurityInfo(
+                directory.as_raw_handle(),
+                SE_FILE_OBJECT,
+                Security::DACL_SECURITY_INFORMATION,
+                ptr::null_mut(),
+                ptr::null_mut(),
+                &raw mut dacl,
+                ptr::null_mut(),
+                &raw mut descriptor,
+            )
+        };
+        assert_eq!(result, ERROR_SUCCESS);
+        // SAFETY: an all-zero ACL_SIZE_INFORMATION is a valid value of this C struct.
+        let mut size: ACL_SIZE_INFORMATION = unsafe { mem::zeroed() };
+        // SAFETY: `dacl` is the valid ACL returned above, and `size` is a live local of the size
+        // passed.
+        let ok = unsafe {
+            GetAclInformation(
+                dacl,
+                (&raw mut size).cast(),
+                u32::try_from(mem::size_of::<ACL_SIZE_INFORMATION>()).unwrap(),
+                AclSizeInformation,
+            )
+        };
+        assert_ne!(ok, 0);
+        let mut found = false;
+        for index in 0..size.AceCount {
+            let mut ace: *mut c_void = ptr::null_mut();
+            // SAFETY: `index` is below the ACE count of the valid `dacl`.
+            assert_ne!(unsafe { GetAce(dacl, index, &raw mut ace) }, 0);
+            // SAFETY: every ACE starts with an ACE_HEADER, and an allowed ACE (type 0) is an
+            // ACCESS_ALLOWED_ACE whose SID starts at `SidStart`, inside the ACL.
+            unsafe {
+                if (*(ace as *const ACE_HEADER)).AceType == 0 {
+                    let sid = (&raw mut (*(ace as *mut ACCESS_ALLOWED_ACE)).SidStart).cast();
+                    found |= IsWellKnownSid(sid, WinAuthenticatedUserSid) != 0;
+                }
+            }
+        }
+        // SAFETY: `descriptor` was allocated by `GetSecurityInfo` for the caller to free, and
+        // `dacl` is not used after this.
+        unsafe { LocalFree(descriptor) };
+        found
+    }
+
+    #[test]
+    fn the_daemon_log_directory_grants_users_nothing() {
+        let root = scratch("logs");
+        let logs = root.join("logs");
+
+        crate::create_dir(logs.clone(), crate::logs::log_dir_permissions()).unwrap();
+
+        assert!(!users_have_an_entry(&logs));
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_directory_users_may_read_has_their_entry() {
+        let root = scratch("readable");
+        let cache = root.join("cache");
+
+        create_privileged_directory(&cache).unwrap();
+
+        assert!(users_have_an_entry(&cache));
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]
