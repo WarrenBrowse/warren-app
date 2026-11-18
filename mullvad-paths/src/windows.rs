@@ -12,23 +12,28 @@ use windows_sys::{
     Win32::{
         Foundation::{
             ERROR_INSUFFICIENT_BUFFER, ERROR_SUCCESS, GENERIC_ALL, GENERIC_EXECUTE, GENERIC_READ,
-            GENERIC_WRITE, HANDLE, LUID, LocalFree, S_OK,
+            GENERIC_WRITE, HANDLE, INVALID_HANDLE_VALUE, LUID, LocalFree, S_OK,
         },
         Security::{
             self, AdjustTokenPrivileges,
             Authorization::{
-                EXPLICIT_ACCESS_W, NO_MULTIPLE_TRUSTEE, SE_FILE_OBJECT, SET_ACCESS,
-                SetEntriesInAclW, SetNamedSecurityInfoW, TRUSTEE_IS_GROUP, TRUSTEE_IS_SID,
+                EXPLICIT_ACCESS_W, GetSecurityInfo, NO_MULTIPLE_TRUSTEE, SE_FILE_OBJECT,
+                SET_ACCESS, SetEntriesInAclW, SetSecurityInfo, TRUSTEE_IS_GROUP, TRUSTEE_IS_SID,
                 TRUSTEE_W,
             },
-            CreateWellKnownSid, EqualSid, GetTokenInformation, ImpersonateSelf,
-            LUID_AND_ATTRIBUTES, LookupPrivilegeValueW, NO_INHERITANCE, RevertToSelf,
-            SE_PRIVILEGE_ENABLED, SUB_CONTAINERS_AND_OBJECTS_INHERIT, SecurityImpersonation,
-            TOKEN_ADJUST_PRIVILEGES, TOKEN_DUPLICATE, TOKEN_IMPERSONATE, TOKEN_PRIVILEGES,
-            TOKEN_QUERY, TOKEN_USER, TokenUser, WinAuthenticatedUserSid,
+            CreateWellKnownSid, EqualSid, GetTokenInformation, ImpersonateSelf, IsWellKnownSid,
+            LUID_AND_ATTRIBUTES, LookupPrivilegeValueW, NO_INHERITANCE, PSECURITY_DESCRIPTOR, PSID,
+            RevertToSelf, SE_PRIVILEGE_ENABLED, SUB_CONTAINERS_AND_OBJECTS_INHERIT,
+            SecurityImpersonation, TOKEN_ADJUST_PRIVILEGES, TOKEN_DUPLICATE, TOKEN_IMPERSONATE,
+            TOKEN_PRIVILEGES, TOKEN_QUERY, TOKEN_USER, TokenUser, WinAuthenticatedUserSid,
             WinBuiltinAdministratorsSid, WinLocalSystemSid,
         },
-        Storage::FileSystem::MAX_SID_SIZE,
+        Storage::FileSystem::{
+            BY_HANDLE_FILE_INFORMATION, CreateFileW, FILE_ATTRIBUTE_DIRECTORY,
+            FILE_ATTRIBUTE_REPARSE_POINT, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT,
+            FILE_SHARE_DELETE, FILE_SHARE_READ, FILE_SHARE_WRITE, GetFileInformationByHandle,
+            MAX_SID_SIZE, OPEN_EXISTING, READ_CONTROL, WRITE_DAC, WRITE_OWNER,
+        },
         System::{
             Com::CoTaskMemFree,
             ProcessStatus::EnumProcesses,
@@ -114,8 +119,20 @@ fn create_dir_recursive_with_permissions(
         }
         // Could not find parent directory, try creating parent
         Err(e) if e.kind() == io::ErrorKind::NotFound => (),
-        // Directory already exists, set permissions
+        // The directory already exists. Any account may have created it before the first install,
+        // so it is reused only when an administrators group or SYSTEM owns it; another account's
+        // directory is replaced, as the Unix version does, rather than handed the privileged ACL.
         Err(e) if e.kind() == io::ErrorKind::AlreadyExists && path.is_dir() => {
+            let directory = open_directory_for_security(path)?;
+            if owner_is_privileged(&directory)? {
+                return apply_security_permissions(&directory, user_permissions);
+            }
+            drop(directory);
+            log::warn!("Replacing a directory that an unprivileged account created");
+            std::fs::remove_dir_all(path)
+                .map_err(|e| Error::RemoveDir(path.display().to_string(), e))?;
+            std::fs::create_dir(path)
+                .map_err(|e| Error::CreateDirFailed(path.display().to_string(), e))?;
             return set_security_permissions(path, user_permissions);
         }
         Err(e) => {
@@ -168,10 +185,95 @@ pub fn create_privileged_directory(path: &Path) -> Result<()> {
     create_dir_recursive_with_permissions(path, UserPermissions::read_only())
 }
 
+/// Opens the directory at `path` itself, never what a reparse point there leads to, with the rights
+/// to read and replace its security descriptor. Applying the descriptor through this handle rather
+/// than by name leaves no window for a junction to be swapped in after the checks.
+fn open_directory_for_security(path: &Path) -> Result<OwnedHandle> {
+    let wide_path = U16CString::from_os_str(path)?;
+    let failed = |error| Error::SetDirPermissionFailed(path.display().to_string(), error);
+    // SAFETY: `wide_path` is NUL-terminated and outlives the call; the security attributes and the
+    // template are null, which the API accepts.
+    let raw = unsafe {
+        CreateFileW(
+            wide_path.as_ptr(),
+            READ_CONTROL | WRITE_DAC | WRITE_OWNER,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            ptr::null(),
+            OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+            ptr::null_mut(),
+        )
+    };
+    if raw == INVALID_HANDLE_VALUE {
+        return Err(failed(io::Error::last_os_error()));
+    }
+    // SAFETY: `CreateFileW` succeeded, so `raw` is an open handle that nothing else owns.
+    let handle = unsafe { OwnedHandle::from_raw_handle(raw) };
+
+    // SAFETY: an all-zero `BY_HANDLE_FILE_INFORMATION` is a valid value of this plain C struct.
+    let mut info: BY_HANDLE_FILE_INFORMATION = unsafe { mem::zeroed() };
+    // SAFETY: the handle is open, and `info` is a live local the call fills in.
+    if unsafe { GetFileInformationByHandle(handle.as_raw_handle(), &raw mut info) } == 0 {
+        return Err(failed(io::Error::last_os_error()));
+    }
+    if info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT != 0 {
+        return Err(Error::ReparsePoint(path.display().to_string()));
+    }
+    if info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY == 0 {
+        return Err(failed(io::Error::other("not a directory")));
+    }
+    Ok(handle)
+}
+
+/// Whether the directory behind `handle` is owned by an administrators group or by SYSTEM.
+fn owner_is_privileged(handle: &OwnedHandle) -> Result<bool> {
+    let mut owner: PSID = ptr::null_mut();
+    let mut descriptor: PSECURITY_DESCRIPTOR = ptr::null_mut();
+    // SAFETY: the handle is open with READ_CONTROL. Only the owner is asked for, so every other
+    // out-pointer is null; `owner` points into `descriptor`, which is freed below after its last
+    // use.
+    let result = unsafe {
+        GetSecurityInfo(
+            handle.as_raw_handle(),
+            SE_FILE_OBJECT,
+            Security::OWNER_SECURITY_INFORMATION,
+            &raw mut owner,
+            ptr::null_mut(),
+            ptr::null_mut(),
+            ptr::null_mut(),
+            &raw mut descriptor,
+        )
+    };
+    if result != ERROR_SUCCESS {
+        return Err(Error::GetDirPermissionFailed(
+            String::from("GetSecurityInfo failed"),
+            io::Error::from_raw_os_error(i32::try_from(result).unwrap_or(i32::MAX)),
+        ));
+    }
+    // SAFETY: `owner` is the valid SID `GetSecurityInfo` returned inside `descriptor`.
+    let privileged = unsafe {
+        IsWellKnownSid(owner, WinBuiltinAdministratorsSid) != 0
+            || IsWellKnownSid(owner, WinLocalSystemSid) != 0
+    };
+    // SAFETY: `descriptor` was allocated by `GetSecurityInfo` for the caller to free with
+    // `LocalFree`, and `owner`, which points into it, is not used after this.
+    unsafe { LocalFree(descriptor) };
+    Ok(privileged)
+}
+
 /// Sets security permissions for path such that admin has full ownership and access while
 /// authenticated users only have read access.
 fn set_security_permissions(path: &Path, user_permissions: UserPermissions) -> Result<()> {
-    let wide_path = U16CString::from_os_str(path)?;
+    let directory = open_directory_for_security(path)?;
+    apply_security_permissions(&directory, user_permissions)
+}
+
+/// [`set_security_permissions`] on a directory already opened by
+/// [`open_directory_for_security`].
+fn apply_security_permissions(
+    directory: &OwnedHandle,
+    user_permissions: UserPermissions,
+) -> Result<()> {
     let security_information = Security::DACL_SECURITY_INFORMATION
         | Security::PROTECTED_DACL_SECURITY_INFORMATION
         | Security::GROUP_SECURITY_INFORMATION
@@ -269,10 +371,11 @@ fn set_security_permissions(path: &Path, user_permissions: UserPermissions) -> R
     }
     // new_dacl is now allocated and must be freed with FreeLocal
 
-    // SAFETY: All pointers are valid
+    // SAFETY: the handle is open with WRITE_DAC and WRITE_OWNER, both SIDs live in local arrays
+    // and `new_dacl` was built by `SetEntriesInAclW` above; all outlive the call.
     let result = unsafe {
-        SetNamedSecurityInfoW(
-            wide_path.as_ptr(),
+        SetSecurityInfo(
+            directory.as_raw_handle(),
             SE_FILE_OBJECT,
             security_information,
             admin_psid.as_mut_ptr().cast(),
@@ -287,7 +390,7 @@ fn set_security_permissions(path: &Path, user_permissions: UserPermissions) -> R
 
     if result != ERROR_SUCCESS {
         Err(Error::SetDirPermissionFailed(
-            String::from("SetNamedSecurityInfoW failed"),
+            String::from("SetSecurityInfo failed"),
             io::Error::from_raw_os_error(
                 i32::try_from(result).expect("result does not fit in i32"),
             ),
@@ -543,20 +646,32 @@ fn find_process<T>(handle_process: impl Fn(BorrowedHandle<'_>) -> Option<T>) -> 
         ))
 }
 
-fn is_local_system_user_token(token: &impl AsRawHandle) -> io::Result<bool> {
-    let mut token_info = vec![0u8; 1024];
+/// The `TOKEN_USER` of a token, in storage aligned for it.
+struct TokenUserInfo(Vec<u64>);
+
+impl TokenUserInfo {
+    /// The account SID of the token, valid as long as `self`.
+    fn sid(&self) -> PSID {
+        // SAFETY: the buffer holds the `TOKEN_USER` that `GetTokenInformation` wrote for the
+        // `TokenUser` class, and a `Vec<u64>` is aligned for it.
+        unsafe { (*(self.0.as_ptr() as *const TOKEN_USER)).User.Sid }
+    }
+}
+
+fn token_user(token: &impl AsRawHandle) -> io::Result<TokenUserInfo> {
+    let mut token_info = vec![0u64; 1024 / mem::size_of::<u64>()];
 
     loop {
         let mut returned_info_len = 0;
 
-        // SAFETY: `token` is a valid handle, and `token_info` is valid for writes of
-        // `token_info.len()` bytes
+        // SAFETY: `token` is a valid handle, and `token_info` is valid for writes of its size in
+        // bytes.
         let info_result = unsafe {
             GetTokenInformation(
                 token.as_raw_handle(),
                 TokenUser,
                 token_info.as_mut_ptr().cast::<c_void>(),
-                u32::try_from(token_info.len()).expect("len must fit in u32"),
+                u32::try_from(mem::size_of_val(&token_info[..])).expect("len must fit in u32"),
                 &raw mut returned_info_len,
             )
         };
@@ -566,19 +681,16 @@ fn is_local_system_user_token(token: &impl AsRawHandle) -> io::Result<bool> {
             log::error!("Failed to obtain token information: {}", err);
             return Err(err);
         }
-
-        token_info.resize(
-            usize::try_from(returned_info_len).expect("u32 must fit in usize"),
-            0,
-        );
         if info_result != 0 {
-            break;
+            return Ok(TokenUserInfo(token_info));
         }
+        let needed = usize::try_from(returned_info_len).expect("u32 must fit in usize");
+        token_info.resize(needed.div_ceil(mem::size_of::<u64>()), 0);
     }
+}
 
-    // SAFETY: We specified `TokenUser` as the class, so that is what GetTokenInformation should
-    // return. This reference is valid for as long as `token_info` is valid.
-    let token_user = unsafe { &*(token_info.as_mut_ptr() as *const TOKEN_USER) };
+fn is_local_system_user_token(token: &impl AsRawHandle) -> io::Result<bool> {
+    let token_user = token_user(token)?;
 
     let mut local_system_sid = [0u8; MAX_SID_SIZE as usize];
     let mut local_system_size =
@@ -602,7 +714,7 @@ fn is_local_system_user_token(token: &impl AsRawHandle) -> io::Result<bool> {
     // SAFETY: Both arguments point to valid security identifiers
     Ok(unsafe {
         EqualSid(
-            token_user.User.Sid,
+            token_user.sid(),
             local_system_sid.as_mut_ptr().cast::<c_void>(),
         )
     } != 0)
@@ -611,6 +723,7 @@ fn is_local_system_user_token(token: &impl AsRawHandle) -> io::Result<bool> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use windows_sys::Win32::System::Threading::GetCurrentProcess;
 
     fn scratch(tag: &str) -> PathBuf {
         let unique = std::time::SystemTime::now()
@@ -641,6 +754,64 @@ mod tests {
         assert!(matches!(result, Err(Error::ReparsePoint(_))), "{result:?}");
         assert!(!target.join("cache").exists());
         let _ = std::fs::remove_dir(&junction);
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    /// Makes the running account, rather than an administrators group, the owner of `path`.
+    fn give_to_current_account(path: &Path) {
+        let process_token =
+            // SAFETY: `GetCurrentProcess` returns a pseudo handle that needs no closing.
+            open_process_token(&unsafe { BorrowedHandle::borrow_raw(GetCurrentProcess()) }, TOKEN_QUERY)
+                .unwrap();
+        let user = token_user(&process_token).unwrap();
+        let directory = open_directory_for_security(path).unwrap();
+        // SAFETY: the handle is open with WRITE_OWNER, and the owner SID lives in `user`, which
+        // outlives the call. No other part of the descriptor is set.
+        let result = unsafe {
+            SetSecurityInfo(
+                directory.as_raw_handle(),
+                SE_FILE_OBJECT,
+                Security::OWNER_SECURITY_INFORMATION,
+                user.sid(),
+                ptr::null_mut(),
+                ptr::null(),
+                ptr::null(),
+            )
+        };
+        assert_eq!(result, ERROR_SUCCESS, "SetSecurityInfo failed");
+    }
+
+    #[test]
+    fn a_directory_it_creates_is_owned_by_the_administrators() {
+        let root = scratch("owner");
+        let product = root.join("product");
+
+        create_privileged_directory(&product).unwrap();
+
+        let directory = open_directory_for_security(&product).unwrap();
+        assert!(owner_is_privileged(&directory).unwrap());
+        drop(directory);
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn an_existing_directory_another_account_owns_is_replaced_not_reused() {
+        let root = scratch("foreign-owner");
+        let product = root.join("product");
+        std::fs::create_dir(&product).unwrap();
+        std::fs::write(product.join("planted"), b"chosen by another account").unwrap();
+        give_to_current_account(&product);
+        assert!(!owner_is_privileged(&open_directory_for_security(&product).unwrap()).unwrap());
+
+        create_privileged_directory(&product).unwrap();
+
+        assert!(
+            !product.join("planted").exists(),
+            "the foreign directory was reused"
+        );
+        let directory = open_directory_for_security(&product).unwrap();
+        assert!(owner_is_privileged(&directory).unwrap());
+        drop(directory);
         let _ = std::fs::remove_dir_all(&root);
     }
 }
