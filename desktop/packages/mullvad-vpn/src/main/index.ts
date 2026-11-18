@@ -155,7 +155,10 @@ import { readSeenPorts, serializeSeenPorts, writeSeenPorts } from './port-forwar
 import { PortForwardingWatcher } from './port-forwarding-watcher';
 import * as problemReport from './problem-report';
 import { resolveBin } from './proc';
-import { installProcessErrorHandlers } from './process-error-handlers';
+import {
+  createRenderProcessGoneHandler,
+  installProcessErrorHandlers,
+} from './process-error-handlers';
 import PurchaseFlow from './purchase-flow';
 import ReconnectionBackoff from './reconnection-backoff';
 import RenewalFlow, {
@@ -514,11 +517,22 @@ class ApplicationMain
 
     this.settings.gui.load();
 
+    const onRenderProcessGone = createRenderProcessGoneHandler({
+      recreateWindow: async () => {
+        if (!this.userInterface || this.quitInitiated) {
+          throw new Error('no window to recreate');
+        }
+        await this.userInterface.recreateWindow(
+          this.account.isLoggedIn(),
+          this.tunnelState.tunnelState,
+        );
+        this.screenProtection.windowRecreated();
+      },
+      quit: () => app.quit(),
+      log,
+    });
     app.on('render-process-gone', (_event, _webContents, details) => {
-      log.error(
-        `Render process exited with exit code ${details.exitCode} due to ${details.reason}`,
-      );
-      app.quit();
+      void onRenderProcessGone(details);
     });
     app.on('child-process-gone', (_event, details) => {
       log.error(
