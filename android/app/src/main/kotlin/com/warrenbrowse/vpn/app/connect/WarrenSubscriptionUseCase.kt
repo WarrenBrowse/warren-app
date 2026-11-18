@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.repository.AccountRequestFailure
 import com.warrenbrowse.vpn.lib.repository.PurchaseClaim
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenAccountStandingState
@@ -17,12 +18,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.boolean
-import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.long
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -64,7 +59,7 @@ class WarrenSubscriptionUseCase(
             throw e
         } catch (e: Exception) {
             Logger.e(throwable = e) { "WarrenSubscriptionUseCase: mnemonic read failed" }
-            return WarrenSubscriptionOutcome.Failure(e.message ?: "wallet read failed")
+            return WarrenSubscriptionOutcome.Failure(AccountRequestFailure.WalletRead)
         }
 
         return withContext(Dispatchers.IO) {
@@ -74,11 +69,9 @@ class WarrenSubscriptionUseCase(
                     WarrenJni.getSubscription(m.phrase)
                 } catch (e: Exception) {
                     Logger.e(throwable = e) { "WarrenJni.getSubscription threw" }
-                    return@use WarrenSubscriptionOutcome.Failure(
-                        e.message ?: "JNI getSubscription threw",
-                    )
+                    return@use WarrenSubscriptionOutcome.Failure(AccountRequestFailure.Engine)
                 }
-                parseOutcome(rawJson).also { outcome ->
+                parseSubscriptionJson(rawJson).also { outcome ->
                     // Cache the freshly fetched expiry into the shared StateFlow so
                     // every observer (account "Paid until", home header "Time
                     // left") refreshes. A 404 resolves to 0 (no subscription),
@@ -104,7 +97,7 @@ class WarrenSubscriptionUseCase(
             throw e
         } catch (e: Exception) {
             Logger.e(throwable = e) { "WarrenSubscriptionUseCase.redeem: mnemonic read failed" }
-            return WarrenVoucherOutcome.Failure(e.message ?: "wallet read failed")
+            return WarrenVoucherOutcome.Failure(AccountRequestFailure.WalletRead)
         }
 
         return withContext(Dispatchers.IO) {
@@ -114,7 +107,7 @@ class WarrenSubscriptionUseCase(
                     WarrenJni.redeemVoucher(m.phrase, voucher)
                 } catch (e: Exception) {
                     Logger.e(throwable = e) { "WarrenJni.redeemVoucher threw" }
-                    return@use WarrenVoucherOutcome.Failure(e.message ?: "JNI redeemVoucher threw")
+                    return@use WarrenVoucherOutcome.Failure(AccountRequestFailure.Engine)
                 }
                 parseVoucherJson(rawJson).also(::showBan)
             }
@@ -171,7 +164,7 @@ class WarrenSubscriptionUseCase(
                         try {
                             purchases.collect(claim.code, mnemonic.phrase)
                         } catch (e: Exception) {
-                            WarrenVoucherOutcome.Failure(e.message ?: "JNI purchase collect threw")
+                            WarrenVoucherOutcome.Failure(AccountRequestFailure.Engine)
                         }
                     }
                     when (outcome) {
@@ -244,25 +237,4 @@ class WarrenSubscriptionUseCase(
             is WalletState.Ready -> state.pubkey.value
             else -> null
         }
-
-    private fun parseOutcome(rawJson: String): WarrenSubscriptionOutcome = try {
-        val root = Json.parseToJsonElement(rawJson).jsonObject
-        val ok = root["ok"]?.jsonPrimitive?.boolean == true
-        if (ok) {
-            val expiresAt = root["expires_at"]?.jsonPrimitive?.long
-                ?: return WarrenSubscriptionOutcome.Failure("missing expires_at")
-            WarrenSubscriptionOutcome.Success(expiresAt)
-        } else if (root["status"]?.jsonPrimitive?.intOrNull == 404) {
-            // A 404 means "no subscription bound yet" (a fresh wallet), not a
-            // failure. Mirror iOS / desktop by resolving it to the Unix epoch
-            // so the UI shows "no active subscription" rather than a fetch
-            // error (the JNI surfaces the HTTP status for exactly this case).
-            WarrenSubscriptionOutcome.Success(0L)
-        } else {
-            val msg = root["error"]?.jsonPrimitive?.content ?: "fetch failed"
-            WarrenSubscriptionOutcome.Failure(msg)
-        }
-    } catch (e: Exception) {
-        WarrenSubscriptionOutcome.Failure("invalid JNI response: ${e.message}")
-    }
 }

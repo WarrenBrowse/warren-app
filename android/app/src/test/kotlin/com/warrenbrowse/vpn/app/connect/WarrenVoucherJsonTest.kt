@@ -2,6 +2,8 @@ package com.warrenbrowse.vpn.app.connect
 
 import com.warrenbrowse.vpn.lib.model.AccountBan
 import com.warrenbrowse.vpn.lib.model.AccountStanding
+import com.warrenbrowse.vpn.lib.repository.AccountRequestFailure
+import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
@@ -79,12 +81,50 @@ class WarrenVoucherJsonTest {
     }
 
     @Test
-    fun `any other refusal is a failure`() {
+    fun `any other refusal is a failure that carries no server text`() {
         assertEquals(
-            WarrenVoucherOutcome.Failure("register failed: server returned status 409"),
+            WarrenVoucherOutcome.Failure(AccountRequestFailure.Refused),
             parseVoucherJson(
                 """{"ok":false,"error":"register failed: server returned status 409"}"""
             ),
+        )
+    }
+
+    @Test
+    fun `a fetched subscription carries its expiry, and no subscription yet reads as the epoch`() {
+        assertEquals(
+            listOf(WarrenSubscriptionOutcome.Success(1_900_000_000), WarrenSubscriptionOutcome.Success(0)),
+            listOf(
+                parseSubscriptionJson("""{"ok":true,"expires_at":1900000000}"""),
+                parseSubscriptionJson("""{"ok":false,"status":404,"error":"not found"}"""),
+            ),
+        )
+    }
+
+    @Test
+    fun `a failed subscription fetch is typed and carries no server text`() {
+        assertEquals(
+            listOf(
+                WarrenSubscriptionOutcome.Failure(AccountRequestFailure.Refused),
+                WarrenSubscriptionOutcome.Failure(AccountRequestFailure.MalformedResponse),
+                WarrenSubscriptionOutcome.Failure(AccountRequestFailure.MalformedResponse),
+            ),
+            listOf(
+                parseSubscriptionJson("""{"ok":false,"status":502,"error":"bad gateway"}"""),
+                parseSubscriptionJson("""{"ok":true}"""),
+                parseSubscriptionJson("not json"),
+            ),
+        )
+    }
+
+    @Test
+    fun `an answer that is not the redeem envelope is a malformed response`() {
+        assertEquals(
+            listOf(
+                WarrenVoucherOutcome.Failure(AccountRequestFailure.MalformedResponse),
+                WarrenVoucherOutcome.Failure(AccountRequestFailure.MalformedResponse),
+            ),
+            listOf(parseVoucherJson("not json"), parseVoucherJson("""{"ok":true}""")),
         )
     }
 

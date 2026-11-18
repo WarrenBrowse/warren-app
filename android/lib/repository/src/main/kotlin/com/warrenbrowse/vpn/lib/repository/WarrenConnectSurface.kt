@@ -37,8 +37,17 @@ sealed interface WarrenConnectResult {
         val observedPubkeyHex: String,
     ) : WarrenConnectResult
 
-    /** Build/IO failure; [message] is loggable + may be shown inline. */
-    data class Failure(val message: String) : WarrenConnectResult
+    /** The connect never reached the tunnel; the screens show one generic message for it. */
+    data class Failure(val reason: ConnectFailure) : WarrenConnectResult
+}
+
+/** Why a connect never reached the tunnel. */
+enum class ConnectFailure {
+    /** The relay catalogue holds no exit to dial. */
+    NoRelayAvailable,
+
+    /** The wallet secret could not be read from its secure store. */
+    WalletRead,
 }
 
 interface WarrenQuinnConnectInvoker {
@@ -341,8 +350,26 @@ sealed interface WarrenSubscriptionOutcome {
     /** Wallet has no mnemonic yet (onboarding hasn't run). */
     data object WalletNotReady : WarrenSubscriptionOutcome
 
-    /** Network / server / signature error - `message` is loggable, not user-facing. */
-    data class Failure(val message: String) : WarrenSubscriptionOutcome
+    /** The fetch did not complete; see [AccountRequestFailure]. */
+    data class Failure(val reason: AccountRequestFailure) : WarrenSubscriptionOutcome
+}
+
+/**
+ * Why a signed account request (a subscription fetch, a voucher redemption) did not complete.
+ * Carries no server or exception text, so an outcome is safe to log and compare as it is.
+ */
+enum class AccountRequestFailure {
+    /** The wallet secret could not be read from its secure store. */
+    WalletRead,
+
+    /** The native call threw. */
+    Engine,
+
+    /** The native call answered something that is not its envelope. */
+    MalformedResponse,
+
+    /** The server answered with an error. */
+    Refused,
 }
 
 /**
@@ -372,7 +399,7 @@ sealed interface WarrenVoucherOutcome {
     /** The voucher is unknown, spent, cancelled or expired: it is worth nothing any more. */
     data object Rejected : WarrenVoucherOutcome
 
-    data class Failure(val message: String) : WarrenVoucherOutcome
+    data class Failure(val reason: AccountRequestFailure) : WarrenVoucherOutcome
 }
 
 interface WarrenSubscriptionInvoker {

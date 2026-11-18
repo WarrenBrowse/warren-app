@@ -11,6 +11,7 @@ import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_CONNECT_QUINN_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
 import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.repository.ConnectFailure
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.ExitKeyVerdict
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
@@ -52,7 +53,7 @@ class WarrenConnectUseCase(
             val pinnedPubkeyHex: String,
             val observedPubkeyHex: String,
         ) : Outcome
-        data class Failure(val message: String) : Outcome
+        data class Failure(val reason: ConnectFailure) : Outcome
     }
 
     /**
@@ -72,7 +73,7 @@ class WarrenConnectUseCase(
             val pinnedPubkeyHex: String,
             val observedPubkeyHex: String,
         ) : ConfigResult
-        data class Failure(val message: String) : ConfigResult
+        data class Failure(val reason: ConnectFailure) : ConfigResult
     }
 
     /**
@@ -85,7 +86,7 @@ class WarrenConnectUseCase(
 
         val built = configBuilder.build(pubkey) ?: run {
             Logger.e("WarrenConnectUseCase: relay catalogue empty, no exit to connect to")
-            return ConfigResult.Failure("No relay available")
+            return ConfigResult.Failure(ConnectFailure.NoRelayAvailable)
         }
 
         // Trust-on-first-use exit key check (fail closed). A mismatch means the
@@ -185,7 +186,7 @@ class WarrenConnectUseCase(
                     pinnedPubkeyHex = outcome.pinnedPubkeyHex,
                     observedPubkeyHex = outcome.observedPubkeyHex,
                 )
-            is Outcome.Failure -> WarrenConnectResult.Failure(outcome.message)
+            is Outcome.Failure -> WarrenConnectResult.Failure(outcome.reason)
         }
 
     suspend fun invoke(context: Context): Outcome {
@@ -219,7 +220,7 @@ class WarrenConnectUseCase(
                 pinnedPubkeyHex = result.pinnedPubkeyHex,
                 observedPubkeyHex = result.observedPubkeyHex,
             )
-            is ConfigResult.Failure -> return Outcome.Failure(result.message)
+            is ConfigResult.Failure -> return Outcome.Failure(result.reason)
         }
 
         // Routine signing: read the mnemonic silently (no biometric/PIN prompt).
@@ -232,7 +233,7 @@ class WarrenConnectUseCase(
             throw e
         } catch (e: Exception) {
             Logger.e(throwable = e) { "WarrenConnectUseCase: mnemonic read failed" }
-            return Outcome.Failure(e.message ?: "wallet read failed")
+            return Outcome.Failure(ConnectFailure.WalletRead)
         }
 
         val configJson = config.toWireJson()

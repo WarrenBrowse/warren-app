@@ -3,11 +3,14 @@ package com.warrenbrowse.vpn.app.connect
 import com.warrenbrowse.vpn.app.standing.accountBanOf
 import com.warrenbrowse.vpn.lib.model.AccountBan
 import com.warrenbrowse.vpn.lib.model.AccountStanding
+import com.warrenbrowse.vpn.lib.repository.AccountRequestFailure
+import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
@@ -27,14 +30,38 @@ internal fun parseVoucherJson(rawJson: String): WarrenVoucherOutcome =
         when {
             root["ok"]?.jsonPrimitive?.boolean == true ->
                 root["expires_at"]?.jsonPrimitive?.long?.let { WarrenVoucherOutcome.Success(it) }
-                    ?: WarrenVoucherOutcome.Failure("missing expires_at")
+                    ?: WarrenVoucherOutcome.Failure(AccountRequestFailure.MalformedResponse)
             error == "banned" && ban != null -> WarrenVoucherOutcome.Banned(accountBanOf(ban))
             error == VOUCHER_REJECTED -> WarrenVoucherOutcome.Rejected
-            else -> WarrenVoucherOutcome.Failure(error ?: "redeem failed")
+            else -> WarrenVoucherOutcome.Failure(AccountRequestFailure.Refused)
         }
     } catch (e: Exception) {
-        WarrenVoucherOutcome.Failure("invalid JNI response: ${e.message}")
+        WarrenVoucherOutcome.Failure(AccountRequestFailure.MalformedResponse)
     }
+
+/**
+ * The outcome of `WarrenJni.getSubscription`: `{"ok":true,"expires_at":N}`, or
+ * `{"ok":false,"status":N,"error":"<class>"}`. A 404 means no subscription is
+ * bound yet (a fresh wallet), which resolves to the Unix epoch as on iOS and
+ * desktop, so the UI shows "no active subscription" rather than a fetch error.
+ */
+@Suppress("TooGenericExceptionCaught")
+internal fun parseSubscriptionJson(rawJson: String): WarrenSubscriptionOutcome =
+    try {
+        val root = Json.parseToJsonElement(rawJson).jsonObject
+        when {
+            root["ok"]?.jsonPrimitive?.boolean == true ->
+                root["expires_at"]?.jsonPrimitive?.long?.let { WarrenSubscriptionOutcome.Success(it) }
+                    ?: WarrenSubscriptionOutcome.Failure(AccountRequestFailure.MalformedResponse)
+            root["status"]?.jsonPrimitive?.intOrNull == HTTP_NOT_FOUND ->
+                WarrenSubscriptionOutcome.Success(0L)
+            else -> WarrenSubscriptionOutcome.Failure(AccountRequestFailure.Refused)
+        }
+    } catch (e: Exception) {
+        WarrenSubscriptionOutcome.Failure(AccountRequestFailure.MalformedResponse)
+    }
+
+private const val HTTP_NOT_FOUND = 404
 
 /**
  * The standing to show once a redemption was refused for [ban], the Kotlin twin

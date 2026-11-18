@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.feature.settings.impl
 
 import android.content.Context
 import com.warrenbrowse.vpn.lib.model.AccountBan
+import com.warrenbrowse.vpn.lib.repository.AccountRequestFailure
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import io.mockk.MockKAnswerScope
@@ -70,7 +71,7 @@ class SubscriptionLabelTest {
         // so every failure collapses to the single generic message on purpose.
         assertEquals(
             "Couldn't redeem voucher. Check the code and try again.",
-            voucherLabel(context, WarrenVoucherOutcome.Failure("invalid")),
+            voucherLabel(context, WarrenVoucherOutcome.Failure(AccountRequestFailure.Refused)),
         )
     }
 }
