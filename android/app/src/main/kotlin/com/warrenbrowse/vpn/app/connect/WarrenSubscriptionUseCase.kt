@@ -162,6 +162,7 @@ class WarrenSubscriptionUseCase(
                         try {
                             purchases.collect(claim.code, mnemonic.phrase)
                         } catch (e: Exception) {
+                            Logger.e(throwable = e) { "purchase collect threw" }
                             WarrenVoucherOutcome.Failure(AccountRequestFailure.Engine)
                         }
                     }

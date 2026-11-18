@@ -133,44 +133,9 @@ class WarrenVpnService : LifecycleVpnService() {
         //      (mirrors the legacy `managementService.tunnelState`
         //      collector below, which targets a daemon that does not
         //      exist on Warren mobile).
-        lifecycleScope.launch {
-            quinnAdapter.natPmpStatus.collect { status ->
-                quinnStateProxy.updateNatPmpStatus(status)
-            }
-        }
-        lifecycleScope.launch {
-            quinnAdapter.appRoutesStatus.collect { status ->
-                quinnStateProxy.updateAppRoutes(AppRouteStatusParser.parse(status))
-            }
-        }
-        lifecycleScope.launch {
-            quinnAdapter.autoRecoveryCount.collect { count ->
-                quinnStateProxy.updateAutoRecoveryCount(count)
-            }
-        }
-        lifecycleScope.launch {
-            quinnAdapter.pathWedged.collect { wedged -> quinnStateProxy.updatePathWedged(wedged) }
-        }
+        mirrorAdapterIntoProxy()
         launchAccountStanding()
         launchRevocationWatch()
-        lifecycleScope.launch {
-            quinnAdapter.effectiveMtu.collect { mtu -> quinnStateProxy.updateEffectiveMtu(mtu) }
-        }
-        lifecycleScope.launch {
-            quinnAdapter.postQuantumSealed.collect { sealed ->
-                quinnStateProxy.updatePostQuantumSealed(sealed)
-            }
-        }
-        lifecycleScope.launch {
-            quinnAdapter.lastAutoRecoveryAtMs.collect { at ->
-                quinnStateProxy.updateLastAutoRecoveryAt(at)
-            }
-        }
-        lifecycleScope.launch {
-            quinnAdapter.failoverCount.collect { count ->
-                quinnStateProxy.updateFailoverCount(count)
-            }
-        }
         lifecycleScope.launch {
             quinnAdapter.state.collect { state ->
                 quinnStateProxy.update(state)
@@ -196,6 +161,46 @@ class WarrenVpnService : LifecycleVpnService() {
         // The Rust runtime and logger are the application's (`WarrenApplication`
         // initialises them before any component runs); the service starts
         // nothing of its own on the main thread.
+    }
+
+    /** Mirrors the adapter's live facts into the process-wide proxy the screens read. */
+    private fun mirrorAdapterIntoProxy() {
+        lifecycleScope.launch {
+            quinnAdapter.natPmpStatus.collect { status ->
+                quinnStateProxy.updateNatPmpStatus(status)
+            }
+        }
+        lifecycleScope.launch {
+            quinnAdapter.appRoutesStatus.collect { status ->
+                quinnStateProxy.updateAppRoutes(AppRouteStatusParser.parse(status))
+            }
+        }
+        lifecycleScope.launch {
+            quinnAdapter.autoRecoveryCount.collect { count ->
+                quinnStateProxy.updateAutoRecoveryCount(count)
+            }
+        }
+        lifecycleScope.launch {
+            quinnAdapter.pathWedged.collect { wedged -> quinnStateProxy.updatePathWedged(wedged) }
+        }
+        lifecycleScope.launch {
+            quinnAdapter.effectiveMtu.collect { mtu -> quinnStateProxy.updateEffectiveMtu(mtu) }
+        }
+        lifecycleScope.launch {
+            quinnAdapter.postQuantumSealed.collect { sealed ->
+                quinnStateProxy.updatePostQuantumSealed(sealed)
+            }
+        }
+        lifecycleScope.launch {
+            quinnAdapter.lastAutoRecoveryAtMs.collect { at ->
+                quinnStateProxy.updateLastAutoRecoveryAt(at)
+            }
+        }
+        lifecycleScope.launch {
+            quinnAdapter.failoverCount.collect { count ->
+                quinnStateProxy.updateFailoverCount(count)
+            }
+        }
     }
 
     // The port-forward standing is polled for as long

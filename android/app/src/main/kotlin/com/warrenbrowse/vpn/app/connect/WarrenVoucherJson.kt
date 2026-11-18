@@ -35,7 +35,7 @@ internal fun parseVoucherJson(rawJson: String): WarrenVoucherOutcome =
             error == VOUCHER_REJECTED -> WarrenVoucherOutcome.Rejected
             else -> WarrenVoucherOutcome.Failure(AccountRequestFailure.Refused)
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         WarrenVoucherOutcome.Failure(AccountRequestFailure.MalformedResponse)
     }
 
@@ -57,7 +57,7 @@ internal fun parseSubscriptionJson(rawJson: String): WarrenSubscriptionOutcome =
                 WarrenSubscriptionOutcome.Success(0L)
             else -> WarrenSubscriptionOutcome.Failure(AccountRequestFailure.Refused)
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         WarrenSubscriptionOutcome.Failure(AccountRequestFailure.MalformedResponse)
     }
 
