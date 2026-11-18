@@ -97,6 +97,9 @@ Line wrap the file at 100 chars.                                              Th
   depended on servers Warren does not run. Direct access and custom SOCKS5 and Shadowsocks proxies
   remain.
 ### Fixed
+- Reach the content-blocking DNS resolvers at their new addresses inside the tunnel (10.66.255.x).
+  With Tailscale running, their old addresses fell in Tailscale's range, and the queries could leave
+  through Tailscale instead of the tunnel.
 - [Windows, macOS, Linux] Show On or Off for Warren's obfuscation in the Anti-censorship row, as the
   service reports it. The row showed an inherited setting the Warren tunnel never read.
 - [Windows, macOS, Linux] Stop asking for a service restart after turning multi-hop on or off, which

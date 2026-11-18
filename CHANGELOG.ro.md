@@ -95,6 +95,9 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   depindeau de servere pe care Warren nu le operează. Accesul direct și proxy-urile SOCKS5 și
   Shadowsocks personalizate rămân disponibile.
 ### Reparat
+- Rezolvatoarele DNS de blocare a conținutului sunt contactate la noile lor adrese din tunel
+  (10.66.255.x). Cu Tailscale activ, vechile adrese cădeau în plaja Tailscale, iar interogările
+  puteau ieși prin Tailscale în loc de tunel.
 - [Windows, macOS, Linux] Rândul Împotriva cenzurii arată Pornit sau Oprit pentru obfuscarea Warren,
   așa cum o raportează serviciul. Rândul afișa o setare moștenită pe care tunelul Warren nu o citea.
 - [Windows, macOS, Linux] Aplicația nu mai cere repornirea serviciului după activarea sau

@@ -99,6 +99,9 @@ par l'application, gardez-le tel quel.
   qui reposaient sur des serveurs que Warren n'exploite pas. L'accès direct et les proxys SOCKS5 et
   Shadowsocks personnalisés restent disponibles.
 ### Corrigé
+- Joindre les résolveurs DNS de blocage de contenu à leurs nouvelles adresses dans le tunnel
+  (10.66.255.x). Avec Tailscale actif, leurs anciennes adresses tombaient dans la plage de
+  Tailscale, et les requêtes pouvaient sortir par Tailscale au lieu du tunnel.
 - [Windows, macOS, Linux] Afficher Activé ou Désactivé pour l'obfuscation de Warren dans la ligne
   Anti-censure, tel que le service le signale. La ligne montrait un réglage hérité que le tunnel
   Warren ne lisait pas.
