@@ -204,7 +204,6 @@ impl SettingsPersister {
                     // not have caused the daemon to enter the non-blocking disconnected state.
                     // On android lockdown mode is handled by the OS so setting this to true
                     // has no effect.
-                    #[cfg(not(target_os = "android"))]
                     lockdown_mode: true,
                     ..Self::default_settings()
                 };
@@ -216,7 +215,7 @@ impl SettingsPersister {
             }
         };
 
-        if cfg!(target_os = "android") {
+        if false {
             // Auto-connect is managed by Android itself.
             result.settings.auto_connect = false;
         }

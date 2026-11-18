@@ -1,14 +1,11 @@
 //! Client that returns and takes mullvad types as arguments instead of prost-generated types
 use crate::types;
-#[cfg(not(target_os = "android"))]
 use futures::{Stream, StreamExt};
-#[cfg(not(target_os = "android"))]
 use mullvad_types::wireguard::DaitaSettings;
 use mullvad_types::{
     access_method::AccessMethodSetting, app_routing::AppRouteStatus, device::DeviceEvent,
     relay_list::RelayList, settings::Settings, states::TunnelState, version::AppVersionInfo,
 };
-#[cfg(not(target_os = "android"))]
 use mullvad_types::{
     access_method::{self, AccessMethod},
     account::{AccountData, AccountNumber, VoucherSubmission},
@@ -22,18 +19,15 @@ use mullvad_types::{
     wireguard::QuantumResistantState,
 };
 use std::net::IpAddr;
-#[cfg(not(target_os = "android"))]
 use std::{path::Path, str::FromStr};
 #[cfg(target_os = "windows")]
 use talpid_types::split_tunnel::ExcludedProcess;
-#[cfg(not(target_os = "android"))]
 use tonic::{Code, Status};
 
 type Error = super::Error;
 
 pub type Result<T> = std::result::Result<T, super::Error>;
 
-#[cfg(not(target_os = "android"))]
 #[derive(Debug, Clone)]
 pub struct MullvadProxyClient(crate::ManagementServiceClient);
 
@@ -103,7 +97,6 @@ impl TryFrom<types::daemon_event::Event> for DaemonEvent {
     }
 }
 
-#[cfg(not(target_os = "android"))]
 impl MullvadProxyClient {
     /// Connect to this environment's own daemon.
     pub async fn new() -> Result<Self> {
@@ -967,7 +960,6 @@ mod daemon_log_tests {
     }
 }
 
-#[cfg(not(target_os = "android"))]
 fn map_device_error(status: Status) -> Error {
     match status.code() {
         Code::ResourceExhausted => Error::TooManyDevices,
@@ -1003,7 +995,6 @@ fn map_logout_error(status: Status) -> Error {
     }
 }
 
-#[cfg(not(target_os = "android"))]
 fn map_custom_list_error(status: Status) -> Error {
     match (status.code(), status.details()) {
         (Code::NotFound, crate::CUSTOM_LIST_LIST_NOT_FOUND_DETAILS) => {
@@ -1014,7 +1005,6 @@ fn map_custom_list_error(status: Status) -> Error {
     }
 }
 
-#[cfg(not(target_os = "android"))]
 fn map_api_access_method_error(status: Status) -> Error {
     match (status.code(), status.details()) {
         (Code::AlreadyExists, crate::API_ACCESS_METHOD_EXISTS_DETAILS) => {
@@ -1051,10 +1041,8 @@ impl TryFrom<types::LeakInfo> for LeakInfo {
     }
 }
 
-#[cfg(not(target_os = "android"))]
 pub struct RelaySelectorClient(crate::RelaySelectorServiceClient);
 
-#[cfg(not(target_os = "android"))]
 impl RelaySelectorClient {
     pub async fn new() -> Result<Self> {
         let channel = crate::grpc_transport_channel().await?;

@@ -478,7 +478,6 @@ impl ConnectingState {
         ))
     }
 
-    #[cfg(not(target_os = "android"))]
     fn reset_firewall(
         self: Box<Self>,
         shared_values: &mut SharedTunnelStateValues,
@@ -507,11 +506,6 @@ impl ConnectingState {
         match command {
             Some(TunnelCommand::AllowLan(allow_lan, lan_networks, complete_tx)) => {
                 let consequence = if shared_values.set_allow_lan(allow_lan, lan_networks) {
-                    #[cfg(target_os = "android")]
-                    {
-                        self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
-                    }
-                    #[cfg(not(target_os = "android"))]
                     self.reset_firewall(shared_values)
                 } else {
                     SameState(self)
@@ -519,7 +513,6 @@ impl ConnectingState {
                 let _ = complete_tx.send(());
                 consequence
             }
-            #[cfg(not(target_os = "android"))]
             Some(TunnelCommand::AllowEndpoint(endpoint, tx)) => {
                 if shared_values.allowed_endpoint != endpoint {
                     shared_values.allowed_endpoint = endpoint;
@@ -540,21 +533,10 @@ impl ConnectingState {
                 SameState(self)
             }
             Some(TunnelCommand::Dns(servers, complete_tx)) => {
-                let consequence = if shared_values.set_dns_config(servers) {
-                    #[cfg(target_os = "android")]
-                    {
-                        self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
-                    }
-                    #[cfg(not(target_os = "android"))]
-                    SameState(self)
-                } else {
-                    SameState(self)
-                };
-
+                shared_values.set_dns_config(servers);
                 let _ = complete_tx.send(());
-                consequence
+                SameState(self)
             }
-            #[cfg(not(target_os = "android"))]
             Some(TunnelCommand::LockdownMode(lockdown_mode, complete_tx)) => {
                 shared_values.set_lockdown_mode(lockdown_mode);
                 let _ = complete_tx.send(());
@@ -587,11 +569,6 @@ impl ConnectingState {
             Some(TunnelCommand::Block(reason)) => {
                 self.disconnect(shared_values, AfterDisconnect::Block(reason))
             }
-            #[cfg(target_os = "android")]
-            Some(TunnelCommand::BypassSocket(fd, done_tx)) => {
-                shared_values.bypass_socket(fd, done_tx);
-                SameState(self)
-            }
             #[cfg(windows)]
             Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
                 if shared_values.set_split_apps(apps, result_tx, false) {
@@ -612,16 +589,6 @@ impl ConnectingState {
                 if mode_changed {
                     self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
                 } else {
-                    SameState(self)
-                }
-            }
-            #[cfg(target_os = "android")]
-            Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
-                if shared_values.set_excluded_paths(paths) {
-                    let _ = result_tx.send(Ok(()));
-                    self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
-                } else {
-                    let _ = result_tx.send(Ok(()));
                     SameState(self)
                 }
             }

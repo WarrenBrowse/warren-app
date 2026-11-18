@@ -11,8 +11,6 @@ use futures::channel::{
     oneshot,
 };
 use std::sync::Arc;
-#[cfg(target_os = "android")]
-use talpid_types::android::AndroidContext;
 
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 use futures::stream::Stream;
@@ -32,13 +30,6 @@ pub mod imp;
 #[path = "linux.rs"]
 mod imp;
 
-#[expect(clippy::module_inception)]
-#[cfg(target_os = "android")]
-#[path = "android.rs"]
-mod imp;
-
-#[cfg(target_os = "android")]
-use crate::Route;
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 pub use imp::Error as PlatformError;
 
@@ -99,15 +90,6 @@ pub(crate) enum RouteManagerCommand {
         Option<Fwmark>,
         oneshot::Sender<Result<Option<Route>, PlatformError>>,
     ),
-}
-
-/// Commands for the underlying route manager object.
-#[cfg(target_os = "android")]
-#[derive(Debug)]
-pub(crate) enum RouteManagerCommand {
-    ClearRouteCache(oneshot::Sender<()>),
-    WaitForRoutes(oneshot::Sender<()>, Vec<Route>),
-    Shutdown(oneshot::Sender<()>),
 }
 
 /// Commands for the underlying route manager object.
@@ -180,7 +162,6 @@ impl RouteManagerHandle {
     pub async fn spawn(
         #[cfg(target_os = "linux")] fwmark: u32,
         #[cfg(target_os = "linux")] table_id: u32,
-        #[cfg(target_os = "android")] android_context: AndroidContext,
     ) -> Result<Self, Error> {
         let (manage_tx, manage_rx) = mpsc::unbounded();
         let manage_tx = Arc::new(manage_tx);
@@ -191,8 +172,6 @@ impl RouteManagerHandle {
             table_id,
             #[cfg(target_os = "macos")]
             Arc::downgrade(&manage_tx),
-            #[cfg(target_os = "android")]
-            android_context,
         )
         .await?;
         tokio::spawn(manager.run(manage_rx));
@@ -210,7 +189,6 @@ impl RouteManagerHandle {
     }
 
     /// Applies the given routes until they are cleared
-    #[cfg(not(target_os = "android"))]
     pub async fn add_routes(&self, routes: HashSet<RequiredRoute>) -> Result<(), Error> {
         let (result_tx, result_rx) = oneshot::channel();
         self.tx
@@ -223,52 +201,11 @@ impl RouteManagerHandle {
             .map_err(Error::PlatformError)
     }
 
-    /// Wait for routes to come up.
-    ///
-    /// This function is guaranteed to *not* wait for longer than 2 seconds.
-    /// Please, see the implementation of this function for further details.
-    #[cfg(target_os = "android")]
-    pub async fn wait_for_routes(&self, expect_routes: Vec<Route>) -> Result<(), Error> {
-        use std::time::Duration;
-        use tokio::time::timeout;
-        /// Maximum time to wait for routes to come up. The expected mean time is low (~200 ms), but
-        /// we add some additional margin to give some slack to slower hardware primarily.
-        const WAIT_FOR_ROUTES_TIMEOUT: Duration = Duration::from_secs(2);
-
-        let (result_tx, result_rx) = oneshot::channel();
-        self.tx
-            .unbounded_send(RouteManagerCommand::WaitForRoutes(result_tx, expect_routes))
-            .map_err(|_| Error::RouteManagerDown)?;
-
-        timeout(WAIT_FOR_ROUTES_TIMEOUT, result_rx)
-            .await
-            .map_err(|_error| Error::PlatformError(imp::Error::RoutesTimedOut))?
-            .map_err(|_| Error::ManagerChannelDown)
-    }
-
     /// Removes all routes previously applied in [`RouteManagerHandle::add_routes`].
-    #[cfg(not(target_os = "android"))]
     pub fn clear_routes(&self) -> Result<(), Error> {
         self.tx
             .unbounded_send(RouteManagerCommand::ClearRoutes)
             .map_err(|_| Error::RouteManagerDown)
-    }
-
-    /// (Android) This is a noop since we don't directly control the routes on Android.
-    #[cfg(target_os = "android")]
-    pub fn clear_routes(&self) -> Result<(), Error> {
-        Ok(())
-    }
-
-    /// (Android) Clear the cached routes
-    #[cfg(target_os = "android")]
-    pub async fn clear_route_cache(&self) -> Result<(), Error> {
-        let (result_tx, result_rx) = oneshot::channel();
-        self.tx
-            .unbounded_send(RouteManagerCommand::ClearRouteCache(result_tx))
-            .map_err(|_| Error::RouteManagerDown)?;
-        let _ = result_rx.await;
-        Ok(())
     }
 
     /// Listen for non-tunnel default route changes.

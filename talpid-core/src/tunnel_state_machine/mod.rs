@@ -49,8 +49,6 @@ use futures::{
     channel::{mpsc, oneshot},
     stream,
 };
-#[cfg(target_os = "android")]
-use std::os::unix::io::RawFd;
 use std::{
     future::Future,
     io,
@@ -59,15 +57,10 @@ use std::{
     sync::{Arc, Mutex},
     time::Duration,
 };
-#[cfg(target_os = "android")]
-use talpid_types::{ErrorExt, android::AndroidContext};
 use talpid_types::{
     net::{AllowedEndpoint, Connectivity},
     tunnel::{ErrorStateCause, ParameterGenerationError, TunnelStateTransition},
 };
-
-#[cfg(target_os = "android")]
-use crate::connectivity_listener::ConnectivityListener;
 
 const TUNNEL_STATE_MACHINE_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -180,7 +173,6 @@ pub struct InitialTunnelState {
     /// The unicast networks reachable outside the tunnel when `allow_lan` is set.
     pub lan_networks: Vec<IpNetwork>,
     /// Block traffic unless connected to the VPN.
-    #[cfg(not(target_os = "android"))]
     pub lockdown_mode: LockdownMode,
     /// DNS configuration to use
     pub dns_config: DnsConfig,
@@ -196,9 +188,6 @@ pub struct InitialTunnelState {
     /// What the split tunnel diverts, and which way.
     #[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
     pub split_apps: SplitApps,
-    /// Apps to exclude from the tunnel.
-    #[cfg(target_os = "android")]
-    pub exclude_paths: Vec<String>,
 }
 
 /// Identifiers for various network resources that should be unique to a given instance of a tunnel
@@ -237,21 +226,15 @@ pub async fn spawn(
     offline_state_listener: mpsc::UnboundedSender<Connectivity>,
     route_manager: RouteManagerHandle,
     #[cfg(target_os = "windows")] volume_update_rx: mpsc::UnboundedReceiver<()>,
-    #[cfg(target_os = "android")] android_context: AndroidContext,
-    #[cfg(target_os = "android")] connectivity_listener: ConnectivityListener,
     #[cfg(target_os = "linux")] linux_ids: LinuxNetworkingIdentifiers,
 ) -> Result<TunnelStateMachineHandle, Error> {
     let (command_tx, command_rx) = mpsc::unbounded();
     let command_tx = Arc::new(command_tx);
 
-    let tun_provider = TunProvider::new(
-        #[cfg(target_os = "android")]
-        android_context.clone(),
-        talpid_tunnel::tun_provider::blocking_config(
-            #[cfg(target_os = "windows")]
-            resource_dir.clone(),
-        ),
-    );
+    let tun_provider = TunProvider::new(talpid_tunnel::tun_provider::blocking_config(
+        #[cfg(target_os = "windows")]
+        resource_dir.clone(),
+    ));
 
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
 
@@ -270,8 +253,6 @@ pub async fn spawn(
         route_manager,
         #[cfg(target_os = "windows")]
         volume_update_rx,
-        #[cfg(target_os = "android")]
-        connectivity_listener,
         #[cfg(target_os = "linux")]
         linux_ids,
     };
@@ -303,12 +284,10 @@ pub enum TunnelCommand {
     /// Endpoint that should never be blocked. `()` is sent to the
     /// channel after attempting to set the firewall policy, regardless
     /// of whether it succeeded.
-    #[cfg(not(target_os = "android"))]
     AllowEndpoint(AllowedEndpoint, oneshot::Sender<()>),
     /// Set DNS configuration to use.
     Dns(talpid_dns::DnsConfig, oneshot::Sender<()>),
     /// Enable or disable the lockdown_mode feature.
-    #[cfg(not(target_os = "android"))]
     LockdownMode(LockdownMode, oneshot::Sender<()>),
     /// The set of Tailscale interfaces coexisting with the tunnel changed. Connected states apply
     /// their firewall policy again so it lets tailnet traffic through the interfaces there now.
@@ -325,9 +304,6 @@ pub enum TunnelCommand {
     Disconnect,
     /// Block all network access unless tunnel is disconnecting or disconnected
     Block(ErrorStateCause),
-    /// Bypass a socket, allowing traffic to flow through outside the tunnel.
-    #[cfg(target_os = "android")]
-    BypassSocket(RawFd, oneshot::Sender<()>),
     /// Set the split mode and the apps it diverts.
     #[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
     SetSplitApps(oneshot::Sender<Result<(), split_tunnel::Error>>, SplitApps),
@@ -335,12 +311,6 @@ pub enum TunnelCommand {
     /// include-only hold follows (`split_tunnel::include_hold`).
     #[cfg(target_os = "windows")]
     FollowSplitTunnel(split_tunnel::include_hold::DriverReport),
-    /// Set applications that are allowed to send and receive traffic outside of the tunnel.
-    #[cfg(target_os = "android")]
-    SetExcludedApps(
-        oneshot::Sender<Result<(), split_tunnel::Error>>,
-        Vec<String>,
-    ),
 }
 
 type TunnelCommandReceiver = stream::Fuse<mpsc::UnboundedReceiver<TunnelCommand>>;
@@ -474,8 +444,6 @@ struct TunnelStateMachineInitArgs<G: TunnelParametersGenerator> {
     route_manager: RouteManagerHandle,
     #[cfg(target_os = "windows")]
     volume_update_rx: mpsc::UnboundedReceiver<()>,
-    #[cfg(target_os = "android")]
-    connectivity_listener: ConnectivityListener,
     #[cfg(target_os = "linux")]
     linux_ids: LinuxNetworkingIdentifiers,
 }
@@ -486,8 +454,6 @@ impl TunnelStateMachine {
     ) -> Result<Self, Error> {
         #[cfg(target_os = "windows")]
         let volume_update_rx = args.volume_update_rx;
-        #[cfg(target_os = "android")]
-        let connectivity_listener = args.connectivity_listener;
 
         let runtime = tokio::runtime::Handle::current();
 
@@ -502,7 +468,6 @@ impl TunnelStateMachine {
         let fwmark = args.linux_ids.fwmark;
 
         let fw_args = FirewallArguments {
-            #[cfg(not(target_os = "android"))]
             initial_state: if args.settings.lockdown_mode.bool() || !args.settings.reset_firewall {
                 InitialFirewallState::Blocked(args.settings.allowed_endpoint.clone())
             } else {
@@ -510,8 +475,6 @@ impl TunnelStateMachine {
             },
             // NOTE: This really has no effect. In all honesty, we should probably remove the
             // firewall stub completely.
-            #[cfg(target_os = "android")]
-            initial_state: InitialFirewallState::None,
             allow_lan: args.settings.allow_lan,
             #[cfg(target_os = "linux")]
             linux_ids: args.linux_ids,
@@ -553,12 +516,9 @@ impl TunnelStateMachine {
         ));
         let offline_monitor = offline::spawn_monitor(
             offline_tx,
-            #[cfg(not(target_os = "android"))]
             args.route_manager.clone(),
             #[cfg(target_os = "linux")]
             Some(fwmark),
-            #[cfg(target_os = "android")]
-            connectivity_listener,
         )
         .await;
         let connectivity = offline_monitor.connectivity().await;
@@ -675,8 +635,6 @@ impl TunnelStateMachine {
             held_apps,
             #[cfg(target_os = "windows")]
             command_tx: args.command_tx.clone(),
-            #[cfg(target_os = "android")]
-            excluded_packages: args.settings.exclude_paths,
             runtime,
             firewall,
             dns_monitor,
@@ -688,7 +646,6 @@ impl TunnelStateMachine {
             ),
             allow_lan: args.settings.allow_lan,
             lan_networks: args.settings.lan_networks,
-            #[cfg(not(target_os = "android"))]
             lockdown_mode: args.settings.lockdown_mode,
             connectivity,
             dns_config: args.settings.dns_config,
@@ -821,7 +778,6 @@ impl TunnelStateMachine {
         // in this module, while this block runs on every non-Android
         // platform (incl. Linux/Windows). Using Display keeps it
         // cross-platform with no extra import.
-        #[cfg(not(target_os = "android"))]
         {
             if self.shared_values.lockdown_mode.keeps_block_on_shutdown() {
                 // Deliberately does not claim WHICH lockdown this is: this
@@ -926,8 +882,6 @@ struct SharedTunnelStateValues {
     /// Where the driver's confirmations come back to the state machine.
     #[cfg(target_os = "windows")]
     command_tx: std::sync::Weak<mpsc::UnboundedSender<TunnelCommand>>,
-    #[cfg(target_os = "android")]
-    excluded_packages: Vec<String>,
     runtime: tokio::runtime::Handle,
     firewall: Firewall,
     dns_monitor: DnsMonitor,
@@ -941,7 +895,6 @@ struct SharedTunnelStateValues {
     /// and `lan_networks`.
     lan_routes: lan_routes::LanRoutes,
     /// Should network access be allowed when in the disconnected state.
-    #[cfg(not(target_os = "android"))]
     lockdown_mode: LockdownMode,
     /// True when the computer is known to be offline.
     connectivity: Connectivity,
@@ -1011,7 +964,6 @@ impl SharedTunnelStateValues {
     /// next boot and cannot describe its own state. Routing every write
     /// through here is what keeps "persistent block" tied to "user asked for
     /// a persistent block".
-    #[cfg(not(target_os = "android"))]
     pub fn set_lockdown_mode(&mut self, lockdown_mode: LockdownMode) {
         self.lockdown_mode = lockdown_mode;
         #[cfg(target_os = "windows")]
@@ -1132,14 +1084,6 @@ impl SharedTunnelStateValues {
         } else {
             log::trace!("Connectivity check wasn't disabled by the daemon");
         }
-    }
-
-    #[cfg(target_os = "android")]
-    pub fn bypass_socket(&mut self, fd: RawFd, tx: oneshot::Sender<()>) {
-        if let Err(err) = self.tun_provider.lock().unwrap().bypass(&fd) {
-            log::error!("Failed to bypass socket {}", err);
-        }
-        let _ = tx.send(());
     }
 
     /// Hands `apps` to the split tunnel driver, and returns whether the
@@ -1314,51 +1258,6 @@ impl SharedTunnelStateValues {
     #[cfg(any(target_os = "windows", target_os = "linux"))]
     pub fn include_only(&self) -> bool {
         self.split_mode == SplitTunnelMode::IncludeOnly
-    }
-
-    /// Update the set of excluded paths (split tunnel apps) for the tunnel provider.
-    #[cfg(target_os = "android")]
-    pub fn set_excluded_paths(&mut self, apps: Vec<String>) -> bool {
-        if apps != self.excluded_packages {
-            self.excluded_packages = apps;
-            true
-        } else {
-            false
-        }
-    }
-
-    /// Update the tunnel provider config. This does not actually create any tunnel.
-    #[cfg(target_os = "android")]
-    pub fn prepare_tun_config(&self, blocking: bool) {
-        let mut tun_provider = self.tun_provider.lock().unwrap();
-
-        let config = tun_provider.config_mut();
-        if blocking {
-            config.set_blocking_config();
-        } else {
-            let addrs: Vec<_> = self.dns_config.resolve(&[]).addresses().collect();
-            config.dns_servers = if addrs.is_empty() { None } else { Some(addrs) };
-        }
-        config.allow_lan = self.allow_lan;
-        config.excluded_packages = self.excluded_packages.clone();
-    }
-
-    /// Recreate the tunnel device. Note that this causes the current tunnel fd used by
-    /// the tunnel monitor to become stale, so a reconnect is needed.
-    #[cfg(target_os = "android")]
-    pub fn restart_tunnel(&self, blocking: bool) -> Result<(), talpid_tunnel::tun_provider::Error> {
-        self.prepare_tun_config(blocking);
-
-        match self.tun_provider.lock().unwrap().open_tun() {
-            Ok(_tun) => Ok(()),
-            Err(error) => {
-                log::error!(
-                    "{}",
-                    error.display_chain_with_msg("Failed to restart tunnel")
-                );
-                Err(error)
-            }
-        }
     }
 }
 

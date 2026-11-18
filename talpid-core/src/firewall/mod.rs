@@ -3,7 +3,6 @@ use std::{
     fmt,
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
 };
-#[cfg(not(target_os = "android"))]
 use talpid_dns::ResolvedDnsConfig;
 use talpid_tunnel::TunnelMetadata;
 use talpid_types::net::{ALLOWED_LAN_NETS, AllowedEndpoint, AllowedTunnelTraffic};
@@ -25,10 +24,6 @@ cfg_if::cfg_if! {
         /// Firewall implementation for desktop Linux
         pub mod linux;
         use linux as imp;
-    } else if #[cfg(target_os = "android")] {
-        /// Firewall implementation for Android
-        mod android;
-        use android as imp;
     }
 }
 
@@ -63,15 +58,15 @@ const LOOPBACK_NETS: [IpNetwork; 2] = [
     IpNetwork::V6(Ipv6Network::new_checked(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1), 128).unwrap()),
 ];
 
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(unix)]
 const DHCPV4_SERVER_PORT: u16 = 67;
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(unix)]
 const DHCPV4_CLIENT_PORT: u16 = 68;
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(unix)]
 const DHCPV6_SERVER_PORT: u16 = 547;
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(unix)]
 const DHCPV6_CLIENT_PORT: u16 = 546;
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(unix)]
 const ROOT_UID: u32 = 0;
 
 /// Returns whether an address belongs to a private subnet.
@@ -126,7 +121,6 @@ pub enum FirewallPolicy {
         /// The unicast networks reachable outside the tunnel when `allow_lan` is set.
         lan_networks: Vec<IpNetwork>,
         /// Servers that are allowed to respond to DNS requests.
-        #[cfg(not(target_os = "android"))]
         dns_config: ResolvedDnsConfig,
         /// Interface to redirect (VPN tunnel) traffic to
         #[cfg(target_os = "macos")]
@@ -480,7 +474,6 @@ impl Firewall {
 /// AND the destination address, so it cannot authorise anything off-tunnel even
 /// on a LAN that happens to use the gateway's subnet. IPv4 only: the probe
 /// binds IPv4, so adding the v6 gateway would widen the rule with no consumer.
-#[cfg(not(target_os = "android"))]
 pub fn allowed_tunnel_dns(dns_config: &ResolvedDnsConfig) -> Vec<IpAddr> {
     let gateway = IpAddr::V4(talpid_warren_tunnel::TUNNEL_GATEWAY_IP);
     let mut servers = dns_config.tunnel_config().to_vec();
@@ -490,7 +483,7 @@ pub fn allowed_tunnel_dns(dns_config: &ResolvedDnsConfig) -> Vec<IpAddr> {
     servers
 }
 
-#[cfg(all(test, not(target_os = "android")))]
+#[cfg(test)]
 mod allowed_tunnel_dns_tests {
     use super::allowed_tunnel_dns;
     use std::net::{IpAddr, Ipv4Addr};

@@ -143,7 +143,7 @@ enum Cli {
     Upgrade,
 
     /// Generate completion scripts for the specified shell
-    #[cfg(all(unix, not(target_os = "android")))]
+    #[cfg(unix)]
     #[command(hide = true)]
     ShellCompletions {
         /// The shell to generate the script for
@@ -271,7 +271,7 @@ async fn run() -> Result<()> {
         Cli::Log(cmd) => cmd.handle().await,
         Cli::Warren(cmd) => cmd.handle().await,
 
-        #[cfg(all(unix, not(target_os = "android")))]
+        #[cfg(unix)]
         Cli::ShellCompletions { shell, dir } => {
             use anyhow::Context;
             use clap::CommandFactory;

@@ -242,7 +242,7 @@ async fn run_standalone(
     })
     .map_err(|e| e.display_chain())?;
 
-    #[cfg(any(windows, target_os = "android"))]
+    #[cfg(windows)]
     mullvad_daemon::shutdown::set_shutdown_signal_handler(move || shutdown_handle.shutdown(true))
         .map_err(|e| e.display_chain())?;
 

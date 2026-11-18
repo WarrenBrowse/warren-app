@@ -5,7 +5,6 @@
 //! # Arguments
 //! - `internal`: Mangle the relay list and output the representation internal to the `mullvad-types` crate.
 
-#[cfg(not(target_os = "android"))]
 mod imp {
     use mullvad_api::{
         ApiEndpoint, RelayListProxy, proxy::ApiConnectionMode, rest::Error as RestError,
@@ -59,9 +58,4 @@ mod imp {
 #[tokio::main]
 async fn main() {
     imp::main().await
-}
-
-#[cfg(target_os = "android")]
-mod imp {
-    pub async fn main() {}
 }

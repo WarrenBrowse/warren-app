@@ -1,19 +1,9 @@
-#[cfg(target_os = "android")]
-use crate::tun_provider::imp::VpnServiceConfig;
 use cfg_if::cfg_if;
 use ipnetwork::{IpNetwork, Ipv4Network, Ipv6Network};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 cfg_if! {
-    if #[cfg(target_os = "android")] {
-        #[path = "android/mod.rs"]
-        mod imp;
-        use self::imp::{AndroidTunProvider, VpnServiceTun};
-        pub use self::imp::Error;
-
-        pub type Tun = VpnServiceTun;
-        pub type TunProvider = AndroidTunProvider;
-    } else if #[cfg(all(unix, not(target_os = "android")))] {
+    if #[cfg(unix)] {
         #[path = "unix.rs"]
         mod imp;
         use self::imp::{UnixTun, UnixTunProvider};
@@ -88,32 +78,6 @@ impl TunConfig {
         }
         servers
     }
-
-    /// Routes to configure for the tunnel.
-    #[cfg(target_os = "android")]
-    pub fn real_routes(&self) -> Vec<IpNetwork> {
-        VpnServiceConfig::new(self.clone())
-            .routes
-            .iter()
-            .map(IpNetwork::from)
-            .collect()
-    }
-
-    /// Applies the blocking config to the current tunnel config
-    ///
-    /// This is so that if the android system rejects the tun config due to some improper values
-    /// we will apply a set of safe values that work so that we can properly route all
-    /// traffic in the tunnel and block it.
-    #[cfg(target_os = "android")]
-    pub fn set_blocking_config(&mut self) {
-        let blocking_config = blocking_config();
-        self.mtu = blocking_config.mtu;
-        self.addresses = blocking_config.addresses;
-        self.ipv4_gateway = blocking_config.ipv4_gateway;
-        self.ipv6_gateway = blocking_config.ipv6_gateway;
-        self.routes = blocking_config.routes;
-        self.dns_servers = blocking_config.dns_servers;
-    }
 }
 
 /// Return a tunnel configuration that routes all traffic inside the tunnel.
@@ -137,9 +101,6 @@ pub fn blocking_config(
         ipv6_gateway: None,
         routes: DEFAULT_ROUTES.to_vec(),
         allow_lan: false,
-        #[cfg(target_os = "android")]
-        dns_servers: Some(vec![IpAddr::V4(Ipv4Addr::new(192, 0, 2, 1))]),
-        #[cfg(not(target_os = "android"))]
         dns_servers: None,
         excluded_packages: vec![],
         #[cfg(target_os = "windows")]

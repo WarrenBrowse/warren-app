@@ -77,7 +77,6 @@ pub struct Gateway {
 }
 
 /// A network route with a specific network node, destination and an optional metric.
-#[cfg(not(target_os = "android"))]
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct Route {
     node: Node,
@@ -89,14 +88,8 @@ pub struct Route {
     mtu: Option<u32>,
 }
 
-/// A network route with a specific network node, destination and an optional metric.
-#[cfg(target_os = "android")]
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
-pub struct Route(IpNetwork);
-
 impl Route {
     /// Construct a new Route
-    #[cfg(not(target_os = "android"))]
     pub fn new(node: Node, prefix: IpNetwork) -> Self {
         Self {
             node,
@@ -107,12 +100,6 @@ impl Route {
             #[cfg(any(target_os = "linux", target_os = "macos"))]
             mtu: None,
         }
-    }
-
-    /// Construct a new Route
-    #[cfg(target_os = "android")]
-    pub fn new(prefix: IpNetwork) -> Self {
-        Self(prefix)
     }
 
     #[cfg(target_os = "linux")]
@@ -130,7 +117,6 @@ impl Route {
     /// Returns the destination network prefix of the route. Used by the
     /// Warren migration watchdog to recognize a default-route (prefix 0)
     /// change among the unix `change_listener` events.
-    #[cfg(not(target_os = "android"))]
     pub fn prefix(&self) -> IpNetwork {
         self.prefix
     }
@@ -153,22 +139,9 @@ impl fmt::Display for Route {
     }
 }
 
-#[cfg(target_os = "android")]
-impl From<&talpid_types::android::RouteInfo> for Route {
-    fn from(route_info: &talpid_types::android::RouteInfo) -> Self {
-        let network = IpNetwork::new(
-            route_info.destination.address,
-            route_info.destination.prefix_length as u8,
-        )
-        .unwrap();
-        Self::new(network)
-    }
-}
-
 /// A network route that should be applied by the route manager.
 /// It can either be routed through a specific network node or it can be routed through the current
 /// default route.
-#[cfg(not(target_os = "android"))]
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct RequiredRoute {
     /// Route's prefix
@@ -182,7 +155,6 @@ pub struct RequiredRoute {
     mtu: Option<u16>,
 }
 
-#[cfg(not(target_os = "android"))]
 impl RequiredRoute {
     /// Constructs a new required route.
     pub fn new(prefix: IpNetwork, node: impl Into<NetNode>) -> Self {

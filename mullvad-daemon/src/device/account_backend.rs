@@ -33,19 +33,10 @@ pub trait WarrenAccountBackend: Send + Sync {
 
     /// Removes the account.
     ///
-    /// Outside Android, `WarrenIdentityService` does not expose
-    /// `delete_account` (see `service.rs:#[cfg(target_os = "android")]`),
-    /// so this trait method is compiled but not invoked
-    /// on non-Android targets. Kept to allow the future
-    /// migration of a desktop `delete_account` flow if needed, and
-    /// used by tests on all targets.
-    #[cfg_attr(
-        not(any(test, target_os = "android")),
-        expect(
-            dead_code,
-            reason = "only called on Android and in cross-platform tests"
-        )
-    )]
+    /// No daemon command calls it: `WarrenIdentityService` exposes no
+    /// account deletion on desktop. The signed request is kept, with its
+    /// tests, for a desktop deletion flow.
+    #[cfg_attr(not(test), expect(dead_code, reason = "only called by tests"))]
     fn delete_account(&self, account: AccountNumber) -> BoxFut<Result<(), rest::Error>>;
 
     /// Redeems a voucher to create or extend a subscription

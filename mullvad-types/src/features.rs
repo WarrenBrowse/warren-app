@@ -187,12 +187,11 @@ pub fn compute_feature_indicators(
     endpoint: &TunnelEndpoint,
     server_ip_override: bool,
 ) -> FeatureIndicators {
-    #[cfg(any(windows, target_os = "android", target_os = "macos"))]
+    #[cfg(any(windows, target_os = "macos"))]
     let split_tunneling = settings.app_routing.exclusions_active();
-    #[cfg(not(any(windows, target_os = "android", target_os = "macos")))]
+    #[cfg(not(any(windows, target_os = "macos")))]
     let split_tunneling = false;
 
-    #[cfg(not(target_os = "android"))]
     let lockdown_mode = settings.lockdown_mode;
     let lan_sharing = settings.allow_lan;
     let dns_content_blockers = settings
@@ -269,7 +268,6 @@ pub fn compute_feature_indicators(
         (custom_dns, FeatureIndicator::CustomDns),
         (allow_external_dns, FeatureIndicator::AllowExternalDns),
         (server_ip_override, FeatureIndicator::ServerIpOverride),
-        #[cfg(not(target_os = "android"))]
         (lockdown_mode, FeatureIndicator::LockdownMode),
         (quantum_resistant, FeatureIndicator::QuantumResistance),
         (multihop, FeatureIndicator::Multihop),

@@ -3,9 +3,7 @@
 
 mod access_method;
 pub mod account_history;
-mod android_dns;
 mod api;
-#[cfg(not(target_os = "android"))]
 mod cleanup;
 mod custom_list;
 mod daemon_logs;
@@ -30,7 +28,6 @@ mod relay_list;
 mod relay_selector;
 /// The class of every management RPC, and the gate that admits each call.
 pub mod rpc_access;
-#[cfg(not(target_os = "android"))]
 pub mod rpc_uniqueness_check;
 pub mod runtime;
 pub mod settings;
@@ -164,8 +161,6 @@ use geoip::GeoIpHandler;
 use management_interface::ManagementInterfaceServer;
 use mullvad_api::{ApiEndpoint, CachedRelayList, access_mode::AccessMethodEvent};
 use mullvad_relay_selector::RelaySelector;
-#[cfg(target_os = "android")]
-use mullvad_types::account::{PlayExternalObfuscatedAccountId, PlayPurchase};
 use mullvad_types::app_routing::{
     AppId, AppRouteStatus, AppRoutingError, AppRoutingSettings, ExitChoice, SplitMode,
 };
@@ -194,13 +189,10 @@ use mullvad_types::{
     },
     relay_list::BridgeList,
 };
-#[cfg(not(target_os = "android"))]
 use mullvad_update::version::rollout::Rollout;
 use relay_list::{RelayListUpdater, RelayListUpdaterHandle};
 use settings::SettingsPersister;
 use std::collections::BTreeSet;
-#[cfg(target_os = "android")]
-use std::os::unix::io::RawFd;
 use std::{
     marker::PhantomData,
     path::PathBuf,
@@ -208,9 +200,6 @@ use std::{
     sync::{Arc, Mutex, Weak},
     time::Duration,
 };
-#[cfg(target_os = "android")]
-use talpid_core::connectivity_listener::ConnectivityListener;
-#[cfg(not(target_os = "android"))]
 use talpid_core::tunnel_state_machine::LockdownMode;
 use talpid_core::{
     mpsc::Sender,
@@ -218,11 +207,8 @@ use talpid_core::{
     tunnel_state_machine::{self, TunnelCommand, TunnelStateMachineHandle},
 };
 use talpid_routing::RouteManagerHandle;
-#[cfg(target_os = "android")]
-use talpid_types::android::AndroidContext;
 #[cfg(target_os = "windows")]
 use talpid_types::split_tunnel::ExcludedProcess;
-#[cfg(not(target_os = "android"))]
 use talpid_types::split_tunnel::{SplitApps, SplitTunnelMode};
 use talpid_types::{
     ErrorExt,
@@ -340,7 +326,6 @@ fn locked_app_paths(routing: &AppRoutingSettings) -> Vec<std::ffi::OsString> {
 /// the excluded apps while excluding, the apps in the tunnel in include-only
 /// mode, nothing otherwise. Linux chooses its apps at launch, so only the
 /// mode reaches its tunnel.
-#[cfg(not(target_os = "android"))]
 fn tunnel_split_apps(routing: &AppRoutingSettings) -> SplitApps {
     let (mode, apps): (_, Vec<&AppId>) = match routing.split_mode {
         SplitMode::Off => return SplitApps::default(),
@@ -375,27 +360,9 @@ fn enforceable_split_apps(split_apps: SplitApps, include_only_supported: bool) -
     split_apps
 }
 
-/// What the tunnel excludes for `routing`: the excluded apps while
-/// excluding, nothing otherwise.
-#[cfg(target_os = "android")]
-fn tunnel_split_apps(routing: &AppRoutingSettings) -> Vec<String> {
-    routing
-        .effective_excluded_apps()
-        .into_iter()
-        .map(AppId::to_tunnel_command_repr)
-        .collect()
-}
-
 /// Whether the split tunnel has work to do for `routing`.
 fn engages_split_tunnel(routing: &AppRoutingSettings) -> bool {
-    #[cfg(not(target_os = "android"))]
-    {
-        tunnel_split_apps(routing).engages_split_tunnel()
-    }
-    #[cfg(target_os = "android")]
-    {
-        !tunnel_split_apps(routing).is_empty()
-    }
+    tunnel_split_apps(routing).engages_split_tunnel()
 }
 
 /// The split mode the pre-app-routing switch asks for: on is exclusion; off
@@ -503,7 +470,6 @@ pub enum Error {
     #[error("Account history error")]
     AccountHistory(#[source] account_history::Error),
 
-    #[cfg(not(target_os = "android"))]
     #[error("Factory reset partially failed: {0}")]
     FactoryResetError(&'static str),
 
@@ -529,14 +495,6 @@ pub enum Error {
     #[cfg(target_os = "macos")]
     #[error("Failed to set exclusion group")]
     GroupIdError(#[source] io::Error),
-
-    #[cfg(target_os = "android")]
-    #[error("Failed to initialize play purchase")]
-    InitPlayPurchase(#[source] device::Error),
-
-    #[cfg(target_os = "android")]
-    #[error("Failed to verify play purchase")]
-    VerifyPlayPurchase(#[source] device::Error),
 }
 
 /// Enum representing commands that can be sent to the daemon.
@@ -670,9 +628,6 @@ pub enum DaemonCommand {
     ClearAccountHistory(ResponseTx<(), Error>),
     /// Get the list of countries and cities where there are relays.
     GetRelayLocations(oneshot::Sender<RelayList>),
-    /// Delete the account and log out the user
-    #[cfg(target_os = "android")]
-    DeleteAccount(ResponseTx<(), Error>),
     /// Trigger an asynchronous relay list update. This returns before the relay list is actually
     /// updated.
     UpdateRelayLocations,
@@ -743,7 +698,6 @@ pub enum DaemonCommand {
     ///
     /// Desktop only: neither mobile OS lets one app observe another app's
     /// VPN state, so no watcher runs there and no yield is ever taken.
-    #[cfg(not(target_os = "android"))]
     ClearEnvYield(ResponseTx<(), warren_env_arbitration::EnvYieldError>),
     /// Replace the pinned key for `exit_id_hex` with
     /// `new_pubkey_hex` (user accepted a key rotation from the modal).
@@ -778,7 +732,6 @@ pub enum DaemonCommand {
     ///
     /// `Err` refuses an ARMING while this build has stood down for a
     /// higher-priority product environment. Disarming is always accepted.
-    #[cfg(not(target_os = "android"))]
     SetLockdownMode(ResponseTx<(), GuardedSettingError>, bool),
     /// Set the auto-connect setting.
     ///
@@ -856,7 +809,6 @@ pub enum DaemonCommand {
     /// Get current version of the app
     GetCurrentVersion(oneshot::Sender<mullvad_version::Version>),
     /// Remove settings and clear the cache
-    #[cfg(not(target_os = "android"))]
     FactoryReset(ResponseTx<(), Error>),
     /// Return whether split tunneling is available
     #[cfg(any(target_os = "linux", target_os = "windows"))]
@@ -910,16 +862,6 @@ pub enum DaemonCommand {
     /// Saves the target tunnel state and enters a blocking state. The state is restored
     /// upon restart.
     PrepareRestart(bool),
-    /// Causes a socket to bypass the tunnel. This has no effect when connected. It is only used
-    /// to bypass the tunnel in blocking states.
-    #[cfg(target_os = "android")]
-    BypassSocket(RawFd, oneshot::Sender<()>),
-    /// Initialize a google play purchase through the API.
-    #[cfg(target_os = "android")]
-    InitPlayPurchase(ResponseTx<PlayExternalObfuscatedAccountId, Error>),
-    /// Verify that a google play payment was successful through the API.
-    #[cfg(target_os = "android")]
-    VerifyPlayPurchase(ResponseTx<(), Error>, PlayPurchase),
     /// Patch the settings using a JSON patch
     ApplyJsonSettings(ResponseTx<(), settings::patch::Error>, String),
     /// Return a JSON blob containing all overridable settings, if there are any
@@ -940,14 +882,11 @@ pub enum DaemonCommand {
         tx: oneshot::Sender<()>,
     },
     /// Calculate and return the rollout threshold for this client.
-    #[cfg(not(target_os = "android"))]
     GetRolloutThreshold(oneshot::Sender<f32>),
     /// Generate a new rollout threshold seed and update settings. Returns the new rollout
     /// threshold.
-    #[cfg(not(target_os = "android"))]
     GenerateNewRolloutSeed(oneshot::Sender<f32>),
     /// Set the rollout threshold seed to the provided value and update settings.
-    #[cfg(not(target_os = "android"))]
     SetRolloutThresholdSeed {
         seed: u32,
         tx: oneshot::Sender<()>,
@@ -995,7 +934,6 @@ pub(crate) enum InternalDaemonEvent {
     /// The window `prepare-restart` opened has expired with no shutdown, so
     /// the lockdown it armed has outlived its installer and must go back to
     /// what the settings say.
-    #[cfg(not(target_os = "android"))]
     RestartLockdownDeadman,
     /// TOFU pubkey-pinning verify-hook event consumed by
     /// the daemon main loop. Routes pin inserts / bumps / mismatches /
@@ -1007,7 +945,6 @@ pub(crate) enum InternalDaemonEvent {
     WarrenAccountStanding(warren_standing::StandingUpdate),
     /// Another product environment's daemon was observed, or went out of
     /// reach (`None`). Drives the cross-environment arbitration.
-    #[cfg(not(target_os = "android"))]
     WarrenForeignEnvObserved {
         env: warren_product_env::ProductEnv,
         state: Option<warren_env_arbitration::ForeignDaemonState>,
@@ -1038,7 +975,6 @@ pub(crate) enum InternalDaemonEvent {
 /// 11:54:29, new daemon up at 11:54:39, ten seconds end to end. Five minutes is
 /// two orders of margin over a slow installer on a slow disk, and still bounds
 /// how long a host can be blocked by an update that gave up.
-#[cfg(not(target_os = "android"))]
 /// How long the shutdown waits for the tunnel to report itself disconnected
 /// before it closes the daemon's interfaces anyway. Below the stop timeout of
 /// the service managers, so the daemon still finishes its own shutdown.
@@ -1061,7 +997,6 @@ const RESTART_LOCKDOWN_DEADMAN: std::time::Duration = std::time::Duration::from_
 /// unconditionally: it restores the user's own choice, so a user who enabled
 /// lockdown keeps it and a user who never did stops being blocked by an
 /// installer's leftover.
-#[cfg(not(target_os = "android"))]
 pub(crate) fn restart_lockdown_verdict(armed: bool, setting: bool) -> Option<bool> {
     armed.then_some(setting)
 }
@@ -1141,16 +1076,6 @@ impl DaemonCommandSender {
     pub fn send(&self, command: DaemonCommand) -> Result<(), Error> {
         self.0
             .unbounded_send(InternalDaemonEvent::Command(command))
-            .map_err(|_| Error::DaemonUnavailable)
-    }
-
-    /// Shuts down the daemon. This triggers the shutdown as though the user would shut it down
-    /// because blocking traffic on Android relies on the daemon process being alive and keeping a
-    /// tunnel device open.
-    #[cfg(target_os = "android")]
-    pub fn shutdown(&self) -> Result<(), Error> {
-        self.0
-            .unbounded_send(InternalDaemonEvent::TriggerShutdown(true))
             .map_err(|_| Error::DaemonUnavailable)
     }
 }
@@ -1239,7 +1164,6 @@ pub struct Daemon {
     /// Set when `prepare-restart` armed the temporary update lockdown, cleared
     /// by the dead-man that puts it back. Without it the dead-man could not
     /// tell an armed lockdown from a daemon that never had one.
-    #[cfg(not(target_os = "android"))]
     restart_lockdown_armed: bool,
     reconnection_job: Option<AbortHandle>,
     management_interface: ManagementInterfaceServer,
@@ -1328,7 +1252,6 @@ pub struct Daemon {
     /// the cross-environment watcher last saw it. Seeded with one entry per
     /// environment, all out of reach, so a machine that runs a single
     /// product publishes a complete and honest list from the first snapshot.
-    #[cfg(not(target_os = "android"))]
     warren_foreign_envs: Vec<warren_env_arbitration::ForeignEnvObservation>,
     /// How each exit in force is served, as last resolved.
     app_route_resolutions: tokio::sync::watch::Receiver<warren_app_routes::Resolutions>,
@@ -1355,8 +1278,6 @@ pub struct DaemonConfig {
     pub cache_dir: PathBuf,
     pub rpc_socket_path: PathBuf,
     pub endpoint: ApiEndpoint,
-    #[cfg(target_os = "android")]
-    pub android_context: AndroidContext,
     pub log_handle: logging::LogHandle,
 }
 
@@ -1464,26 +1385,11 @@ impl Daemon {
             let _ = tokens_tx.send(InternalDaemonEvent::WarrenSessionTokensAtHand);
         }));
 
-        #[cfg(target_os = "android")]
-        let connectivity_listener = ConnectivityListener::new(config.android_context.clone())
-            .inspect_err(|error| {
-                log::error!(
-                    "{}",
-                    error.display_chain_with_msg("Failed to start connectivity listener")
-                );
-            })
-            .map_err(|_| Error::DaemonUnavailable)?;
-
         mullvad_api::proxy::ApiConnectionMode::try_delete_cache(&config.cache_dir).await;
-        let api_runtime = mullvad_api::Runtime::with_cache(
-            &config.endpoint,
-            &config.cache_dir,
-            true,
-            #[cfg(target_os = "android")]
-            api::create_bypass_tx(&internal_event_tx),
-        )
-        .await
-        .map_err(Error::InitRpcFactory)?;
+        let api_runtime =
+            mullvad_api::Runtime::with_cache(&config.endpoint, &config.cache_dir, true)
+                .await
+                .map_err(Error::InitRpcFactory)?;
 
         let api_availability = api_runtime.availability_handle();
         api_availability.suspend();
@@ -1709,9 +1615,6 @@ impl Daemon {
             );
             warren_status_cache.record_restored_after_unclean_shutdown();
         }
-
-        #[cfg(target_os = "android")]
-        let exclude_paths = tunnel_split_apps(&settings.app_routing);
 
         #[cfg(target_os = "linux")]
         let split_tunneling_pid_manager = split_tunnel::PidManager::default();
@@ -2063,8 +1966,6 @@ impl Daemon {
             mullvad_types::TUNNEL_FWMARK,
             #[cfg(target_os = "linux")]
             mullvad_types::TUNNEL_TABLE_ID,
-            #[cfg(target_os = "android")]
-            config.android_context.clone(),
         )
         .await
         .map_err(Error::RouteManager)?;
@@ -2076,7 +1977,6 @@ impl Daemon {
             tunnel_state_machine::InitialTunnelState {
                 allow_lan: settings.allow_lan,
                 lan_networks: settings.lan_networks(),
-                #[cfg(not(target_os = "android"))]
                 lockdown_mode: LockdownMode::from(settings.lockdown_mode),
                 dns_config: dns::addresses_from_options(&settings.tunnel_options.dns_options),
                 allowed_endpoint: access_mode_handler
@@ -2092,7 +1992,6 @@ impl Daemon {
                 initial_block: secured_boot
                     .as_ref()
                     .and_then(warren_session_gate::SecuredBoot::initial_block),
-                #[cfg(not(target_os = "android"))]
                 split_apps: {
                     let split_apps = tunnel_split_apps(&settings.app_routing);
                     #[cfg(target_os = "linux")]
@@ -2107,8 +2006,6 @@ impl Daemon {
                         enforceable_split_apps(split_apps, split_tunnel::INCLUDE_ONLY_READY);
                     split_apps
                 },
-                #[cfg(target_os = "android")]
-                exclude_paths,
             },
             parameters_generator.clone(),
             Arc::new(parameters_generator.clone()),
@@ -2119,10 +2016,6 @@ impl Daemon {
             route_manager.clone(),
             #[cfg(target_os = "windows")]
             volume_update_rx,
-            #[cfg(target_os = "android")]
-            config.android_context,
-            #[cfg(target_os = "android")]
-            connectivity_listener.clone(),
             #[cfg(target_os = "linux")]
             tunnel_state_machine::LinuxNetworkingIdentifiers {
                 fwmark: mullvad_types::TUNNEL_FWMARK,
@@ -2545,12 +2438,7 @@ impl Daemon {
         }
 
         let location_handler = GeoIpHandler::new(
-            api_runtime.rest_handle(
-                #[cfg(not(target_os = "android"))]
-                mullvad_api::DefaultDnsResolver,
-                #[cfg(target_os = "android")]
-                android_dns::AndroidDnsResolver::new(connectivity_listener),
-            ),
+            api_runtime.rest_handle(mullvad_api::DefaultDnsResolver),
             internal_event_tx.clone().to_specialized_sender(),
         );
 
@@ -2562,7 +2450,6 @@ impl Daemon {
         let daemon = Daemon {
             tunnel_state: TunnelState::Disconnected {
                 location: None,
-                #[cfg(not(target_os = "android"))]
                 locked_down: settings.lockdown_mode,
             },
             target_state,
@@ -2570,7 +2457,6 @@ impl Daemon {
             exclude_pids: split_tunneling_pid_manager,
             rx: internal_event_rx,
             tx: internal_event_tx,
-            #[cfg(not(target_os = "android"))]
             restart_lockdown_armed: false,
             reconnection_job: None,
             management_interface,
@@ -2605,7 +2491,6 @@ impl Daemon {
             warren_auto_recovery_pending: false,
             warren_identity,
             warren_multi_hop_directory_active,
-            #[cfg(not(target_os = "android"))]
             warren_foreign_envs: warren_env_arbitration::seed_observations(
                 warren_product_env::CURRENT,
             ),
@@ -2623,7 +2508,6 @@ impl Daemon {
         // higher-priority one holds the machine. Prod watches the lower ones
         // too, read-only, so its GUI can say they will stand down; it never
         // issues a command to them.
-        #[cfg(not(target_os = "android"))]
         for observation in &daemon.warren_foreign_envs {
             let env = observation.env;
             let event_tx = daemon.tx.clone();
@@ -2637,7 +2521,6 @@ impl Daemon {
             ));
         }
 
-        #[cfg(not(target_os = "android"))]
         daemon.publish_env_arbitration();
 
         api_availability.unsuspend();
@@ -2840,11 +2723,9 @@ impl Daemon {
                 self.update_feature_indicators_on_settings_changed();
             }
             AppRoutingChanged(routing, tx) => self.handle_app_routing_changed(routing, tx).await,
-            #[cfg(not(target_os = "android"))]
             RestartLockdownDeadman => self.on_restart_lockdown_deadman(),
             WarrenPinUpdate(update) => self.handle_warren_pin_update(update).await,
             WarrenAccountStanding(update) => self.handle_warren_account_standing(update),
-            #[cfg(not(target_os = "android"))]
             WarrenForeignEnvObserved { env, state } => {
                 self.handle_warren_foreign_env_observed(env, state).await;
             }
@@ -2871,7 +2752,6 @@ impl Daemon {
     /// Never used on Android: neither mobile OS lets one app observe
     /// another app's VPN state, so no watcher is spawned there and the
     /// stand-down is driven by package presence instead.
-    #[cfg(not(target_os = "android"))]
     async fn handle_warren_foreign_env_observed(
         &mut self,
         env: warren_product_env::ProductEnv,
@@ -2909,7 +2789,6 @@ impl Daemon {
     /// The disconnect and the disarm both travel the tunnel state machine's
     /// single command channel, so issuing them in this order is what keeps
     /// the block armed until the tunnel is actually down.
-    #[cfg(not(target_os = "android"))]
     async fn stand_down_for(&mut self, to: warren_product_env::ProductEnv) {
         log::info!(
             "the {} product environment holds this machine, standing down",
@@ -2983,7 +2862,6 @@ impl Daemon {
     /// Manual re-enable: put the two recorded settings back and drop the
     /// yield. Refused while the higher environment still asserts, so the
     /// window is the one the design promises.
-    #[cfg(not(target_os = "android"))]
     async fn on_clear_env_yield(
         &mut self,
         tx: ResponseTx<(), warren_env_arbitration::EnvYieldError>,
@@ -3036,7 +2914,6 @@ impl Daemon {
 
     /// Publish the whole coexistence picture in one snapshot, so no client
     /// ever renders the yield without the states that produced it.
-    #[cfg(not(target_os = "android"))]
     fn publish_env_arbitration(&self) {
         let (environments, env_yield) = warren_env_arbitration::publication(
             &self.warren_foreign_envs,
@@ -3188,13 +3065,10 @@ impl Daemon {
         }
 
         let tunnel_state = match tunnel_state_transition {
-            #[cfg(not(target_os = "android"))]
             TunnelStateTransition::Disconnected { locked_down } => TunnelState::Disconnected {
                 location: None,
                 locked_down,
             },
-            #[cfg(target_os = "android")]
-            TunnelStateTransition::Disconnected {} => TunnelState::Disconnected { location: None },
             TunnelStateTransition::Connecting(endpoint) => {
                 let feature_indicators = compute_feature_indicators(
                     self.settings.settings(),
@@ -3364,8 +3238,7 @@ impl Daemon {
         match self.tunnel_state {
             TunnelState::Disconnected {
                 ref mut location,
-                #[cfg(not(target_os = "android"))]
-                    locked_down: _,
+                locked_down: _,
             } => *location = Some(fetched_location),
             TunnelState::Connected {
                 ref mut location, ..
@@ -3540,7 +3413,6 @@ impl Daemon {
                 self.on_set_warren_multi_hop_settings(tx, settings).await
             }
             SetNatPmpSettings(tx, settings) => self.on_set_nat_pmp_settings(tx, settings).await,
-            #[cfg(not(target_os = "android"))]
             ClearEnvYield(tx) => self.on_clear_env_yield(tx).await,
             TrustNewExitKey {
                 tx,
@@ -3571,7 +3443,6 @@ impl Daemon {
                 .await
             }
             SetShowBetaReleases(tx, enabled) => self.on_set_show_beta_releases(tx, enabled).await,
-            #[cfg(not(target_os = "android"))]
             SetLockdownMode(tx, lockdown_mode) => {
                 self.on_set_lockdown_mode(tx, lockdown_mode).await
             }
@@ -3625,7 +3496,6 @@ impl Daemon {
             TestCustomApiAccessMethod(tx, proxy) => self.on_test_proxy_as_access_method(tx, proxy),
             IsPerformingPostUpgrade(tx) => self.on_is_performing_post_upgrade(tx),
             GetCurrentVersion(tx) => self.on_get_current_version(tx),
-            #[cfg(not(target_os = "android"))]
             FactoryReset(tx) => self.on_factory_reset(tx).await,
             #[cfg(any(target_os = "linux", target_os = "windows"))]
             SplitTunnelIsSupported(tx) => self.on_split_tunnel_is_supported(tx),
@@ -3707,28 +3577,17 @@ impl Daemon {
                 self.on_set_obfuscation_settings(tx, settings).await
             }
             PrepareRestart(shutdown) => self.on_prepare_restart(shutdown),
-            #[cfg(target_os = "android")]
-            BypassSocket(fd, tx) => self.on_bypass_socket(fd, tx),
-            #[cfg(target_os = "android")]
-            InitPlayPurchase(tx) => self.on_init_play_purchase(tx),
-            #[cfg(target_os = "android")]
-            VerifyPlayPurchase(tx, play_purchase) => {
-                self.on_verify_play_purchase(tx, play_purchase)
-            }
             ApplyJsonSettings(tx, blob) => self.on_apply_json_settings(tx, blob).await,
             ExportJsonSettings(tx) => self.on_export_json_settings(tx),
             GetFeatureIndicators(tx) => self.on_get_feature_indicators(tx),
             DisableRelay { relay, tx } => self.on_toggle_relay(relay, false, tx),
             EnableRelay { relay, tx } => self.on_toggle_relay(relay, true, tx),
-            #[cfg(not(target_os = "android"))]
             GetRolloutThreshold(tx) => self.on_get_rollout_threshold(tx).await,
-            #[cfg(not(target_os = "android"))]
             GenerateNewRolloutSeed(tx) => {
                 let seed = self.generate_and_set().await;
                 let threshold = Self::calculate_rollout_threshold(seed);
                 let _ = tx.send(threshold);
             }
-            #[cfg(not(target_os = "android"))]
             SetRolloutThresholdSeed { seed, tx } => {
                 self.set_rollout_threshold_seed(seed).await;
                 let _ = tx.send(());
@@ -3738,8 +3597,6 @@ impl Daemon {
             GetAppUpgradeCacheDir(tx) => self.on_get_app_upgrade_cache_dir(tx).await,
             AppUpgradeInstall(tx) => self.on_app_upgrade_install(tx),
             GetBridges(tx) => self.on_get_bridges(tx),
-            #[cfg(target_os = "android")]
-            DeleteAccount(tx) => self.on_delete_account(tx),
         }
     }
 
@@ -3824,21 +3681,6 @@ impl Daemon {
         event: AccessMethodEvent,
         endpoint_active_tx: oneshot::Sender<()>,
     ) {
-        #[cfg(target_os = "android")]
-        match event {
-            AccessMethodEvent::New { setting, .. } => {
-                // On android mullvad-api invokes protect on a socket to send requests
-                // outside the tunnel
-                let notifier = self.management_interface.notifier().clone();
-                tokio::spawn(async move {
-                    // No-op
-                    let _ = endpoint_active_tx.send(());
-                    // Notify clients about the change if necessary.
-                    notifier.notify_new_access_method_event(setting);
-                });
-            }
-        }
-        #[cfg(not(target_os = "android"))]
         match event {
             AccessMethodEvent::Allow { endpoint } => {
                 let (completion_tx, completion_rx) = oneshot::channel();
@@ -3953,10 +3795,7 @@ impl Daemon {
         }
 
         let (result_tx, result_rx) = oneshot::channel();
-        #[cfg(not(target_os = "android"))]
         self.send_tunnel_command(TunnelCommand::SetSplitApps(result_tx, split_apps));
-        #[cfg(target_os = "android")]
-        self.send_tunnel_command(TunnelCommand::SetExcludedApps(result_tx, split_apps));
         let daemon_tx = self.tx.clone();
 
         tokio::spawn(async move {
@@ -4853,18 +4692,6 @@ impl Daemon {
         }
     }
 
-    #[cfg(target_os = "android")]
-    fn on_delete_account(&mut self, tx: ResponseTx<(), Error>) {
-        let account_manager = self.account_manager.clone();
-        tokio::spawn(async move {
-            let result = account_manager.delete().await.map_err(|error| {
-                log::error!("{}", error.display_chain_with_msg("Delete account failed"));
-                Error::DeleteAccountError(error)
-            });
-            Self::oneshot_send(tx, result, "delete_account response");
-        });
-    }
-
     fn on_get_device(&mut self, tx: ResponseTx<DeviceState, Error>) {
         let account_manager = self.account_manager.clone();
         tokio::spawn(async move {
@@ -4948,7 +4775,6 @@ impl Daemon {
         );
     }
 
-    #[cfg(not(target_os = "android"))]
     async fn on_factory_reset(&mut self, tx: ResponseTx<(), Error>) {
         let mut last_error = None;
 
@@ -5459,7 +5285,6 @@ impl Daemon {
         .map_err(GuardedSettingError::EnvYield)
     }
 
-    #[cfg(not(target_os = "android"))]
     async fn on_set_lockdown_mode(
         &mut self,
         tx: ResponseTx<(), GuardedSettingError>,
@@ -5549,7 +5374,6 @@ impl Daemon {
         //       whenever settings are updated. For instance, changing "allow_lan" should probably
         //       cause a tunnel command to be sent.
 
-        #[cfg(not(target_os = "android"))]
         {
             let (tx, _rx) = oneshot::channel();
             self.send_tunnel_command(TunnelCommand::SetSplitApps(
@@ -5557,13 +5381,7 @@ impl Daemon {
                 tunnel_split_apps(&self.settings.app_routing),
             ));
         }
-        #[cfg(target_os = "android")]
-        {
-            let (tx, _rx) = oneshot::channel();
-            self.send_tunnel_command(TunnelCommand::SetExcludedApps(tx, vec![]));
-        }
 
-        #[cfg(not(target_os = "android"))]
         {
             let (tx, _rx) = oneshot::channel();
             self.send_tunnel_command(TunnelCommand::LockdownMode(
@@ -5603,7 +5421,6 @@ impl Daemon {
         self.reconnect_tunnel();
     }
 
-    #[cfg(not(target_os = "android"))]
     async fn on_get_rollout_threshold(&mut self, reply: oneshot::Sender<f32>) {
         let seed = match self.settings.rollout_threshold_seed {
             Some(seed) => seed,
@@ -5612,7 +5429,6 @@ impl Daemon {
         let _ = reply.send(Self::calculate_rollout_threshold(seed));
     }
 
-    #[cfg(not(target_os = "android"))]
     fn calculate_rollout_threshold(seed: u32) -> f32 {
         let version = mullvad_version::VERSION
             .parse::<mullvad_version::Version>()
@@ -5626,7 +5442,6 @@ impl Daemon {
     }
 
     // Regenrate a new seed and store it to settings.
-    #[cfg(not(target_os = "android"))]
     async fn generate_and_set(&mut self) -> u32 {
         let seed = Rollout::seed();
         self.set_rollout_threshold_seed(seed).await;
@@ -5634,7 +5449,6 @@ impl Daemon {
     }
 
     // Store the given seed to settings.
-    #[cfg(not(target_os = "android"))]
     async fn set_rollout_threshold_seed(&mut self, seed: u32) {
         if let Err(err) = self
             .settings
@@ -5651,7 +5465,6 @@ impl Daemon {
         }
     }
 
-    #[cfg_attr(target_os = "android", expect(unused_variables))]
     fn on_trigger_shutdown(&mut self, user_init_shutdown: bool) {
         // Block all traffic before shutting down to ensure that no traffic can leak on boot or
         // shutdown.
@@ -5660,7 +5473,6 @@ impl Daemon {
         // it would take the machine offline with the environment that DOES
         // hold the tunnel on it. `auto_connect` can still read true here
         // after a crash between two steps of the stand-down.
-        #[cfg(not(target_os = "android"))]
         if !user_init_shutdown
             && (*self.target_state == TargetState::Secured || self.settings.auto_connect)
             && warren_env_arbitration::may_assert_machine(
@@ -5682,7 +5494,6 @@ impl Daemon {
     fn on_prepare_restart(&mut self, shutdown: bool) {
         // TODO: See if this can be made to also shut down the daemon
         //       without causing the service to be restarted.
-        #[cfg(not(target_os = "android"))]
         if *self.target_state == TargetState::Secured {
             let persist = if cfg!(target_os = "windows") {
                 // During app upgrades, as a safety measure, we make the firewall filters
@@ -5731,7 +5542,6 @@ impl Daemon {
     /// installer that armed the lockdown never came back for it. Put the
     /// lockdown back to the setting and say so loudly: a host blocked with no
     /// owner is the failure this exists to end.
-    #[cfg(not(target_os = "android"))]
     fn on_restart_lockdown_deadman(&mut self) {
         let setting = self.settings.settings().lockdown_mode;
         let Some(restore) = restart_lockdown_verdict(self.restart_lockdown_armed, setting) else {
@@ -5749,50 +5559,6 @@ impl Daemon {
             LockdownMode::from(restore).persist(restore),
             tx,
         ));
-    }
-
-    #[cfg(target_os = "android")]
-    fn on_bypass_socket(&mut self, fd: RawFd, tx: oneshot::Sender<()>) {
-        match self.tunnel_state {
-            // When connected, the API connection shouldn't be bypassed.
-            TunnelState::Connected { .. } => {
-                log::trace!("Not bypassing connection because the tunnel is up");
-                let _ = tx.send(());
-            }
-            _ => {
-                self.send_tunnel_command(TunnelCommand::BypassSocket(fd, tx));
-            }
-        }
-    }
-
-    #[cfg(target_os = "android")]
-    fn on_init_play_purchase(&mut self, tx: ResponseTx<PlayExternalObfuscatedAccountId, Error>) {
-        let manager = self.account_manager.clone();
-        tokio::spawn(async move {
-            Self::oneshot_send(
-                tx,
-                manager
-                    .init_play_purchase()
-                    .await
-                    .map_err(Error::InitPlayPurchase),
-                "init_play_purchase response",
-            );
-        });
-    }
-
-    #[cfg(target_os = "android")]
-    fn on_verify_play_purchase(&mut self, tx: ResponseTx<(), Error>, play_purchase: PlayPurchase) {
-        let manager = self.account_manager.clone();
-        tokio::spawn(async move {
-            Self::oneshot_send(
-                tx,
-                manager
-                    .verify_play_purchase(play_purchase)
-                    .await
-                    .map_err(Error::VerifyPlayPurchase),
-                "verify_play_purchase response",
-            );
-        });
     }
 
     async fn on_apply_json_settings(
@@ -7012,7 +6778,7 @@ mod enforceable_split_apps_tests {
     }
 }
 
-#[cfg(all(test, not(target_os = "android")))]
+#[cfg(test)]
 mod tunnel_split_apps_tests {
     use super::tunnel_split_apps;
     use mullvad_types::app_routing::{AppId, AppRoutingSettings, ExitChoice, SplitMode};

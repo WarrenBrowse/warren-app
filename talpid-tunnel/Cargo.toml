@@ -14,15 +14,9 @@ talpid-routing = { path = "../talpid-routing" }
 talpid-types = { path = "../talpid-types" }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "process", "rt-multi-thread"] }
-
-[target.'cfg(not(target_os = "android"))'.dependencies]
 tun08 = { package = "tun", version = "0.8.5", default-features = false, features = [
   "async",
 ] }
-
-[target.'cfg(target_os = "android")'.dependencies]
-jnix = { version = "0.5.1", features = ["derive"] }
-log = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 talpid-windows = { path = "../talpid-windows" }

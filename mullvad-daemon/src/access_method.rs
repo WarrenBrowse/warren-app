@@ -156,7 +156,6 @@ impl Daemon {
     /// different kinds of testing contexts, such as testing
     /// [`AccessMethodSetting`]s or on the fly testing of
     /// [`talpid_types::net::proxy::CustomProxy`]s.
-    #[cfg(not(target_os = "android"))]
     pub(crate) async fn test_access_method(
         proxy: talpid_types::net::AllowedEndpoint,
         access_method_selector: access_mode::AccessModeSelectorHandle,
@@ -182,19 +181,6 @@ impl Daemon {
             .await?;
 
         result
-    }
-
-    #[cfg(target_os = "android")]
-    pub(crate) async fn test_access_method(
-        _: talpid_types::net::AllowedEndpoint,
-        _: access_mode::AccessModeSelectorHandle,
-        _: crate::DaemonEventSender<(
-            access_mode::AccessMethodEvent,
-            futures::channel::oneshot::Sender<()>,
-        )>,
-        api_proxy: ApiProxy,
-    ) -> Result<bool, Error> {
-        Self::perform_api_request(api_proxy).await
     }
 
     /// Create an [`ApiProxy`] which will perform all REST requests against one

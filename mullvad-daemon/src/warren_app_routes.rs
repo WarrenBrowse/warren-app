@@ -88,12 +88,6 @@ impl RoutePlanner {
         }
     }
 
-    /// The observer for the next tunnel: its reports carry that tunnel's
-    /// number.
-    #[cfg_attr(
-        target_os = "android",
-        expect(dead_code, reason = "per-app exits run on desktop only")
-    )]
     pub fn observer_for_next_tunnel(
         &mut self,
     ) -> Option<talpid_warren_tunnel::app_routes::AppRouteObserver> {
@@ -118,10 +112,6 @@ impl RoutePlanner {
         self.multi_hop = multi_hop;
     }
 
-    #[cfg_attr(
-        target_os = "android",
-        expect(dead_code, reason = "per-app exits run on desktop only")
-    )]
     pub fn plan_rx(&self) -> watch::Receiver<AppRoutesPlan> {
         self.plan_tx.subscribe()
     }

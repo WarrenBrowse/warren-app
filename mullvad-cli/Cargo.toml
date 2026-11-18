@@ -58,7 +58,7 @@ tokio = { workspace = true, features = [
 # `warren upgrade` reads the outcome the detached upgrade job records.
 mullvad-update = { path = "../mullvad-update" }
 
-[target.'cfg(all(unix, not(target_os = "android")))'.dependencies]
+[target.'cfg(unix)'.dependencies]
 clap_complete = { version = "4.4.8" }
 nix = { workspace = true, features = ["signal"] }
 

@@ -1,10 +1,6 @@
 use crate::types;
 use chrono::DateTime;
 use mullvad_types::account::{AccountData, VoucherSubmission};
-#[cfg(target_os = "android")]
-use mullvad_types::account::{
-    PlayExternalObfuscatedAccountId, PlayPurchase, PlayPurchasePaymentToken,
-};
 
 use super::FromProtobufTypeError;
 
@@ -65,39 +61,5 @@ impl TryFrom<types::AccountData> for AccountData {
             id: data.id,
             expiry,
         })
-    }
-}
-
-#[cfg(target_os = "android")]
-impl TryFrom<types::PlayPurchase> for PlayPurchase {
-    type Error = FromProtobufTypeError;
-
-    fn try_from(value: types::PlayPurchase) -> Result<Self, Self::Error> {
-        let product_id = value.product_id;
-        let purchase_token = value
-            .purchase_token
-            .ok_or(FromProtobufTypeError::invalid_argument(
-                "Missing purchase token",
-            ))?
-            .token;
-
-        Ok(Self {
-            product_id,
-            purchase_token,
-        })
-    }
-}
-
-#[cfg(target_os = "android")]
-impl From<PlayPurchasePaymentToken> for types::PlayPurchasePaymentToken {
-    fn from(token: PlayPurchasePaymentToken) -> Self {
-        Self { token }
-    }
-}
-
-#[cfg(target_os = "android")]
-impl From<PlayExternalObfuscatedAccountId> for types::PlayExternalObfuscatedAccountId {
-    fn from(id: PlayExternalObfuscatedAccountId) -> Self {
-        Self { id }
     }
 }

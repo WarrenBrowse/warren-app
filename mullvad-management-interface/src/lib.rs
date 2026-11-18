@@ -16,13 +16,11 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(unix)]
 use tipsy::Endpoint as IpcEndpoint;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
-#[cfg(not(target_os = "android"))]
 use tonic::transport::{Endpoint, Uri};
 use tonic::transport::{Server, server::Connected};
-#[cfg(not(target_os = "android"))]
 use tower::service_fn;
 
 pub use tonic::{Code, Request, Response, Status, async_trait, codegen::Bytes, transport::Channel};
@@ -155,7 +153,6 @@ impl From<tonic::Status> for Error {
     }
 }
 
-#[cfg(not(target_os = "android"))]
 #[deprecated(note = "Prefer MullvadProxyClient")]
 pub async fn new_management_service_client() -> Result<ManagementServiceClient, Error> {
     grpc_transport_channel()
@@ -165,7 +162,6 @@ pub async fn new_management_service_client() -> Result<ManagementServiceClient, 
 
 /// Create a [Channel] for communication between any of the available gRPC clients (e.g.
 /// [ManagementServiceClient]) and this environment's management interface gRPC service.
-#[cfg(not(target_os = "android"))]
 pub(crate) async fn grpc_transport_channel() -> Result<Channel, Error> {
     grpc_transport_channel_at(mullvad_paths::get_rpc_socket_path()).await
 }
@@ -205,7 +201,7 @@ pub(crate) async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Chann
 /// socket lives in a directory only root can create entries in (on macOS,
 /// `/var/run` is also writable by the `daemon` group, whose only member is
 /// root), so the path itself vouches for the daemon.
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(unix)]
 pub(crate) async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Channel, Error> {
     use futures::TryFutureExt;
 
@@ -222,7 +218,7 @@ pub(crate) async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Chann
 ///
 /// Takes a [`PrivilegedSocketPath`] rather than a path, so the ownership check
 /// cannot be forgotten: see that type for why it is load-bearing.
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(unix)]
 pub async fn grpc_transport_channel_to(path: &PrivilegedSocketPath) -> Result<Channel, Error> {
     // The unix ownership question is settled by the path itself (see
     // [`PrivilegedSocketPath`]), so the ordinary connector is enough here.
@@ -305,7 +301,6 @@ async fn connect_admin_owned_pipe(
 /// `None` is refused like an unprivileged owner. An environment that is not
 /// installed has no endpoint, and a probe that cannot see one must read as
 /// "nothing to yield to" rather than as evidence.
-#[cfg(not(target_os = "android"))]
 #[must_use]
 fn endpoint_admits(privileged_owner: Option<bool>) -> bool {
     privileged_owner == Some(true)
@@ -313,7 +308,7 @@ fn endpoint_admits(privileged_owner: Option<bool>) -> bool {
 
 /// What the OS says about the owner of the management endpoint at `path`, or
 /// `None` when there is nothing there to ask about.
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(unix)]
 #[must_use]
 fn unix_endpoint_owner_is_privileged(path: &std::path::Path) -> Option<bool> {
     use std::os::unix::fs::{FileTypeExt, MetadataExt};
@@ -334,7 +329,7 @@ fn unix_endpoint_owner_is_privileged(path: &std::path::Path) -> Option<bool> {
 /// unprivileged process that served a look-alike endpoint at prod's path could
 /// claim to hold the machine forever, and any environment that believed it
 /// would stand down on command.
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(unix)]
 #[must_use]
 fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
     endpoint_admits(unix_endpoint_owner_is_privileged(path))
@@ -390,11 +385,9 @@ fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
 ///   on a different instance. So [`Self::vouched_for`] is only a cheap early
 ///   rejection there, and the binding check is made on the pipe instance the
 ///   channel actually holds, inside [`grpc_transport_channel_to`].
-#[cfg(not(target_os = "android"))]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PrivilegedSocketPath(PathBuf);
 
-#[cfg(not(target_os = "android"))]
 impl PrivilegedSocketPath {
     /// The only constructor, so there is no spelling of a foreign dial that
     /// skips the gate: `Some` when the OS says the endpoint at `path` belongs
@@ -415,7 +408,6 @@ impl PrivilegedSocketPath {
     }
 }
 
-#[cfg(not(target_os = "android"))]
 pub use client::MullvadProxyClient;
 
 pub type ServerJoinHandle = tokio::task::JoinHandle<()>;
@@ -759,7 +751,7 @@ impl<T: AsyncRead + AsyncWrite + Unpin> AsyncWrite for StreamBox<T> {
     }
 }
 
-#[cfg(all(test, not(target_os = "android")))]
+#[cfg(test)]
 mod foreign_socket_tests {
     use super::PrivilegedSocketPath;
 
@@ -868,7 +860,7 @@ mod foreign_socket_tests {
     }
 }
 
-#[cfg(all(test, unix, not(target_os = "android")))]
+#[cfg(all(test, unix))]
 mod socket_access_tests {
     use super::*;
 
@@ -942,7 +934,7 @@ mod socket_access_tests {
     }
 }
 
-#[cfg(all(test, unix, not(target_os = "android")))]
+#[cfg(all(test, unix))]
 mod peer_credential_tests {
     use super::*;
     use futures::StreamExt;
@@ -1135,7 +1127,7 @@ mod rpc_size_tests {
 /// that stopped admitting a genuine root-owned endpoint would keep every
 /// refusal test green while quietly deciding that no other environment ever
 /// asserts the machine, and the whole stand-down would do nothing at all.
-#[cfg(all(test, not(target_os = "android")))]
+#[cfg(test)]
 mod foreign_endpoint_tests {
     use super::endpoint_admits;
 

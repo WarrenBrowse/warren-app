@@ -2,7 +2,6 @@ use super::{
     ConnectingState, EventConsequence, SharedTunnelStateValues, TunnelCommand,
     TunnelCommandReceiver, TunnelState, TunnelStateTransition,
 };
-#[cfg(not(target_os = "android"))]
 use crate::firewall::FirewallPolicy;
 #[cfg(target_os = "macos")]
 use crate::tunnel_state_machine::ErrorState;
@@ -53,13 +52,10 @@ impl DisconnectedState {
         Self::set_firewall_policy(shared_values, should_reset_firewall);
         #[cfg(target_os = "linux")]
         shared_values.reset_connectivity_check();
-        #[cfg(target_os = "android")]
-        shared_values.tun_provider.lock().unwrap().close_tun();
 
         Self::construct_state_transition(shared_values)
     }
 
-    #[cfg_attr(target_os = "android", expect(unused_variables))]
     fn construct_state_transition(
         shared_values: &mut SharedTunnelStateValues,
     ) -> (Box<dyn TunnelState>, TunnelStateTransition) {
@@ -68,13 +64,11 @@ impl DisconnectedState {
             TunnelStateTransition::Disconnected {
                 // Being disconnected and having lockdown mode enabled implies that your internet
                 // access is locked down
-                #[cfg(not(target_os = "android"))]
                 locked_down: shared_values.lockdown_mode.bool(),
             },
         )
     }
 
-    #[cfg(not(target_os = "android"))]
     fn set_firewall_policy(
         shared_values: &mut SharedTunnelStateValues,
         should_reset_firewall: bool,
@@ -111,8 +105,6 @@ impl DisconnectedState {
     // policies by calling a bunch of functions that will end up being a no-op. The proper
     // long-term fix would be to remove the firewall module completely,
     // but I leave this for a future developer to clean up.
-    #[cfg(target_os = "android")]
-    fn set_firewall_policy(_: &mut SharedTunnelStateValues, _: bool) {}
 
     #[cfg(windows)]
     fn register_split_tunnel_addresses(
@@ -178,7 +170,6 @@ impl TunnelState for DisconnectedState {
                 let _ = complete_tx.send(());
                 SameState(self)
             }
-            #[cfg(not(target_os = "android"))]
             Some(TunnelCommand::AllowEndpoint(endpoint, tx)) => {
                 if shared_values.allowed_endpoint != endpoint {
                     shared_values.allowed_endpoint = endpoint;
@@ -193,7 +184,6 @@ impl TunnelState for DisconnectedState {
                 let _ = complete_tx.send(());
                 SameState(self)
             }
-            #[cfg(not(target_os = "android"))]
             Some(TunnelCommand::LockdownMode(lockdown_mode, complete_tx)) => {
                 // `PartialEq` on `LockdownMode` only compares the boolean, so a
                 // change confined to the persistence flag compares equal. Apply
@@ -246,11 +236,6 @@ impl TunnelState for DisconnectedState {
             }
             Some(TunnelCommand::Connect) => NewState(ConnectingState::enter(shared_values, 0)),
             Some(TunnelCommand::Block(_reason)) => SameState(self),
-            #[cfg(target_os = "android")]
-            Some(TunnelCommand::BypassSocket(fd, done_tx)) => {
-                shared_values.bypass_socket(fd, done_tx);
-                SameState(self)
-            }
             #[cfg(windows)]
             Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
                 let _ = shared_values.set_split_apps(apps, result_tx, false);
@@ -266,12 +251,6 @@ impl TunnelState for DisconnectedState {
                 if shared_values.set_split_apps(apps) {
                     Self::set_firewall_policy(shared_values, false);
                 }
-                let _ = result_tx.send(Ok(()));
-                SameState(self)
-            }
-            #[cfg(target_os = "android")]
-            Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
-                shared_values.set_excluded_paths(paths);
                 let _ = result_tx.send(Ok(()));
                 SameState(self)
             }

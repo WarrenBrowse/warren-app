@@ -38,7 +38,6 @@ pub enum AccessMethodEvent {
         connection_mode: ApiConnectionMode,
         /// The endpoint which represents how to connect to the Mullvad API and
         /// which clients are allowed to initiate such a connection.
-        #[cfg(not(target_os = "android"))]
         endpoint: AllowedEndpoint,
     },
     /// Emitted when the API endpoint is updated.
@@ -50,7 +49,6 @@ pub enum AccessMethodEvent {
     /// should be opaque to any client, it should not produce any unwanted noise
     /// and as such it is *not* broadcasted after the daemon is done processing
     /// this [`AccessMethodEvent::Allow`].
-    #[cfg(not(target_os = "android"))]
     Allow { endpoint: AllowedEndpoint },
 }
 
@@ -398,7 +396,6 @@ impl<B: AccessMethodResolver + 'static> AccessModeSelector<B> {
         let access_method_event = AccessMethodEvent::New {
             setting: resolved.setting,
             connection_mode: resolved.connection_mode.clone(),
-            #[cfg(not(target_os = "android"))]
             endpoint: resolved.endpoint,
         };
         let sender = self.access_method_event_sender.clone();

@@ -107,7 +107,6 @@ pub struct Settings {
     pub custom_lan_networks: Option<Vec<ipnetwork::IpNetwork>>,
     /// Extra level of kill switch. When this setting is on, the disconnected state will block
     /// the firewall to not allow any traffic in or out.
-    #[cfg(not(target_os = "android"))]
     pub lockdown_mode: bool,
     /// If the daemon should connect the VPN tunnel directly on start or not.
     pub auto_connect: bool,
@@ -130,7 +129,6 @@ pub struct Settings {
     /// it is expected to be fairly unique.
     ///
     /// This is an Option to make the Default implementation deterministic.
-    #[cfg(not(target_os = "android"))]
     pub rollout_threshold_seed: Option<u32>,
     /// URL of the warren-api server used by the
     /// `WarrenRemote{Account,Device}Backend`.
@@ -558,7 +556,6 @@ impl Default for Settings {
             api_access_methods: access_method::Settings::default(),
             allow_lan: false,
             custom_lan_networks: None,
-            #[cfg(not(target_os = "android"))]
             lockdown_mode: false,
             auto_connect: false,
             tunnel_options: TunnelOptions::default(),
@@ -567,7 +564,6 @@ impl Default for Settings {
             app_routing: AppRoutingSettings::default(),
             settings_version: CURRENT_SETTINGS_VERSION,
             recents: Some(vec![]),
-            #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
             // `None` here resolves to the compiled production default
             // (`warren_remote_config::DEFAULT_WARREN_API_URL`) at boot,

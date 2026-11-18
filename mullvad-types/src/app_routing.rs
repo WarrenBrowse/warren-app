@@ -61,7 +61,7 @@ pub enum AppIdFlavor {
 
 impl AppIdFlavor {
     /// The conventions of the platform this code runs on.
-    pub const HOST: Self = if cfg!(target_os = "android") {
+    pub const HOST: Self = if false {
         Self::Android
     } else if cfg!(windows) {
         Self::Windows
@@ -191,15 +191,8 @@ impl AppId {
     }
 
     /// The form the tunnel's exclusion commands take.
-    #[cfg(not(target_os = "android"))]
     pub fn to_tunnel_command_repr(&self) -> std::ffi::OsString {
         std::ffi::OsString::from(&self.0)
-    }
-
-    /// The form the tunnel's exclusion commands take.
-    #[cfg(target_os = "android")]
-    pub fn to_tunnel_command_repr(&self) -> String {
-        self.0.clone()
     }
 }
 

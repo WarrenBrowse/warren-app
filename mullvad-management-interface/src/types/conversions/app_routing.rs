@@ -220,12 +220,10 @@ mod tests {
         AppId::parse(raw).unwrap()
     }
 
-    #[cfg(not(any(windows, target_os = "android")))]
+    #[cfg(not(windows))]
     const APPS: [&str; 3] = ["/usr/bin/curl", "/opt/app/browser", "/opt/app/mailer"];
     #[cfg(windows)]
     const APPS: [&str; 3] = [r"C:\curl.exe", r"C:\browser.exe", r"C:\mailer.exe"];
-    #[cfg(target_os = "android")]
-    const APPS: [&str; 3] = ["net.curl", "org.browser", "org.mailer"];
 
     fn settings() -> AppRoutingSettings {
         let mut settings = AppRoutingSettings {

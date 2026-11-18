@@ -1,4 +1,3 @@
-#[cfg(not(target_os = "android"))]
 use mullvad_update::version::VersionInfo;
 use mullvad_version::Version;
 use serde::{Deserialize, Serialize};
@@ -11,12 +10,10 @@ pub(super) struct VersionCache {
     pub cache_version: Version,
     /// Whether the current (installed) version is supported or an upgrade is required
     pub current_version_supported: bool,
-    #[cfg(not(target_os = "android"))]
     /// The latest available versions
     pub version_info: VersionInfo,
     /// When we last checked with platform headers
     pub last_platform_header_check: SystemTime,
-    #[cfg(not(target_os = "android"))]
     pub metadata_version: usize,
     /// HTTP ETag associated with this metadata
     pub etag: Option<String>,
@@ -41,7 +38,6 @@ pub(super) type VersionCheckResult = std::result::Result<VersionCache, ()>;
 ///
 /// `refresh_rx` is woken by the router whenever a frontend asks for a fresh
 /// check; the poller otherwise re-checks on a fixed interval.
-#[cfg(not(target_os = "android"))]
 pub(super) fn spawn_version_updater(
     cache_dir: &std::path::Path,
     rollout_threshold_seed: Option<u32>,
@@ -57,10 +53,8 @@ pub(super) fn spawn_version_updater(
 }
 
 /// The anti-rollback floor's file in the daemon's root-owned cache directory.
-#[cfg(not(target_os = "android"))]
 const METADATA_FLOOR_FILE: &str = "version-metadata-floor";
 
-#[cfg(not(target_os = "android"))]
 async fn version_updater_loop(
     floor: mullvad_update::version::MetadataVersionFloor,
     rollout_threshold_seed: Option<u32>,
@@ -134,7 +128,6 @@ async fn version_updater_loop(
 
 /// The package format of this install, asked again at every check until it
 /// is known, so a query that failed once does not turn in-app upgrades off.
-#[cfg(not(target_os = "android"))]
 #[cfg_attr(not(target_os = "linux"), expect(clippy::unused_async))]
 async fn installed_package_format() -> Option<String> {
     #[cfg(target_os = "linux")]
@@ -155,7 +148,6 @@ async fn installed_package_format() -> Option<String> {
 ///
 /// Signature verification and anti-rollback are enforced inside
 /// `get_versions` against the trusted Warren signing keys.
-#[cfg(not(target_os = "android"))]
 async fn check_once(
     platform: mullvad_update::api::MetaRepositoryPlatform,
     architecture: mullvad_update::format::Architecture,
@@ -228,7 +220,6 @@ async fn check_once(
 /// minimum to hard-block older clients). Otherwise fall back to the upstream
 /// rule, "supported iff the running version is listed in `releases`". Dev builds
 /// are always considered supported so local testing is never blocked.
-#[cfg(not(target_os = "android"))]
 fn current_version_is_supported(
     current_version: &Version,
     response: &mullvad_update::format::response::Response,
@@ -237,7 +228,6 @@ fn current_version_is_supported(
 }
 
 /// Map the detected native CPU architecture to the metadata architecture enum.
-#[cfg(not(target_os = "android"))]
 fn native_update_architecture() -> Option<mullvad_update::format::Architecture> {
     use mullvad_update::format::Architecture;
 
@@ -252,7 +242,7 @@ fn native_update_architecture() -> Option<mullvad_update::format::Architecture> 
     }
 }
 
-#[cfg(all(test, not(target_os = "android")))]
+#[cfg(test)]
 mod tests {
     use super::{Version, current_version_is_supported};
     use mullvad_update::format::release::Release;

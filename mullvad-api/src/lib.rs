@@ -1,11 +1,7 @@
 #![allow(rustdoc::private_intra_doc_links)]
 use async_trait::async_trait;
-#[cfg(target_os = "android")]
-use futures::channel::mpsc;
 use hyper::body::Incoming;
 use mullvad_types::account::{AccountData, AccountNumber, VoucherSubmission};
-#[cfg(target_os = "android")]
-use mullvad_types::account::{PlayExternalObfuscatedAccountId, PlayPurchase};
 use proxy::{ApiConnectionMode, ConnectionModeProvider};
 use std::{future::Future, io, net::SocketAddr, path::Path, sync::Arc};
 
@@ -20,8 +16,6 @@ pub mod access_mode;
 mod https_client;
 pub mod proxy;
 mod tls_stream;
-#[cfg(target_os = "android")]
-pub use crate::https_client::SocketBypassRequest;
 
 mod access;
 mod address_cache;
@@ -80,9 +74,6 @@ const APP_URL_PREFIX: &str = "app/v1";
 
 #[cfg(target_os = "ios")]
 const APPLE_PAYMENT_URL_PREFIX: &str = "payments/apple/v2";
-
-#[cfg(target_os = "android")]
-const GOOGLE_PAYMENTS_URL_PREFIX: &str = "payments/google-play/v1";
 
 use mullvad_api_constants::*;
 
@@ -437,8 +428,6 @@ where
     address_cache: Arc<AddressCache<B>>,
     api_availability: availability::ApiAvailability,
     endpoint: ApiEndpoint,
-    #[cfg(target_os = "android")]
-    socket_bypass_tx: Option<mpsc::Sender<SocketBypassRequest>>,
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -458,19 +447,13 @@ pub enum Error {
 
 impl Runtime {
     /// Will create a new Runtime without a cache with the provided API endpoint.
-    pub fn new(
-        handle: tokio::runtime::Handle,
-        endpoint: &ApiEndpoint,
-        #[cfg(target_os = "android")] socket_bypass_tx: Option<mpsc::Sender<SocketBypassRequest>>,
-    ) -> Self {
+    pub fn new(handle: tokio::runtime::Handle, endpoint: &ApiEndpoint) -> Self {
         let address_cache = Arc::new(AddressCache::new(endpoint, None));
         Runtime {
             handle,
             address_cache,
             api_availability: ApiAvailability::default(),
             endpoint: endpoint.clone(),
-            #[cfg(target_os = "android")]
-            socket_bypass_tx,
         }
     }
 
@@ -481,18 +464,12 @@ impl Runtime {
         endpoint: &ApiEndpoint,
         cache_dir: &Path,
         write_changes: bool,
-        #[cfg(target_os = "android")] socket_bypass_tx: Option<mpsc::Sender<SocketBypassRequest>>,
     ) -> Result<Self, Error> {
         let handle = tokio::runtime::Handle::current();
 
         #[cfg(feature = "api-override")]
         if endpoint.should_disable_address_cache() {
-            return Ok(Self::new(
-                handle,
-                endpoint,
-                #[cfg(target_os = "android")]
-                socket_bypass_tx,
-            ));
+            return Ok(Self::new(handle, endpoint));
         }
 
         let cache_file = cache_dir.join(API_IP_CACHE_FILENAME);
@@ -514,8 +491,6 @@ impl Runtime {
             address_cache,
             api_availability,
             endpoint: endpoint.clone(),
-            #[cfg(target_os = "android")]
-            socket_bypass_tx,
         })
     }
 
@@ -524,8 +499,6 @@ impl Runtime {
         self.new_request_service(
             ApiConnectionMode::Direct.into_provider(),
             Arc::new(dns_resolver),
-            #[cfg(target_os = "android")]
-            None,
             #[cfg(any(feature = "api-override", test))]
             false,
         )
@@ -537,7 +510,6 @@ impl<B: AddressCacheBacking> Runtime<B> {
         handle: tokio::runtime::Handle,
         endpoint: &ApiEndpoint,
         backing: Arc<B>,
-        #[cfg(target_os = "android")] socket_bypass_tx: Option<mpsc::Sender<SocketBypassRequest>>,
     ) -> Runtime<B>
     where
         B: AddressCacheBacking,
@@ -550,8 +522,6 @@ impl<B: AddressCacheBacking> Runtime<B> {
             address_cache,
             api_availability: ApiAvailability::default(),
             endpoint: endpoint.clone(),
-            #[cfg(target_os = "android")]
-            socket_bypass_tx,
         }
     }
 
@@ -585,8 +555,6 @@ impl<B: AddressCacheBacking> Runtime<B> {
         let service = self.new_request_service(
             connection_mode_provider,
             Arc::clone(&self.address_cache),
-            #[cfg(target_os = "android")]
-            self.socket_bypass_tx.clone(),
             #[cfg(any(feature = "api-override", test))]
             self.endpoint.disable_tls,
         );
@@ -618,15 +586,12 @@ impl<B: AddressCacheBacking> Runtime<B> {
         &self,
         connection_mode_provider: T,
         dns_resolver: Arc<impl DnsResolver>,
-        #[cfg(target_os = "android")] socket_bypass_tx: Option<mpsc::Sender<SocketBypassRequest>>,
         #[cfg(any(feature = "api-override", test))] disable_tls: bool,
     ) -> rest::RequestServiceHandle {
         rest::RequestService::spawn(
             self.api_availability.clone(),
             connection_mode_provider,
             dns_resolver,
-            #[cfg(target_os = "android")]
-            socket_bypass_tx,
             #[cfg(any(feature = "api-override", test))]
             disable_tls,
         )
@@ -777,61 +742,6 @@ impl AccountsProxy {
             .post_json_bytes(&format!("{APPLE_PAYMENT_URL_PREFIX}/check"), body)?
             .expected_status(&[StatusCode::OK]);
         self.handle.service.request(request).await
-    }
-
-    #[cfg(target_os = "android")]
-    pub fn init_play_purchase(
-        &mut self,
-        account: AccountNumber,
-    ) -> impl Future<Output = Result<PlayExternalObfuscatedAccountId, rest::Error>> + use<> {
-        #[derive(serde::Deserialize)]
-        struct PlayPurchaseInitResponse {
-            obfuscated_id: String,
-        }
-
-        let service = self.handle.service.clone();
-        let factory = self.handle.factory.clone();
-
-        async move {
-            let request = factory
-                .post_json(&format!("{GOOGLE_PAYMENTS_URL_PREFIX}/init"), &())?
-                .account(account)?
-                .expected_status(&[StatusCode::OK]);
-            let response = service.request(request).await?;
-
-            let PlayPurchaseInitResponse { obfuscated_id } = response.deserialize().await?;
-
-            Ok(obfuscated_id)
-        }
-    }
-
-    #[cfg(target_os = "android")]
-    pub fn verify_play_purchase(
-        &mut self,
-        account: AccountNumber,
-        play_purchase: PlayPurchase,
-    ) -> impl Future<Output = Result<(), rest::Error>> + use<> {
-        let service = self.handle.service.clone();
-        let factory = self.handle.factory.clone();
-
-        async move {
-            let request = factory
-                .post_json(
-                    &format!("{GOOGLE_PAYMENTS_URL_PREFIX}/acknowledge"),
-                    &play_purchase,
-                )?
-                .account(account)?
-                .expected_status(&[StatusCode::NO_CONTENT]);
-
-            let response = service.request(request).await;
-            match response {
-                Err(e) => {
-                    log::error!("verify_play_purchase failed: #{:?}", e);
-                    Err(e)
-                }
-                Ok(_) => Ok(()),
-            }
-        }
     }
 
     pub fn get_www_auth_token(

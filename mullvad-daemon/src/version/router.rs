@@ -4,11 +4,9 @@ use std::path::PathBuf;
 use futures::channel::{mpsc, oneshot};
 use futures::stream::StreamExt;
 use mullvad_types::version::AppVersionInfo;
-#[cfg(not(target_os = "android"))]
 use mullvad_types::version::SuggestedUpgrade;
 #[cfg(in_app_upgrade)]
 use mullvad_update::app::{AppDownloader, AppDownloaderParameters, HttpAppDownloader};
-#[cfg(not(target_os = "android"))]
 use mullvad_update::version::VersionInfo;
 use talpid_core::mpsc::Sender;
 #[cfg(in_app_upgrade)]
@@ -267,18 +265,12 @@ pub(crate) fn spawn_version_router(
         // before feeding `VersionCache` updates back here. On Android no update
         // channel exists, so the channels stay empty and the router only
         // responds to `GetLatestVersion` with "no version".
-        #[cfg(not(target_os = "android"))]
         super::check::spawn_version_updater(
             &cache_dir,
             rollout_threshold_seed,
             new_version_tx,
             refresh_version_check_rx,
         );
-        #[cfg(target_os = "android")]
-        {
-            drop(new_version_tx);
-            drop(refresh_version_check_rx);
-        }
 
         VersionRouter {
             daemon_rx: rx,
@@ -831,9 +823,6 @@ async fn wait_for_update(state: &mut State) -> Option<AppVersionInfo> {
     }
 }
 
-/// Extract [`AppVersionInfo`], containing upgrade version and `current_version_supported`
-/// from [VersionCache] and beta program state.
-#[cfg_attr(target_os = "android", expect(unused_variables))]
 fn to_app_version_info(
     cache: &VersionCache,
     beta_program: bool,
@@ -842,7 +831,6 @@ fn to_app_version_info(
     let current_version_supported = cache.current_version_supported;
     AppVersionInfo {
         current_version_supported,
-        #[cfg(not(target_os = "android"))]
         suggested_upgrade: recommended_version_upgrade(&cache.version_info, beta_program).map(
             |version| SuggestedUpgrade {
                 manual_install_only: version.urls.is_empty(),
@@ -856,7 +844,6 @@ fn to_app_version_info(
 }
 
 /// Extract upgrade version from [VersionCache] based on `beta_program`
-#[cfg(not(target_os = "android"))]
 fn recommended_version_upgrade(
     version_info: &VersionInfo,
     beta_program: bool,
@@ -887,7 +874,6 @@ mod no_updater_tests {
     use std::path::PathBuf;
 
     use super::{Message, State, VersionRouter};
-    #[cfg(not(target_os = "android"))]
     use super::{VersionCache, VersionInfo};
 
     /// Regression: no version event should be sent to the daemon while the
@@ -949,7 +935,6 @@ mod no_updater_tests {
     /// the variant of the never-answering-check tests that the automatic CI
     /// executes: the in-app test module needs `in_app_upgrade`, which the
     /// Linux gate never sets.
-    #[cfg(not(target_os = "android"))]
     #[tokio::test(start_paused = true)]
     async fn version_request_is_answered_from_cache_when_the_check_never_answers() {
         use futures::channel::oneshot;

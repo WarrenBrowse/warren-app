@@ -53,7 +53,6 @@ impl DisconnectingState {
                 let _ = shared_values.set_allow_lan(allow_lan, lan_networks);
                 let _ = complete_tx.send(());
             }
-            #[cfg(not(target_os = "android"))]
             Some(TunnelCommand::AllowEndpoint(endpoint, tx)) => {
                 shared_values.allowed_endpoint = endpoint;
                 let _ = tx.send(());
@@ -62,7 +61,6 @@ impl DisconnectingState {
                 let _ = shared_values.set_dns_config(servers);
                 let _ = complete_tx.send(());
             }
-            #[cfg(not(target_os = "android"))]
             Some(TunnelCommand::LockdownMode(lockdown_mode, complete_tx)) => {
                 shared_values.set_lockdown_mode(lockdown_mode);
                 let _ = complete_tx.send(());
@@ -108,10 +106,6 @@ impl DisconnectingState {
                     self.after_disconnect = AfterDisconnect::Nothing;
                 }
             }
-            #[cfg(target_os = "android")]
-            Some(TunnelCommand::BypassSocket(fd, done_tx)) => {
-                shared_values.bypass_socket(fd, done_tx);
-            }
             #[cfg(windows)]
             Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
                 // The state entered next applies the mode.
@@ -124,11 +118,6 @@ impl DisconnectingState {
             #[cfg(target_os = "linux")]
             Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
                 let _ = shared_values.set_split_apps(apps);
-                let _ = result_tx.send(Ok(()));
-            }
-            #[cfg(target_os = "android")]
-            Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
-                shared_values.set_excluded_paths(paths);
                 let _ = result_tx.send(Ok(()));
             }
             #[cfg(target_os = "macos")]

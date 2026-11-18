@@ -958,7 +958,6 @@ mod tests {
 /// socket, and so the fail-safe direction lives in exactly one place: every
 /// failure path here reports [`None`], which
 /// [`ForeignEnvObservation::is_asserting`] reads as "not asserting".
-#[cfg(not(target_os = "android"))]
 pub(crate) mod watch {
     use std::time::Duration;
 

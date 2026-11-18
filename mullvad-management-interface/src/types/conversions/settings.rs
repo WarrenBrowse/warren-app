@@ -4,7 +4,7 @@ use mullvad_types::settings::CURRENT_SETTINGS_VERSION;
 impl From<&mullvad_types::settings::Settings> for proto::Settings {
     fn from(settings: &mullvad_types::settings::Settings) -> Self {
         // Clients that predate app routing read the exclusion part here.
-        #[cfg(any(windows, target_os = "android", target_os = "macos"))]
+        #[cfg(any(windows, target_os = "macos"))]
         let split_tunnel = Some(proto::SplitTunnelSettings {
             enable_exclusions: settings.app_routing.exclusions_active(),
             apps: settings
@@ -20,10 +20,7 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
         Self {
             relay_settings: Some(proto::RelaySettings::from(settings.get_relay_settings())),
             allow_lan: settings.allow_lan,
-            #[cfg(not(target_os = "android"))]
             lockdown_mode: settings.lockdown_mode,
-            #[cfg(target_os = "android")]
-            lockdown_mode: false,
             auto_connect: settings.auto_connect,
             tunnel_options: Some(proto::TunnelOptions::from(&settings.tunnel_options)),
             show_beta_releases: settings.show_beta_releases,
@@ -377,7 +374,6 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
                 .map(custom_lan_networks)
                 .transpose()?
                 .flatten(),
-            #[cfg(not(target_os = "android"))]
             lockdown_mode: settings.lockdown_mode,
             auto_connect: settings.auto_connect,
             tunnel_options: mullvad_types::settings::TunnelOptions::try_from(tunnel_options)?,
@@ -406,7 +402,6 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             // We should look into separating the serializable settings object that pass accross
             // gRPC from the daemon's trusted settings. There are multiple fields that would not be
             // included in the serializable settings, such as the below value.
-            #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
             // Empty string proto -> None on the mullvad_types side.
             // Lets the gRPC UI/CLI unset the field by sending "".

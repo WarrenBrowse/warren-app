@@ -1,8 +1,5 @@
-#[cfg(target_os = "android")]
-use crate::connectivity_listener::ConnectivityListener;
 use futures::channel::mpsc::UnboundedSender;
 use std::sync::LazyLock;
-#[cfg(not(target_os = "android"))]
 use talpid_routing::RouteManagerHandle;
 use talpid_types::{ErrorExt, net::Connectivity};
 
@@ -16,10 +13,6 @@ mod imp;
 
 #[cfg(target_os = "linux")]
 #[path = "linux.rs"]
-mod imp;
-
-#[cfg(target_os = "android")]
-#[path = "android.rs"]
 mod imp;
 
 /// Disables offline monitor
@@ -42,21 +35,17 @@ impl MonitorHandle {
 
 pub async fn spawn_monitor(
     sender: UnboundedSender<Connectivity>,
-    #[cfg(not(target_os = "android"))] route_manager: RouteManagerHandle,
+    route_manager: RouteManagerHandle,
     #[cfg(target_os = "linux")] fwmark: Option<u32>,
-    #[cfg(target_os = "android")] connectivity_listener: ConnectivityListener,
 ) -> MonitorHandle {
     let monitor = if *FORCE_DISABLE_OFFLINE_MONITOR {
         None
     } else {
         imp::spawn_monitor(
             sender,
-            #[cfg(not(target_os = "android"))]
             route_manager,
             #[cfg(target_os = "linux")]
             fwmark,
-            #[cfg(target_os = "android")]
-            connectivity_listener,
         )
         .await
         .inspect_err(|error| {

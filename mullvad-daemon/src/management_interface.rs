@@ -609,12 +609,6 @@ impl ManagementService for ManagementServiceImpl {
     async fn clear_env_yield(&self, request: Request<()>) -> ServiceResult<()> {
         log::debug!("clear_env_yield");
 
-        #[cfg(target_os = "android")]
-        return Err(Status::unimplemented(
-            "cross-environment arbitration is desktop-only",
-        ));
-
-        #[cfg(not(target_os = "android"))]
         {
             let call = Self::call_of(&request);
             let (tx, rx) = oneshot::channel();
@@ -683,7 +677,6 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn factory_reset(&self, request: Request<()>) -> ServiceResult<()> {
-        #[cfg(not(target_os = "android"))]
         {
             let call = Self::call_of(&request);
             log::debug!("factory_reset");
@@ -693,10 +686,6 @@ impl ManagementService for ManagementServiceImpl {
                 .await?
                 .map(Response::new)
                 .map_err(map_daemon_error)
-        }
-        #[cfg(target_os = "android")]
-        {
-            Ok(Response::new(()))
         }
     }
 
@@ -834,7 +823,7 @@ impl ManagementService for ManagementServiceImpl {
             types::custom_lan_networks(request.into_inner()).map_err(map_protobuf_type_err)?;
         // Windows compiles its LAN filters into winfw and Android routes the built-in ranges
         // around the VPN, so a list accepted here would be reported as shared and not enforced.
-        if networks.is_some() && cfg!(any(windows, target_os = "android")) {
+        if networks.is_some() && cfg!(windows) {
             return Err(Status::unimplemented(
                 "custom local networks are not supported on this platform",
             ));
@@ -1486,7 +1475,6 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    #[cfg(not(target_os = "android"))]
     async fn set_lockdown_mode(&self, request: Request<bool>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
         let lockdown_mode = request.into_inner();
@@ -1497,15 +1485,6 @@ impl ManagementService for ManagementServiceImpl {
             .await?
             .map_err(map_guarded_setting_error)?;
         Ok(Response::new(()))
-    }
-
-    #[cfg(target_os = "android")]
-    async fn set_lockdown_mode(&self, request: Request<bool>) -> ServiceResult<()> {
-        let lockdown_mode = request.into_inner();
-        log::debug!("set_lockdown_mode({})", lockdown_mode);
-        Err(Status::unimplemented(
-            "Setting Lockdown mode on Android is not supported - this is handled by the OS, not the daemon",
-        ))
     }
 
     async fn set_auto_connect(&self, request: Request<bool>) -> ServiceResult<()> {
@@ -1697,23 +1676,6 @@ impl ManagementService for ManagementServiceImpl {
         result.map(Response::new).map_err(map_daemon_error)
     }
 
-    #[cfg(target_os = "android")]
-    async fn delete_account(&self, request: Request<()>) -> ServiceResult<()> {
-        let call = Self::call_of(&request);
-        log::debug!("delete_account");
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(&call, DaemonCommand::DeleteAccount(tx))?;
-        let result = self
-            .wait_for_result(rx)
-            .await?
-            .map(Response::new)
-            .map_err(map_daemon_error);
-        let (tx, _) = oneshot::channel();
-        self.send_command_to_daemon(&call, DaemonCommand::ClearAccountHistory(tx))?;
-        result
-    }
-
-    #[cfg(not(target_os = "android"))]
     async fn delete_account(&self, _: Request<()>) -> ServiceResult<()> {
         log::error!("Called `delete_account` on non-Android platform");
         Ok(Response::new(()))
@@ -2538,28 +2500,7 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(blob))
     }
 
-    #[cfg(target_os = "android")]
-    async fn init_play_purchase(
-        &self,
-        request: Request<()>,
-    ) -> ServiceResult<types::PlayExternalObfuscatedAccountId> {
-        let call = Self::call_of(&request);
-        log::debug!("init_play_purchase");
-
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(&call, DaemonCommand::InitPlayPurchase(tx))?;
-
-        let external_obufscated_account_id = self
-            .wait_for_result(rx)
-            .await?
-            .map(types::PlayExternalObfuscatedAccountId::from)
-            .map_err(map_daemon_error)?;
-
-        Ok(Response::new(external_obufscated_account_id))
-    }
-
     /// On non-Android platforms, the return value will be useless.
-    #[cfg(not(target_os = "android"))]
     async fn init_play_purchase(
         &self,
         _: Request<()>,
@@ -2570,25 +2511,6 @@ impl ManagementService for ManagementServiceImpl {
         }))
     }
 
-    #[cfg(target_os = "android")]
-    async fn verify_play_purchase(
-        &self,
-        request: Request<types::PlayPurchase>,
-    ) -> ServiceResult<()> {
-        let call = Self::call_of(&request);
-        log::debug!("verify_play_purchase");
-
-        let (tx, rx) = oneshot::channel();
-        let play_purchase = mullvad_types::account::PlayPurchase::try_from(request.into_inner())?;
-
-        self.send_command_to_daemon(&call, DaemonCommand::VerifyPlayPurchase(tx, play_purchase))?;
-
-        self.wait_for_result(rx).await?.map_err(map_daemon_error)?;
-
-        Ok(Response::new(()))
-    }
-
-    #[cfg(not(target_os = "android"))]
     async fn verify_play_purchase(&self, _: Request<types::PlayPurchase>) -> ServiceResult<()> {
         log::error!("Called `verify_play_purchase` on non-Android platform");
         Ok(Response::new(()))
@@ -2706,7 +2628,6 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    #[cfg(not(target_os = "android"))]
     async fn get_rollout_threshold(&self, request: Request<()>) -> ServiceResult<types::Rollout> {
         let call = Self::call_of(&request);
         log::debug!("get_rollout_threshold");
@@ -2717,7 +2638,6 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(rollout))
     }
 
-    #[cfg(not(target_os = "android"))]
     async fn set_rollout_threshold_seed(&self, seed: Request<types::Seed>) -> ServiceResult<()> {
         let call = Self::call_of(&seed);
         log::debug!("set_rollout_threshold_seed");
@@ -2728,7 +2648,6 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    #[cfg(not(target_os = "android"))]
     async fn regenerate_rollout_threshold(
         &self,
         request: Request<()>,
@@ -2740,21 +2659,6 @@ impl ManagementService for ManagementServiceImpl {
         let threshold = self.wait_for_result(rx).await?;
         let rollout = types::Rollout { threshold };
         Ok(Response::new(rollout))
-    }
-
-    #[cfg(target_os = "android")]
-    async fn get_rollout_threshold(&self, _: Request<()>) -> ServiceResult<types::Rollout> {
-        unreachable!("You should not call get_rollout_threshold");
-    }
-
-    #[cfg(target_os = "android")]
-    async fn set_rollout_threshold_seed(&self, _: Request<types::Seed>) -> ServiceResult<()> {
-        unreachable!("You should not call set_rollout_threshold_seed");
-    }
-
-    #[cfg(target_os = "android")]
-    async fn regenerate_rollout_threshold(&self, _: Request<()>) -> ServiceResult<types::Rollout> {
-        unreachable!("You should not call regenerate_rollout_threshold");
     }
 
     // App upgrade
@@ -3350,8 +3254,6 @@ fn map_daemon_error(error: crate::Error) -> Status {
             }
         }
         DaemonError::VoucherSubmission(error) => map_device_error(&error),
-        #[cfg(target_os = "android")]
-        DaemonError::VerifyPlayPurchase(error) => map_device_error(&error),
         DaemonError::SplitTunnelError(error) => map_split_tunnel_error(error),
         #[cfg(any(target_os = "linux", target_os = "windows"))]
         DaemonError::IncludeOnlyUnavailable => Status::failed_precondition(error.to_string()),

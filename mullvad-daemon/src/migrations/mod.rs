@@ -205,13 +205,7 @@ async fn migrate_settings(
     v7::migrate(settings)?;
     v8::migrate(settings)?;
 
-    v9::migrate(
-        settings,
-        #[cfg(target_os = "android")]
-        directories.map(|directories| v9::Directories {
-            settings: directories.settings_dir,
-        }),
-    )?;
+    v9::migrate(settings)?;
 
     v10::migrate(settings)?;
     v11::migrate(settings)?;

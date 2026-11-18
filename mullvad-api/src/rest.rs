@@ -1,5 +1,3 @@
-#[cfg(target_os = "android")]
-pub use crate::https_client::SocketBypassRequest;
 use crate::{
     DnsResolver,
     access::AccessTokenStore,
@@ -175,7 +173,6 @@ impl<T: ConnectionModeProvider + 'static> RequestService<T> {
         api_availability: ApiAvailability,
         connection_mode_provider: T,
         dns_resolver: Arc<dyn DnsResolver>,
-        #[cfg(target_os = "android")] socket_bypass_tx: Option<mpsc::Sender<SocketBypassRequest>>,
         #[cfg(any(feature = "api-override", test))] disable_tls: bool,
     ) -> RequestServiceHandle {
         let proxy_config = {
@@ -185,8 +182,6 @@ impl<T: ConnectionModeProvider + 'static> RequestService<T> {
         let connector = HttpsConnector::new(
             dns_resolver,
             proxy_config,
-            #[cfg(target_os = "android")]
-            socket_bypass_tx.clone(),
             #[cfg(any(feature = "api-override", test))]
             disable_tls,
         );

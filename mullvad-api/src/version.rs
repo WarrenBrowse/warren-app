@@ -1,9 +1,6 @@
 use super::rest;
-#[cfg(target_os = "android")]
-use anyhow::Context;
 use http::StatusCode;
 use http::header;
-#[cfg(not(target_os = "android"))]
 use mullvad_update::{
     format::response::SignedResponse,
     version::{VersionInfo, VersionParameters, is_version_supported, rollout::Rollout},
@@ -11,33 +8,6 @@ use mullvad_update::{
 use std::future::Future;
 use std::str::FromStr;
 use std::sync::Arc;
-
-pub mod android {
-    use serde::{Deserialize, Serialize};
-
-    /// Android releases
-    #[derive(Default, Debug, Deserialize, Serialize, Clone)]
-    pub struct AndroidReleases {
-        /// Available app releases
-        pub releases: Vec<Release>,
-    }
-
-    #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, PartialOrd)]
-    pub struct Release {
-        /// Mullvad app version
-        pub version: mullvad_version::Version,
-    }
-
-    pub fn is_version_supported_android(
-        current_version: &mullvad_version::Version,
-        response: &AndroidReleases,
-    ) -> bool {
-        response
-            .releases
-            .iter()
-            .any(|release| release.version == *current_version)
-    }
-}
 
 #[derive(Clone)]
 pub struct AppVersionProxy {
@@ -47,11 +17,9 @@ pub struct AppVersionProxy {
 /// Reply from `/app/releases/<platform>.json` endpoint
 pub struct AppVersionResponse {
     /// Information about available versions for the current target
-    #[cfg(not(target_os = "android"))]
     pub version_info: VersionInfo,
     /// Index of the metadata version used to sign the response.
     /// Used to prevent replay/downgrade attacks.
-    #[cfg(not(target_os = "android"))]
     pub metadata_version: usize,
     /// Whether or not the current app version (mullvad_version::VERSION) is supported.
     pub current_version_supported: bool,
@@ -70,7 +38,6 @@ impl AppVersionProxy {
     /// Get versions from `/app/releases/<platform>.json`
     ///
     /// This returns `None` if the server responds with 304 (version is same as etag).
-    #[cfg(not(target_os = "android"))]
     pub fn version_check(
         &self,
         platform: &str,
@@ -130,56 +97,6 @@ impl AppVersionProxy {
                     .map_err(Arc::new)
                     .map_err(rest::Error::FetchVersions)?,
                 metadata_version,
-                current_version_supported,
-                etag,
-            }))
-        }
-    }
-
-    #[cfg(target_os = "android")]
-    pub fn version_check_android(
-        &self,
-        platform_version: Option<String>,
-        etag: Option<String>,
-    ) -> impl Future<Output = Result<Option<AppVersionResponse>, rest::Error>> + use<> {
-        let service = self.handle.service.clone();
-        let path = "app/releases/android.json".to_string();
-        let request = self.handle.factory.get(&path);
-
-        async move {
-            let mut request = request?.expected_status(&[StatusCode::NOT_MODIFIED, StatusCode::OK]);
-            if let Some(platform_version) = platform_version {
-                request = request
-                    .header(
-                        "M-App-Version",
-                        &sanitize_header_value(mullvad_version::VERSION),
-                    )?
-                    .header(
-                        "M-Platform-Version",
-                        &sanitize_header_value(&platform_version),
-                    )?;
-            }
-            if let Some(ref tag) = etag {
-                request = request.header(header::IF_NONE_MATCH, tag)?;
-            }
-            let response = service.request(request).await?;
-            if etag.is_some() && response.status() == StatusCode::NOT_MODIFIED {
-                return Ok(None);
-            }
-            let etag = Self::extract_etag(&response);
-
-            let bytes = response.body_with_max_size(Self::SIZE_LIMIT).await?;
-
-            let response: android::AndroidReleases = serde_json::from_slice(&bytes)
-                .context("Invalid version JSON")
-                .map_err(|err| rest::Error::FetchVersions(Arc::new(err)))?;
-
-            let current_version =
-                mullvad_version::Version::from_str(mullvad_version::VERSION).unwrap();
-            let current_version_supported =
-                android::is_version_supported_android(&current_version, &response);
-
-            Ok(Some(AppVersionResponse {
                 current_version_supported,
                 etag,
             }))

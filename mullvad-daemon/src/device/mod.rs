@@ -20,10 +20,6 @@ use futures::{
 };
 
 use mullvad_api::rest;
-#[cfg(target_os = "android")]
-use mullvad_types::account::{
-    PlayExternalObfuscatedAccountId, PlayPurchase, PlayPurchasePaymentToken,
-};
 use mullvad_types::{
     account::{AccountNumber, VoucherSubmission},
     device::{DeviceEvent, DeviceEventCause, DeviceState},
@@ -244,13 +240,7 @@ enum AccountManagerCommand {
     Revoke(ResponseTx<()>),
     GetData(ResponseTx<PrivateDeviceState>),
     SubmitVoucher(String, ResponseTx<VoucherSubmission>),
-    #[cfg(target_os = "android")]
-    InitPlayPurchase(ResponseTx<PlayExternalObfuscatedAccountId>),
-    #[cfg(target_os = "android")]
-    VerifyPlayPurchase(ResponseTx<()>, PlayPurchase),
     CheckExpiry(ResponseTx<DateTime<Utc>>),
-    #[cfg(target_os = "android")]
-    Delete(ResponseTx<()>),
     Shutdown(oneshot::Sender<()>),
 }
 
@@ -302,23 +292,6 @@ impl AccountManagerHandle {
 
     pub async fn check_expiry(&self) -> Result<DateTime<Utc>, Error> {
         self.send_command(AccountManagerCommand::CheckExpiry).await
-    }
-
-    #[cfg(target_os = "android")]
-    pub async fn init_play_purchase(&self) -> Result<PlayExternalObfuscatedAccountId, Error> {
-        self.send_command(AccountManagerCommand::InitPlayPurchase)
-            .await
-    }
-
-    #[cfg(target_os = "android")]
-    pub async fn verify_play_purchase(&self, play_purchase: PlayPurchase) -> Result<(), Error> {
-        self.send_command(move |tx| AccountManagerCommand::VerifyPlayPurchase(tx, play_purchase))
-            .await
-    }
-
-    #[cfg(target_os = "android")]
-    pub async fn delete(&self) -> Result<(), Error> {
-        self.send_command(AccountManagerCommand::Delete).await
     }
 
     pub async fn shutdown(self) {
@@ -439,19 +412,6 @@ impl AccountManager {
                         Some(AccountManagerCommand::CheckExpiry(tx)) => {
                             self.handle_expiry_request(tx, &mut current_api_call);
                         },
-                        #[cfg(target_os = "android")]
-                        Some(AccountManagerCommand::InitPlayPurchase(tx)) => {
-                            self.handle_init_play_purchase(tx, &mut current_api_call);
-                        },
-                        #[cfg(target_os = "android")]
-                        Some(AccountManagerCommand::VerifyPlayPurchase(tx, play_purchase)) => {
-                            self.handle_verify_play_purchase(tx, play_purchase, &mut current_api_call);
-                        },
-                        #[cfg(target_os = "android")]
-                        Some(AccountManagerCommand::Delete(tx)) => {
-                            current_api_call.clear();
-                            self.delete(tx).await;
-                        },
 
                         None => {
                             break;
@@ -498,33 +458,6 @@ impl AccountManager {
         }
     }
 
-    #[cfg(target_os = "android")]
-    fn handle_init_play_purchase(
-        &mut self,
-        tx: ResponseTx<PlayPurchasePaymentToken>,
-        current_api_call: &mut api::CurrentApiCall,
-    ) {
-        if current_api_call.is_logging_in() {
-            let _ = tx.send(Err(Error::AccountChange));
-            return;
-        }
-
-        let init_play_purchase_api_call = move || {
-            let pubkey = self.data.pubkey().ok_or(Error::NoDevice)?.clone();
-            let warren_identity_service = self.warren_identity_service.clone();
-            Ok(async move { warren_identity_service.init_play_purchase(pubkey).await })
-        };
-
-        match init_play_purchase_api_call() {
-            Ok(call) => {
-                current_api_call.set_init_play_purchase(Box::pin(call), tx);
-            }
-            Err(err) => {
-                let _ = tx.send(Err(err));
-            }
-        }
-    }
-
     fn handle_expiry_request(
         &mut self,
         tx: ResponseTx<DateTime<Utc>>,
@@ -550,38 +483,6 @@ impl AccountManager {
         }
     }
 
-    #[cfg(target_os = "android")]
-    fn handle_verify_play_purchase(
-        &mut self,
-        tx: ResponseTx<()>,
-        play_purchase: PlayPurchase,
-        current_api_call: &mut api::CurrentApiCall,
-    ) {
-        if current_api_call.is_logging_in() {
-            let _ = tx.send(Err(Error::AccountChange));
-            return;
-        }
-
-        let play_purchase_verify_api_call = move || {
-            let pubkey = self.data.pubkey().ok_or(Error::NoDevice)?.clone();
-            let warren_identity_service = self.warren_identity_service.clone();
-            Ok(async move {
-                warren_identity_service
-                    .verify_play_purchase(pubkey, play_purchase)
-                    .await
-            })
-        };
-
-        match play_purchase_verify_api_call() {
-            Ok(call) => {
-                current_api_call.set_verify_play_purchase(Box::pin(call), tx);
-            }
-            Err(err) => {
-                let _ = tx.send(Err(err));
-            }
-        }
-    }
-
     async fn consume_api_result(&mut self, result: api::ApiResult) {
         use api::ApiResult::*;
         match result {
@@ -589,16 +490,6 @@ impl AccountManager {
                 self.consume_voucher_result(data_response, tx).await
             }
             ExpiryCheck(data_response) => self.consume_expiry_result(data_response).await,
-            #[cfg(target_os = "android")]
-            InitPlayPurchase(data_response, tx) => {
-                self.consume_init_play_purchase_result(data_response, tx)
-                    .await
-            }
-            #[cfg(target_os = "android")]
-            VerifyPlayPurchase(data_response, tx) => {
-                self.consume_verify_play_purchase_result(data_response, tx)
-                    .await
-            }
         }
     }
 
@@ -659,44 +550,6 @@ impl AccountManager {
         }
     }
 
-    #[cfg(target_os = "android")]
-    async fn consume_init_play_purchase_result(
-        &mut self,
-        response: Result<PlayPurchasePaymentToken, Error>,
-        tx: ResponseTx<PlayPurchasePaymentToken>,
-    ) {
-        match &response {
-            Ok(_) => (),
-            Err(Error::InvalidAccount) => {
-                self.revoke_device(|| Error::InvalidAccount).await;
-            }
-            Err(Error::InvalidDevice) => {
-                self.revoke_device(|| Error::InvalidDevice).await;
-            }
-            Err(err) => log::error!("Failed to initialize play purchase: {}", err),
-        }
-        let _ = tx.send(response);
-    }
-
-    #[cfg(target_os = "android")]
-    async fn consume_verify_play_purchase_result(
-        &mut self,
-        response: Result<(), Error>,
-        tx: ResponseTx<()>,
-    ) {
-        match &response {
-            Ok(_) => (),
-            Err(Error::InvalidAccount) => {
-                self.revoke_device(|| Error::InvalidAccount).await;
-            }
-            Err(Error::InvalidDevice) => {
-                self.revoke_device(|| Error::InvalidDevice).await;
-            }
-            Err(err) => log::error!("Failed to verify play purchase: {}", err),
-        }
-        let _ = tx.send(response);
-    }
-
     fn drain_requests<T>(requests: &mut Vec<ResponseTx<T>>, result: impl Fn() -> Result<T, Error>) {
         for req in requests.drain(0..) {
             let _ = req.send(result());
@@ -742,41 +595,6 @@ impl AccountManager {
         });
 
         let _ = tx.send(Ok(()));
-    }
-
-    #[cfg(target_os = "android")]
-    async fn delete(&mut self, tx: ResponseTx<()>) {
-        if self.data.logged_out() {
-            let _ = tx.send(Err(Error::AccountChange));
-            return;
-        }
-
-        let old_pubkey = self.data.pubkey().cloned().ok_or(Error::NoDevice);
-
-        let Ok(old_pubkey) = old_pubkey else {
-            let _ = tx.send(old_pubkey.map(|_| ()));
-            return;
-        };
-
-        let service = self.warren_identity_service.clone();
-        match service.delete_account(old_pubkey).await {
-            Ok(_) => {
-                if let Err(err) = self.cacher.write(&PrivateDeviceState::LoggedOut).await {
-                    let _ = tx.send(Err(err));
-                    return;
-                }
-                self.data.logout();
-                self.listeners.retain(|listener| {
-                    listener
-                        .send(AccountEvent::Device(PrivateDeviceEvent::Logout))
-                        .is_ok()
-                });
-                let _ = tx.send(Ok(()));
-            }
-            Err(err) => {
-                let _ = tx.send(Err(err));
-            }
-        }
     }
 
     async fn set(&mut self, event: PrivateDeviceEvent) -> Result<(), Error> {

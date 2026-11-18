@@ -23,8 +23,4 @@ mod imp;
 #[path = "macos/mod.rs"]
 mod imp;
 
-#[cfg(target_os = "android")]
-#[path = "android.rs"]
-mod imp;
-
 pub use imp::*;

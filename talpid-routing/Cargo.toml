@@ -23,9 +23,6 @@ tokio = { workspace = true, features = [
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }
 
-[target.'cfg(target_os = "android")'.dependencies]
-jnix = { version = "0.5.2", features = ["derive"] }
-
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2"
 netlink-packet-core = { workspace = true }

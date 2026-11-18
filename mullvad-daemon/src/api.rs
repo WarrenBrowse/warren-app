@@ -1,9 +1,5 @@
 use std::net::SocketAddr;
 
-#[cfg(target_os = "android")]
-use crate::DaemonCommand;
-#[cfg(target_os = "android")]
-use crate::DaemonEventSender;
 use futures::{StreamExt, channel::mpsc};
 use mullvad_api::AddressCache;
 use mullvad_api::FileAddressCacheBacking;
@@ -14,8 +10,6 @@ use mullvad_api::{
 };
 use mullvad_management_interface::async_trait;
 use mullvad_types::access_method::{AccessMethod, BuiltInAccessMethod};
-#[cfg(target_os = "android")]
-use talpid_core::mpsc::Sender;
 use talpid_types::net::AllowedEndpoint;
 use talpid_types::net::Endpoint;
 use talpid_types::net::TransportProtocol;
@@ -95,26 +89,6 @@ pub fn allowed_clients(connection_mode: &ApiConnectionMode) -> AllowedClients {
             .into()
         }
     }
-}
-
-#[cfg(target_os = "android")]
-pub(crate) fn create_bypass_tx(
-    event_sender: &DaemonEventSender,
-) -> Option<mpsc::Sender<mullvad_api::SocketBypassRequest>> {
-    let (bypass_tx, mut bypass_rx) = mpsc::channel(1);
-    let daemon_tx = event_sender.to_specialized_sender();
-    tokio::spawn(async move {
-        while let Some((raw_fd, done_tx)) = bypass_rx.next().await {
-            if daemon_tx
-                .send(DaemonCommand::BypassSocket(raw_fd, done_tx))
-                .is_err()
-            {
-                log::error!("Can't send socket bypass request to daemon");
-                break;
-            }
-        }
-    });
-    Some(bypass_tx)
 }
 
 /// Forwards the received values from `offline_state_rx` to the [`ApiAvailability`].

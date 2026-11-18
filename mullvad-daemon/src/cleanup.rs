@@ -1,5 +1,3 @@
-#![cfg(not(target_os = "android"))]
-
 use std::path::Path;
 use tokio::{fs, io};
 

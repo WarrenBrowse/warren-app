@@ -64,7 +64,7 @@ impl LogFileWriter {
         // On Android, the runtime is not running at this point, and will be restarted multiple times
         // during the application's lifecycle. Instead, we simply call `mem::forget` to never drop the guard.
         // Instead, one should call `LogFileWriter::get_flusher`, to receive channel for manually flushing
-        if cfg!(target_os = "android") {
+        if false {
             core::mem::forget(guard);
         } else {
             tokio::spawn(async {
@@ -73,17 +73,6 @@ impl LogFileWriter {
             });
         }
         Ok(Self(Some(file_writer)))
-    }
-
-    /// Flush any buffered logs to file
-    #[cfg(target_os = "android")]
-    pub fn flush(&mut self) -> io::Result<()> {
-        use std::io::Write;
-        if let Some(writer) = &mut self.0 {
-            writer.flush()
-        } else {
-            Ok(())
-        }
     }
 }
 
@@ -115,9 +104,6 @@ pub fn is_enabled() -> bool {
 pub struct LogHandle {
     env_filter: Handle<EnvFilter, Registry>,
     log_stream: LogStreamer,
-    /// A copy of the logfile writer used to manual flushing of buffered logs
-    #[cfg(target_os = "android")]
-    pub logfile_writer: LogFileWriter,
 }
 
 impl LogHandle {
@@ -225,20 +211,12 @@ pub fn init_logger(
     let reload_handle = LogHandle {
         env_filter: reload_handle,
         log_stream: log_stream.clone(),
-        #[cfg(target_os = "android")]
-        logfile_writer: file_writer.clone(),
     };
 
     let reg = tracing_subscriber::registry().with(user_filter);
     let stdout_formatter = tracing_subscriber::fmt::layer()
         .with_ansi(true)
         .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE);
-
-    #[cfg(all(target_os = "android", debug_assertions))]
-    let reg = {
-        let android_layer = paranoid_android::layer("warren-daemon").with_ansi(false);
-        reg.with(android_layer)
-    };
 
     let grpc_formatter = tracing_subscriber::fmt::layer()
         .with_ansi(true)

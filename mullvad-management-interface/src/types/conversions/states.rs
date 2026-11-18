@@ -35,14 +35,10 @@ impl From<mullvad_types::states::TunnelState> for proto::TunnelState {
         let state = match state {
             MullvadTunnelState::Disconnected {
                 location: disconnected_location,
-                #[cfg(not(target_os = "android"))]
                 locked_down,
             } => proto::tunnel_state::State::Disconnected(proto::tunnel_state::Disconnected {
                 disconnected_location: disconnected_location.map(proto::GeoIpLocation::from),
-                #[cfg(not(target_os = "android"))]
                 locked_down,
-                #[cfg(target_os = "android")]
-                locked_down: false,
             }),
             MullvadTunnelState::Connecting {
                 endpoint,
@@ -113,31 +109,7 @@ impl From<mullvad_types::states::TunnelState> for proto::TunnelState {
                             talpid_tunnel::ErrorStateCause::IsOffline => {
                                 i32::from(Cause::IsOffline)
                             }
-                            #[cfg(target_os = "android")]
-                            talpid_tunnel::ErrorStateCause::NotPrepared => {
-                                i32::from(Cause::NotPrepared)
-                            }
-                            #[cfg(target_os = "android")]
-                            talpid_tunnel::ErrorStateCause::OtherAlwaysOnApp { .. } => {
-                                i32::from(Cause::OtherAlwaysOnApp)
-                            }
-                            #[cfg(target_os = "android")]
-                            talpid_tunnel::ErrorStateCause::OtherLegacyAlwaysOnVpn => {
-                                i32::from(Cause::OtherLegacyAlwaysOnVpn)
-                            }
-                            #[cfg(target_os = "android")]
-                            talpid_tunnel::ErrorStateCause::InvalidDnsServers(_) => {
-                                i32::from(Cause::InvalidDnsServers)
-                            }
-                            #[cfg(target_os = "android")]
-                            talpid_tunnel::ErrorStateCause::InvalidIPv6Config { .. } => {
-                                i32::from(Cause::InvalidIpv6Config)
-                            }
-                            #[cfg(any(
-                                target_os = "windows",
-                                target_os = "macos",
-                                target_os = "android"
-                            ))]
+                            #[cfg(any(target_os = "windows", target_os = "macos"))]
                             talpid_tunnel::ErrorStateCause::SplitTunnelError => {
                                 i32::from(Cause::SplitTunnelError)
                             }
@@ -154,50 +126,9 @@ impl From<mullvad_types::states::TunnelState> for proto::TunnelState {
                             }
                         },
                         blocking_error: error_state.block_failure().map(map_firewall_error),
-                        #[cfg(not(target_os = "android"))]
                         other_always_on_app_error: None,
-                        #[cfg(target_os = "android")]
-                        other_always_on_app_error:
-                            if let talpid_tunnel::ErrorStateCause::OtherAlwaysOnApp { app_name } =
-                                error_state.cause()
-                            {
-                                Some(proto::error_state::OtherAlwaysOnAppError {
-                                    app_name: app_name.clone(),
-                                })
-                            } else {
-                                None
-                            },
-                        #[cfg(not(target_os = "android"))]
                         invalid_dns_servers_error: None,
-                        #[cfg(target_os = "android")]
-                        invalid_dns_servers_error:
-                            if let talpid_tunnel::ErrorStateCause::InvalidDnsServers(ip_addrs) =
-                                error_state.cause()
-                            {
-                                Some(proto::error_state::InvalidDnsServersError {
-                                    ip_addrs: ip_addrs.iter().map(|ip| ip.to_string()).collect(),
-                                })
-                            } else {
-                                None
-                            },
-                        #[cfg(not(target_os = "android"))]
                         invalid_ipv6_config_error: None,
-                        #[cfg(target_os = "android")]
-                        invalid_ipv6_config_error:
-                            if let talpid_tunnel::ErrorStateCause::InvalidIPv6Config {
-                                addresses,
-                                routes,
-                                dns_servers,
-                            } = error_state.cause()
-                            {
-                                Some(proto::error_state::InvalidIpv6Config {
-                                    addrs: addresses.iter().map(|ip| ip.to_string()).collect(),
-                                    routes: routes.iter().map(|route| route.to_string()).collect(),
-                                    dns: dns_servers.iter().map(|dns| dns.to_string()).collect(),
-                                })
-                            } else {
-                                None
-                            },
                         auth_failed_error: mullvad_types::auth_failed::AuthFailed::try_from(
                             error_state.cause(),
                         )
@@ -351,7 +282,6 @@ impl TryFrom<proto::TunnelState> for mullvad_types::states::TunnelState {
         use talpid_types::{net as talpid_net, tunnel as talpid_tunnel};
 
         let state = match state.state {
-            #[cfg_attr(target_os = "android", expect(unused_variables))]
             Some(proto::tunnel_state::State::Disconnected(proto::tunnel_state::Disconnected {
                 disconnected_location,
                 locked_down,
@@ -359,7 +289,6 @@ impl TryFrom<proto::TunnelState> for mullvad_types::states::TunnelState {
                 location: disconnected_location
                     .map(mullvad_types::location::GeoIpLocation::try_from)
                     .transpose()?,
-                #[cfg(not(target_os = "android"))]
                 locked_down,
             },
             Some(proto::tunnel_state::State::Connecting(proto::tunnel_state::Connecting {

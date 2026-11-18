@@ -9,7 +9,7 @@ const NSEC_PER_SEC: c_long = 1_000_000_000;
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 const CLOCK_ID: ClockId = ClockId::CLOCK_MONOTONIC;
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(target_os = "linux")]
 const CLOCK_ID: ClockId = ClockId::CLOCK_BOOTTIME;
 
 #[derive(Clone, Copy)]

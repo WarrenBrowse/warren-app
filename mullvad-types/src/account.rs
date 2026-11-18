@@ -10,14 +10,6 @@ pub type AccessToken = String;
 /// Account identifier (not used for authentication).
 pub type AccountId = String;
 
-/// The external obfuscated id returned by initiating a google play purchase.
-/// In the API this is called the `obfuscated_id`.
-#[cfg(target_os = "android")]
-pub type PlayExternalObfuscatedAccountId = String;
-
-#[cfg(target_os = "android")]
-pub type PlayPurchasePaymentToken = String;
-
 /// Account expiration info returned by the API via `/v1/me`.
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct AccountData {
@@ -40,15 +32,6 @@ pub struct VoucherSubmission {
     pub time_added: u64,
     /// Updated expiry time
     pub new_expiry: DateTime<Utc>,
-}
-
-/// `PlayPurchase` is provided to google in order to verify that a google play purchase was
-/// acknowledged.
-#[derive(Deserialize, Serialize, Debug, Clone)]
-#[cfg(target_os = "android")]
-pub struct PlayPurchase {
-    pub product_id: String,
-    pub purchase_token: PlayPurchasePaymentToken,
 }
 
 /// Token used for authentication in the API.

@@ -226,7 +226,6 @@ impl ConnectedState {
             tunnel: self.metadata.clone(),
             allow_lan: shared_values.allow_lan,
             lan_networks: shared_values.lan_networks.clone(),
-            #[cfg(not(target_os = "android"))]
             dns_config: Self::resolve_dns(&self.metadata, shared_values),
             #[cfg(target_os = "macos")]
             redirect_interface,
@@ -332,11 +331,6 @@ impl ConnectedState {
         match command {
             Some(TunnelCommand::AllowLan(allow_lan, lan_networks, complete_tx)) => {
                 let consequence = if shared_values.set_allow_lan(allow_lan, lan_networks) {
-                    #[cfg(target_os = "android")]
-                    {
-                        self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
-                    }
-                    #[cfg(not(target_os = "android"))]
                     {
                         match self.set_firewall_policy(shared_values) {
                             Ok(()) => SameState(self),
@@ -355,7 +349,6 @@ impl ConnectedState {
                 let _ = complete_tx.send(());
                 consequence
             }
-            #[cfg(not(target_os = "android"))]
             Some(TunnelCommand::AllowEndpoint(endpoint, tx)) => {
                 shared_values.allowed_endpoint = endpoint;
                 let _ = tx.send(());
@@ -363,10 +356,6 @@ impl ConnectedState {
             }
             Some(TunnelCommand::Dns(servers, complete_tx)) => {
                 let consequence = if shared_values.set_dns_config(servers) {
-                    #[cfg(target_os = "android")]
-                    {
-                        self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
-                    }
                     // An include-only tunnel routes its resolvers when it
                     // connects, so new resolvers need a new connection.
                     #[cfg(target_os = "windows")]
@@ -374,7 +363,6 @@ impl ConnectedState {
                         let _ = complete_tx.send(());
                         return self.disconnect(shared_values, AfterDisconnect::Reconnect(0));
                     }
-                    #[cfg(not(target_os = "android"))]
                     {
                         if let Err(error) = self.set_firewall_policy(shared_values) {
                             return self.disconnect(
@@ -405,7 +393,6 @@ impl ConnectedState {
                 let _ = complete_tx.send(());
                 consequence
             }
-            #[cfg(not(target_os = "android"))]
             Some(TunnelCommand::LockdownMode(lockdown_mode, complete_tx)) => {
                 shared_values.set_lockdown_mode(lockdown_mode);
                 let _ = complete_tx.send(());
@@ -467,11 +454,6 @@ impl ConnectedState {
             Some(TunnelCommand::Block(reason)) => {
                 self.disconnect(shared_values, AfterDisconnect::Block(reason))
             }
-            #[cfg(target_os = "android")]
-            Some(TunnelCommand::BypassSocket(fd, done_tx)) => {
-                shared_values.bypass_socket(fd, done_tx);
-                SameState(self)
-            }
             #[cfg(windows)]
             Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
                 if shared_values.set_split_apps(apps, result_tx, true) {
@@ -492,16 +474,6 @@ impl ConnectedState {
                 if mode_changed {
                     self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
                 } else {
-                    SameState(self)
-                }
-            }
-            #[cfg(target_os = "android")]
-            Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
-                if shared_values.set_excluded_paths(paths) {
-                    let _ = result_tx.send(Ok(()));
-                    self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
-                } else {
-                    let _ = result_tx.send(Ok(()));
                     SameState(self)
                 }
             }

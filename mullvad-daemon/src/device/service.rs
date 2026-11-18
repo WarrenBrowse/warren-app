@@ -1,8 +1,6 @@
 use std::{future::Future, sync::Arc, time::Duration};
 
 use futures::future::{AbortHandle, abortable};
-#[cfg(target_os = "android")]
-use mullvad_types::account::{PlayPurchase, PlayPurchasePaymentToken};
 use mullvad_types::{
     account::{AccountData, AccountNumber, VoucherSubmission},
     warren_pubkey::WarrenPubKey,
@@ -107,81 +105,6 @@ impl WarrenIdentityService {
             Some(voucher) => Ok(voucher),
             None => Err(Error::VoucherNotReady),
         }
-    }
-
-    #[cfg(target_os = "android")]
-    pub async fn init_play_purchase(
-        &self,
-        pubkey: WarrenPubKey,
-    ) -> Result<PlayPurchasePaymentToken, Error> {
-        let mut proxy = self.proxy.clone();
-        let api_handle = self.api_availability.clone();
-        let account_number: AccountNumber = pubkey.as_str().to_owned();
-        let factory = move || {
-            let account_number = account_number.clone();
-
-            proxy.init_play_purchase(account_number)
-        };
-        let result = retry_future(
-            factory,
-            move |result| should_retry(result, &api_handle),
-            RETRY_ACTION_STRATEGY,
-        )
-        .await;
-        if result.is_ok() {
-            self.initial_check_abort_handle.abort();
-            self.api_availability.resume_background();
-        }
-        result.map_err(map_rest_error)
-    }
-
-    #[cfg(target_os = "android")]
-    pub async fn verify_play_purchase(
-        &self,
-        pubkey: WarrenPubKey,
-        play_purchase: PlayPurchase,
-    ) -> Result<(), Error> {
-        let mut proxy = self.proxy.clone();
-        let api_handle = self.api_availability.clone();
-        let account_number: AccountNumber = pubkey.as_str().to_owned();
-        let factory = move || {
-            let account_number = account_number.clone();
-            let play_purchase = play_purchase.clone();
-
-            proxy.verify_play_purchase(account_number, play_purchase)
-        };
-        let result = retry_future(
-            factory,
-            move |result| should_retry(result, &api_handle),
-            RETRY_ACTION_STRATEGY,
-        )
-        .await;
-        if result.is_ok() {
-            self.initial_check_abort_handle.abort();
-            self.api_availability.resume_background();
-        }
-        result.map_err(map_rest_error)
-    }
-
-    #[cfg(target_os = "android")]
-    pub async fn delete_account(&self, pubkey: WarrenPubKey) -> Result<(), Error> {
-        let backend = self.backend.clone();
-        let api_handle = self.api_availability.clone();
-        let account_number: AccountNumber = pubkey.as_str().to_owned();
-
-        let factory = move || {
-            let account_number = account_number.clone();
-            backend.delete_account(account_number)
-        };
-        retry_future(
-            factory,
-            move |result| should_retry(result, &api_handle),
-            RETRY_ACTION_STRATEGY,
-        )
-        .await
-        .map_err(map_rest_error)?;
-
-        Ok(())
     }
 }
 
