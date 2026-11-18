@@ -3,7 +3,6 @@ import {
   IRelaySettingsNormal,
   ISettings,
   NatPmpProto,
-  ObfuscationType,
   Ownership,
 } from '../shared/daemon-rpc-types';
 
@@ -44,7 +43,6 @@ export function getDefaultSettings(): ISettings {
     },
     tunnelOptions: {
       enableIpv6: false,
-      mtu: undefined,
       quantumResistant: true,
       daita: {
         enabled: false,
@@ -64,18 +62,6 @@ export function getDefaultSettings(): ISettings {
         customOptions: {
           addresses: [],
         },
-      },
-    },
-    obfuscationSettings: {
-      selectedObfuscation: ObfuscationType.auto,
-      udp2tcpSettings: {
-        port: 'any',
-      },
-      shadowsocksSettings: {
-        port: 'any',
-      },
-      lwoSettings: {
-        port: 'any',
       },
     },
     customLists: [],

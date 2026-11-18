@@ -4,6 +4,5 @@ export const strings = {
   daita: 'DAITA',
   daitaFull: 'Defence against AI-guided Traffic Analysis',
   supportEmail: 'support@warrenbrowse.com',
-  lwo: 'LWO',
   quic: 'QUIC',
 } as const;

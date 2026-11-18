@@ -66,13 +66,6 @@ const featureIndicatorWithOption: FeatureIndicatorWithOptionTestOption[] = [
     option: { name: 'Use custom DNS server', type: 'switch' },
   },
   {
-    testId: 'MTU',
-    featureIndicator: FeatureIndicator.customMtu,
-    route: RoutePath.vpnSettings,
-    featureIndicatorLabel: 'MTU',
-    option: { name: 'MTU', type: 'input' },
-  },
-  {
     testId: 'local network sharing',
     featureIndicator: FeatureIndicator.lanSharing,
     route: RoutePath.vpnSettings,
@@ -163,8 +156,6 @@ test.describe('Feature indicators', () => {
   test('Should show all feature indicators when connected with many active features', async () => {
     await helpers.connectWithFeatures([
       FeatureIndicator.daita,
-      FeatureIndicator.udp2tcp,
-      FeatureIndicator.customMtu,
       FeatureIndicator.lanSharing,
       FeatureIndicator.serverIpOverride,
       FeatureIndicator.customDns,
@@ -181,8 +172,6 @@ test.describe('Feature indicators', () => {
     await expectFeatureIndicators([
       'DAITA',
       'Quantum resistance',
-      'MTU',
-      'UDP-over-TCP',
       'Local network sharing',
       'Lockdown mode',
       'Multihop',

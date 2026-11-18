@@ -111,9 +111,6 @@ msgstr "Egendefinert"
 msgid "Custom DNS"
 msgstr "Tilpasset DNS"
 
-msgid "Default"
-msgstr "Standard"
-
 msgid "Delete"
 msgstr "Slett"
 
@@ -1993,13 +1990,6 @@ msgctxt "select-location-view"
 msgid "Filtered:"
 msgstr "Filtrert:"
 
-#. Label for indicator that shows that obfuscation is being used as a filter.
-#. Available placeholders:
-#. %(obfuscation)s - type of obfuscation in use
-msgctxt "select-location-view"
-msgid "Obfuscation: %(obfuscation)s"
-msgstr "Forvirring: %(obfuscation)s"
-
 msgctxt "select-location-view"
 msgid "Open %(daita)s settings"
 msgstr "Åpne innstillinger for %(daita)s"
@@ -2929,13 +2919,6 @@ msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
 msgstr "Den kombinerer en kvantesikker nøkkelutveksling med den klassiske. Når den er på, kobler appen seg bare til via servere som tilbyr den. Når den er av, brukes den likevel der en server tilbyr den."
 
-#. The title for the QUIC MTU setting. MTU stands for Maximum
-#. Transmission Unit and controls the maximum size of packets sent over
-#. the VPN tunnel.
-msgctxt "wireguard-settings-view"
-msgid "MTU"
-msgstr "MTU"
-
 msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Multihop brukes til å aktivere DAITA for den valgte plasseringen"
@@ -2952,26 +2935,9 @@ msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "Kvantebestandig tunnel"
 
-#. The hint displayed below the QUIC MTU input field.
-#. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "QUIC"
-#. %(max)d - the maximum possible wireguard mtu value
-#. %(min)d - the minimum possible wireguard mtu value
-msgctxt "wireguard-settings-view"
-msgid "Set %(wireguard)s MTU value. Valid range: %(min)d - %(max)d."
-msgstr "Angi %(wireguard)s MTU-verdi. Gyldig område: %(min)d-%(max)d."
-
-msgctxt "wireguard-settings-view"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
 msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "Denne funksjonen beskytter trafikken din til utgangsserveren mot mulige angrep fra kvantedatamaskiner."
-
-msgctxt "wireguard-settings-view"
-msgid "UDP-over-TCP"
-msgstr "UDP-over-TCP"
 
 msgid "Continue"
 msgstr "Fortsett"

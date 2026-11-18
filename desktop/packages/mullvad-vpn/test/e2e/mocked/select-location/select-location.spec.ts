@@ -3,11 +3,7 @@ import { Page } from 'playwright';
 
 import { getDefaultSettings } from '../../../../src/main/default-settings';
 import { colorTokens } from '../../../../src/renderer/lib/foundations';
-import {
-  type ISettings,
-  ObfuscationType,
-  Ownership,
-} from '../../../../src/shared/daemon-rpc-types';
+import { type ISettings, Ownership } from '../../../../src/shared/daemon-rpc-types';
 import { RoutePath } from '../../../../src/shared/routes';
 import { mockData } from '../../mock-data';
 import { RoutesObjectModel } from '../../route-object-models';
@@ -372,55 +368,6 @@ test.describe('Select location', () => {
         await Promise.all([util.ipc.settings.setRelaySettings.handle(), ownerFilterChip.click()]);
         await helpers.updateMockRelayFilter({});
         await expect(ownerFilterChip).not.toBeVisible();
-      });
-    });
-    test.describe('Filter by obfuscation', () => {
-      test('Should apply filter when QUIC obfuscation is selected', async () => {
-        const settings = getDefaultSettings();
-        if ('normal' in settings.relaySettings) {
-          settings.obfuscationSettings.selectedObfuscation = ObfuscationType.quic;
-        }
-        await util.ipc.settings[''].notify(settings);
-
-        const relaySelectionPaths = helpers.toSelectionPaths(
-          helpers.getRelaysByObfuscation(relayList, (relay) => 'quic' in relay),
-        );
-        const relays = relaySelectionPaths.map((locatedRelay) => locatedRelay.relay);
-        const relayNames = relays.map((relay) => relay.hostname);
-
-        // The filter leaves one exit, and a place with one exit is that exit:
-        // its country row stands for the relay and does not open.
-        expect(relayNames).toHaveLength(1);
-        const [country] = relaySelectionPaths.map((path) => path.country.name);
-        await expect(routes.selectLocation.getRelaysMatching([country])).toHaveCount(1);
-        await expect(page.getByLabel(`Expand ${country}`)).toHaveCount(0);
-        await expect(
-          page.getByText(`Showing 1 of ${helpers.toSelectionPaths(relayList).length}`),
-        ).toBeVisible();
-      });
-
-      test('Should apply filter when LWO obfuscation is selected', async () => {
-        const settings = getDefaultSettings();
-        if ('normal' in settings.relaySettings) {
-          settings.obfuscationSettings.selectedObfuscation = ObfuscationType.lwo;
-        }
-        await util.ipc.settings[''].notify(settings);
-
-        const relaySelectionPaths = helpers.toSelectionPaths(
-          helpers.getRelaysByObfuscation(relayList, (relay) => relay.lwo),
-        );
-        const relays = relaySelectionPaths.map((locatedRelay) => locatedRelay.relay);
-        const relayNames = relays.map((relay) => relay.hostname);
-
-        // The filter leaves one exit, and a place with one exit is that exit:
-        // its country row stands for the relay and does not open.
-        expect(relayNames).toHaveLength(1);
-        const [country] = relaySelectionPaths.map((path) => path.country.name);
-        await expect(routes.selectLocation.getRelaysMatching([country])).toHaveCount(1);
-        await expect(page.getByLabel(`Expand ${country}`)).toHaveCount(0);
-        await expect(
-          page.getByText(`Showing 1 of ${helpers.toSelectionPaths(relayList).length}`),
-        ).toBeVisible();
       });
     });
   });

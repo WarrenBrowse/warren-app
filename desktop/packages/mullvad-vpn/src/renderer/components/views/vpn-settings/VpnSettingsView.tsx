@@ -29,7 +29,6 @@ import {
   IpVersionSetting,
   KillSwitchSetting,
   MaxRateSetting,
-  MtuSetting,
   ResetPinnedExitKeys,
 } from './components';
 
@@ -75,7 +74,6 @@ export function VpnSettingsView() {
                   <AntiCensorshipListItem position="solo" />
                   <QuantumResistantSetting position="solo" />
                   <IpVersionSetting />
-                  <MtuSetting />
                   <MaxRateSetting />
                   <ResetPinnedExitKeys position="solo" />
                   {showCustomExit ? <WarrenCustomExitSetting position="solo" /> : null}

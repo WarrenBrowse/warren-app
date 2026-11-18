@@ -66,25 +66,6 @@ export const createHelpers = (_page: Page, routes: RoutesObjectModel, utils: Moc
     };
   };
 
-  const getRelaysByObfuscation = (
-    relayList: IRelayList,
-    relayCondition: (relay: IRelayListHostname) => boolean,
-  ): IRelayList => {
-    return {
-      countries: relayList.countries
-        .map((country) => ({
-          ...country,
-          cities: country.cities
-            .map((city) => ({
-              ...city,
-              relays: city.relays.filter((relay) => relayCondition(relay)),
-            }))
-            .filter((city) => city.relays.length > 0),
-        }))
-        .filter((country) => country.cities.length > 0),
-    };
-  };
-
   const updateMockRelayFilter = async ({
     ownership,
     providers,
@@ -183,7 +164,6 @@ export const createHelpers = (_page: Page, routes: RoutesObjectModel, utils: Moc
     toSelectionPaths,
     getRelaysByHostnames,
     getRelaysByProvider,
-    getRelaysByObfuscation,
     updateMockRelayFilter,
     updateMockSettings: mockSettings,
     updateEntryLocation: mockEntryLocation,

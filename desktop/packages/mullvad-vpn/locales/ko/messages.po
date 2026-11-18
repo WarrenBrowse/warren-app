@@ -105,9 +105,6 @@ msgstr "사용자 지정"
 msgid "Custom DNS"
 msgstr "사용자 지정 DNS"
 
-msgid "Default"
-msgstr "기본값"
-
 msgid "Delete"
 msgstr "삭제"
 
@@ -1985,13 +1982,6 @@ msgctxt "select-location-view"
 msgid "Filtered:"
 msgstr "필터링됨:"
 
-#. Label for indicator that shows that obfuscation is being used as a filter.
-#. Available placeholders:
-#. %(obfuscation)s - type of obfuscation in use
-msgctxt "select-location-view"
-msgid "Obfuscation: %(obfuscation)s"
-msgstr "난독 처리: %(obfuscation)s"
-
 msgctxt "select-location-view"
 msgid "Open %(daita)s settings"
 msgstr "%(daita)s 설정 열기"
@@ -2920,13 +2910,6 @@ msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
 msgstr "양자 내성 키 교환을 기존 키 교환과 결합합니다. 켜져 있으면 앱은 이를 제공하는 서버를 통해서만 연결합니다. 꺼져 있어도 서버가 제공하는 경우에는 계속 사용됩니다."
 
-#. The title for the QUIC MTU setting. MTU stands for Maximum
-#. Transmission Unit and controls the maximum size of packets sent over
-#. the VPN tunnel.
-msgctxt "wireguard-settings-view"
-msgid "MTU"
-msgstr "MTU"
-
 msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "선택한 위치의 DAITA를 활성화하기 위해 멀티홉을 사용 중입니다"
@@ -2943,26 +2926,9 @@ msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "양자 저항 터널"
 
-#. The hint displayed below the QUIC MTU input field.
-#. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "QUIC"
-#. %(max)d - the maximum possible wireguard mtu value
-#. %(min)d - the minimum possible wireguard mtu value
-msgctxt "wireguard-settings-view"
-msgid "Set %(wireguard)s MTU value. Valid range: %(min)d - %(max)d."
-msgstr "%(wireguard)s MTU 값을 설정하세요. 유효 범위: %(min)d ~ %(max)d"
-
-msgctxt "wireguard-settings-view"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
 msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "이 기능은 출구 서버로 가는 트래픽을 양자 컴퓨터의 잠재적인 공격으로부터 보호합니다."
-
-msgctxt "wireguard-settings-view"
-msgid "UDP-over-TCP"
-msgstr "UDP-over-TCP"
 
 msgid "Continue"
 msgstr "계속"

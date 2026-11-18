@@ -105,9 +105,6 @@ msgstr "自定义"
 msgid "Custom DNS"
 msgstr "自定义 DNS"
 
-msgid "Default"
-msgstr "默认"
-
 msgid "Delete"
 msgstr "删除"
 
@@ -1985,13 +1982,6 @@ msgctxt "select-location-view"
 msgid "Filtered:"
 msgstr "已筛选："
 
-#. Label for indicator that shows that obfuscation is being used as a filter.
-#. Available placeholders:
-#. %(obfuscation)s - type of obfuscation in use
-msgctxt "select-location-view"
-msgid "Obfuscation: %(obfuscation)s"
-msgstr "混淆：%(obfuscation)s"
-
 msgctxt "select-location-view"
 msgid "Open %(daita)s settings"
 msgstr "打开 %(daita)s 设置"
@@ -2920,13 +2910,6 @@ msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
 msgstr "它将抗量子密钥交换与传统密钥交换相结合。开启时，应用只通过提供该功能的服务器连接。关闭时，只要服务器提供，仍会使用。"
 
-#. The title for the QUIC MTU setting. MTU stands for Maximum
-#. Transmission Unit and controls the maximum size of packets sent over
-#. the VPN tunnel.
-msgctxt "wireguard-settings-view"
-msgid "MTU"
-msgstr "MTU"
-
 msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "正在使用多跳为您的所选位置启用 DAITA"
@@ -2943,26 +2926,9 @@ msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "抗量子隧道"
 
-#. The hint displayed below the QUIC MTU input field.
-#. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "QUIC"
-#. %(max)d - the maximum possible wireguard mtu value
-#. %(min)d - the minimum possible wireguard mtu value
-msgctxt "wireguard-settings-view"
-msgid "Set %(wireguard)s MTU value. Valid range: %(min)d - %(max)d."
-msgstr "设置 %(wireguard)s MTU 值。值范围：%(min)d - %(max)d。"
-
-msgctxt "wireguard-settings-view"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
 msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "此功能可保护您发往出口服务器的流量，使其免受量子计算机的潜在攻击。"
-
-msgctxt "wireguard-settings-view"
-msgid "UDP-over-TCP"
-msgstr "UDP-over-TCP"
 
 msgid "Continue"
 msgstr "继续"

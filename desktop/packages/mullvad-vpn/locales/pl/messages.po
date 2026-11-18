@@ -123,9 +123,6 @@ msgstr "Niestandardowy"
 msgid "Custom DNS"
 msgstr "Niestandardowy serwer DNS"
 
-msgid "Default"
-msgstr "Domyślnie"
-
 msgid "Delete"
 msgstr "Usuń"
 
@@ -2009,13 +2006,6 @@ msgctxt "select-location-view"
 msgid "Filtered:"
 msgstr "Odfiltrowane:"
 
-#. Label for indicator that shows that obfuscation is being used as a filter.
-#. Available placeholders:
-#. %(obfuscation)s - type of obfuscation in use
-msgctxt "select-location-view"
-msgid "Obfuscation: %(obfuscation)s"
-msgstr "Zaciemnianie: %(obfuscation)s"
-
 msgctxt "select-location-view"
 msgid "Open %(daita)s settings"
 msgstr "Otwórz ustawienia %(daita)s"
@@ -2947,13 +2937,6 @@ msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
 msgstr "Łączy odporną na komputery kwantowe wymianę kluczy z klasyczną. Gdy jest włączona, aplikacja łączy się tylko przez serwery, które ją oferują. Gdy jest wyłączona, nadal jest używana wszędzie tam, gdzie serwer ją oferuje."
 
-#. The title for the QUIC MTU setting. MTU stands for Maximum
-#. Transmission Unit and controls the maximum size of packets sent over
-#. the VPN tunnel.
-msgctxt "wireguard-settings-view"
-msgid "MTU"
-msgstr "MTU"
-
 msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Wielokrotny przeskok jest używany do włączenia DAITA dla wybranej lokalizacji"
@@ -2970,26 +2953,9 @@ msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "Tunel odporny na ataki z użyciem komputerów kwantowych"
 
-#. The hint displayed below the QUIC MTU input field.
-#. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "QUIC"
-#. %(max)d - the maximum possible wireguard mtu value
-#. %(min)d - the minimum possible wireguard mtu value
-msgctxt "wireguard-settings-view"
-msgid "Set %(wireguard)s MTU value. Valid range: %(min)d - %(max)d."
-msgstr "Ustaw wartość MTU %(wireguard)s. Prawidłowy zakres: %(min)d-%(max)d."
-
-msgctxt "wireguard-settings-view"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
 msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "Ta funkcja chroni Twój ruch do serwera wyjściowego przed potencjalnymi atakami komputerów kwantowych."
-
-msgctxt "wireguard-settings-view"
-msgid "UDP-over-TCP"
-msgstr "UDP-przez-TCP"
 
 msgid "Continue"
 msgstr "Kontynuuj"

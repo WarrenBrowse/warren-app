@@ -171,7 +171,6 @@ export type ErrorStateDetails =
 export type AfterDisconnect = 'nothing' | 'block' | 'reconnect';
 
 export type RelayProtocol = 'tcp' | 'udp';
-export type EndpointObfuscationType = 'udp2tcp' | 'shadowsocks' | 'quic' | 'lwo';
 
 export type Constraint<T> = 'any' | { only: T };
 export type LiftedConstraint<T> = 'any' | T;
@@ -202,7 +201,6 @@ export interface ITunnelEndpoint {
   address: string;
   protocol: RelayProtocol;
   quantumResistant: boolean;
-  obfuscationEndpoint?: IObfuscationEndpoint;
   entryEndpoint?: IEndpoint;
   daita: boolean;
   effectiveMtu?: number;
@@ -219,12 +217,6 @@ export interface ITunnelEndpoint {
 export interface IEndpoint {
   address: string;
   transportProtocol: RelayProtocol;
-}
-
-export interface IObfuscationEndpoint {
-  address: string;
-  protocol: RelayProtocol;
-  obfuscationType: EndpointObfuscationType;
 }
 
 export interface IProxyEndpoint {
@@ -305,16 +297,11 @@ export enum FeatureIndicator {
   multihop,
   splitTunneling,
   lockdownMode,
-  udp2tcp,
-  shadowsocks,
-  quic,
-  lwo,
   lanSharing,
   dnsContentBlockers,
   customDns,
   allowExternalDns,
   serverIpOverride,
-  customMtu,
 }
 
 export type DisconnectedState = {
@@ -462,7 +449,6 @@ export type Quic = {
 };
 
 export interface ITunnelOptions {
-  mtu?: number;
   quantumResistant: boolean;
   daita?: IDaitaSettings;
   enableIpv6: boolean;
@@ -562,7 +548,6 @@ export interface ISettings {
   // Exclude, include-only and per-app exits (docs/app-routing.md).
   // `splitTunnel` mirrors the exclusion part for older code paths.
   appRouting: AppRoutingSettings;
-  obfuscationSettings: ObfuscationSettings;
   customLists: CustomLists;
   recents?: Recents;
   apiAccessMethods: ApiAccessMethodSettings;
@@ -1084,34 +1069,6 @@ export type AppRouteStatus = {
   reason?: AppRouteUnavailableReason;
   publicIp?: string;
   apps: string[];
-};
-
-export type LwoSettings = {
-  port: Constraint<number>;
-};
-
-export type Udp2TcpObfuscationSettings = {
-  port: Constraint<number>;
-};
-
-export type ShadowsocksSettings = {
-  port: Constraint<number>;
-};
-
-export enum ObfuscationType {
-  auto,
-  off,
-  udp2tcp,
-  shadowsocks,
-  quic,
-  lwo,
-}
-
-export type ObfuscationSettings = {
-  selectedObfuscation: ObfuscationType;
-  udp2tcpSettings: Udp2TcpObfuscationSettings;
-  shadowsocksSettings: ShadowsocksSettings;
-  lwoSettings: LwoSettings;
 };
 
 export interface ISocketAddress {

@@ -1,8 +1,6 @@
 import { useSelector } from '../../../redux/store';
-import { useObfuscation } from '../../anti-censorship/hooks';
 import { useDaitaDirectOnly, useDaitaEnabled } from '../../daita/hooks';
 import { useMultihop } from '../../multihop/hooks';
-import { useIpVersion } from '../../tunnel/hooks';
 import { type LocationType } from '../types';
 import { filterLocations } from '../utils';
 import { useOwnership, useProviders } from '.';
@@ -13,9 +11,7 @@ export function useFilterCountryLocations(locationType: LocationType) {
   const { activeProviders } = useProviders();
   const { daitaEnabled } = useDaitaEnabled();
   const { daitaDirectOnly } = useDaitaDirectOnly();
-  const { obfuscation } = useObfuscation();
   const { multihop } = useMultihop();
-  const { ipVersion } = useIpVersion();
 
   return filterLocations({
     locations,
@@ -25,7 +21,5 @@ export function useFilterCountryLocations(locationType: LocationType) {
     directOnly: daitaDirectOnly,
     locationType,
     multihop,
-    obfuscation,
-    ipVersion,
   });
 }

@@ -22,7 +22,6 @@ import {
   DeviceEvent,
   DeviceState,
   DirectMethod,
-  EndpointObfuscationType,
   ErrorStateCause,
   ErrorStateDetails,
   ExitChoice,
@@ -31,7 +30,6 @@ import {
   FirewallPolicyErrorType,
   IAppVersionInfo,
   ICustomList,
-  IObfuscationEndpoint,
   IRelayListCity,
   IRelayListCountry,
   IRelayListHostname,
@@ -51,8 +49,6 @@ import {
   NatPmpStatus,
   NewAccessMethodSetting,
   NewCustomList,
-  ObfuscationSettings,
-  ObfuscationType,
   Ownership,
   Quic,
   type Recents,
@@ -390,7 +386,6 @@ function convertFromTunnelStateRelayInfo(
         tunnelType: convertFromTunnelType(
           (state.tunnelEndpoint as Record<string, unknown>).tunnelType as number | undefined,
         ),
-        obfuscationEndpoint: convertFromObfuscationInfo(state.tunnelEndpoint.obfuscation),
         effectiveMtu: state.tunnelEndpoint.effectiveMtu || undefined,
         // A bundle width of 0 (or an older daemon that omits the field) means
         // the tunnel was never sampled, so BOTH counts stay undefined. Once it
@@ -429,8 +424,6 @@ function convertFromFeatureIndicator(
       return FeatureIndicator.splitTunneling;
     case grpcTypes.FeatureIndicator.LOCKDOWN_MODE:
       return FeatureIndicator.lockdownMode;
-    case grpcTypes.FeatureIndicator.UDP_2_TCP:
-      return FeatureIndicator.udp2tcp;
     case grpcTypes.FeatureIndicator.LAN_SHARING:
       return FeatureIndicator.lanSharing;
     case grpcTypes.FeatureIndicator.DNS_CONTENT_BLOCKERS:
@@ -441,8 +434,6 @@ function convertFromFeatureIndicator(
       return FeatureIndicator.allowExternalDns;
     case grpcTypes.FeatureIndicator.SERVER_IP_OVERRIDE:
       return FeatureIndicator.serverIpOverride;
-    case grpcTypes.FeatureIndicator.CUSTOM_MTU:
-      return FeatureIndicator.customMtu;
     case grpcTypes.FeatureIndicator.DAITA:
       return FeatureIndicator.daita;
     case grpcTypes.FeatureIndicator.DAITA_MULTIHOP:
@@ -453,71 +444,10 @@ function convertFromFeatureIndicator(
       return FeatureIndicator.degradedBond;
     case grpcTypes.FeatureIndicator.DAITA_UNAVAILABLE:
       return FeatureIndicator.daitaUnavailable;
-    case grpcTypes.FeatureIndicator.SHADOWSOCKS:
-      return FeatureIndicator.shadowsocks;
-    case grpcTypes.FeatureIndicator.QUIC:
-      return FeatureIndicator.quic;
-    case grpcTypes.FeatureIndicator.LWO:
-      return FeatureIndicator.lwo;
     default:
-      // Unknown / removed indicators (e.g. the legacy WireGuard port) are dropped.
+      // Unknown or removed indicators are dropped.
       return undefined;
   }
-}
-
-// Resolve the obfuscation endpoint shown in the connection panel from the
-// daemon's ObfuscationInfo (single OR multiplexed). For the multiplex case
-// the UI shows one badge, so the first obfuscator is taken as the
-// representative endpoint. Returns undefined when no obfuscation is active.
-function convertFromObfuscationInfo(
-  obfuscation: grpcTypes.ObfuscationInfo.AsObject | undefined,
-): IObfuscationEndpoint | undefined {
-  if (obfuscation?.single?.endpoint) {
-    return convertFromObfuscationEndpoint(
-      obfuscation.single.obfuscationType,
-      obfuscation.single.endpoint,
-    );
-  }
-  const firstMultiplexed = obfuscation?.multiple?.obfuscatorsList?.[0];
-  if (firstMultiplexed?.endpoint) {
-    return convertFromObfuscationEndpoint(
-      firstMultiplexed.obfuscationType,
-      firstMultiplexed.endpoint,
-    );
-  }
-  return undefined;
-}
-
-function convertFromObfuscationEndpoint(
-  obfuscationType: grpcTypes.ObfuscationEndpoint.ObfuscationType,
-  obfuscationEndpoint: grpcTypes.Endpoint.AsObject,
-): IObfuscationEndpoint | undefined {
-  let translatedType: EndpointObfuscationType;
-  switch (obfuscationType) {
-    case grpcTypes.ObfuscationEndpoint.ObfuscationType.UDP2TCP:
-      translatedType = 'udp2tcp';
-      break;
-    case grpcTypes.ObfuscationEndpoint.ObfuscationType.SHADOWSOCKS:
-      translatedType = 'shadowsocks';
-      break;
-    case grpcTypes.ObfuscationEndpoint.ObfuscationType.QUIC:
-      translatedType = 'quic';
-      break;
-    case grpcTypes.ObfuscationEndpoint.ObfuscationType.LWO:
-      translatedType = 'lwo';
-      break;
-    default:
-      // Unknown type from a newer daemon than the bindings: drop the badge
-      // rather than throwing and crashing the tunnel-state conversion.
-      log.warn('Unsupported obfuscation protocol: ' + obfuscationType);
-      return undefined;
-  }
-
-  return {
-    address: obfuscationEndpoint.address,
-    protocol: convertFromTransportProtocol(obfuscationEndpoint.protocol),
-    obfuscationType: translatedType,
-  };
 }
 
 function convertFromEntryEndpoint(entryEndpoint: grpcTypes.Endpoint.AsObject) {
@@ -536,7 +466,6 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
     settings.getAppRouting(),
     settings.getSplitTunnel(),
   );
-  const obfuscationSettings = convertFromObfuscationSettings(settingsObject.obfuscationSettings);
   const customLists = convertFromCustomListSettings(settings.getCustomLists());
   const apiAccessMethods = convertFromApiAccessMethodSettings(settings.getApiAccessMethods()!);
   const relayOverrides = settingsObject.relayOverridesList;
@@ -566,7 +495,6 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
     tunnelOptions,
     splitTunnel,
     appRouting,
-    obfuscationSettings,
     customLists,
     apiAccessMethods,
     relayOverrides,
@@ -1115,7 +1043,6 @@ function convertFromGeographicConstraint(
 
 function convertFromTunnelOptions(tunnelOptions: grpcTypes.TunnelOptions.AsObject): ITunnelOptions {
   return {
-    mtu: tunnelOptions.mtu,
     quantumResistant: convertFromQuantumResistantState(tunnelOptions.quantumResistant?.state),
     daita: tunnelOptions.daita,
     enableIpv6: tunnelOptions.enableIpv6,
@@ -1147,42 +1074,6 @@ function convertFromQuantumResistantState(state?: grpcTypes.QuantumResistantStat
         [grpcTypes.QuantumResistantState.State.ON]: true,
         [grpcTypes.QuantumResistantState.State.OFF]: false,
       }[state];
-}
-
-function convertFromObfuscationSettings(
-  obfuscationSettings?: grpcTypes.ObfuscationSettings.AsObject,
-): ObfuscationSettings {
-  let selectedObfuscationType = ObfuscationType.auto;
-  switch (obfuscationSettings?.selectedObfuscation) {
-    case grpcTypes.ObfuscationSettings.SelectedObfuscation.OFF:
-      selectedObfuscationType = ObfuscationType.off;
-      break;
-    case grpcTypes.ObfuscationSettings.SelectedObfuscation.UDP2TCP:
-      selectedObfuscationType = ObfuscationType.udp2tcp;
-      break;
-    case grpcTypes.ObfuscationSettings.SelectedObfuscation.SHADOWSOCKS:
-      selectedObfuscationType = ObfuscationType.shadowsocks;
-      break;
-    case grpcTypes.ObfuscationSettings.SelectedObfuscation.QUIC:
-      selectedObfuscationType = ObfuscationType.quic;
-      break;
-    case grpcTypes.ObfuscationSettings.SelectedObfuscation.LWO:
-      selectedObfuscationType = ObfuscationType.lwo;
-      break;
-  }
-
-  return {
-    selectedObfuscation: selectedObfuscationType,
-    udp2tcpSettings: obfuscationSettings?.udp2tcp
-      ? { port: convertFromConstraint(obfuscationSettings.udp2tcp.port) }
-      : { port: 'any' },
-    shadowsocksSettings: obfuscationSettings?.shadowsocks
-      ? { port: convertFromConstraint(obfuscationSettings.shadowsocks.port) }
-      : { port: 'any' },
-    lwoSettings: obfuscationSettings?.lwo
-      ? { port: convertFromConstraint(obfuscationSettings.lwo.port) }
-      : { port: 'any' },
-  };
 }
 
 function convertFromAppUpgradeError(error: grpcTypes.AppUpgradeError.Error): DaemonAppUpgradeError {
@@ -1371,14 +1262,6 @@ function convertFromWireguardConstraints(
   }
 
   return result;
-}
-
-function convertFromConstraint<T>(value: T | undefined): Constraint<T> {
-  if (value) {
-    return { only: value };
-  } else {
-    return 'any';
-  }
 }
 
 export function convertToRelayConstraints(

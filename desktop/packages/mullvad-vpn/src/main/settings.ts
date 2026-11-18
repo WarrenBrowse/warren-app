@@ -60,9 +60,6 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetLockdownMode((lockdownMode) =>
       this.daemonRpc.setLockdownMode(lockdownMode),
     );
-    IpcMainEventChannel.settings.handleSetWireguardMtu((mtu?: number) =>
-      this.daemonRpc.setWireguardMtu(mtu),
-    );
     IpcMainEventChannel.settings.handleSetWireguardQuantumResistant((quantumResistant: boolean) =>
       this.daemonRpc.setWireguardQuantumResistant(quantumResistant),
     );
@@ -74,9 +71,6 @@ export default class Settings implements Readonly<ISettings> {
     });
     IpcMainEventChannel.autoStart.handleSet((autoStart: boolean) => {
       return this.setAutoStart(autoStart);
-    });
-    IpcMainEventChannel.settings.handleSetObfuscationSettings((obfuscationSettings) => {
-      return this.daemonRpc.setObfuscationSettings(obfuscationSettings);
     });
     IpcMainEventChannel.settings.handleAddApiAccessMethod((method) => {
       return this.daemonRpc.addApiAccessMethod(method);
@@ -214,9 +208,6 @@ export default class Settings implements Readonly<ISettings> {
   }
   public get appRouting() {
     return this.settingsValue.appRouting;
-  }
-  public get obfuscationSettings() {
-    return this.settingsValue.obfuscationSettings;
   }
   public get customLists() {
     return this.settingsValue.customLists;

@@ -15,8 +15,6 @@ import {
   NatPmpProto,
   NatPmpSettings,
   NatPmpStatus,
-  ObfuscationSettings,
-  ObfuscationType,
   Ownership,
   Quic,
   type Recents,
@@ -119,7 +117,6 @@ export interface ISettingsReduxState {
   // controller has had a reason to speak.
   torrentClientStatus?: TorrentClientStatus;
   wireguard: {
-    mtu?: number;
     quantumResistant: boolean;
     daita?: IDaitaSettings;
   };
@@ -132,7 +129,6 @@ export interface ISettingsReduxState {
   appRouteStatus: AppRouteStatus[];
   // Name and icon of the included apps and the apps with a country.
   appRoutingApplications: ISplitTunnelingApplication[];
-  obfuscationSettings: ObfuscationSettings;
   customLists: CustomLists;
   recents?: Recents;
   apiAccessMethods: ApiAccessMethodSettings;
@@ -231,18 +227,6 @@ const initialState: ISettingsReduxState = {
   },
   appRouteStatus: [],
   appRoutingApplications: [],
-  obfuscationSettings: {
-    selectedObfuscation: ObfuscationType.auto,
-    udp2tcpSettings: {
-      port: 'any',
-    },
-    shadowsocksSettings: {
-      port: 'any',
-    },
-    lwoSettings: {
-      port: 'any',
-    },
-  },
   customLists: [],
   recents: undefined,
   apiAccessMethods: getDefaultApiAccessMethods(),
@@ -358,15 +342,6 @@ export default function (
         showBetaReleases: action.showBetaReleases,
       };
 
-    case 'UPDATE_WIREGUARD_MTU':
-      return {
-        ...state,
-        wireguard: {
-          ...state.wireguard,
-          mtu: action.mtu,
-        },
-      };
-
     case 'UPDATE_WIREGUARD_QUANTUM_RESISTANT':
       return {
         ...state,
@@ -430,12 +405,6 @@ export default function (
       return {
         ...state,
         appRoutingApplications: action.applications,
-      };
-
-    case 'SET_OBFUSCATION_SETTINGS':
-      return {
-        ...state,
-        obfuscationSettings: action.obfuscationSettings,
       };
 
     case 'SET_CUSTOM_LISTS':

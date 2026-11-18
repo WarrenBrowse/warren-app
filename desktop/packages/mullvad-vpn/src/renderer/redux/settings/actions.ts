@@ -11,7 +11,6 @@ import {
   IWireguardEndpointData,
   NatPmpSettings,
   NatPmpStatus,
-  ObfuscationSettings,
   type Recents,
   RelayOverride,
   WarrenCustomExitSettings,
@@ -126,11 +125,6 @@ export interface IUpdateShowBetaReleasesAction {
   showBetaReleases: boolean;
 }
 
-export interface IUpdateWireguardMtuAction {
-  type: 'UPDATE_WIREGUARD_MTU';
-  mtu?: number;
-}
-
 export interface IUpdateWireguardQuantumResistantAction {
   type: 'UPDATE_WIREGUARD_QUANTUM_RESISTANT';
   quantumResistant: boolean;
@@ -181,11 +175,6 @@ export interface ISetAppRoutingApplicationsAction {
   applications: ISplitTunnelingApplication[];
 }
 
-export interface ISetObfuscationSettings {
-  type: 'SET_OBFUSCATION_SETTINGS';
-  obfuscationSettings: ObfuscationSettings;
-}
-
 export interface ISetCustomLists {
   type: 'SET_CUSTOM_LISTS';
   customLists: CustomLists;
@@ -229,7 +218,6 @@ export type SettingsAction =
   | IUpdateEnableIpv6Action
   | IUpdateLockdownModeAction
   | IUpdateShowBetaReleasesAction
-  | IUpdateWireguardMtuAction
   | IUpdateWireguardQuantumResistantAction
   | IUpdateWireguardDaitaAction
   | IUpdateAutoStartAction
@@ -240,7 +228,6 @@ export type SettingsAction =
   | IUpdateAppRoutingAction
   | ISetAppRouteStatusAction
   | ISetAppRoutingApplicationsAction
-  | ISetObfuscationSettings
   | ISetCustomLists
   | ISetRecents
   | ISetApiAccessMethods
@@ -380,13 +367,6 @@ function updateShowBetaReleases(showBetaReleases: boolean): IUpdateShowBetaRelea
   };
 }
 
-function updateWireguardMtu(mtu?: number): IUpdateWireguardMtuAction {
-  return {
-    type: 'UPDATE_WIREGUARD_MTU',
-    mtu,
-  };
-}
-
 function updateWireguardQuantumResistant(
   quantumResistant: boolean,
 ): IUpdateWireguardQuantumResistantAction {
@@ -463,15 +443,6 @@ function setAppRoutingApplications(
   };
 }
 
-function updateObfuscationSettings(
-  obfuscationSettings: ObfuscationSettings,
-): ISetObfuscationSettings {
-  return {
-    type: 'SET_OBFUSCATION_SETTINGS',
-    obfuscationSettings,
-  };
-}
-
 function updateCustomLists(customLists: CustomLists): ISetCustomLists {
   return {
     type: 'SET_CUSTOM_LISTS',
@@ -525,7 +496,6 @@ export default {
   updateEnableIpv6,
   updateLockdownMode,
   updateShowBetaReleases,
-  updateWireguardMtu,
   updateWireguardQuantumResistant,
   updateWireguardDaita,
   updateAutoStart,
@@ -536,7 +506,6 @@ export default {
   updateAppRouting,
   setAppRouteStatus,
   setAppRoutingApplications,
-  updateObfuscationSettings,
   updateCustomLists,
   updateApiAccessMethods,
   updateCurrentApiAccessMethod,

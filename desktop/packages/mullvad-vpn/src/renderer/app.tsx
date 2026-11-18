@@ -32,7 +32,6 @@ import {
   NatPmpSettings,
   NewAccessMethodSetting,
   NewCustomList,
-  ObfuscationSettings,
   RelaySettings,
   TunnelState,
   WarrenCustomExitSettings,
@@ -625,8 +624,6 @@ export default class AppRenderer {
     IpcRendererEventChannel.appRouting.addLockedApp(application);
   public removeLockedApp = (application: string) =>
     IpcRendererEventChannel.appRouting.removeLockedApp(application);
-  public setObfuscationSettings = (obfuscationSettings: ObfuscationSettings) =>
-    IpcRendererEventChannel.settings.setObfuscationSettings(obfuscationSettings);
   public setEnableDaita = (value: boolean) =>
     IpcRendererEventChannel.settings.setEnableDaita(value);
   public setDaitaDirectOnly = (value: boolean) =>
@@ -900,12 +897,6 @@ export default class AppRenderer {
     actions.settings.updateLockdownMode(lockdownMode);
   };
 
-  public setWireguardMtu = async (mtu?: number) => {
-    const actions = this.reduxActions;
-    actions.settings.updateWireguardMtu(mtu);
-    await IpcRendererEventChannel.settings.setWireguardMtu(mtu);
-  };
-
   public setWireguardQuantumResistant = async (quantumResistant: boolean) => {
     const actions = this.reduxActions;
     actions.settings.updateWireguardQuantumResistant(quantumResistant);
@@ -1155,13 +1146,11 @@ export default class AppRenderer {
     reduxSettings.updateEnableIpv6(newSettings.tunnelOptions.enableIpv6);
     reduxSettings.updateLockdownMode(newSettings.lockdownMode);
     reduxSettings.updateShowBetaReleases(newSettings.showBetaReleases);
-    reduxSettings.updateWireguardMtu(newSettings.tunnelOptions.mtu);
     reduxSettings.updateWireguardQuantumResistant(newSettings.tunnelOptions.quantumResistant);
     reduxSettings.updateWireguardDaita(newSettings.tunnelOptions.daita);
     reduxSettings.updateDnsOptions(newSettings.tunnelOptions.dns);
     reduxSettings.updateSplitTunnelingState(newSettings.splitTunnel.enableExclusions);
     reduxSettings.updateAppRouting(newSettings.appRouting);
-    reduxSettings.updateObfuscationSettings(newSettings.obfuscationSettings);
     reduxSettings.updateCustomLists(newSettings.customLists);
     reduxSettings.updateApiAccessMethods(newSettings.apiAccessMethods);
     reduxSettings.updateRelayOverrides(newSettings.relayOverrides);

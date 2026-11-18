@@ -111,9 +111,6 @@ msgstr "سفارشی"
 msgid "Custom DNS"
 msgstr "DNS سفارشی"
 
-msgid "Default"
-msgstr "پیش‌فرض"
-
 msgid "Delete"
 msgstr "حذف کردن"
 
@@ -1993,13 +1990,6 @@ msgctxt "select-location-view"
 msgid "Filtered:"
 msgstr "فیلتر شد:"
 
-#. Label for indicator that shows that obfuscation is being used as a filter.
-#. Available placeholders:
-#. %(obfuscation)s - type of obfuscation in use
-msgctxt "select-location-view"
-msgid "Obfuscation: %(obfuscation)s"
-msgstr "پنهان‌سازی: %(obfuscation)s"
-
 msgctxt "select-location-view"
 msgid "Open %(daita)s settings"
 msgstr "باز کردن تنظیمات %(daita)s"
@@ -2929,13 +2919,6 @@ msgctxt "wireguard-settings-view"
 msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
 msgstr "این قابلیت یک تبادل کلید مقاوم در برابر کوانتوم را با تبادل کلید کلاسیک ترکیب می‌کند. وقتی روشن است، برنامه فقط از طریق سرورهایی متصل می‌شود که آن را ارائه می‌دهند. وقتی خاموش است، هر جا سروری آن را ارائه دهد همچنان استفاده می‌شود."
 
-#. The title for the QUIC MTU setting. MTU stands for Maximum
-#. Transmission Unit and controls the maximum size of packets sent over
-#. the VPN tunnel.
-msgctxt "wireguard-settings-view"
-msgid "MTU"
-msgstr "MTU"
-
 msgctxt "wireguard-settings-view"
 msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "برای فعال شدن DAITA در مکان انتخابی شما، از قابلیت مولتی‌هاپ استفاده شده است"
@@ -2952,26 +2935,9 @@ msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "تونل مقاوم در برابر کوانتوم"
 
-#. The hint displayed below the QUIC MTU input field.
-#. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "QUIC"
-#. %(max)d - the maximum possible wireguard mtu value
-#. %(min)d - the minimum possible wireguard mtu value
-msgctxt "wireguard-settings-view"
-msgid "Set %(wireguard)s MTU value. Valid range: %(min)d - %(max)d."
-msgstr "تنظیم مقدار MTU برای %(wireguard)s. بازهٔ معتبر: %(min)d تا %(max)d."
-
-msgctxt "wireguard-settings-view"
-msgid "Shadowsocks"
-msgstr "Shadowsocks"
-
 msgctxt "wireguard-settings-view"
 msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
 msgstr "این قابلیت ترافیک شما به سمت سرور خروجی را در برابر حملات احتمالی رایانه‌های کوانتومی محافظت می‌کند."
-
-msgctxt "wireguard-settings-view"
-msgid "UDP-over-TCP"
-msgstr "‏UDP روی TCP"
 
 msgid "Continue"
 msgstr "ادامه"

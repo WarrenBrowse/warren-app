@@ -3,7 +3,6 @@ import styled from 'styled-components';
 
 import { strings } from '../../../../../../../../shared/constants';
 import {
-  EndpointObfuscationType,
   formatExitLocation,
   isMultihopTunnelState,
   isUnspecifiedSocketAddress,
@@ -20,10 +19,6 @@ interface Endpoint {
   ip: string;
   port: number;
   protocol: RelayProtocol;
-}
-
-interface ObfuscationData extends Endpoint {
-  obfuscationType: EndpointObfuscationType;
 }
 
 const { details } = homeTokens;
@@ -239,15 +234,8 @@ function getEntryPoint(tunnelState: TunnelState): Endpoint | undefined {
   const endpoint = tunnelState.details.endpoint;
   const inAddress = tunnelEndpointToRelayInAddress(endpoint);
   const entryLocationInAddress = tunnelEndpointToEntryLocationInAddress(endpoint);
-  const obfuscationEndpoint = tunnelEndpointToObfuscationEndpoint(endpoint);
 
-  if (obfuscationEndpoint) {
-    return obfuscationEndpoint;
-  } else if (entryLocationInAddress && inAddress) {
-    return entryLocationInAddress;
-  } else {
-    return inAddress;
-  }
+  return entryLocationInAddress ?? inAddress;
 }
 
 // The "Out" (Sortante) endpoint is the exit the user traffic leaves
@@ -299,22 +287,5 @@ function tunnelEndpointToEntryLocationInAddress(
     ip: socketAddr.host,
     port: socketAddr.port,
     protocol: tunnelEndpoint.entryEndpoint.transportProtocol,
-  };
-}
-
-function tunnelEndpointToObfuscationEndpoint(
-  endpoint: ITunnelEndpoint,
-): ObfuscationData | undefined {
-  if (!endpoint.obfuscationEndpoint) {
-    return undefined;
-  }
-
-  const socketAddr = parseSocketAddress(endpoint.obfuscationEndpoint.address);
-
-  return {
-    ip: socketAddr.host,
-    port: socketAddr.port,
-    protocol: endpoint.obfuscationEndpoint.protocol,
-    obfuscationType: endpoint.obfuscationEndpoint.obfuscationType,
   };
 }
