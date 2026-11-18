@@ -293,9 +293,11 @@ async fn handle_eslogger_output(
     let stderr = proc.stderr.take().unwrap();
 
     // Parse each line from stdout as an ESMessage
+    let (unreadable_tx, unreadable_rx) = oneshot::channel::<()>();
     tokio::spawn(async move {
         let reader = BufReader::new(stdout);
         let mut lines = reader.lines();
+        let mut health = DecodeHealth::new();
 
         while let Ok(Some(line)) = lines.next_line().await {
             // Each line from eslogger is a JSON object, one of several types of messages;
@@ -304,9 +306,14 @@ async fn handle_eslogger_output(
                 Ok(val) => val,
                 Err(error) => {
                     log_parse_error_throttled(&error);
+                    if !health.record(false) {
+                        let _ = unreadable_tx.send(());
+                        return;
+                    }
                     continue;
                 }
             };
+            health.record(true);
 
             let mut inner = states.inner.lock().unwrap();
             inner.handle_message(val);
@@ -340,6 +347,14 @@ async fn handle_eslogger_output(
                 }
                 Err(error) => Err(Error::MonitorFailed(error)),
             }
+        }
+        Ok(()) = unreadable_rx => {
+            if let Err(error) = proc.kill().await {
+                log::error!("Failed to kill eslogger: {error}");
+            }
+            Err(Error::MonitorFailed(io::Error::other(
+                "eslogger output is mostly unreadable",
+            )))
         }
         Ok(response_tx) = stop_rx => {
             if let Err(error) = proc.kill().await {
@@ -376,6 +391,42 @@ fn log_parse_error_throttled(error: &serde_json::Error) {
         suppressed => log::error!(
             "Failed to parse eslogger message: {error} ({suppressed} similar errors suppressed)"
         ),
+    }
+}
+
+/// Whether eslogger's output can still be read. A line that does not decode is an exec, fork or
+/// exit the monitor did not see, so a process may keep a routing it no longer deserves: an
+/// included app could run outside the tunnel. A stray line is tolerated; output that is mostly
+/// unreadable (a schema of a later macOS) means the monitor is steering blind, and it stops,
+/// which blocks the tunnel like an eslogger that exited.
+struct DecodeHealth {
+    recent: std::collections::VecDeque<bool>,
+    unreadable: usize,
+}
+
+impl DecodeHealth {
+    /// Lines the verdict looks back on.
+    const WINDOW: usize = 200;
+    /// Lines needed before any verdict, so a garbled start-up line cannot stop the monitor.
+    const MIN_SAMPLES: usize = 50;
+
+    fn new() -> Self {
+        DecodeHealth {
+            recent: std::collections::VecDeque::with_capacity(Self::WINDOW),
+            unreadable: 0,
+        }
+    }
+
+    /// Records whether a line decoded; `false` once more than half of the recent lines did not.
+    fn record(&mut self, decoded: bool) -> bool {
+        if self.recent.len() == Self::WINDOW && self.recent.pop_front() == Some(false) {
+            self.unreadable -= 1;
+        }
+        self.recent.push_back(decoded);
+        if !decoded {
+            self.unreadable += 1;
+        }
+        self.recent.len() < Self::MIN_SAMPLES || self.unreadable * 2 <= self.recent.len()
     }
 }
 
@@ -842,6 +893,67 @@ fn check_os_version_support_inner(version: MacosVersion) -> Result<(), Error> {
         Ok(())
     } else {
         Err(Error::UnsupportedMacosVersion { actual: version })
+    }
+}
+
+#[cfg(test)]
+mod decode_health_test {
+    use super::*;
+
+    #[test]
+    fn a_few_unreadable_lines_among_readable_ones_are_tolerated() {
+        let mut health = DecodeHealth::new();
+        for line in 0..1000 {
+            assert!(health.record(line % 10 != 0), "line {line}");
+        }
+    }
+
+    #[test]
+    fn output_that_is_mostly_unreadable_is_judged_unreadable() {
+        let mut health = DecodeHealth::new();
+        let verdicts: Vec<bool> = (0..DecodeHealth::WINDOW)
+            .map(|_| health.record(false))
+            .collect();
+        assert!(verdicts.contains(&false), "never judged unreadable");
+    }
+
+    #[test]
+    fn no_verdict_is_reached_on_the_first_few_lines() {
+        let mut health = DecodeHealth::new();
+        for _ in 0..DecodeHealth::MIN_SAMPLES - 1 {
+            assert!(health.record(false));
+        }
+    }
+
+    /// A stand-in eslogger that prints a schema the monitor cannot read and stays alive: the
+    /// monitor gives up on its own instead of steering processes blind until it exits.
+    #[tokio::test]
+    async fn the_monitor_stops_when_eslogger_output_cannot_be_read() {
+        let proc = tokio::process::Command::new("/bin/sh")
+            .args(["-c", "yes '{\"unknown\": 1}' | head -n 400; sleep 30"])
+            .kill_on_drop(true)
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let states = ProcessStates {
+            inner: Arc::new(Mutex::new(InnerProcessStates {
+                processes: HashMap::new(),
+                mode: SplitTunnelMode::IncludeOnly,
+                paths: HashSet::new(),
+            })),
+        };
+        let (_stop_tx, stop_rx) = oneshot::channel();
+
+        let result = tokio::time::timeout(
+            Duration::from_secs(10),
+            handle_eslogger_output(proc, states, stop_rx),
+        )
+        .await
+        .expect("the monitor kept running on unreadable output");
+
+        assert!(matches!(result, Err(Error::MonitorFailed(_))), "{result:?}");
     }
 }
 
