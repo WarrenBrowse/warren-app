@@ -111,23 +111,30 @@ fn strip_namespace<P: AsRef<Path>>(path: P) -> PathBuf {
         .unwrap_or(path.as_ref().to_path_buf())
 }
 
+/// A zeroed buffer for structures the kernel writes, which are all DWORD-aligned: a `Vec<u8>`
+/// only promises byte alignment, so the storage is made of `u32`s.
+fn dword_aligned_buffer(bytes: usize) -> Vec<u32> {
+    vec![0u32; bytes.div_ceil(mem::size_of::<u32>())]
+}
+
 macro_rules! get_reparse_path {
     ($tag_type:ident, $data:ident) => {{
         let reparse_data = &*($data.as_ptr() as *const $tag_type);
-        let last_offset = reparse_data.sub_name_offset as usize
-            + reparse_data.sub_name_length as usize
-            + memoffset::offset_of!($tag_type, path_buffer);
+        let name_start =
+            memoffset::offset_of!($tag_type, path_buffer) + reparse_data.sub_name_offset as usize;
+        let last_offset = name_start + reparse_data.sub_name_length as usize;
 
-        if last_offset > $data.len() {
+        if last_offset > mem::size_of_val(&$data[..]) || name_start % mem::size_of::<u16>() != 0 {
             log::error!("Ignoring mount point with out-of-bounds index");
             Err(io::Error::new(
                 io::ErrorKind::InvalidData,
                 "link indices out-of-bounds",
             ))
         } else {
-            let path_buffer = reparse_data.path_buffer.as_ptr();
+            // The name is addressed from the buffer itself: the header's one-element
+            // `path_buffer` array does not cover the bytes that follow it.
             let parsed_path = std::slice::from_raw_parts(
-                path_buffer.add(reparse_data.sub_name_offset as usize / mem::size_of::<u16>()),
+                ($data.as_ptr() as *const u8).add(name_start) as *const u16,
                 reparse_data.sub_name_length as usize / mem::size_of::<u16>(),
             );
             Ok::<PathBuf, io::Error>(PathBuf::from(OsString::from_wide(parsed_path)))
@@ -138,7 +145,7 @@ macro_rules! get_reparse_path {
 /// Returns the target of a reparse point as an absolute path.
 /// If `path` is not a link, `None` is returned.
 fn resolve_link<T: AsRef<Path> + Copy>(path: T) -> io::Result<Option<PathBuf>> {
-    let mut data_buffer = vec![0u8; MAXIMUM_REPARSE_DATA_BUFFER_SIZE as usize];
+    let mut data_buffer = dword_aligned_buffer(MAXIMUM_REPARSE_DATA_BUFFER_SIZE as usize);
 
     let mut stripped_path = strip_namespace(path);
     if !stripped_path.starts_with(r"\\?\") {
@@ -172,7 +179,7 @@ fn resolve_link<T: AsRef<Path> + Copy>(path: T) -> io::Result<Option<PathBuf>> {
             ptr::null_mut(),
             0u32,
             data_buffer.as_mut_ptr() as *mut _,
-            data_buffer.len() as u32,
+            mem::size_of_val(&data_buffer[..]) as u32,
             &raw mut bytes_returned,
             ptr::null_mut(),
         )
@@ -189,9 +196,8 @@ fn resolve_link<T: AsRef<Path> + Copy>(path: T) -> io::Result<Option<PathBuf>> {
     }
 
     // SAFETY: `data_buffer` is a zero-initialised allocation of `MAXIMUM_REPARSE_DATA_BUFFER_SIZE`
-    // bytes, larger than every reparse header, and the Windows heap behind the global allocator
-    // returns blocks aligned to 16 bytes, enough for these `u32`-aligned `repr(C)` structs, whose
-    // fields are all plain integers.
+    // bytes, larger than every reparse header, made of `u32`s so it is aligned for these
+    // `u32`-aligned `repr(C)` structs, whose fields are all plain integers.
     let reparse_tag = unsafe { &*(data_buffer.as_ptr() as *const ReparseData) }.tag;
     match reparse_tag {
         IO_REPARSE_TAG_SYMLINK => {
@@ -269,7 +275,7 @@ fn resolve_all_links<P: AsRef<Path>>(path: P) -> io::Result<Vec<PathBuf>> {
 struct DirContext {
     path: PathBuf,
     dir_handle: fs::File,
-    buffer: Vec<u8>,
+    buffer: Vec<u32>,
     overlapped: Pin<Box<OVERLAPPED>>,
     _io_completion_port: Arc<CompletionPort>,
 }
@@ -305,7 +311,7 @@ impl DirContext {
         Ok(DirContext {
             path: path.as_ref().to_path_buf(),
             dir_handle,
-            buffer: vec![0u8; 16 * 1024],
+            buffer: dword_aligned_buffer(16 * 1024),
             // SAFETY: `OVERLAPPED` is a C struct of integers, a union of integers and a raw
             // pointer, for which all-zero bytes are a valid value (and the documented initial
             // state).
@@ -326,7 +332,7 @@ impl DirContext {
             ReadDirectoryChangesW(
                 self.dir_handle.as_raw_handle() as HANDLE,
                 self.buffer.as_mut_ptr() as *mut _,
-                self.buffer.len() as u32,
+                mem::size_of_val(&self.buffer[..]) as u32,
                 1,
                 FILE_NOTIFY_CHANGE_FILE_NAME
                     | FILE_NOTIFY_CHANGE_DIR_NAME
@@ -767,14 +773,18 @@ impl PathMonitor {
             // SAFETY: this runs only for a completed request that returned data. `info` starts at
             // the beginning of `buffer` and then follows `NextEntryOffset`, so it always points to
             // a `FILE_NOTIFY_INFORMATION` entry the kernel wrote inside the buffer, DWORD-aligned
-            // as the API guarantees (the buffer start is heap-aligned).
+            // as the API guarantees (the buffer is made of `u32`s).
             let current_field = unsafe { &*info };
 
             // SAFETY: the entry's name follows its header inside the buffer, `FileNameLength`
-            // bytes long, and the kernel wrote all of it.
+            // bytes long, and the kernel wrote all of it. It is addressed from `info`, which
+            // covers the whole buffer, because the header's one-element `FileName` array does
+            // not cover the bytes past it.
             let file_name = unsafe {
                 std::slice::from_raw_parts(
-                    current_field.FileName.as_ptr(),
+                    (info as *const u8)
+                        .add(memoffset::offset_of!(FILE_NOTIFY_INFORMATION, FileName))
+                        as *const u16,
                     current_field.FileNameLength as usize / mem::size_of::<u16>(),
                 )
             };
@@ -901,4 +911,35 @@ fn osstr_to_wide<T: AsRef<OsStr>>(string: T) -> Vec<u16> {
         .encode_wide()
         .chain(std::iter::once(0u16))
         .collect()
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn a_junction_resolves_to_its_target() {
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("talpid-path-monitor-{unique}"));
+        let target = root.join("junction-target");
+        fs::create_dir_all(&target).unwrap();
+        let junction = root.join("junction");
+        let status = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(&junction)
+            .arg(&target)
+            .status()
+            .unwrap();
+        assert!(status.success(), "mklink /J failed");
+
+        let resolved = resolve_link(&junction);
+
+        let _ = fs::remove_dir(&junction);
+        let _ = fs::remove_dir_all(&root);
+        let resolved = resolved.unwrap().expect("a junction is a link");
+        assert_eq!(resolved.file_name(), target.file_name());
+    }
 }
