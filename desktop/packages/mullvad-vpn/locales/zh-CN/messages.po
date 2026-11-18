@@ -48,12 +48,6 @@ msgstr "帐户设置"
 msgid "Add"
 msgstr "添加"
 
-msgid "Any"
-msgstr "任何"
-
-msgid "Apply"
-msgstr "应用"
-
 msgid "Automatic"
 msgstr "自动"
 
@@ -161,9 +155,6 @@ msgstr "前往“系统设置”"
 msgid "Got it!"
 msgstr "知道了！"
 
-msgid "Import"
-msgstr "导入"
-
 msgid "IPv4"
 msgstr "IPv4"
 
@@ -192,9 +183,6 @@ msgstr "新建列表"
 
 msgid "Next"
 msgstr "下一步"
-
-msgid "No matching servers found"
-msgstr "找不到匹配的服务器"
 
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "没有关于<b>%(searchTerm)s</b>的结果。"
@@ -882,10 +870,6 @@ msgid "Too many simultaneous connections on this account. Disconnect another dev
 msgstr "此帐户的同步连接数过多。请断开另一个设备或者稍后再次尝试连接。"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "正在阻止网络：因违反使用政策，您的访问权限已被撤销。如果您认为这是误判，请联系支持团队。"
-
-msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
 msgstr "无法验证帐户。请在我们的社区论坛上报告问题。"
 
@@ -1236,38 +1220,13 @@ msgctxt "error-boundary-view"
 msgid "Reload the app"
 msgstr "重新加载应用"
 
-#. Title label in navigation bar
-msgctxt "filter-nav"
-msgid "Filter"
-msgstr "筛选"
-
-msgctxt "filter-view"
-msgid "All providers"
-msgstr "所有提供商"
-
-msgctxt "filter-view"
-msgid "Warren owned only"
-msgstr "仅 Warren 自有"
-
 msgctxt "filter-view"
 msgid "Owned"
 msgstr "自有"
 
 msgctxt "filter-view"
-msgid "Ownership"
-msgstr "所有权"
-
-msgctxt "filter-view"
-msgid "Providers"
-msgstr "提供商"
-
-msgctxt "filter-view"
 msgid "Rented"
 msgstr "租用"
-
-msgctxt "filter-view"
-msgid "Rented only"
-msgstr "仅租用"
 
 msgctxt "in-app-notifications"
 msgid "%(duration)s. Buy more credit."
@@ -2067,76 +2026,11 @@ msgid "%(count)d location"
 msgid_plural "%(count)d locations"
 msgstr[0] "%(count)d 个位置"
 
-msgctxt "settings-import"
-msgid "Clear all overrides"
-msgstr "清除所有覆盖设置"
-
-msgctxt "settings-import"
-msgid "Clear all overrides?"
-msgstr "是否清除所有覆盖设置？"
-
-msgctxt "settings-import"
-msgid "Clearing the imported overrides changes the server IPs, in the Select location view, back to default."
-msgstr "清除导入的覆盖设置会将“选择位置”视图中的服务器 IP 更改回默认值。"
-
-msgctxt "settings-import"
-msgid "If you are having issues connecting to VPN servers, please contact support."
-msgstr "如果您在连接到 VPN 服务器时遇到问题，请联系支持团队。"
-
-msgctxt "settings-import"
-msgid "Import file"
-msgstr "导入文件"
-
-msgctxt "settings-import"
-msgid "Import files or text with new IP addresses for the servers in the Select location view."
-msgstr "为“选择位置”视图中的服务器导入具有新 IP 地址的文件或文本。"
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was successful, overrides are now active."
-msgstr "文件 %(fileName)s 导入成功，覆盖设置现已激活。"
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was unsuccessful, please try again."
-msgstr "文件 %(fileName)s 导入失败，请重试。"
-
-msgctxt "settings-import"
-msgid "Import of text was successful, overrides are now active."
-msgstr "文本导入成功，覆盖设置现已激活。"
-
-msgctxt "settings-import"
-msgid "Import of text was unsuccessful, please try again."
-msgstr "文本导入失败，请重试。"
-
-msgctxt "settings-import"
-msgid "IMPORT SUCCESSFUL"
-msgstr "导入成功"
-
-#. Title label in navigation bar
-msgctxt "settings-import"
-msgid "Import via text"
-msgstr "通过文本导入"
-
-msgctxt "settings-import"
-msgid "NO OVERRIDES IMPORTED"
-msgstr "未导入覆盖设置"
-
-msgctxt "settings-import"
-msgid "On some networks, where various types of censorship are being used, our server IP addresses are sometimes blocked."
-msgstr "在某些使用各类审查的网络上，我们的服务器 IP 地址有时会被阻止。"
-
-msgctxt "settings-import"
-msgid "OVERRIDES ACTIVE"
-msgstr "覆盖设置处于激活状态"
-
 #. Title label in navigation bar. This is for a feature that lets
 #. users import server IP settings.
 msgctxt "settings-import"
 msgid "Server IP override"
 msgstr "服务器 IP 覆盖"
-
-msgctxt "settings-import"
-msgid "To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view."
-msgstr "为了避免这种情况，您可以导入由我们的支持团队提供的文件或文本，其中的新 IP 地址会覆盖“选择位置”视图中服务器的默认地址。"
 
 #. Navigation button to the 'API access methods' view
 msgctxt "settings-view"
@@ -2750,10 +2644,6 @@ msgctxt "vpn-settings-view"
 msgid "Malware"
 msgstr "恶意软件"
 
-msgctxt "vpn-settings-view"
-msgid "Server IP override"
-msgstr "服务器 IP 覆盖"
-
 #. Label for settings that enables block of social media.
 msgctxt "vpn-settings-view"
 msgid "Social media"
@@ -3365,10 +3255,6 @@ msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "检测到服务器身份不匹配。出口节点的公钥已更改。"
 
-msgctxt "vpn-settings-view"
-msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
-msgstr "warren-api 服务器的 URL。格式 http(s)://host:port。留空 = 未设置（回退到默认后端）。重启服务以使更改生效。"
-
 msgid "OK"
 msgstr "确定"
 
@@ -3561,10 +3447,6 @@ msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
 msgstr "在新的固定项建立之前，替换检测保护会短暂失效：如果攻击者在两次重置之间替换了出口，首次重新连接时将不会被标记出来。"
 
-msgctxt "vpn-settings-view"
-msgid "Warren api URL"
-msgstr "Warren api URL"
-
 msgctxt "warren-multi-hop-view"
 msgid "Entry country"
 msgstr "入口国家/地区"
@@ -3653,7 +3535,6 @@ msgctxt "warren-pubkey-warning"
 msgid "Trust new key"
 msgstr "信任新密钥"
 
-
 msgctxt "warren-status-view"
 msgid "Last"
 msgstr "最近一次"
@@ -3701,10 +3582,6 @@ msgstr "批准登录"
 msgctxt "forum-login"
 msgid "Cancel"
 msgstr "取消"
-
-msgctxt "forum-login"
-msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
-msgstr "访问论坛需要 Warren 订阅。此钱包从未订阅过。"
 
 msgctxt "forum-login"
 msgid "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in."
@@ -4294,10 +4171,6 @@ msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
 msgstr "正在阻止网络：由于转发端口被反复举报滥用，您的访问权限已被撤销，直至 %(date)s。您可以在 %(url)s 提出申诉"
 
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "正在阻止网络：因违反使用政策，您的访问权限已被撤销，直至 %(date)s。如果您认为这是误判，请联系支持团队。"
-
 msgctxt "connect-view"
 msgid "Degraded bond"
 msgstr "聚合连接已降级"
@@ -4487,8 +4360,6 @@ msgctxt "split-tunneling-view"
 msgid "Lockdown mode already blocks every app while the VPN is off."
 msgstr "锁定模式已在 VPN 关闭期间阻止所有应用。"
 
-
-
 msgctxt "split-tunneling-view"
 msgid "Choose a route through the VPN to turn this on"
 msgstr "选择经过 VPN 的路由以开启此项"
@@ -4609,10 +4480,6 @@ msgstr "应退金额：%(amount)s"
 msgctxt "account-view"
 msgid "This purchase was not credited to this account."
 msgstr "此购买未记入该账户。"
-
-msgctxt "account-view"
-msgid "A withdrawal with another refund address is already recorded: contact support."
-msgstr "已有使用其他退款地址的撤回记录：请联系支持团队。"
 
 msgctxt "account-view"
 msgid "The refund address is not valid."

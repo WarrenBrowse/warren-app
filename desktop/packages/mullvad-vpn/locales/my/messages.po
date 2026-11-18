@@ -48,12 +48,6 @@ msgstr "အကောင့် ဆက်တင်"
 msgid "Add"
 msgstr "ပေါင်းထည့်ရန်"
 
-msgid "Any"
-msgstr "တစ်ခုခု"
-
-msgid "Apply"
-msgstr "သုံးရန်"
-
 msgid "Automatic"
 msgstr "အလိုအလျောက်"
 
@@ -161,9 +155,6 @@ msgstr "System Settings သို့ သွားရန်"
 msgid "Got it!"
 msgstr "ရပါပြီ။"
 
-msgid "Import"
-msgstr "ထည့်ရန်"
-
 msgid "IPv4"
 msgstr "IPv4"
 
@@ -192,9 +183,6 @@ msgstr "စာရင်းသစ်"
 
 msgid "Next"
 msgstr "ရှေ့သို့"
-
-msgid "No matching servers found"
-msgstr "ကိုက်ညီသည့် ဆာဗာများ မတွေ့ပါ"
 
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "<b>%(searchTerm)s</b> အတွက် ရလဒ် မရှိပါ။"
@@ -882,10 +870,6 @@ msgid "Too many simultaneous connections on this account. Disconnect another dev
 msgstr "ဤအကောင့်တွင် တစ်ပြိုင်နက် ချိတ်ဆက်မှုများ များလွန်းနေပါသည်။ အခြားစက်တွင် ချိတ်ဆက်မှု ဖြုတ်ပေးပါ သို့မဟုတ် ခဏကြာပြီးနောက် ထပ်မံချိတ်ဆက်ကြည့်ပါ။"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "အင်တာနက် ပိတ်ဆို့နေပါသည်: အသုံးပြုမှု မူဝါဒကို ချိုးဖောက်သောကြောင့် သင့်ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားပါသည်။ မှားယွင်းနေသည်ဟု ယူဆပါက ပံ့ပိုးကူညီရေးကို ဆက်သွယ်ပါ။"
-
-msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
 msgstr "အကောင့်ကို စစ်မှန်ကြောင်း အတည်ပြု၍ မရနိုင်ပါ။ ကျွန်ုပ်တို့၏ အသိုက်အဝန်း ဖိုရမ်တွင် ပြဿနာကို ရီပို့တ်လုပ်ပါ။"
 
@@ -1236,38 +1220,13 @@ msgctxt "error-boundary-view"
 msgid "Reload the app"
 msgstr "အက်ပ်ကို ပြန်လည်ဖွင့်ရန်"
 
-#. Title label in navigation bar
-msgctxt "filter-nav"
-msgid "Filter"
-msgstr "စစ်ထုတ်မှု"
-
-msgctxt "filter-view"
-msgid "All providers"
-msgstr "ပံ့ပိုးသူအားလုံး"
-
-msgctxt "filter-view"
-msgid "Warren owned only"
-msgstr "Warren ပိုင်ဆိုင်သည်များသာ"
-
 msgctxt "filter-view"
 msgid "Owned"
 msgstr "အပိုင်"
 
 msgctxt "filter-view"
-msgid "Ownership"
-msgstr "ပိုင်ဆိုင်မှု"
-
-msgctxt "filter-view"
-msgid "Providers"
-msgstr "ပံ့ပိုးသူများ"
-
-msgctxt "filter-view"
 msgid "Rented"
 msgstr "အငှား"
-
-msgctxt "filter-view"
-msgid "Rented only"
-msgstr "အငှားသီးသန့်"
 
 msgctxt "in-app-notifications"
 msgid "%(duration)s. Buy more credit."
@@ -2067,76 +2026,11 @@ msgid "%(count)d location"
 msgid_plural "%(count)d locations"
 msgstr[0] "တည်နေရာ %(count)d ခု"
 
-msgctxt "settings-import"
-msgid "Clear all overrides"
-msgstr "ကျော်လွန် ပယ်ဖျက်မှုအားလုံးကို ရှင်းရန်"
-
-msgctxt "settings-import"
-msgid "Clear all overrides?"
-msgstr "ကျော်လွန် ပယ်ဖျက်မှုအားလုံးကို ရှင်းမည်လား။"
-
-msgctxt "settings-import"
-msgid "Clearing the imported overrides changes the server IPs, in the Select location view, back to default."
-msgstr "ထည့်သွင်းထားသော ကျော်လွန် ပယ်ဖျက်မှုများကို ရှင်းလင်းခြင်းဖြင့် တည်နေရာ ရွေးရန် ပြသမှုတွင် ဆာဗာ IP များကို ပုံသေအဖြစ် ပြန်ပြောင်းလိုက်ပါမည်။"
-
-msgctxt "settings-import"
-msgid "If you are having issues connecting to VPN servers, please contact support."
-msgstr "VPN ဆာဗာများကို ချိတ်ဆက်ရာတွင် ပြဿနာများရှိနေပါက အကူအညီပေးရေးအဖွဲ့ကို ဆက်သွယ်ပါ။"
-
-msgctxt "settings-import"
-msgid "Import file"
-msgstr "ဖိုင် ထည့်သွင်းရန်"
-
-msgctxt "settings-import"
-msgid "Import files or text with new IP addresses for the servers in the Select location view."
-msgstr "တည်နေရာ ရွေးရန် ပြသမှုတွင် ဆာဗာများအတွက် IP လိပ်စာသစ်များပါဝင်‌သော ဖိုင်များ သို့မဟုတ် စာသားကို ထည့်သွင်းပါ။"
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was successful, overrides are now active."
-msgstr "%(fileName)s ဖိုင် ထည့်သွင်းမှု အောင်မြင်ပါသည်၊ ယခုအခါ ကျော်လွန် ပယ်ဖျက်မှုများ သက်ဝင်နေပြီ ဖြစ်သည်။"
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was unsuccessful, please try again."
-msgstr "%(fileName)s ဖိုင် ထည့်သွင်းမှု မအောင်မြင်ပါ၊ ထပ်ကြိုးစားကြည့်ပါ။"
-
-msgctxt "settings-import"
-msgid "Import of text was successful, overrides are now active."
-msgstr "စာသား ထည့်သွင်းမှု အောင်မြင်ပါသည်၊ ယခုအခါ ကျော်လွန် ပယ်ဖျက်မှုများ သက်ဝင်နေပြီ ဖြစ်သည်။"
-
-msgctxt "settings-import"
-msgid "Import of text was unsuccessful, please try again."
-msgstr "စာသား ထည့်သွင်းမှု မအောင်မြင်ပါ၊ ထပ်ကြိုးစားကြည့်ပါ။"
-
-msgctxt "settings-import"
-msgid "IMPORT SUCCESSFUL"
-msgstr "ထည့်သွင်းမှု အောင်မြင်ပါသည်"
-
-#. Title label in navigation bar
-msgctxt "settings-import"
-msgid "Import via text"
-msgstr "စာသားမှတစ်ဆင့် ထည့်သွင်းရန်"
-
-msgctxt "settings-import"
-msgid "NO OVERRIDES IMPORTED"
-msgstr "ထည့်သွင်းထားသော ကျော်လွန် ပယ်ဖျက်မှုများ မရှိပါ"
-
-msgctxt "settings-import"
-msgid "On some networks, where various types of censorship are being used, our server IP addresses are sometimes blocked."
-msgstr "အမျိုးအမျိုးသော စိစစ်ဖြတ်တောက်မှု အမျိုးအစားများ အသုံးပြုသည့် ကွန်ရက်အချို့တွင် ကျွန်ုပ်တို့၏ ဆာဗာ IP လိပ်စာများကို တစ်ခါတစ်ရံ ပိတ်ဆို့ထားပါသည်။"
-
-msgctxt "settings-import"
-msgid "OVERRIDES ACTIVE"
-msgstr "ထပ်ရေးမှုများ သက်ဝင်ခြင်း"
-
 #. Title label in navigation bar. This is for a feature that lets
 #. users import server IP settings.
 msgctxt "settings-import"
 msgid "Server IP override"
 msgstr "ဆာဗာ IP ကျော်လွန် ပယ်ဖျက်မှု"
-
-msgctxt "settings-import"
-msgid "To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view."
-msgstr "ဤသည်ကို ရှောင်လွှဲရန် ကျွန်ုပ်တို့ အကူအညီပေးရေးအဖွဲ့မှ ပေးထားသော တည်နေရာ ရွေးရန် ပြသမှုအတွင်းရှိ ဆာဗာများ၏ ပုံသေ လိပ်စာများကို ကျော်လွန် ပယ်ဖျက်သည့် IP လိပ်စာအသစ်များဖြင့် ဖိုင် သို့မဟုတ် စာသားကို သင် ထည့်သွင်းနိုင်ပါသည်။"
 
 #. Navigation button to the 'API access methods' view
 msgctxt "settings-view"
@@ -2750,10 +2644,6 @@ msgctxt "vpn-settings-view"
 msgid "Malware"
 msgstr "မဲလ်ဝဲရ်"
 
-msgctxt "vpn-settings-view"
-msgid "Server IP override"
-msgstr "ဆာဗာ IP ကျော်လွန် ပယ်ဖျက်ရန်"
-
 #. Label for settings that enables block of social media.
 msgctxt "vpn-settings-view"
 msgid "Social media"
@@ -3365,10 +3255,6 @@ msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "ဆာဗာ အထောက်အထား မကိုက်ညီမှု တွေ့ရှိသည်။ ထွက်ပေါက်နုဒ်၏ အများသုံးသော့ ပြောင်းလဲသွားပါသည်။"
 
-msgctxt "vpn-settings-view"
-msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
-msgstr "warren-api ဆာဗာ၏ URL။ ပုံစံ http(s)://host:port။ ဗလာ = မသတ်မှတ်ထား (မူရင်း backend သို့ ပြန်သုံးသည်)။ ပြောင်းလဲမှု သက်ရောက်စေရန် ဝန်ဆောင်မှုကို ပြန်လည်စတင်ပါ။"
-
 msgid "OK"
 msgstr "OK"
 
@@ -3561,10 +3447,6 @@ msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
 msgstr "ပင်ထိုးမှုအသစ်များ မပြုလုပ်ရသေးမီ အစားထိုးခြင်းရှာဖွေသည့် ကာကွယ်မှုသည် ခဏတာ ပိတ်နေသည် - ပြန်လည်သတ်မှတ်မှုနှစ်ခုကြားတွင် exit ကို အစားထိုးထားသည့် တိုက်ခိုက်သူတစ်ဦးကို ပထမအကြိမ် ပြန်ချိတ်ဆက်ချိန်တွင် သတိပေးဖော်ပြမည် မဟုတ်ပါ။"
 
-msgctxt "vpn-settings-view"
-msgid "Warren api URL"
-msgstr "Warren API လိပ်စာ (URL)"
-
 msgctxt "warren-multi-hop-view"
 msgid "Entry country"
 msgstr "ဝင်ရောက်သည့်နိုင်ငံ"
@@ -3653,7 +3535,6 @@ msgctxt "warren-pubkey-warning"
 msgid "Trust new key"
 msgstr "သော့အသစ်ကို ယုံကြည်ရန်"
 
-
 msgctxt "warren-status-view"
 msgid "Last"
 msgstr "နောက်ဆုံး"
@@ -3701,10 +3582,6 @@ msgstr "ဝင်ရောက်ခြင်းကို အတည်ပြု�
 msgctxt "forum-login"
 msgid "Cancel"
 msgstr "ပယ်ဖျက်ရန်"
-
-msgctxt "forum-login"
-msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
-msgstr "ဖိုရမ်ကို အသုံးပြုရန် Warren subscription လိုအပ်ပါသည်။ ဤပိုက်ဆံအိတ်သည် တစ်ခါမျှ subscription မဝယ်ယူဖူးပါ။"
 
 msgctxt "forum-login"
 msgid "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in."
@@ -4294,10 +4171,6 @@ msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
 msgstr "အင်တာနက် ပိတ်ဆို့နေပါသည်: ပြန်ညွှန်းထားသော ပို့တ်နှင့်ပတ်သက်၍ အလွဲသုံးမှု အစီရင်ခံစာများ ထပ်ခါထပ်ခါ ရရှိပြီးနောက် သင့်ဝင်ရောက်ခွင့်ကို %(date)s အထိ ရုပ်သိမ်းထားပါသည်။ %(url)s တွင် အယူခံဝင်နိုင်ပါသည်"
 
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "အင်တာနက် ပိတ်ဆို့နေပါသည်: အသုံးပြုမှု မူဝါဒကို ချိုးဖောက်သောကြောင့် သင့်ဝင်ရောက်ခွင့်ကို %(date)s အထိ ရုပ်သိမ်းထားပါသည်။ မှားယွင်းနေသည်ဟု ယူဆပါက ပံ့ပိုးကူညီရေးကို ဆက်သွယ်ပါ။"
-
 msgctxt "connect-view"
 msgid "Degraded bond"
 msgstr "ပေါင်းစပ်ချိတ်ဆက်မှု အားနည်းနေသည်"
@@ -4487,8 +4360,6 @@ msgctxt "split-tunneling-view"
 msgid "Lockdown mode already blocks every app while the VPN is off."
 msgstr "လော့ခ်ဒေါင်းစနစ်သည် VPN ပိတ်ထားစဉ် အက်ပ်အားလုံးကို ပိတ်ဆို့ထားပြီး ဖြစ်သည်။"
 
-
-
 msgctxt "split-tunneling-view"
 msgid "Choose a route through the VPN to turn this on"
 msgstr "၎င်းကို ဖွင့်ရန် VPN မှတစ်ဆင့် လမ်းကြောင်းတစ်ခု ရွေးပါ"
@@ -4609,10 +4480,6 @@ msgstr "ပြန်အမ်းမည့် ပမာဏ: %(amount)s"
 msgctxt "account-view"
 msgid "This purchase was not credited to this account."
 msgstr "ဤဝယ်ယူမှုကို ဤအကောင့်သို့ ထည့်သွင်းမထားပါ။"
-
-msgctxt "account-view"
-msgid "A withdrawal with another refund address is already recorded: contact support."
-msgstr "အခြား ငွေပြန်အမ်းလိပ်စာဖြင့် ပယ်ဖျက်မှု မှတ်တမ်းရှိပြီးဖြစ်သည်: အကူအညီဌာနကို ဆက်သွယ်ပါ။"
 
 msgctxt "account-view"
 msgid "The refund address is not valid."

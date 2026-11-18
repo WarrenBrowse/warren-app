@@ -54,12 +54,6 @@ msgstr "Tiliasetukset"
 msgid "Add"
 msgstr "Lisää"
 
-msgid "Any"
-msgstr "Mikä tahansa"
-
-msgid "Apply"
-msgstr "Ota käyttöön"
-
 msgid "Automatic"
 msgstr "Automaattinen"
 
@@ -167,9 +161,6 @@ msgstr "Siirry järjestelmäasetuksiin"
 msgid "Got it!"
 msgstr "Selvä!"
 
-msgid "Import"
-msgstr "Tuo"
-
 msgid "IPv4"
 msgstr "IPv4"
 
@@ -198,9 +189,6 @@ msgstr "Uusi luettelo"
 
 msgid "Next"
 msgstr "Seuraava"
-
-msgid "No matching servers found"
-msgstr "Vastaavia palvelimia ei löytynyt"
 
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "Ei tuloksia haulle <b>%(searchTerm)s</b>."
@@ -888,10 +876,6 @@ msgid "Too many simultaneous connections on this account. Disconnect another dev
 msgstr "Tällä tilillä on liian monta samanaikaista yhteyttä. Katkaise toisen laitteen yhteys tai yritä hetken kuluttua uudelleen."
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Verkkoyhteys estetään: käyttöoikeutesi on peruttu käyttöehtojen rikkomisen vuoksi. Ota yhteyttä tukeen, jos tämä on mielestäsi virhe."
-
-msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
 msgstr "Tilin todentaminen ei onnistu. Ilmoita ongelmasta foorumillamme."
 
@@ -1244,38 +1228,13 @@ msgctxt "error-boundary-view"
 msgid "Reload the app"
 msgstr "Lataa sovellus uudelleen"
 
-#. Title label in navigation bar
-msgctxt "filter-nav"
-msgid "Filter"
-msgstr "Suodata"
-
-msgctxt "filter-view"
-msgid "All providers"
-msgstr "Kaikki palveluntarjoajat"
-
-msgctxt "filter-view"
-msgid "Warren owned only"
-msgstr "Vain Warrenin omistamat"
-
 msgctxt "filter-view"
 msgid "Owned"
 msgstr "Omistettu"
 
 msgctxt "filter-view"
-msgid "Ownership"
-msgstr "Omistajuus"
-
-msgctxt "filter-view"
-msgid "Providers"
-msgstr "Tarjoajat"
-
-msgctxt "filter-view"
 msgid "Rented"
 msgstr "Vuokrattu"
-
-msgctxt "filter-view"
-msgid "Rented only"
-msgstr "Vain vuokratut"
 
 msgctxt "in-app-notifications"
 msgid "%(duration)s. Buy more credit."
@@ -2076,76 +2035,11 @@ msgid_plural "%(count)d locations"
 msgstr[0] "%(count)d sijainti"
 msgstr[1] "%(count)d sijaintia"
 
-msgctxt "settings-import"
-msgid "Clear all overrides"
-msgstr "Poista kaikki ohitukset"
-
-msgctxt "settings-import"
-msgid "Clear all overrides?"
-msgstr "Poistetaanko kaikki ohitukset?"
-
-msgctxt "settings-import"
-msgid "Clearing the imported overrides changes the server IPs, in the Select location view, back to default."
-msgstr "Tuotujen ohitusten poistaminen vaihtaa palvelimien IP-osoitteet takaisin oletusarvoisiksi sijainnin valintanäkymässä."
-
-msgctxt "settings-import"
-msgid "If you are having issues connecting to VPN servers, please contact support."
-msgstr "Jos sinulla on ongelmia yhteyden muodostamisessa VPN-palvelimiin, ota yhteyttä tukeen."
-
-msgctxt "settings-import"
-msgid "Import file"
-msgstr "Tuo tiedosto"
-
-msgctxt "settings-import"
-msgid "Import files or text with new IP addresses for the servers in the Select location view."
-msgstr "Tuo tiedostoja tai tekstiä palvelimien uusin IP-osoittein sijainnin valintanäkymässä."
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was successful, overrides are now active."
-msgstr "Tiedoston %(fileName)s tuonti onnistui. Ohitukset ovat nyt voimassa."
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was unsuccessful, please try again."
-msgstr "Tiedoston %(fileName)s tuonti epäonnistui. Yritä uudelleen."
-
-msgctxt "settings-import"
-msgid "Import of text was successful, overrides are now active."
-msgstr "Tekstin tuonti onnistui. Ohitukset ovat nyt voimassa."
-
-msgctxt "settings-import"
-msgid "Import of text was unsuccessful, please try again."
-msgstr "Tekstin tuonti epäonnistui. Yritä uudelleen."
-
-msgctxt "settings-import"
-msgid "IMPORT SUCCESSFUL"
-msgstr "TUONTI ONNISTUI"
-
-#. Title label in navigation bar
-msgctxt "settings-import"
-msgid "Import via text"
-msgstr "Tuo tekstinä"
-
-msgctxt "settings-import"
-msgid "NO OVERRIDES IMPORTED"
-msgstr "OHITUKSIA EI TUOTU"
-
-msgctxt "settings-import"
-msgid "On some networks, where various types of censorship are being used, our server IP addresses are sometimes blocked."
-msgstr "Palvelimiemme IP-osoitteet estetään toisinaan joissakin useita erityyppistä sensurointimenetelmiä käyttävissä verkoissa."
-
-msgctxt "settings-import"
-msgid "OVERRIDES ACTIVE"
-msgstr "OHITUKSIA KÄYTÖSSÄ"
-
 #. Title label in navigation bar. This is for a feature that lets
 #. users import server IP settings.
 msgctxt "settings-import"
 msgid "Server IP override"
 msgstr "Palvelimen IP-osoitteen ohitus"
-
-msgctxt "settings-import"
-msgid "To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view."
-msgstr "Voit kiertää estot tuomalla tukitiimimme toimittaman tiedoston tai tekstin, josta löytyy uusia, palvelimien oletusosoitteet sijainnin valintanäkymässä ohittavia IP-osoitteita."
 
 #. Navigation button to the 'API access methods' view
 msgctxt "settings-view"
@@ -2759,10 +2653,6 @@ msgctxt "vpn-settings-view"
 msgid "Malware"
 msgstr "Haittaohjelmat"
 
-msgctxt "vpn-settings-view"
-msgid "Server IP override"
-msgstr "Palvelimen IP-osoitteen ohitus"
-
 #. Label for settings that enables block of social media.
 msgctxt "vpn-settings-view"
 msgid "Social media"
@@ -3086,7 +2976,6 @@ msgstr "UDP TCP:n kautta"
 msgid "Continue"
 msgstr "Jatka"
 
-
 msgctxt "warren-multi-hop-view"
 msgid "Entry country"
 msgstr "Tulomaa"
@@ -3282,7 +3171,6 @@ msgstr "Tämä tarkoittaa yleensä, että operaattori on vaihtanut avainta, mutt
 msgctxt "warren-pubkey-warning"
 msgid "Trust new key"
 msgstr "Luota uuteen avaimeen"
-
 
 msgctxt "warren-status-view"
 msgid "Last"
@@ -3480,10 +3368,6 @@ msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "Palvelimen identiteetin epäjohdonmukaisuus havaittu. Poistumissolmun julkinen avain on muuttunut."
 
-msgctxt "vpn-settings-view"
-msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
-msgstr "warren-api-palvelimen URL-osoite. Muoto http(s)://host:port. Tyhjä = ei asetettu (palautuu oletustaustajärjestelmään). Käynnistä palvelu uudelleen, jotta muutos tulee voimaan."
-
 msgid "OK"
 msgstr "OK"
 
@@ -3676,10 +3560,6 @@ msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
 msgstr "Kunnes uudet kiinnitykset on muodostettu, korvaamisen havaitsemissuoja on hetkellisesti poissa käytöstä: hyökkääjää, joka korvasi poistumispalvelimen nollausten välillä, ei merkitä ensimmäisellä uudelleenyhdistyksellä."
 
-msgctxt "vpn-settings-view"
-msgid "Warren api URL"
-msgstr "Warren-rajapinnan URL"
-
 msgctxt "warren-multi-hop-view"
 msgid "Multihop"
 msgstr "Multihop"
@@ -3711,10 +3591,6 @@ msgstr "Hyväksy kirjautuminen"
 msgctxt "forum-login"
 msgid "Cancel"
 msgstr "Peruuta"
-
-msgctxt "forum-login"
-msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
-msgstr "Foorumin käyttö edellyttää Warren-tilausta. Tällä lompakolla ei ole koskaan ollut tilausta."
 
 msgctxt "forum-login"
 msgid "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in."
@@ -4305,10 +4181,6 @@ msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
 msgstr "Verkkoyhteys estetään: käyttöoikeutesi on peruttu %(date)s asti toistuvien väärinkäyttöilmoitusten vuoksi, jotka koskevat edelleenohjattua porttia. Voit riitauttaa tämän osoitteessa %(url)s"
 
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Verkkoyhteys estetään: käyttöoikeutesi on peruttu %(date)s asti käyttöehtojen rikkomisen vuoksi. Ota yhteyttä tukeen, jos tämä on mielestäsi virhe."
-
 msgctxt "connect-view"
 msgid "Degraded bond"
 msgstr "Heikentynyt niputus"
@@ -4499,8 +4371,6 @@ msgctxt "split-tunneling-view"
 msgid "Lockdown mode already blocks every app while the VPN is off."
 msgstr "Lukitustila estää jo kaikki sovellukset, kun VPN on pois päältä."
 
-
-
 msgctxt "split-tunneling-view"
 msgid "Choose a route through the VPN to turn this on"
 msgstr "Valitse reitti VPN:n kautta ottaaksesi tämän käyttöön"
@@ -4622,10 +4492,6 @@ msgstr "Palautettava summa: %(amount)s"
 msgctxt "account-view"
 msgid "This purchase was not credited to this account."
 msgstr "Tätä ostoa ei hyvitetty tälle tilille."
-
-msgctxt "account-view"
-msgid "A withdrawal with another refund address is already recorded: contact support."
-msgstr "Peruutus toisella palautusosoitteella on jo kirjattu: ota yhteyttä tukeen."
 
 msgctxt "account-view"
 msgid "The refund address is not valid."

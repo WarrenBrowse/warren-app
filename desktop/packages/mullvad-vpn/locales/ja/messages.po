@@ -48,12 +48,6 @@ msgstr "アカウント設定"
 msgid "Add"
 msgstr "追加"
 
-msgid "Any"
-msgstr "すべて"
-
-msgid "Apply"
-msgstr "適用"
-
 msgid "Automatic"
 msgstr "自動"
 
@@ -161,9 +155,6 @@ msgstr "システム設定に移動"
 msgid "Got it!"
 msgstr "了解"
 
-msgid "Import"
-msgstr "インポート"
-
 msgid "IPv4"
 msgstr "IPv4"
 
@@ -192,9 +183,6 @@ msgstr "新規リスト"
 
 msgid "Next"
 msgstr "次へ"
-
-msgid "No matching servers found"
-msgstr "一致するサーバーが見つかりません"
 
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "<b>%(searchTerm)s</b>に該当する検索結果はありません。"
@@ -882,10 +870,6 @@ msgid "Too many simultaneous connections on this account. Disconnect another dev
 msgstr "このアカウントの同時接続が多すぎます。他のデバイスを切断するか、少し待ってから再接続してみてください。"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "インターネットをブロック中: 利用ポリシー違反により、アクセスが取り消されました。誤りだと思われる場合はサポートにお問い合わせください。"
-
-msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
 msgstr "アカウントを認証できません。コミュニティフォーラムで問題を報告してください。"
 
@@ -1236,38 +1220,13 @@ msgctxt "error-boundary-view"
 msgid "Reload the app"
 msgstr "アプリを再読み込み"
 
-#. Title label in navigation bar
-msgctxt "filter-nav"
-msgid "Filter"
-msgstr "絞り込み"
-
-msgctxt "filter-view"
-msgid "All providers"
-msgstr "すべてのプロバイダ"
-
-msgctxt "filter-view"
-msgid "Warren owned only"
-msgstr "Warren 所有サーバーのみ"
-
 msgctxt "filter-view"
 msgid "Owned"
 msgstr "自社サーバー"
 
 msgctxt "filter-view"
-msgid "Ownership"
-msgstr "所有権"
-
-msgctxt "filter-view"
-msgid "Providers"
-msgstr "プロバイダ"
-
-msgctxt "filter-view"
 msgid "Rented"
 msgstr "レンタルサーバー"
-
-msgctxt "filter-view"
-msgid "Rented only"
-msgstr "レンタルサーバーのみ"
 
 msgctxt "in-app-notifications"
 msgid "%(duration)s. Buy more credit."
@@ -2067,76 +2026,11 @@ msgid "%(count)d location"
 msgid_plural "%(count)d locations"
 msgstr[0] "%(count)d か所"
 
-msgctxt "settings-import"
-msgid "Clear all overrides"
-msgstr "すべてのオーバーライドをクリア"
-
-msgctxt "settings-import"
-msgid "Clear all overrides?"
-msgstr "すべてのオーバーライドをクリアしますか？"
-
-msgctxt "settings-import"
-msgid "Clearing the imported overrides changes the server IPs, in the Select location view, back to default."
-msgstr "インポートされたオーバーライドをクリアすると「場所を選択」ビューのサーバーIPがデフォルトに戻されます。"
-
-msgctxt "settings-import"
-msgid "If you are having issues connecting to VPN servers, please contact support."
-msgstr "VPNサーバーへの接続に問題が生じている場合は、サポートにお問い合わせください。"
-
-msgctxt "settings-import"
-msgid "Import file"
-msgstr "ファイルをインポート"
-
-msgctxt "settings-import"
-msgid "Import files or text with new IP addresses for the servers in the Select location view."
-msgstr "「場所を選択」ビューでサーバーの新しいIPアドレスを持つファイルまたはテキストをインポートします。"
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was successful, overrides are now active."
-msgstr "ファイル %(fileName)s を正常にインポートしました。現在、オーバーライドが有効です。"
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was unsuccessful, please try again."
-msgstr "ファイル %(fileName)s は正常にインポートされませんでした。もう一度お試しください。"
-
-msgctxt "settings-import"
-msgid "Import of text was successful, overrides are now active."
-msgstr "テキストを正常にインポートしました。現在、オーバーライドが有効です。"
-
-msgctxt "settings-import"
-msgid "Import of text was unsuccessful, please try again."
-msgstr "テキストは正常にインポートされませんでした。もう一度お試しください。"
-
-msgctxt "settings-import"
-msgid "IMPORT SUCCESSFUL"
-msgstr "インポートしました"
-
-#. Title label in navigation bar
-msgctxt "settings-import"
-msgid "Import via text"
-msgstr "テキストでインポート"
-
-msgctxt "settings-import"
-msgid "NO OVERRIDES IMPORTED"
-msgstr "オーバーライドはインポートされませんでした"
-
-msgctxt "settings-import"
-msgid "On some networks, where various types of censorship are being used, our server IP addresses are sometimes blocked."
-msgstr "各種の検閲が使用されている一部のネットワークでは、サーバーIPアドレスがブロックされる場合があります。"
-
-msgctxt "settings-import"
-msgid "OVERRIDES ACTIVE"
-msgstr "オーバーライドが有効です"
-
 #. Title label in navigation bar. This is for a feature that lets
 #. users import server IP settings.
 msgctxt "settings-import"
 msgid "Server IP override"
 msgstr "サーバーIPのオーバーライド"
-
-msgctxt "settings-import"
-msgid "To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view."
-msgstr "これを回避するには、「場所を選択」ビューでサポートチームが提供したサーバーのデフォルトアドレスをオーバーライドする新しいIPアドレスを含むファイルまたはテキストをインポートできます。"
 
 #. Navigation button to the 'API access methods' view
 msgctxt "settings-view"
@@ -2750,10 +2644,6 @@ msgctxt "vpn-settings-view"
 msgid "Malware"
 msgstr "マルウェア"
 
-msgctxt "vpn-settings-view"
-msgid "Server IP override"
-msgstr "サーバーIPのオーバーライド"
-
 #. Label for settings that enables block of social media.
 msgctxt "vpn-settings-view"
 msgid "Social media"
@@ -3365,10 +3255,6 @@ msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "サーバー identity の不一致が検出されました。出口ノードの公開鍵が変更されました。"
 
-msgctxt "vpn-settings-view"
-msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
-msgstr "warren-api サーバーの URL。形式 http(s)://host:port。空 = 未設定（既定のバックエンドにフォールバック）。変更を反映するにはサービスを再起動してください。"
-
 msgid "OK"
 msgstr "OK"
 
@@ -3561,10 +3447,6 @@ msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
 msgstr "新しいピンが確立されるまでの間、すり替え検知の保護は一時的に無効になります。リセットの間に出口サーバーをすり替えた攻撃者がいた場合、最初の再接続時には検出されません。"
 
-msgctxt "vpn-settings-view"
-msgid "Warren api URL"
-msgstr "Warren API の URL"
-
 msgctxt "warren-multi-hop-view"
 msgid "Entry country"
 msgstr "入口の国"
@@ -3653,7 +3535,6 @@ msgctxt "warren-pubkey-warning"
 msgid "Trust new key"
 msgstr "新しい鍵を信頼"
 
-
 msgctxt "warren-status-view"
 msgid "Last"
 msgstr "最終"
@@ -3701,10 +3582,6 @@ msgstr "サインインを承認"
 msgctxt "forum-login"
 msgid "Cancel"
 msgstr "キャンセル"
-
-msgctxt "forum-login"
-msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
-msgstr "フォーラムを利用するには Warren のサブスクリプションが必要です。このウォレットは一度も登録していません。"
 
 msgctxt "forum-login"
 msgid "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in."
@@ -4294,10 +4171,6 @@ msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
 msgstr "インターネットをブロック中: 転送ポートに関する不正利用の報告が繰り返されたため、%(date)s までアクセスが取り消されました。%(url)s で異議を申し立てられます"
 
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "インターネットをブロック中: 利用ポリシー違反により、%(date)s までアクセスが取り消されました。誤りだと思われる場合はサポートにお問い合わせください。"
-
 msgctxt "connect-view"
 msgid "Degraded bond"
 msgstr "ボンディング低下"
@@ -4487,8 +4360,6 @@ msgctxt "split-tunneling-view"
 msgid "Lockdown mode already blocks every app while the VPN is off."
 msgstr "ロックダウンモードが、VPNがオフの間すべてのアプリをすでにブロックしています。"
 
-
-
 msgctxt "split-tunneling-view"
 msgid "Choose a route through the VPN to turn this on"
 msgstr "有効にするには、VPN経由のルートを選択してください"
@@ -4609,10 +4480,6 @@ msgstr "返金額：%(amount)s"
 msgctxt "account-view"
 msgid "This purchase was not credited to this account."
 msgstr "この購入はこのアカウントに反映されていません。"
-
-msgctxt "account-view"
-msgid "A withdrawal with another refund address is already recorded: contact support."
-msgstr "別の返金先アドレスで撤回がすでに記録されています。サポートにお問い合わせください。"
 
 msgctxt "account-view"
 msgid "The refund address is not valid."

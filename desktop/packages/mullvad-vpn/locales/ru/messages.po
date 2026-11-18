@@ -66,12 +66,6 @@ msgstr "Настройки учетной записи"
 msgid "Add"
 msgstr "Добавить"
 
-msgid "Any"
-msgstr "Все"
-
-msgid "Apply"
-msgstr "Применить"
-
 msgid "Automatic"
 msgstr "Автоматически"
 
@@ -179,9 +173,6 @@ msgstr "Перейти в системные настройки"
 msgid "Got it!"
 msgstr "Понятно!"
 
-msgid "Import"
-msgstr "Импортировать"
-
 msgid "IPv4"
 msgstr "IPv4"
 
@@ -210,9 +201,6 @@ msgstr "Новый список"
 
 msgid "Next"
 msgstr "Далее"
-
-msgid "No matching servers found"
-msgstr "Подходящих серверов не найдено"
 
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "По запросу <b>%(searchTerm)s</b> ничего не найдено."
@@ -900,10 +888,6 @@ msgid "Too many simultaneous connections on this account. Disconnect another dev
 msgstr "Слишком много одновременных подключений с этой учетной записи. Отключите другое устройство или попробуйте подключиться еще раз через некоторое время."
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Интернет блокируется: ваш доступ отозван за нарушение правил использования. Обратитесь в поддержку, если считаете это ошибкой."
-
-msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
 msgstr "Не удается произвести аутентификацию учетной записи. Сообщите о проблеме на нашем форуме."
 
@@ -1260,38 +1244,13 @@ msgctxt "error-boundary-view"
 msgid "Reload the app"
 msgstr "Перезагрузить приложение"
 
-#. Title label in navigation bar
-msgctxt "filter-nav"
-msgid "Filter"
-msgstr "Фильтр"
-
-msgctxt "filter-view"
-msgid "All providers"
-msgstr "Все провайдеры"
-
-msgctxt "filter-view"
-msgid "Warren owned only"
-msgstr "Только принадлежащие Warren"
-
 msgctxt "filter-view"
 msgid "Owned"
 msgstr "Во владении"
 
 msgctxt "filter-view"
-msgid "Ownership"
-msgstr "Собственность"
-
-msgctxt "filter-view"
-msgid "Providers"
-msgstr "Провайдеры"
-
-msgctxt "filter-view"
 msgid "Rented"
 msgstr "Арендованные"
-
-msgctxt "filter-view"
-msgid "Rented only"
-msgstr "Только арендованные"
 
 msgctxt "in-app-notifications"
 msgid "%(duration)s. Buy more credit."
@@ -2094,76 +2053,11 @@ msgstr[1] "%(count)d места"
 msgstr[2] "%(count)d мест"
 msgstr[3] "%(count)d места"
 
-msgctxt "settings-import"
-msgid "Clear all overrides"
-msgstr "Удалить все переопределения"
-
-msgctxt "settings-import"
-msgid "Clear all overrides?"
-msgstr "Удалить все переопределения?"
-
-msgctxt "settings-import"
-msgid "Clearing the imported overrides changes the server IPs, in the Select location view, back to default."
-msgstr "Удаление импортированных переопределений изменяет IP-адреса серверов в представлении «Выбор местоположения» на значения по умолчанию."
-
-msgctxt "settings-import"
-msgid "If you are having issues connecting to VPN servers, please contact support."
-msgstr "Если у вас возникли проблемы с подключением к VPN-серверам, обратитесь в службу поддержки."
-
-msgctxt "settings-import"
-msgid "Import file"
-msgstr "Импортировать файл"
-
-msgctxt "settings-import"
-msgid "Import files or text with new IP addresses for the servers in the Select location view."
-msgstr "Импортируйте файлы или текст с новыми IP-адресами для серверов в представлении «Выбор местоположения»."
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was successful, overrides are now active."
-msgstr "Файл «%(fileName)s» импортирован, переопределения активны."
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was unsuccessful, please try again."
-msgstr "Файл «%(fileName)s» импортировать не удалось, попробуйте еще раз."
-
-msgctxt "settings-import"
-msgid "Import of text was successful, overrides are now active."
-msgstr "Текст импортирован, переопределения активны."
-
-msgctxt "settings-import"
-msgid "Import of text was unsuccessful, please try again."
-msgstr "Текст импортировать не удалось, попробуйте еще раз."
-
-msgctxt "settings-import"
-msgid "IMPORT SUCCESSFUL"
-msgstr "ИМПОРТ ВЫПОЛНЕН"
-
-#. Title label in navigation bar
-msgctxt "settings-import"
-msgid "Import via text"
-msgstr "Импортировать через текст"
-
-msgctxt "settings-import"
-msgid "NO OVERRIDES IMPORTED"
-msgstr "ПЕРЕОПРЕДЕЛЕНИЯ НЕ ИМПОРТИРОВАНЫ"
-
-msgctxt "settings-import"
-msgid "On some networks, where various types of censorship are being used, our server IP addresses are sometimes blocked."
-msgstr "В некоторых сетях, где используются различные виды цензуры, IP-адреса наших серверов иногда блокируются."
-
-msgctxt "settings-import"
-msgid "OVERRIDES ACTIVE"
-msgstr "ПЕРЕОПРЕДЕЛЕНИЯ АКТИВНЫ"
-
 #. Title label in navigation bar. This is for a feature that lets
 #. users import server IP settings.
 msgctxt "settings-import"
 msgid "Server IP override"
 msgstr "Переопределение IP-адреса сервера"
-
-msgctxt "settings-import"
-msgid "To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view."
-msgstr "Чтобы обойти эту проблему, можно импортировать файл или текст, предоставленный нашей службой поддержки, с новыми IP-адресами, которые заменяют адреса серверов по умолчанию в представлении «Выбор местоположения»."
 
 #. Navigation button to the 'API access methods' view
 msgctxt "settings-view"
@@ -2777,10 +2671,6 @@ msgctxt "vpn-settings-view"
 msgid "Malware"
 msgstr "Вредоносное ПО"
 
-msgctxt "vpn-settings-view"
-msgid "Server IP override"
-msgstr "Переопределение IP-адреса сервера"
-
 #. Label for settings that enables block of social media.
 msgctxt "vpn-settings-view"
 msgid "Social media"
@@ -3104,7 +2994,6 @@ msgstr "UDP через TCP"
 msgid "Continue"
 msgstr "Продолжить"
 
-
 msgctxt "warren-multi-hop-view"
 msgid "Entry country"
 msgstr "Страна входа"
@@ -3300,7 +3189,6 @@ msgstr "Обычно это означает, что оператор ротир
 msgctxt "warren-pubkey-warning"
 msgid "Trust new key"
 msgstr "Доверять новому ключу"
-
 
 msgctxt "warren-status-view"
 msgid "Last"
@@ -3498,10 +3386,6 @@ msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "Обнаружено несоответствие идентификатора сервера. Открытый ключ выходного узла изменился."
 
-msgctxt "vpn-settings-view"
-msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
-msgstr "URL-адрес сервера warren-api. Формат http(s)://host:port. Пусто = не задано (используется бэкенд по умолчанию). Перезапустите службу, чтобы изменение вступило в силу."
-
 msgid "OK"
 msgstr "ОК"
 
@@ -3694,10 +3578,6 @@ msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
 msgstr "Пока новые закрепления не установлены, защита от обнаружения подмены ненадолго отключается: злоумышленник, заменивший выходной сервер между сбросами, не будет обнаружен при первом переподключении."
 
-msgctxt "vpn-settings-view"
-msgid "Warren api URL"
-msgstr "URL-адрес Warren api"
-
 msgctxt "warren-multi-hop-view"
 msgid "Multihop"
 msgstr "Multihop"
@@ -3729,10 +3609,6 @@ msgstr "Подтвердить вход"
 msgctxt "forum-login"
 msgid "Cancel"
 msgstr "Отмена"
-
-msgctxt "forum-login"
-msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
-msgstr "Доступ к форуму требует подписки Warren. С этого кошелька подписка никогда не оформлялась."
 
 msgctxt "forum-login"
 msgid "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in."
@@ -4325,10 +4201,6 @@ msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
 msgstr "Интернет блокируется: ваш доступ отозван до %(date)s после неоднократных жалоб на злоупотребление перенаправленным портом. Оспорить можно по адресу %(url)s"
 
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Интернет блокируется: ваш доступ отозван до %(date)s за нарушение правил использования. Обратитесь в поддержку, если считаете это ошибкой."
-
 msgctxt "connect-view"
 msgid "Degraded bond"
 msgstr "Агрегация ослаблена"
@@ -4521,8 +4393,6 @@ msgctxt "split-tunneling-view"
 msgid "Lockdown mode already blocks every app while the VPN is off."
 msgstr "Режим блокировки уже блокирует все приложения, пока VPN выключен."
 
-
-
 msgctxt "split-tunneling-view"
 msgid "Choose a route through the VPN to turn this on"
 msgstr "Выберите маршрут через VPN, чтобы включить это"
@@ -4646,10 +4516,6 @@ msgstr "Сумма к возврату: %(amount)s"
 msgctxt "account-view"
 msgid "This purchase was not credited to this account."
 msgstr "Эта покупка не была зачислена на этот аккаунт."
-
-msgctxt "account-view"
-msgid "A withdrawal with another refund address is already recorded: contact support."
-msgstr "Отказ с другим адресом для возврата уже зарегистрирован: обратитесь в поддержку."
 
 msgctxt "account-view"
 msgid "The refund address is not valid."

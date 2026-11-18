@@ -54,12 +54,6 @@ msgstr "Configuración de la cuenta"
 msgid "Add"
 msgstr "Añadir"
 
-msgid "Any"
-msgstr "Cualquiera"
-
-msgid "Apply"
-msgstr "Aplicar"
-
 msgid "Automatic"
 msgstr "Automático"
 
@@ -167,9 +161,6 @@ msgstr "Ir a la configuración del sistema"
 msgid "Got it!"
 msgstr "¡Entendido!"
 
-msgid "Import"
-msgstr "Importar"
-
 msgid "IPv4"
 msgstr "IPv4"
 
@@ -198,9 +189,6 @@ msgstr "Nueva lista"
 
 msgid "Next"
 msgstr "Siguiente"
-
-msgid "No matching servers found"
-msgstr "No se han encontrado servidores coincidentes"
 
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "No hay resultados para <b>%(searchTerm)s</b>."
@@ -888,10 +876,6 @@ msgid "Too many simultaneous connections on this account. Disconnect another dev
 msgstr "Hay demasiadas conexiones simultáneas en la cuenta. Desconecte otro dispositivo o intente volver a conectarse más tarde."
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Bloqueando la conexión a Internet: tu acceso ha sido revocado por incumplir la política de uso. Contacta con el servicio de asistencia si crees que se trata de un error."
-
-msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
 msgstr "No se puede autenticar la cuenta. Informe del problema en nuestro foro de la comunidad."
 
@@ -1244,38 +1228,13 @@ msgctxt "error-boundary-view"
 msgid "Reload the app"
 msgstr "Recargar la aplicación"
 
-#. Title label in navigation bar
-msgctxt "filter-nav"
-msgid "Filter"
-msgstr "Filtrar"
-
-msgctxt "filter-view"
-msgid "All providers"
-msgstr "Todos los proveedores"
-
-msgctxt "filter-view"
-msgid "Warren owned only"
-msgstr "Solo propiedad de Warren"
-
 msgctxt "filter-view"
 msgid "Owned"
 msgstr "Propios"
 
 msgctxt "filter-view"
-msgid "Ownership"
-msgstr "Propiedad"
-
-msgctxt "filter-view"
-msgid "Providers"
-msgstr "Proveedores"
-
-msgctxt "filter-view"
 msgid "Rented"
 msgstr "Alquilados"
-
-msgctxt "filter-view"
-msgid "Rented only"
-msgstr "Solo alquilados"
 
 msgctxt "in-app-notifications"
 msgid "%(duration)s. Buy more credit."
@@ -2076,76 +2035,11 @@ msgid_plural "%(count)d locations"
 msgstr[0] "%(count)d ubicación"
 msgstr[1] "%(count)d ubicaciones"
 
-msgctxt "settings-import"
-msgid "Clear all overrides"
-msgstr "Borrar todas las anulaciones"
-
-msgctxt "settings-import"
-msgid "Clear all overrides?"
-msgstr "¿Borrar todas las anulaciones?"
-
-msgctxt "settings-import"
-msgid "Clearing the imported overrides changes the server IPs, in the Select location view, back to default."
-msgstr "Borrar las anulaciones importadas cambia las IP del servidor, en la vista Seleccionar ubicación, y vuelve a los valores predeterminados."
-
-msgctxt "settings-import"
-msgid "If you are having issues connecting to VPN servers, please contact support."
-msgstr "Si tiene problemas para conectarse a los servidores VPN, póngase en contacto con el servicio de asistencia."
-
-msgctxt "settings-import"
-msgid "Import file"
-msgstr "Importar archivo"
-
-msgctxt "settings-import"
-msgid "Import files or text with new IP addresses for the servers in the Select location view."
-msgstr "Importe archivos o texto con nuevas direcciones IP para los servidores en la vista Seleccionar ubicación."
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was successful, overrides are now active."
-msgstr "El archivo %(fileName)s se ha importado. Las anulaciones ya están activas."
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was unsuccessful, please try again."
-msgstr "El archivo %(fileName)s no se ha importado. Inténtelo de nuevo."
-
-msgctxt "settings-import"
-msgid "Import of text was successful, overrides are now active."
-msgstr "El texto se ha importado. Las anulaciones ya están activas."
-
-msgctxt "settings-import"
-msgid "Import of text was unsuccessful, please try again."
-msgstr "El texto no se ha importado. Inténtelo de nuevo."
-
-msgctxt "settings-import"
-msgid "IMPORT SUCCESSFUL"
-msgstr "IMPORTACIÓN CORRECTA"
-
-#. Title label in navigation bar
-msgctxt "settings-import"
-msgid "Import via text"
-msgstr "Importación a través de texto"
-
-msgctxt "settings-import"
-msgid "NO OVERRIDES IMPORTED"
-msgstr "NO SE HA IMPORTADO NINGUNA ANULACIÓN"
-
-msgctxt "settings-import"
-msgid "On some networks, where various types of censorship are being used, our server IP addresses are sometimes blocked."
-msgstr "En algunas redes, donde se aplican diversos tipos de censura, a veces se bloquean las direcciones IP de nuestro servidor."
-
-msgctxt "settings-import"
-msgid "OVERRIDES ACTIVE"
-msgstr "ANULACIONES ACTIVAS"
-
 #. Title label in navigation bar. This is for a feature that lets
 #. users import server IP settings.
 msgctxt "settings-import"
 msgid "Server IP override"
 msgstr "Anulación de IP de servidor"
-
-msgctxt "settings-import"
-msgid "To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view."
-msgstr "Para eludir esto, puede importar un archivo o texto, suministrado por nuestro equipo de asistencia, con nuevas direcciones IP que anulan las direcciones predeterminadas de los servidores en la vista Seleccionar ubicación."
 
 #. Navigation button to the 'API access methods' view
 msgctxt "settings-view"
@@ -2759,10 +2653,6 @@ msgctxt "vpn-settings-view"
 msgid "Malware"
 msgstr "Malware"
 
-msgctxt "vpn-settings-view"
-msgid "Server IP override"
-msgstr "Anulación de IP de servidor"
-
 #. Label for settings that enables block of social media.
 msgctxt "vpn-settings-view"
 msgid "Social media"
@@ -3086,7 +2976,6 @@ msgstr "UDP sobre TCP"
 msgid "Continue"
 msgstr "Continuar"
 
-
 msgctxt "warren-multi-hop-view"
 msgid "Entry country"
 msgstr "País de entrada"
@@ -3282,7 +3171,6 @@ msgstr "Normalmente significa que el operador ha rotado la clave, pero también 
 msgctxt "warren-pubkey-warning"
 msgid "Trust new key"
 msgstr "Confiar en la nueva clave"
-
 
 msgctxt "warren-status-view"
 msgid "Last"
@@ -3480,10 +3368,6 @@ msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "Se detectó una discrepancia de identidad del servidor. La clave pública del nodo de salida ha cambiado."
 
-msgctxt "vpn-settings-view"
-msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
-msgstr "URL del servidor warren-api. Formato http(s)://host:puerto. Vacío = sin definir (se usa el backend predeterminado). Reinicia el servicio para que el cambio surta efecto."
-
 msgid "OK"
 msgstr "Aceptar"
 
@@ -3676,10 +3560,6 @@ msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
 msgstr "Hasta que se establezcan las nuevas fijaciones, la protección de detección de sustituciones queda brevemente desactivada: un atacante que hubiera reemplazado un nodo de salida entre restablecimientos no sería detectado en la primera reconexión."
 
-msgctxt "vpn-settings-view"
-msgid "Warren api URL"
-msgstr "URL de la API de Warren"
-
 msgctxt "warren-multi-hop-view"
 msgid "Multihop"
 msgstr "Multihop"
@@ -3711,10 +3591,6 @@ msgstr "Aprobar inicio de sesión"
 msgctxt "forum-login"
 msgid "Cancel"
 msgstr "Cancelar"
-
-msgctxt "forum-login"
-msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
-msgstr "El acceso al foro requiere una suscripción a Warren. Este monedero nunca se ha suscrito."
 
 msgctxt "forum-login"
 msgid "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in."
@@ -4305,10 +4181,6 @@ msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
 msgstr "Bloqueando la conexión a Internet: tu acceso ha sido revocado hasta el %(date)s tras denuncias repetidas de abuso sobre un puerto redirigido. Puedes impugnarlo en %(url)s"
 
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Bloqueando la conexión a Internet: tu acceso ha sido revocado hasta el %(date)s por incumplir la política de uso. Contacta con el servicio de asistencia si crees que se trata de un error."
-
 msgctxt "connect-view"
 msgid "Degraded bond"
 msgstr "Agregación degradada"
@@ -4499,8 +4371,6 @@ msgctxt "split-tunneling-view"
 msgid "Lockdown mode already blocks every app while the VPN is off."
 msgstr "El modo de bloqueo ya bloquea todas las apps mientras la VPN está desactivada."
 
-
-
 msgctxt "split-tunneling-view"
 msgid "Choose a route through the VPN to turn this on"
 msgstr "Elija una ruta por la VPN para activar esta opción"
@@ -4622,10 +4492,6 @@ msgstr "Importe a reembolsar: %(amount)s"
 msgctxt "account-view"
 msgid "This purchase was not credited to this account."
 msgstr "Esta compra no se acreditó en esta cuenta."
-
-msgctxt "account-view"
-msgid "A withdrawal with another refund address is already recorded: contact support."
-msgstr "Ya hay un desistimiento registrado con otra dirección de reembolso: contacta con soporte."
 
 msgctxt "account-view"
 msgid "The refund address is not valid."

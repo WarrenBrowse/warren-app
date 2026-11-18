@@ -60,12 +60,6 @@ msgstr "Setări cont"
 msgid "Add"
 msgstr "Adăugați"
 
-msgid "Any"
-msgstr "Oricare"
-
-msgid "Apply"
-msgstr "Aplicați"
-
 msgid "Automatic"
 msgstr "Automat"
 
@@ -173,9 +167,6 @@ msgstr "Accesați Setări sistem"
 msgid "Got it!"
 msgstr "Am înțeles!"
 
-msgid "Import"
-msgstr "Import"
-
 msgid "IPv4"
 msgstr "IPv4"
 
@@ -204,9 +195,6 @@ msgstr "Listă nouă"
 
 msgid "Next"
 msgstr "Următorul"
-
-msgid "No matching servers found"
-msgstr "Nu s-au găsit servere corespunzătoare"
 
 msgid "No result for <b>%(searchTerm)s</b>."
 msgstr "Nu s-au găsit rezultate pentru <b>%(searchTerm)s</b>."
@@ -936,10 +924,6 @@ msgid "Blocking internet: this device has been revoked. Log in again to connect,
 msgstr "Blocarea accesului la internet: acest dispozitiv a fost revocat. Autentificați-vă din nou pentru a vă conecta sau deconectați-vă pentru a debloca internetul."
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Blocarea accesului la internet: accesul dvs. a fost revocat pentru încălcarea regulilor de utilizare. Contactați asistența dacă considerați că este o greșeală."
-
-msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
 msgstr "Nu se poate autentifica contul. Vă rugăm să raportați problema pe forumul nostru."
 
@@ -1298,38 +1282,13 @@ msgctxt "error-boundary-view"
 msgid "Reload the app"
 msgstr "Reîncărcați aplicația"
 
-#. Title label in navigation bar
-msgctxt "filter-nav"
-msgid "Filter"
-msgstr "Filtru"
-
-msgctxt "filter-view"
-msgid "All providers"
-msgstr "Toți furnizorii"
-
-msgctxt "filter-view"
-msgid "Warren owned only"
-msgstr "Warren deținea doar"
-
 msgctxt "filter-view"
 msgid "Owned"
 msgstr "Deținut"
 
 msgctxt "filter-view"
-msgid "Ownership"
-msgstr "Proprietate"
-
-msgctxt "filter-view"
-msgid "Providers"
-msgstr "Furnizori"
-
-msgctxt "filter-view"
 msgid "Rented"
 msgstr "Închiriat"
-
-msgctxt "filter-view"
-msgid "Rented only"
-msgstr "Doar închiriere"
 
 msgctxt "in-app-notifications"
 msgid "%(duration)s. Buy more credit."
@@ -2234,76 +2193,11 @@ msgstr[0] "%(count)d locație"
 msgstr[1] "%(count)d locații"
 msgstr[2] "%(count)d de locații"
 
-msgctxt "settings-import"
-msgid "Clear all overrides"
-msgstr "Șterge toate suprascrierile"
-
-msgctxt "settings-import"
-msgid "Clear all overrides?"
-msgstr "Să ștergi toate suprascrierile?"
-
-msgctxt "settings-import"
-msgid "Clearing the imported overrides changes the server IPs, in the Select location view, back to default."
-msgstr "Ștergerea setărilor de suprascriere importate readuce adresele IP ale serverelor la valorile implicite în vizualizarea „Selectare locație”."
-
-msgctxt "settings-import"
-msgid "If you are having issues connecting to VPN servers, please contact support."
-msgstr "Dacă întâmpinați probleme la conectarea la serverele VPN, vă rugăm să contactați serviciul de asistență."
-
-msgctxt "settings-import"
-msgid "Import file"
-msgstr "Importare fișier"
-
-msgctxt "settings-import"
-msgid "Import files or text with new IP addresses for the servers in the Select location view."
-msgstr "Importați fișiere sau text cu noile adrese IP pentru serverele din vizualizarea „Selectați locația”."
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was successful, overrides are now active."
-msgstr "Importul fișierului „%(fileName)s” s-a realizat cu succes; modificările sunt acum active."
-
-msgctxt "settings-import"
-msgid "Import of file %(fileName)s was unsuccessful, please try again."
-msgstr "Importul fișierului „%(fileName)s” nu a reușit; vă rugăm să încercați din nou."
-
-msgctxt "settings-import"
-msgid "Import of text was successful, overrides are now active."
-msgstr "Importul textului s-a realizat cu succes, modificările sunt acum active."
-
-msgctxt "settings-import"
-msgid "Import of text was unsuccessful, please try again."
-msgstr "Importul textului nu a reușit; vă rugăm să încercați din nou."
-
-msgctxt "settings-import"
-msgid "IMPORT SUCCESSFUL"
-msgstr "IMPORTUL S-A EFECTUAT CU SUCCES"
-
-#. Title label in navigation bar
-msgctxt "settings-import"
-msgid "Import via text"
-msgstr "Import din text"
-
-msgctxt "settings-import"
-msgid "NO OVERRIDES IMPORTED"
-msgstr "NU S-AU IMPORTAT NICIUN FILE DE SUPRASCRIS"
-
-msgctxt "settings-import"
-msgid "On some networks, where various types of censorship are being used, our server IP addresses are sometimes blocked."
-msgstr "În unele rețele, unde se practică diverse forme de cenzură, adresele IP ale serverelor noastre sunt uneori blocate."
-
-msgctxt "settings-import"
-msgid "OVERRIDES ACTIVE"
-msgstr "SUPRASCRIERI ACTIVE"
-
 #. Title label in navigation bar. This is for a feature that lets
 #. users import server IP settings.
 msgctxt "settings-import"
 msgid "Server IP override"
 msgstr "Suprascrierea adresei IP a serverului"
-
-msgctxt "settings-import"
-msgid "To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view."
-msgstr "Pentru a rezolva această problemă, puteți importa un fișier sau un text, furnizat de echipa noastră de asistență, care conține adrese IP noi ce înlocuiesc adresele implicite ale serverelor din vizualizarea „Selectați locația”."
 
 #. Navigation button to the 'API access methods' view
 msgctxt "settings-view"
@@ -2964,10 +2858,6 @@ msgctxt "vpn-settings-view"
 msgid "Reset to default"
 msgstr "Reveniți la valorile implicite"
 
-msgctxt "vpn-settings-view"
-msgid "Server IP override"
-msgstr "Suprascrierea adresei IP a serverului"
-
 #. Label for settings that enables block of social media.
 msgctxt "vpn-settings-view"
 msgid "Social media"
@@ -3040,10 +2930,6 @@ msgstr "Setări VPN"
 msgctxt "vpn-settings-view"
 msgid "Warning: The malware blocker is not an anti-virus and should not be treated as such, this is just an extra layer of protection."
 msgstr "Atenție: Programul de blocare a programelor malware nu este un antivirus și nu trebuie considerat ca atare; acesta reprezintă doar un nivel suplimentar de protecție."
-
-msgctxt "vpn-settings-view"
-msgid "Warren api URL"
-msgstr "URL-ul API-ului Warren"
 
 msgctxt "vpn-settings-view"
 msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
@@ -3427,7 +3313,6 @@ msgctxt "warren-pubkey-warning"
 msgid "The key changed again before it could be trusted. Review the new key and try again."
 msgstr "Cheia s-a schimbat din nou înainte de a i se putea acorda încredere. Verificați noua cheie și încercați din nou."
 
-
 msgctxt "warren-status-view"
 msgid "inactive"
 msgstr "inactiv"
@@ -3613,10 +3498,6 @@ msgctxt "notifications"
 msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "Nepotrivire de identitate a serverului detectată. Cheia publică a nodului de ieșire s-a schimbat."
 
-msgctxt "vpn-settings-view"
-msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
-msgstr "URL-ul serverului warren-api. Format http(s)://host:port. Gol = nesetat (revine la backendul implicit). Repornește serviciul pentru ca modificarea să intre în vigoare."
-
 msgid "Continue"
 msgstr "Continuă"
 
@@ -3688,7 +3569,6 @@ msgctxt "port-forwarding-view"
 msgid "no port available"
 msgstr "niciun port disponibil"
 
-
 msgctxt "port-forwarding-view"
 msgid "open: %(port)d"
 msgstr "deschis: %(port)d"
@@ -3744,10 +3624,6 @@ msgstr "Aprobă autentificarea"
 msgctxt "forum-login"
 msgid "Cancel"
 msgstr "Anulează"
-
-msgctxt "forum-login"
-msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
-msgstr "Accesul la forum necesită un abonament Warren. Acest portofel nu a avut niciodată un abonament."
 
 msgctxt "forum-login"
 msgid "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in."
@@ -4327,10 +4203,6 @@ msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
 msgstr "Se blochează internetul: accesul dvs. a fost revocat până la %(date)s după raportări repetate de abuz privind un port redirecționat. Puteți contesta la %(url)s"
 
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Blocarea accesului la internet: accesul dvs. a fost revocat până la %(date)s pentru încălcarea regulilor de utilizare. Contactați asistența dacă considerați că este o greșeală."
-
 msgctxt "in-app-notifications"
 msgid "PORT FORWARDING WARNING"
 msgstr "AVERTISMENT PORT FORWARDING"
@@ -4526,8 +4398,6 @@ msgctxt "split-tunneling-view"
 msgid "Lockdown mode already blocks every app while the VPN is off."
 msgstr "Modul Blocare blochează deja orice aplicație cât timp VPN-ul este oprit."
 
-
-
 msgctxt "split-tunneling-view"
 msgid "Choose a route through the VPN to turn this on"
 msgstr "Alegeți o rută prin VPN pentru a activa această opțiune"
@@ -4650,10 +4520,6 @@ msgstr "Sumă de rambursat: %(amount)s"
 msgctxt "account-view"
 msgid "This purchase was not credited to this account."
 msgstr "Această achiziție nu a fost creditată în acest cont."
-
-msgctxt "account-view"
-msgid "A withdrawal with another refund address is already recorded: contact support."
-msgstr "O retragere cu altă adresă de rambursare este deja înregistrată: contactează asistența."
 
 msgctxt "account-view"
 msgid "The refund address is not valid."
