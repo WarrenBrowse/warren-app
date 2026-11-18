@@ -50,7 +50,7 @@ mod ffi {
     use warren_api::WarrenApiClient;
     use warren_api::reqwest_transport::ReqwestTransport;
     use warren_identity::WarrenIdentity;
-    use warren_standing::device_registry::failure;
+    use warren_standing::device_registry::{Failure, failure};
     use zeroize::Zeroizing;
 
     use super::{configure, registry};
@@ -85,13 +85,13 @@ mod ffi {
         Fut: std::future::Future<Output = String>,
     {
         if seed.is_null() {
-            return into_cstring(failure("no_wallet"));
+            return into_cstring(failure(Failure::NoWallet));
         }
         let mut bytes = Zeroizing::new([0u8; SEED_LEN]);
         // SAFETY: `seed` points to at least SEED_LEN readable bytes (precondition).
         unsafe { std::ptr::copy_nonoverlapping(seed, bytes.as_mut_ptr(), SEED_LEN) };
         let Ok(runtime) = crate::warren_ios_runtime() else {
-            return into_cstring(failure("unavailable"));
+            return into_cstring(failure(Failure::Unavailable));
         };
         let client = warren_standing::server_clock::attach(WarrenApiClient::new(
             warren_product_env::API_URL.to_owned(),
@@ -166,7 +166,7 @@ mod ffi {
             let (Some(id), Some(name)) =
                 (unsafe { read_str(device_id) }, unsafe { read_str(name) })
             else {
-                return into_cstring(failure("invalid_device"));
+                return into_cstring(failure(Failure::InvalidDevice));
             };
             // SAFETY: `seed` upholds the documented precondition.
             unsafe {
@@ -195,7 +195,7 @@ mod ffi {
         crate::ffi_guard(std::ptr::null_mut(), || {
             // SAFETY: the argument upholds the documented precondition.
             let Some(id) = (unsafe { read_str(device_id) }) else {
-                return into_cstring(failure("invalid_device"));
+                return into_cstring(failure(Failure::InvalidDevice));
             };
             // SAFETY: `seed` upholds the documented precondition.
             unsafe {

@@ -140,7 +140,7 @@ impl DeviceRegistry {
                 "older_client_seen_on": list.older_client_seen_on,
             })
             .to_string(),
-            Err(error) => self.refused(client, &error, "invalid_device"),
+            Err(error) => self.refused(client, &error, Failure::InvalidDevice),
         }
     }
 
@@ -153,7 +153,7 @@ impl DeviceRegistry {
         name: &str,
     ) -> String {
         let Ok(id) = DeviceId::try_from(id.to_owned()) else {
-            return failure("invalid_device");
+            return failure(Failure::InvalidDevice);
         };
         match client.rename_device(id, name).await {
             Ok(()) => {
@@ -163,7 +163,7 @@ impl DeviceRegistry {
                 }
                 json!({ "ok": true, "this_device": this_device }).to_string()
             }
-            Err(error) => self.refused(client, &error, "invalid_name"),
+            Err(error) => self.refused(client, &error, Failure::InvalidName),
         }
     }
 
@@ -175,7 +175,7 @@ impl DeviceRegistry {
         id: &str,
     ) -> String {
         let Ok(id) = DeviceId::try_from(id.to_owned()) else {
-            return failure("invalid_device");
+            return failure(Failure::InvalidDevice);
         };
         match client.revoke_device(id).await {
             Ok(()) => {
@@ -185,7 +185,7 @@ impl DeviceRegistry {
                 }
                 json!({ "ok": true, "this_device": this_device }).to_string()
             }
-            Err(error) => self.refused(client, &error, "invalid_device"),
+            Err(error) => self.refused(client, &error, Failure::InvalidDevice),
         }
     }
 
@@ -197,7 +197,7 @@ impl DeviceRegistry {
         &self,
         client: &WarrenApiClient<T>,
         error: &ClientError,
-        bad_request: &str,
+        bad_request: Failure,
     ) -> String {
         match error {
             ClientError::DeviceRevoked { revocation } => {
@@ -207,18 +207,52 @@ impl DeviceRegistry {
                         .is_ok()
                 });
                 self.on_revoked(verified);
-                failure("revoked")
+                failure(Failure::Revoked)
             }
-            ClientError::ServerStatus { status: 404, .. } => failure("not_found"),
+            ClientError::ServerStatus { status: 404, .. } => failure(Failure::NotFound),
             ClientError::ServerStatus { status: 400, .. } => failure(bad_request),
             ClientError::ServerStatus { status, .. } => {
                 log::warn!("device registry call refused by the server ({status})");
-                failure("unavailable")
+                failure(Failure::Unavailable)
             }
             _ => {
                 log::warn!("device registry call failed in transport");
-                failure("unavailable")
+                failure(Failure::Unavailable)
             }
+        }
+    }
+}
+
+/// Why a registry call could not be made or was refused. The apps decode
+/// [`Failure::code`], so a code never changes once released.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum Failure {
+    /// No wallet is installed to sign the call.
+    NoWallet,
+    /// The device id is malformed, or the registry refused it.
+    InvalidDevice,
+    /// The registry refused the new device name.
+    InvalidName,
+    /// The registry knows no such device.
+    NotFound,
+    /// The registry revoked this device.
+    Revoked,
+    /// The registry could not be reached, or failed.
+    Unavailable,
+}
+
+impl Failure {
+    /// The code the apps decode.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Failure::NoWallet => "no_wallet",
+            Failure::InvalidDevice => "invalid_device",
+            Failure::InvalidName => "invalid_name",
+            Failure::NotFound => "not_found",
+            Failure::Revoked => "revoked",
+            Failure::Unavailable => "unavailable",
         }
     }
 }
@@ -226,8 +260,8 @@ impl DeviceRegistry {
 /// `{"ok":false,"error":code}`, the envelope of a call that could not
 /// be made or was refused.
 #[must_use]
-pub fn failure(code: &str) -> String {
-    json!({ "ok": false, "error": code }).to_string()
+pub fn failure(failure: Failure) -> String {
+    json!({ "ok": false, "error": failure.code() }).to_string()
 }
 
 #[cfg(test)]
@@ -408,6 +442,25 @@ mod tests {
             "kitchen phone"
         );
         assert_eq!(registry.seen.lock().unwrap()[0].0, Method::Patch);
+    }
+
+    /// The codes the Android and iOS device screens decode, one per refusal.
+    #[test]
+    fn each_failure_carries_the_code_the_apps_decode() {
+        let cases = [
+            (Failure::NoWallet, "no_wallet"),
+            (Failure::InvalidDevice, "invalid_device"),
+            (Failure::InvalidName, "invalid_name"),
+            (Failure::NotFound, "not_found"),
+            (Failure::Revoked, "revoked"),
+            (Failure::Unavailable, "unavailable"),
+        ];
+        for (failure_kind, code) in cases {
+            assert_eq!(
+                parsed(&failure(failure_kind)),
+                json!({ "ok": false, "error": code })
+            );
+        }
     }
 
     #[tokio::test]
