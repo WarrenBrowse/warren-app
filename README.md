@@ -272,7 +272,7 @@ production. The procedure, the guards and how to withdraw a release are in
   every RPC against the caller's uid: only the wallet's owner and administrators may drive the tunnel
   or reach the wallet (see [the security document](docs/security.md#who-may-use-the-management-interface)).
 
-* `MULLVAD_BACKTRACE_ON_FAULT`: On SIGSEGV etc., logs a backtrace to `daemon.log`. Enabled by default
+* `WARREN_BACKTRACE_ON_FAULT` (inherited alias: `MULLVAD_BACKTRACE_ON_FAULT`): On SIGSEGV etc., logs a backtrace to `daemon.log`. Enabled by default
   in debug builds, disabled in release builds. Allocating from the signal handler is technically UB;
   enable at your own risk.
 

@@ -21,7 +21,7 @@ static LOG_FILE_PATH: OnceLock<CString> = OnceLock::new();
 /// If true, the signal-handler will log a backtrace when triggered.
 ///
 /// Default value is `true` for debug-builds, and `false` for release-builds.
-/// This can be overridden by setting the env var [ENABLE_BACKTRACE_VAR] to `1` or `0`.
+/// This can be overridden by setting one of [ENABLE_BACKTRACE_VARS] to `1` or `0`.
 ///
 /// # Safety
 /// The [Backtrace] implementation we use does not guarantee signal-safety; Invoking it from a
@@ -29,8 +29,20 @@ static LOG_FILE_PATH: OnceLock<CString> = OnceLock::new();
 /// users, we disable backtracing by default in release-builds.
 static ENABLE_BACKTRACE: AtomicBool = AtomicBool::new(cfg!(debug_assertions));
 
-/// Name of the environment variable that sets [ENABLE_BACKTRACE].
-const ENABLE_BACKTRACE_VAR: &str = "MULLVAD_BACKTRACE_ON_FAULT";
+/// Names of the environment variable that sets [ENABLE_BACKTRACE]. The Warren
+/// name wins; the inherited one is still read so an override an administrator
+/// already set in a service unit keeps working.
+const ENABLE_BACKTRACE_VARS: [&str; 2] =
+    ["WARREN_BACKTRACE_ON_FAULT", "MULLVAD_BACKTRACE_ON_FAULT"];
+
+/// The backtrace override the environment asks for, if any: any value but `0`
+/// turns it on.
+fn backtrace_override(var: impl Fn(&str) -> Option<String>) -> Option<bool> {
+    ENABLE_BACKTRACE_VARS
+        .iter()
+        .find_map(|name| var(name))
+        .map(|value| value != "0")
+}
 
 /// The signals we install handlers for.
 const FAULT_SIGNALS: [Signal; 5] = [
@@ -60,7 +72,7 @@ pub fn enable() {
     static INIT_ONCE: Once = Once::new();
 
     INIT_ONCE.call_once(|| {
-        if let Ok(override_backtrace) = env::var(ENABLE_BACKTRACE_VAR).map(|v| v != "0") {
+        if let Some(override_backtrace) = backtrace_override(|name| env::var(name).ok()) {
             ENABLE_BACKTRACE.store(override_backtrace, Ordering::Release);
         }
 
@@ -205,7 +217,7 @@ fn log_fault_to_writer(signum: c_int, mut w: impl fmt::Write) -> Result<(), Faul
         writeln!(w, "Backtrace:")?;
         writeln!(w, "{}", Backtrace::force_capture())?;
     } else {
-        writeln!(w, "Set {ENABLE_BACKTRACE_VAR}=1 to print backtrace.")?
+        writeln!(w, "Set {}=1 to print backtrace.", ENABLE_BACKTRACE_VARS[0])?
     }
 
     Ok(())
@@ -278,5 +290,55 @@ impl From<fmt::Error> for FaultHandlerErr {
     /// [fmt::Error] is returned by [fmt::Write]-methods.
     fn from(_: fmt::Error) -> Self {
         FaultHandlerErr::Write
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::backtrace_override;
+
+    fn env(pairs: &'static [(&'static str, &'static str)]) -> impl Fn(&str) -> Option<String> {
+        move |name| {
+            pairs
+                .iter()
+                .find(|(key, _)| *key == name)
+                .map(|(_, value)| value.to_string())
+        }
+    }
+
+    #[test]
+    fn warren_name_sets_the_backtrace() {
+        assert_eq!(
+            backtrace_override(env(&[("WARREN_BACKTRACE_ON_FAULT", "1")])),
+            Some(true)
+        );
+        assert_eq!(
+            backtrace_override(env(&[("WARREN_BACKTRACE_ON_FAULT", "0")])),
+            Some(false)
+        );
+    }
+
+    #[test]
+    fn inherited_name_still_sets_it_when_the_warren_one_is_unset() {
+        assert_eq!(
+            backtrace_override(env(&[("MULLVAD_BACKTRACE_ON_FAULT", "1")])),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn warren_name_wins_over_the_inherited_one() {
+        assert_eq!(
+            backtrace_override(env(&[
+                ("MULLVAD_BACKTRACE_ON_FAULT", "1"),
+                ("WARREN_BACKTRACE_ON_FAULT", "0"),
+            ])),
+            Some(false)
+        );
+    }
+
+    #[test]
+    fn neither_name_leaves_the_build_default() {
+        assert_eq!(backtrace_override(env(&[])), None);
     }
 }
