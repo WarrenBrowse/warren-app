@@ -16,7 +16,6 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
-#[cfg(unix)]
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tonic::transport::{Endpoint, Uri};
 use tonic::transport::{Server, server::Connected};
