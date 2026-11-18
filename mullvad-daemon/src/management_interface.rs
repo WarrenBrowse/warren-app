@@ -37,10 +37,14 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 
 const RPC_SERVER_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(1);
 
-/// Trailing token a logout source must carry for the daemon to perform a
-/// destructive identity wipe (true sign-out). The desktop sends it only
-/// from the backup-confirmed "log out" button (see AccountView.tsx).
-const WIPE_IDENTITY_LOGOUT_TOKEN: &str = "gui-logout-button";
+/// Whether a logout erases the local BIP39 identity (a true sign-out). Only
+/// the typed flag decides it, never the free-text source: the desktop sets it
+/// from the backup-confirmed "log out" button alone, and every other logout
+/// (a device revoked by the server, the CLI) keeps the mnemonic so the
+/// account stays recoverable on this device.
+fn logout_erases_identity(request: &types::LogoutRequest) -> bool {
+    request.erase_identity
+}
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -1643,27 +1647,11 @@ impl ManagementService for ManagementServiceImpl {
         result.map(Response::new).map_err(map_daemon_error)
     }
 
-    async fn logout_account(&self, request: Request<String>) -> ServiceResult<()> {
+    async fn logout_account(&self, request: Request<types::LogoutRequest>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
-        let source = request.into_inner();
-        log::debug!("logout_account (source: {source})");
-        // Only an explicit, backup-confirmed user sign-out from the GUI
-        // erases the local BIP39 identity (true sign-out). Every other
-        // logout (a server-driven device-revoked event
-        // `gui-device-revoked`, a CLI logout, Android, etc.) must PRESERVE
-        // the mnemonic so the account stays recoverable on this device. The
-        // GUI gates the "log out" button behind a "I backed up my phrase"
-        // confirmation (see AccountView).
-        //
-        // Match the exact trailing token (the desktop prefixes the source
-        // with the client name, e.g. `"desktop gui-logout-button"`, see
-        // daemon-rpc.ts `logoutAccount`). Exact-token rather than
-        // `ends_with` so a near-miss label cannot accidentally trip the
-        // destructive path.
-        let wipe_identity = source
-            .split_whitespace()
-            .next_back()
-            .is_some_and(|token| token == WIPE_IDENTITY_LOGOUT_TOKEN);
+        let logout = request.into_inner();
+        log::debug!("logout_account (source: {})", logout.source);
+        let wipe_identity = logout_erases_identity(&logout);
         if wipe_identity {
             log::info!("logout_account: erasing local identity (authorized true sign-out)");
         }
@@ -3391,6 +3379,29 @@ fn map_version_check_error(error: crate::version::Error) -> Status {
 fn map_protobuf_type_err(err: types::FromProtobufTypeError) -> Status {
     match err {
         types::FromProtobufTypeError::InvalidArgument(err) => Status::invalid_argument(err),
+    }
+}
+
+#[cfg(test)]
+mod logout_tests {
+    use super::*;
+
+    #[test]
+    fn only_the_typed_flag_erases_the_identity() {
+        let flagged = types::LogoutRequest {
+            source: "desktop account view".to_owned(),
+            erase_identity: true,
+        };
+        let worded = types::LogoutRequest {
+            source: "desktop gui-logout-button".to_owned(),
+            erase_identity: false,
+        };
+
+        assert!(logout_erases_identity(&flagged));
+        assert!(
+            !logout_erases_identity(&worded),
+            "a word in the free-text source must not wipe the wallet"
+        );
     }
 }
 

@@ -548,9 +548,14 @@ impl MullvadProxyClient {
         Ok(())
     }
 
-    pub async fn logout_account(&mut self, source: &str) -> Result<()> {
+    /// Logs out; `erase_identity` also erases the wallet from this device,
+    /// which only a sign-out the user confirmed after a backup may ask for.
+    pub async fn logout_account(&mut self, source: &str, erase_identity: bool) -> Result<()> {
         self.0
-            .logout_account(source.to_owned())
+            .logout_account(types::LogoutRequest {
+                source: source.to_owned(),
+                erase_identity,
+            })
             .await
             .map_err(map_logout_error)?;
         Ok(())

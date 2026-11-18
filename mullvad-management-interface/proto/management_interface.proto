@@ -240,7 +240,7 @@ service ManagementService {
   // Account management
   rpc CreateNewAccount(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
   rpc LoginAccount(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
-  rpc LogoutAccount(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
+  rpc LogoutAccount(LogoutRequest) returns (google.protobuf.Empty) {}
   rpc GetAccountData(google.protobuf.StringValue) returns (AccountData) {}
   rpc GetAccountHistory(google.protobuf.Empty) returns (AccountHistory) {}
   rpc ClearAccountHistory(google.protobuf.Empty) returns (google.protobuf.Empty) {}
@@ -425,6 +425,15 @@ message Seed { uint32 seed = 1; }
 message Rollout { float threshold = 1; }
 
 message UUID { string value = 1; }
+
+message LogoutRequest {
+  // Who asked, for the log only.
+  string source = 1;
+  // Erase the wallet from this device: set only by a sign-out the user
+  // confirmed after backing up the recovery phrase. Every other logout keeps
+  // it, so the account stays recoverable here.
+  bool erase_identity = 2;
+}
 
 message AccountData {
   string id = 1;

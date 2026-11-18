@@ -404,6 +404,17 @@ function deserialize_mullvad_daemon_management_interface_LogMessage(buffer_arg) 
   return management_interface_pb.LogMessage.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_LogoutRequest(arg) {
+  if (!(arg instanceof management_interface_pb.LogoutRequest)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.LogoutRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_LogoutRequest(buffer_arg) {
+  return management_interface_pb.LogoutRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_NatPmpSettings(arg) {
   if (!(arg instanceof management_interface_pb.NatPmpSettings)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.NatPmpSettings');
@@ -1197,7 +1208,7 @@ getWarrenDiagnostics: {
     responseSerialize: serialize_mullvad_daemon_management_interface_WarrenDiagnostics,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenDiagnostics,
   },
-  // Public network transparency snapshot (warren-core doc 106), fetched from
+  // Public network transparency snapshot, fetched from
 // the API only when a frontend calls this and cached for the window it
 // describes. Anonymous display data: nothing in it is about this client.
 getWarrenNetworkStats: {
@@ -1259,8 +1270,8 @@ setWarrenMnemonic: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
-  // Signs a community-forum login challenge (DiscourseConnect wallet SSO,
-// warren-core doc 55). The GUI passes the `sid` from a
+  // Signs a community-forum login challenge (DiscourseConnect wallet SSO).
+// The GUI passes the `sid` from a
 // `warren://forum-login?sid=..` deep link; the daemon signs the fixed
 // canonical request `POST /v1/forum/login` with body `{"sid":"<sid>"}`
 // using the Warren identity key and returns the four X-Warren-* header
@@ -1278,7 +1289,7 @@ signForumLogin: {
     responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
   },
-  // Signs a community-forum notification read (warren-core doc 55). The
+  // Signs a community-forum notification read. The
 // canonical request is `POST /v1/forum/notifications` with an empty JSON
 // object as its body: the account to read is derived from the signature,
 // never named in the request, so this cannot be pointed at anyone else.
@@ -1311,7 +1322,7 @@ signForumNotificationsSeen: {
     responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
   },
-  // Signs a community-forum attach-logs request (warren-core doc 55). The
+  // Signs a community-forum attach-logs request. The
 // GUI passes the `sid` + `topic_id` from a
 // `warren://attach-logs?sid=..&topic=..` deep link plus the gzipped
 // redacted problem report; the daemon builds the canonical JSON body
@@ -1332,7 +1343,7 @@ signForumAttachLogs: {
     responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
   },
-  // Signs a community-forum in-app report (warren-core doc 55): the
+  // Signs a community-forum in-app report: the
 // Settings, Support, "Report a problem" form filed without a browser. The
 // GUI passes the form's fields as one JSON object (the connect contract's
 // field names: platform, area, frequency, what_happened, steps,
@@ -1553,7 +1564,7 @@ natPmpStatusUpdates: {
     responseSerialize: serialize_mullvad_daemon_management_interface_NatPmpStatus,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_NatPmpStatus,
   },
-  // Port-forward abuse standing of the wallet (warren-core doc 105), asked
+  // Port-forward abuse standing of the wallet, asked
 // of the API now rather than read from the last poll, which
 // WarrenStatus.account_standing carries. Owner-only: the strikes name the
 // ports the account forwarded and the cases against it. UNAVAILABLE when
@@ -1596,10 +1607,10 @@ createNewAccount: {
     path: '/mullvad_daemon.management_interface.ManagementService/LogoutAccount',
     requestStream: false,
     responseStream: false,
-    requestType: google_protobuf_wrappers_pb.StringValue,
+    requestType: management_interface_pb.LogoutRequest,
     responseType: google_protobuf_empty_pb.Empty,
-    requestSerialize: serialize_google_protobuf_StringValue,
-    requestDeserialize: deserialize_google_protobuf_StringValue,
+    requestSerialize: serialize_mullvad_daemon_management_interface_LogoutRequest,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_LogoutRequest,
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
@@ -1745,7 +1756,7 @@ getDevice: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
-  // Renames a device of the logged-in account (warren-core doc 115).
+  // Renames a device of the logged-in account.
 // INVALID_ARGUMENT: malformed id, or a name that is not 1 to 40 characters
 // once trimmed or holds a control character; NOT_FOUND: the account has no
 // such active device; UNAUTHENTICATED: no wallet, or this device was

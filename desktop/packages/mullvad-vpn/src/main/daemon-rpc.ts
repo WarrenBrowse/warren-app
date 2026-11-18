@@ -21,6 +21,7 @@ import {
   IDnsOptions,
   IRelayListWithEndpointData,
   ISettings,
+  logoutErasesIdentity,
   LogoutSource,
   NatPmpSettings,
   NatPmpStatus,
@@ -558,8 +559,10 @@ export class DaemonRpc extends GrpcClient {
   }
 
   public async logoutAccount(source: LogoutSource): Promise<void> {
-    const prefixedSource = `desktop ${source}`;
-    await this.callString(this.client.logoutAccount, prefixedSource);
+    const request = new grpcTypes.LogoutRequest();
+    request.setSource(`desktop ${source}`);
+    request.setEraseIdentity(logoutErasesIdentity(source));
+    await this.call<grpcTypes.LogoutRequest, Empty>(this.client.logoutAccount, request);
   }
 
   // TODO: Custom tunnel configurations are not supported by the GUI.

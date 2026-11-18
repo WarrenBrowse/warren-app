@@ -139,7 +139,7 @@ impl Account {
     }
 
     async fn logout(rpc: &mut MullvadProxyClient) -> Result<()> {
-        rpc.logout_account(&format!("{BIN_NAME} logout")).await?;
+        rpc.logout_account(&format!("{BIN_NAME} logout"), false).await?;
         println!(
             "Logged out. Your recovery phrase is kept on this device; restore later\n\
              with `{BIN_NAME} account login`."

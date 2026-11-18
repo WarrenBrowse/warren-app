@@ -10,10 +10,14 @@ export type DisconnectSource =
   | 'tray-disconnect'
   | 'tray-disconnect-quit';
 
-// The daemon reads this label: only `gui-logout-button` erases the on-disk
-// BIP39 identity, every other source logs out and preserves it. See
-// `logout_account` in the daemon's management interface.
 export type LogoutSource = 'gui-logout-button' | 'gui-device-revoked' | 'gui-discard-new-account';
+
+// Only the backup-confirmed log out button erases the on-disk BIP39 identity;
+// every other logout preserves it. The daemon reads this as a typed flag of
+// the logout request, never from the source label.
+export function logoutErasesIdentity(source: LogoutSource): boolean {
+  return source === 'gui-logout-button';
+}
 
 // How a logout the daemon answered ended. `tunnel-still-up` is its refusal
 // when the tunnel did not come down within its bound: nothing was changed, the
