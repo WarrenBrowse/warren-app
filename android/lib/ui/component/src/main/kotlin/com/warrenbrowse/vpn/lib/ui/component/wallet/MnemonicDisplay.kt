@@ -53,8 +53,8 @@ fun MnemonicDisplay(
     modifier: Modifier = Modifier,
     alwaysRevealed: Boolean = false,
 ) {
-    val words = remember(phrase) { phrase.trim().split(' ') }
     var revealed by remember { mutableStateOf(alwaysRevealed) }
+    val words = remember(phrase, revealed) { mnemonicWordsShown(phrase, revealed) }
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -125,6 +125,17 @@ fun MnemonicDisplay(
     }
 }
 
+/**
+ * The words the grid draws: the phrase once revealed, the same placeholder in every cell before.
+ * The blur alone is not enough, since Compose ignores it before Android 12 and the words would
+ * then be readable without a tap.
+ */
+internal fun mnemonicWordsShown(phrase: String, revealed: Boolean): List<String> {
+    val words = phrase.trim().split(' ')
+    return if (revealed) words else List(words.size) { HIDDEN_WORD }
+}
+
+private const val HIDDEN_WORD = "••••••"
 private const val BLUR_RADIUS_DP = 12
 private const val WORD_CORNER_DP = 8
 private const val WORD_PADDING_DP = 12
