@@ -554,6 +554,13 @@ jobs:
         shell: bash
         run: bash ci/test-require-signing-identities.sh
 
+      # With only the secrets the repository holds, a beta tag still builds
+      # and publishes while a production tag is refused.
+      - name: Release guards without signing identities
+        working-directory: .
+        shell: bash
+        run: bash ci/test-release-without-identities.sh
+
       # `ci/git-config-global.sh` fronts the build-env action's remaining
       # `git config --global` writes (`safe.directory`), on every OS. A
       # regression in its retry loop, its lock grep or its stale-lock removal

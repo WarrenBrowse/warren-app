@@ -779,6 +779,9 @@ jobs:
     #   IOS_TUNNEL_PROVISIONING_PROFILE_BASE64[_BETA]
     #   APPLE_DEVELOPER_TEAM_ID
     #   APPSTORECONNECT_API_KEY_BASE64, _ID, APPSTORECONNECT_API_ISSUER_ID
+    # Without the certificate, the team id and the channel's two profiles, a
+    # beta tag skips the build with a notice and a production tag is refused
+    # (ci/ios-signing-ready.sh).
     if: ${{ vars.WARREN_ENABLE_IOS == 'true' }}
     needs: [tag-guard, tests]
     runs-on: macos-26
@@ -788,8 +791,13 @@ jobs:
       SOURCE_PACKAGES_PATH: .spm
       IOS_DISTRIBUTION_CERT_B64: ${{ secrets.IOS_DISTRIBUTION_CERT_BASE64 }}
       IOS_DISTRIBUTION_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_PASSWORD }}
-      IOS_APP_PROFILE_B64: ${{ needs.tag-guard.outputs.channel == 'beta' && secrets.IOS_APP_PROVISIONING_PROFILE_BASE64_BETA || secrets.IOS_APP_PROVISIONING_PROFILE_BASE64 }}
-      IOS_TUNNEL_PROFILE_B64: ${{ needs.tag-guard.outputs.channel == 'beta' && secrets.IOS_TUNNEL_PROVISIONING_PROFILE_BASE64_BETA || secrets.IOS_TUNNEL_PROVISIONING_PROFILE_BASE64 }}
+      # Each channel's profiles under their own name: an `a && b || c`
+      # expression would hand a beta build the production profiles whenever
+      # the beta ones are absent.
+      IOS_APP_PROFILE_PROD_B64: ${{ secrets.IOS_APP_PROVISIONING_PROFILE_BASE64 }}
+      IOS_TUNNEL_PROFILE_PROD_B64: ${{ secrets.IOS_TUNNEL_PROVISIONING_PROFILE_BASE64 }}
+      IOS_APP_PROFILE_BETA_B64: ${{ secrets.IOS_APP_PROVISIONING_PROFILE_BASE64_BETA }}
+      IOS_TUNNEL_PROFILE_BETA_B64: ${{ secrets.IOS_TUNNEL_PROVISIONING_PROFILE_BASE64_BETA }}
       APPSTORECONNECT_API_KEY_B64: ${{ secrets.APPSTORECONNECT_API_KEY_BASE64 }}
       APPSTORECONNECT_API_KEY_ID: ${{ secrets.APPSTORECONNECT_API_KEY_ID }}
       APPSTORECONNECT_API_ISSUER_ID: ${{ secrets.APPSTORECONNECT_API_ISSUER_ID }}
@@ -800,7 +808,14 @@ jobs:
         with:
           submodules: false
 
+      - name: Decide whether this channel can sign
+        id: signing
+        run: |
+          set -euo pipefail
+          bash ci/ios-signing-ready.sh "$WARREN_PRODUCT_ENV" | tee -a "$GITHUB_OUTPUT"
+
       - name: Checkout the golden vectors submodule
+        if: steps.signing.outputs.ready == 'true'
         env:
           ENGINE_TOKEN: ${{ secrets.WARREN_CORE_RO_TOKEN }}
         run: |
@@ -813,25 +828,24 @@ jobs:
             git submodule update --init vectors
           fi
 
-      - uses: ./.github/actions/mullvad-build-env
+      - if: steps.signing.outputs.ready == 'true'
+        uses: ./.github/actions/mullvad-build-env
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
           product-env: ${{ needs.tag-guard.outputs.channel }}
 
       - name: Setup iOS project toolchain
+        if: steps.signing.outputs.ready == 'true'
         uses: ./.github/actions/ios/setup-project-toolchain
         with:
           ios_rust_target: aarch64-apple-ios
           xcode_version: ''
 
       - name: Install the signing certificate and both provisioning profiles
-        if: env.IOS_DISTRIBUTION_CERT_B64 != ''
+        if: steps.signing.outputs.ready == 'true'
         run: |
           set -euo pipefail
-          if [ -z "$IOS_APP_PROFILE_B64" ] || [ -z "$IOS_TUNNEL_PROFILE_B64" ]; then
-            echo "::error::The $WARREN_PRODUCT_ENV channel needs both the app and the packet tunnel provisioning profiles"
-            exit 1
-          fi
+          channel=$(printf '%s' "$WARREN_PRODUCT_ENV" | tr '[:lower:]' '[:upper:]')
           profiles="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$profiles"
           tmp_cert=$(mktemp -t warren-ios-cert-XXXXXX.p12)
@@ -845,7 +859,7 @@ jobs:
           # Each profile is installed under its UUID and handed to the build by
           # its Name, which the export options map to its bundle id below.
           for role in APP TUNNEL; do
-            var="IOS_${role}_PROFILE_B64"
+            var="IOS_${role}_PROFILE_${channel}_B64"
             tmp_prov=$(mktemp -t warren-ios-prov-XXXXXX.mobileprovision)
             printf '%s' "${!var}" | base64 -d > "$tmp_prov"
             security cms -D -i "$tmp_prov" > "$tmp_prov.plist"
@@ -860,7 +874,7 @@ jobs:
       # goes into each target's configuration: a PROVISIONING_PROFILE_SPECIFIER
       # on the command line would apply one profile to every target.
       - name: Name the profiles in the generated target configurations
-        if: env.IOS_DISTRIBUTION_CERT_B64 != ''
+        if: steps.signing.outputs.ready == 'true'
         working-directory: ios/Configurations
         run: |
           set -euo pipefail
@@ -868,7 +882,7 @@ jobs:
           printf 'PROVISIONING_PROFILE_SPECIFIER[config=Release] = %s\n' "$IOS_TUNNEL_PROFILE_NAME" >> PacketTunnel.xcconfig
 
       - name: Archive WarrenVPN (signed)
-        if: env.IOS_DISTRIBUTION_CERT_B64 != ''
+        if: steps.signing.outputs.ready == 'true'
         working-directory: ios
         run: |
           set -o pipefail
@@ -885,7 +899,7 @@ jobs:
             CODE_SIGN_STYLE=Manual 2>&1 | xcbeautify
 
       - name: Export IPA (signed)
-        if: env.IOS_DISTRIBUTION_CERT_B64 != ''
+        if: steps.signing.outputs.ready == 'true'
         working-directory: ios
         run: |
           set -euo pipefail
@@ -909,7 +923,7 @@ jobs:
             -exportOptionsPlist "$plist"
 
       - name: Upload to TestFlight
-        if: env.IOS_DISTRIBUTION_CERT_B64 != '' && env.APPSTORECONNECT_API_KEY_B64 != ''
+        if: steps.signing.outputs.ready == 'true' && env.APPSTORECONNECT_API_KEY_B64 != ''
         run: |
           set -euo pipefail
           tmp_key=$(mktemp -t appstore-api-key-XXXXXX.p8)
@@ -924,30 +938,14 @@ jobs:
             --apiIssuer "$APPSTORECONNECT_API_ISSUER_ID"
           rm -f "$tmp_key" ~/.appstoreconnect/private_keys/AuthKey_"$APPSTORECONNECT_API_KEY_ID".p8
 
-      - name: Build (unsigned, signing assets missing)
-        if: env.IOS_DISTRIBUTION_CERT_B64 == ''
-        working-directory: ios
-        run: |
-          set -o pipefail
-          echo "::warning::IOS_DISTRIBUTION_CERT_BASE64 secret not set; producing an unsigned archive."
-          xcodebuild archive \
-            -project WarrenVPN.xcodeproj \
-            -scheme WarrenVPN \
-            -configuration Release \
-            -archivePath build/WarrenVPN.xcarchive \
-            -destination 'generic/platform=iOS' \
-            -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
-            -disableAutomaticPackageResolution \
-            WARREN_PRODUCT_ENV="$WARREN_PRODUCT_ENV" \
-            CODE_SIGNING_ALLOWED=NO 2>&1 | xcbeautify
-
       - name: Wipe signing material from runner
-        if: always() && env.IOS_DISTRIBUTION_CERT_B64 != ''
+        if: always() && steps.signing.outputs.ready == 'true'
         run: |
           security delete-keychain warren-ios.keychain || true
           rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision
 
       - name: Upload iOS artifacts
+        if: steps.signing.outputs.ready == 'true'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: ios-installers
@@ -1034,19 +1032,15 @@ jobs:
             echo "WARREN_KEY_PASSWORD=$ANDROID_KEY_PASSWORD"
           } >> "$GITHUB_ENV"
 
-      # The shared versionCode derivation (mullvad-version, YYVVXZZZ) has no
-      # room for the semver patch, so every 0.0.z beta would carry the SAME
-      # code. The beta app has its own applicationId (com.warrenbrowse.vpn.beta)
-      # and ships by direct APK, so its code only has to grow along its own
-      # version line: pack the tag as major*10000 + minor*100 + patch. A device
-      # holding a beta from before the 0.0.1 restart must uninstall first,
-      # Android refuses a versionCode downgrade. The prod flavor keeps the
-      # shared derivation untouched.
+      # The beta app packs its own versionCode from the tag
+      # (ci/android-beta-version-code.sh). A device holding a beta from before
+      # the 0.0.1 restart must uninstall first, Android refuses a versionCode
+      # downgrade. The prod flavor keeps the shared derivation untouched.
       - name: Compute the beta Android versionCode
         if: env.WARREN_CHANNEL == 'beta'
         run: |
-          IFS=. read -r major minor patch <<< "${WARREN_VERSION%%-*}"
-          code=$((10#$major * 10000 + 10#$minor * 100 + 10#$patch))
+          set -euo pipefail
+          code=$(bash ci/android-beta-version-code.sh "${WARREN_VERSION%%-*}")
           echo "WARREN_BETA_VERSION_CODE=$code" >> "$GITHUB_ENV"
           echo "beta versionCode $code for $WARREN_VERSION"
 
