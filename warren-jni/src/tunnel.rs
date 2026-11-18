@@ -702,8 +702,9 @@ async fn run_multi_hop_session(
             let stop = match supervisor.run().await {
                 Ok(()) => None,
                 Err(e) => {
-                    log::warn!("multi-hop supervisor terminated: {e}");
-                    crate::dial_facts::record_dial_error(crate::dial_facts::class_of(&e));
+                    let class = crate::dial_facts::class_of(&e);
+                    log::warn!("multi-hop supervisor terminated ({})", class.word());
+                    crate::dial_facts::record_dial_error(class);
                     crate::supervised_session::supervisor_stop_status(&e)
                 }
             };

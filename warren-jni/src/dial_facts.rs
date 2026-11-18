@@ -68,6 +68,23 @@ pub(crate) fn class_of(error: &warrenguard_transport::multihop::MultiHopError) -
     }
 }
 
+/// The class of any error the session code logs, found by walking its
+/// source chain to the engine error inside. The engine's own text can name
+/// a peer address, which is why a log line carries this class instead.
+#[cfg(any(test, feature = "tunnel"))]
+pub(crate) fn class_of_error(error: &(dyn std::error::Error + 'static)) -> DialErrorClass {
+    let mut next = Some(error);
+    while let Some(current) = next {
+        if let Some(engine) =
+            current.downcast_ref::<warrenguard_transport::multihop::MultiHopError>()
+        {
+            return class_of(engine);
+        }
+        next = current.source();
+    }
+    DialErrorClass::Other
+}
+
 /// The class of a refusal the engine reported for the entry of a dial:
 /// `no-route` when this host routes none of that entry's families (the
 /// engine reports an unroutable entry through the same observer as a drain),
@@ -191,5 +208,36 @@ mod tests {
 
         assert_eq!(class, DialErrorClass::NoToken);
         assert_eq!(class.word(), "no-token");
+    }
+
+    #[test]
+    fn an_engine_error_wrapped_by_a_pump_keeps_its_class() {
+        use warrenguard_transport::multihop::MultiHopError;
+
+        #[derive(Debug)]
+        struct Wrapped(MultiHopError);
+        impl std::fmt::Display for Wrapped {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "uplink: {}", self.0)
+            }
+        }
+        impl std::error::Error for Wrapped {
+            fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+                Some(&self.0)
+            }
+        }
+
+        assert_eq!(
+            class_of_error(&Wrapped(MultiHopError::NoRouteToRelay)),
+            DialErrorClass::NoRoute
+        );
+    }
+
+    #[test]
+    fn an_error_from_outside_the_engine_is_other() {
+        assert_eq!(
+            class_of_error(&std::io::Error::other("tun closed")),
+            DialErrorClass::Other
+        );
     }
 }

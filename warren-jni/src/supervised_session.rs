@@ -272,7 +272,8 @@ where
         let notify = state_changed.clone();
         async move {
             if let Err(e) = run_uplink_with_daita(rx, tun, daita, notify).await {
-                log::warn!("multi-hop uplink terminated: {e}");
+                let class = crate::dial_facts::class_of_error(e.as_ref());
+                log::warn!("multi-hop uplink terminated ({})", class.word());
             }
         }
     });
@@ -281,7 +282,8 @@ where
         let notify = state_changed.clone();
         async move {
             if let Err(e) = run_downlink_with_daita(rx, tun, daita, notify, None, drain).await {
-                log::warn!("multi-hop downlink terminated: {e}");
+                let class = crate::dial_facts::class_of_error(e.as_ref());
+                log::warn!("multi-hop downlink terminated ({})", class.word());
             }
         }
     });
