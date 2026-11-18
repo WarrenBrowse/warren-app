@@ -1574,6 +1574,40 @@ mod reassert_kernel_tests {
         assert!(!reasserted_twice, "an armed policy was applied again");
     }
 
+    /// The content-blocking resolvers sit inside 10/8, which a shared LAN opens: the only pass
+    /// naming one must be the DNS pass on the tunnel interface.
+    #[test]
+    #[ignore = "needs root; applies a connected policy"]
+    fn a_content_blocking_resolver_is_passed_on_the_tunnel_interface_only() {
+        use talpid_types::net::{BLOCK_ADS, BLOCK_TRACKERS, content_blocking_resolver};
+        let resolver = content_blocking_resolver(BLOCK_ADS | BLOCK_TRACKERS).unwrap();
+        let tunnel_interface = default_interface();
+        let mut policy = connected_through_the_default_interface();
+        if let FirewallPolicy::Connected { dns_config, .. } = &mut policy {
+            *dns_config = DnsConfig::from_addresses(&[IpAddr::V4(resolver)], &[])
+                .resolve(&[IpAddr::V4(Ipv4Addr::new(10, 66, 0, 1))], 53);
+        }
+        let mut firewall = Firewall::new().unwrap();
+        firewall.apply_policy(policy).unwrap();
+
+        let rules = output_of("pfctl", &["-a", ANCHOR_NAME, "-sr"]);
+
+        firewall.reset_policy().unwrap();
+        let passes: Vec<&str> = rules
+            .lines()
+            .filter(|rule| rule.starts_with("pass") && rule.contains(&resolver.to_string()))
+            .collect();
+        assert!(!passes.is_empty(), "no pass for the resolver:\n{rules}");
+        // pfctl names the port from the services database when it can.
+        let dns_port = |rule: &str| rule.contains("port = 53") || rule.contains("port = domain");
+        for pass in passes {
+            assert!(
+                pass.contains(&format!(" on {tunnel_interface} ")) && dns_port(pass),
+                "a pass for the resolver beside the tunnel's DNS: {pass}"
+            );
+        }
+    }
+
     #[test]
     #[ignore = "needs root; disables pf"]
     fn a_disabled_pf_is_enabled_again() {

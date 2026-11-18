@@ -2357,6 +2357,82 @@ mod dns_gate_kernel_tests {
         assert!(lan_refused, "DNS to a LAN resolver left beside the tunnel");
         assert!(!tunnel_refused, "DNS through the tunnel was refused");
     }
+
+    /// A shared LAN that routes the exit's pool, standing in for a network
+    /// that claims the content-blocking resolver's address.
+    const LAN: &str = "warren-dnslan";
+
+    fn ip(args: &[&str]) {
+        let status = Command::new("ip").args(args).status().unwrap();
+        assert!(status.success(), "ip {args:?}");
+    }
+
+    struct StandInLan;
+
+    impl StandInLan {
+        fn up() -> Self {
+            let _ = Command::new("ip")
+                .args(["link", "del", LAN])
+                .stderr(Stdio::null())
+                .status();
+            ip(&["link", "add", LAN, "type", "dummy"]);
+            ip(&["addr", "add", "10.77.0.2/24", "dev", LAN]);
+            ip(&["link", "set", LAN, "up"]);
+            StandInLan
+        }
+    }
+
+    impl Drop for StandInLan {
+        fn drop(&mut self) {
+            let _ = Command::new("ip").args(["link", "del", LAN]).status();
+        }
+    }
+
+    #[test]
+    #[ignore = "needs root"]
+    fn a_content_blocking_resolver_is_reached_through_the_tunnel_only() {
+        let resolver = talpid_types::net::content_blocking_resolver(
+            talpid_types::net::BLOCK_ADS | talpid_types::net::BLOCK_TRACKERS,
+        )
+        .unwrap();
+        let target = SocketAddr::from((resolver, 53)).to_string();
+        let block = talpid_types::net::CONTENT_BLOCKING_RESOLVERS.to_string();
+        let _tunnel = StandInTunnel::up();
+        let _lan = StandInLan::up();
+        let mut policy = connected_with_external_dns();
+        if let FirewallPolicy::Connected {
+            dns_config,
+            lan_networks,
+            ..
+        } = &mut policy
+        {
+            *dns_config = DnsConfig::from_addresses(&[IpAddr::V4(resolver)], &[])
+                .resolve(&[IpAddr::V4(Ipv4Addr::new(10, 66, 0, 1))]);
+            *lan_networks = vec!["10.0.0.0/8".parse().unwrap()];
+        }
+        let mut firewall = Firewall::new(0, None, None).unwrap();
+        firewall.apply_policy(policy).unwrap();
+
+        ip(&["route", "replace", &block, "dev", TUN]);
+        let in_tunnel = sent(&target);
+        ip(&["route", "replace", &block, "dev", LAN]);
+        let beside_tunnel = sent(&target);
+
+        firewall.reset_policy().unwrap();
+        assert!(in_tunnel, "the resolver was not reached in the tunnel");
+        assert!(!beside_tunnel, "the resolver was reached beside the tunnel");
+    }
+
+    /// Whether the SYN left: nothing answers on a dummy device, so a connection
+    /// the policy lets out times out, while a reject or a drop in the output
+    /// chain fails at once.
+    fn sent(target: &str) -> bool {
+        let target: SocketAddr = target.parse().unwrap();
+        match TcpStream::connect_timeout(&target, Duration::from_millis(1500)) {
+            Err(error) => error.kind() == io::ErrorKind::TimedOut,
+            Ok(_) => false,
+        }
+    }
 }
 
 /// Private destinations sent into the tunnel, against the kernel's nftables: run

@@ -581,6 +581,36 @@ fn external_dns_reaches_resolvers_through_the_tunnel_only() {
     }
 }
 
+/// The content-blocking resolvers sit in the exit's pool, inside the 10/8 the
+/// policy shares as LAN: only the DNS rules keep them off the physical adapter.
+#[test]
+#[ignore = "needs an elevated process and winfw.dll; applies a connected policy"]
+fn a_content_blocking_resolver_is_reached_through_the_tunnel_only() {
+    use talpid_types::net::{BLOCK_ADS, BLOCK_TRACKERS, content_blocking_resolver};
+    let _lock = WINFW.lock().unwrap_or_else(|poison| poison.into_inner());
+    let engine = Engine::open();
+    let _fw = Winfw::init();
+    let resolver = content_blocking_resolver(BLOCK_ADS | BLOCK_TRACKERS).unwrap();
+
+    apply_connected_with_dns(
+        false,
+        talpid_dns::DnsConfig::from_addresses(&[std::net::IpAddr::V4(resolver)], &[]),
+    );
+    let names = engine.filter_names(our_provider());
+    let beside_blocked = blocked_by_the_filtering_engine(&format!("{resolver}:53"));
+
+    assert!(
+        beside_blocked,
+        "the content-blocking resolver was reached beside the tunnel"
+    );
+    assert!(
+        names
+            .iter()
+            .any(|n| n == "Permit selected DNS traffic inside tunnel (IPv4)"),
+        "no permit for the resolver inside the tunnel: {names:?}"
+    );
+}
+
 /// The filters that keep private destinations out of the tunnel, and let the
 /// exit's own pool (its gateway, resolver and port mapping) in.
 const LAN_IN_TUNNEL: [&str; 4] = [
