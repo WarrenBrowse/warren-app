@@ -13,71 +13,257 @@ version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
 ## [Unreleased]
+
+## [1.1.58] - 2026-11-18
 ### Ajouté
-- [Windows, macOS, Linux] Un écran Licences dans Réglages, Infos sur l'application : le texte de
-  la GPL livré avec l'application, la licence du moteur du tunnel, la mention de Mullvad VPN AB,
-  et des liens vers le code source de la version installée. Chaque paquet desktop contient
-  désormais le texte de la GPL.
-- [Windows, macOS, Linux] Demander trois mots d'une nouvelle phrase de restauration avant
-  d'utiliser le nouveau compte, pour qu'une phrase non notée soit repérée tant qu'elle est encore
-  lisible.
+- [Windows, macOS, Linux] Un écran Licences dans Réglages, Infos sur l'application : le texte de la
+  GPL livré avec l'application, la licence du moteur du tunnel, la mention de Mullvad VPN AB, et des
+  liens vers le code source de la version installée. Chaque paquet desktop contient désormais le
+  texte de la GPL.
+- [Android, iOS] Un écran Licences avec le texte de la GPL, la licence du moteur du tunnel, la
+  mention de Mullvad VPN AB et le code source de la version installée.
+- [Windows, macOS, Linux, Android, iOS] Demander trois mots d'une nouvelle phrase de récupération
+  avant d'utiliser le nouveau compte, pour qu'une phrase non notée soit repérée tant qu'elle est
+  encore lisible.
+- [Windows, macOS, Linux, Android, iOS] Afficher chaque serveur sous son nom sur l'écran d'accueil
+  et dans la liste des lieux. Un serveur sans nom garde l'étiquette tirée de sa clé.
+- [Windows, macOS, Linux, Android, iOS] Bloquer la connexion et indiquer que l'horloge de cet
+  appareil est décalée quand deux serveurs refusent son heure.
+- [Android] Afficher la puce de résistance quantique quand la connexion est protégée par l'échange
+  de clés post-quantique.
+- [Android] Conseiller d'activer le VPN permanent et « Bloquer les connexions sans VPN » quand l'un
+  des deux est désactivé, pour que le trafic reste bloqué pendant une mise à jour de Warren ou s'il
+  s'arrête.
+- [Windows, macOS, Linux] Un lien vers la politique de confidentialité dans la vue Assistance, comme
+  sur Android et iOS.
+- [Windows, macOS, Linux] Lister le split tunneling en mode inclusion seule et les sorties par
+  application parmi les fonctions actives dans `warren status`.
+- [Windows, macOS, Linux] Signaler une plage d'adresses publique parmi les réseaux locaux partagés
+  avec `warren lan`, et avertir que le trafic vers elle sort hors du tunnel.
 - [iOS] Un thème clair pour l'écran de connexion, et un réglage Thème : Système, Sombre ou Clair.
   Système suit l'apparence de l'appareil, et reste sombre quand l'appareil n'en indique aucune.
 - [iOS] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est fermé
   après un signalement d'abus : une notification par avertissement, une bannière avec sa référence
   de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans l'écran
-  port forwarding avec l'adresse à laquelle écrire. Les avertissements s'affichent dès que la mise
-  à jour serveur correspondante est en ligne.
+  port forwarding avec l'adresse à laquelle écrire. Les avertissements s'affichent dès que la mise à
+  jour serveur correspondante est en ligne.
 - [iOS] Afficher la révocation d'un compte, avec le jour où elle prend fin quand il y en a un, au
-  lieu d'une simple déconnexion, et arrêter la connexion quand la révocation est apprise en cours
-  de session.
+  lieu d'une simple déconnexion, et arrêter la connexion quand la révocation est apprise en cours de
+  session.
 - [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
   automatiquement au lieu de s'arrêter au premier refus.
-
 ### Modifié
+- [Windows, macOS, Linux, Android, iOS] Refonte de l'écran d'accueil autour d'un paysage encadré
+  sous une barre d'outils flottante, avec l'état de la connexion, les commandes, les puces de
+  fonctions et le pied de page du compte, en thème sombre et clair. La ligne du lieu affiche le
+  drapeau rond du pays et ouvre les détails de connexion sur place, les bannières de mise à jour et
+  d'annonce sont plus compactes, et la limite de débit de la bêta passe dans le pied de page.
+- [Windows, macOS, Linux, Android, iOS] Composer le texte de l'application dans la police Instrument
+  Sans. Sur iOS, il suit la taille de texte de Dynamic Type.
+- [Windows, macOS, Linux, iOS] Ne se connecter qu'à des serveurs qui proposent l'échange de clés
+  post-quantique tant que le réglage Tunnel résistant aux attaques quantiques est activé, ce qui est
+  le cas par défaut. Désactivé, l'échange reste utilisé partout où un serveur le propose. Changer le
+  réglage relance la connexion.
+- [Windows, macOS, Linux, Android, iOS] Ouvrir le site, les pages d'aide et le paiement de la bêta
+  depuis l'application bêta, au lieu de ceux de la version de production.
+- [Windows, macOS, Linux, Android, iOS] Nommer warrenBrowse SRL comme éditeur.
 - Présenter l'abonnement dans l'accueil comme du temps prépayé, avec un renouvellement mensuel
   facultatif que l'on peut désactiver sans frais. Le texte annonçait l'absence de facturation
   récurrente.
-- [Windows, macOS, Linux] `warren unblock` indique quand il désactive le mode verrouillage, et
-  donne la commande qui le réactive.
-- [Windows, macOS, Linux] Retirer WireGuard et Mullvad de l'aide de la CLI, et masquer les
-  commandes héritées que le tunnel Warren ignore (anti-censure, relais personnalisé, IP
-  autorisées, WireGuard en espace utilisateur). Elles fonctionnent encore pour les scripts
-  existants.
-
+- En français, donner un seul nom à la phrase de récupération dans toutes les applications, garder
+  le terme kill switch en anglais, et retirer la promesse que l'application ne laisse aucune trace.
+- [Windows, macOS, Linux] Chercher les réponses du forum chaque minute seulement quand la fenêtre
+  est à l'écran, toutes les dix minutes quand elle est masquée, et plus du tout sans compte forum ou
+  avec les notifications du forum désactivées.
+- [Windows, macOS, Linux] `warren unblock` indique quand il désactive le mode verrouillage, et donne
+  la commande qui le réactive.
+- [Windows, macOS, Linux] Retirer WireGuard et Mullvad de l'aide de la CLI, et masquer la commande
+  héritée de relais personnalisé, que le tunnel Warren ignore. Elle fonctionne encore pour les
+  scripts existants.
+- [Android] Expliquer ce que bloquent le kill switch et le mode verrouillage : quand la connexion
+  tombe sans cesse ou que le compte est refusé, le trafic repasse par le réseau habituel sauf si le
+  mode verrouillage est activé, et seul le réglage Android « Bloquer les connexions sans VPN » le
+  garde bloqué après une déconnexion manuelle.
+- [Android] Afficher le blocage et la connexion en cours sur la tuile des réglages rapides, et se
+  connecter directement depuis elle.
+- [Linux] Sur NixOS, démarrer le service avant que le réseau soit en ligne et bloquer le trafic au
+  début du démarrage par défaut, comme les autres paquets Linux.
+- [iOS] Confirmer la suppression d'un compte avec les quatre derniers caractères de son adresse de
+  portefeuille, et appeler la ligne du compte adresse du portefeuille, comme l'application desktop.
+### Retiré
+- [Windows, macOS, Linux] Les réglages qui ne changeaient rien au tunnel Warren : MTU, remplacement
+  d'IP de serveur avec son import, et Animer la carte dans l'application, ainsi que la commande
+  `anti-censorship` et les options de tunnel MTU, espace utilisateur et IP autorisées dans la CLI.
+  Format des réglages passé en `v19`.
+- Les méthodes d'accès à l'API « Warren bridges », « Encrypted DNS proxy » et « Domain fronting »,
+  qui reposaient sur des serveurs que Warren n'exploite pas. L'accès direct et les proxys SOCKS5 et
+  Shadowsocks personnalisés restent disponibles.
 ### Corrigé
+- [Windows, macOS, Linux] Afficher Activé ou Désactivé pour l'obfuscation de Warren dans la ligne
+  Anti-censure, tel que le service le signale. La ligne montrait un réglage hérité que le tunnel
+  Warren ne lisait pas.
+- [Windows, macOS, Linux] Ne plus demander de redémarrer le service après avoir activé ou désactivé
+  le multi-hop, qui s'applique aussitôt, et ouvrir les réglages multi-hop depuis l'indicateur
+  multi-hop.
+- [Windows, macOS, Linux] Ouvrir une nouvelle fenêtre, une fois, quand la fenêtre plante, au lieu de
+  quitter l'application et son icône dans la barre des tâches.
+- [Windows, macOS, Linux] Distinguer un compte refusé ou une connexion échouée d'une phrase de
+  récupération invalide, et garder un compte que le service refuse sur la vue de lancement au lieu
+  de l'écran d'accueil.
+- [Windows, macOS, Linux] Continuer à récupérer les données du compte après un refus des serveurs,
+  pour que le compte réapparaisse dès qu'ils répondent.
+- [Windows, macOS, Linux] Faire pointer les messages sur un bannissement, une rétractation ou un
+  refus du forum vers la page d'aide publique.
+- [Windows, macOS, Linux] Supprimer le rapport de problème collecté pour un lien de rattachement au
+  forum quand un lien plus récent le remplace ou qu'il expire sans réponse.
+- [Windows, macOS, Linux] Ne jamais annoncer le VPN connecté tant que ses routes ne sont pas en
+  place.
+- [Windows, macOS, Linux] Arrêter le service en un temps borné même quand le tunnel ne finit pas de
+  se déconnecter, au lieu d'attendre que le système le tue.
+- [Windows, macOS, Linux] Lancer `warren unblock --deep` depuis la commande du PATH, qui ne trouvait
+  pas son outil.
 - [Linux] Lancer les lanceurs de routage par application de l'édition installée : ouvrir une
-  application hors du VPN ou dans le VPN fonctionne aussi dans la bêta, et un lanceur qui ne
-  démarre pas est signalé au lieu d'annoncer un lancement.
+  application hors du VPN ou dans le VPN fonctionne aussi dans la bêta, et un lanceur qui ne démarre
+  pas est signalé au lieu d'annoncer un lancement.
+- [Linux] Déclarer libdbus comme dépendance du paquet .deb, et faire pointer `warren-problem-report`
+  vers le binaire livré par les paquets.
+- [Linux] Garder le portefeuille quand le paquet .rpm est désinstallé et le profil AppArmor lors
+  d'une mise à niveau, et interrompre une mise à niveau des paquets sysvinit et headless dont le
+  service ne peut pas être sécurisé, comme le fait le paquet systemd.
+- [Linux] Refuser les paquets systemd avant le déballage sur un système qui n'utilise pas systemd,
+  en nommant le paquet qui convient.
+- [Linux] Donner à la bêta et à la version de production des groupes de split tunneling distincts,
+  pour qu'elles ne se gênent pas quand les deux sont installées.
+- [macOS] Garder le suivi des applications du split tunneling sur macOS 27.3.
+- [macOS] Garder le DNS en état de marche lors d'une rafale de requêtes : le service peut ouvrir
+  plus de fichiers, et chaque requête relayée est bornée dans le temps.
+- [macOS] N'accepter qu'un programme ou un paquet .app quand une application est ajoutée au routage
+  par application.
+- [macOS] Interrompre une mise à niveau dont l'ancien service reste chargé, et reconnaître
+  l'installateur de cette édition quand l'application est remplacée.
+- [Windows] Attendre le service quand il est occupé au démarrage, au lieu d'échouer la vérification
+  que l'application parle au vrai service.
+- [Windows] Faire agir l'installateur uniquement sur les fichiers de mise à jour, le programme et
+  les règles de pare-feu de sa propre édition, pour qu'installer la bêta laisse la version de
+  production intacte, et inversement.
+- [Windows] Corriger des erreurs de mémoire dans l'échange entre le service et le pilote de split
+  tunneling.
+- [Android] Ne plus se fermer quand Android démarre le VPN sans l'application, par exemple avec le
+  VPN permanent.
+- [Android] Rétablir le VPN quand Android relance son service après l'arrêt du processus de
+  l'application.
+- [Android] Ouvrir l'écran Langue sur Android 12 et versions antérieures, où il fermait
+  l'application.
+- [Android] Joindre un rapport de problème au forum sur Android 9 et versions antérieures, où sa
+  collecte fermait l'application, et signaler un lien qu'aucune application ne peut ouvrir au lieu
+  de se fermer.
+- [Android] Ne plus présenter comme un échec une connexion, une actualisation, une déconnexion du
+  compte ou une lecture du portefeuille annulée.
+- [Android] Garder la notification du VPN en phase avec la connexion, et garder l'application
+  réactive en sortant la notification, la reconnexion et la vérification de révocation du fil
+  principal.
+- [Android] Déclarer le VPN comme non facturé à l'usage, pour que les applications suivent ce que
+  fait le réseau sous-jacent au lieu de traiter chaque connexion comme facturée à l'usage.
+- [Android] Distinguer une phrase de récupération qui n'a pas pu être enregistrée d'une phrase
+  invalide.
+- [Android] Compter les jours restants dans la bannière d'expiration avec les formes du pluriel de
+  chaque langue.
+- [Android] Marquer les titres d'écran et de section comme des titres pour TalkBack, et laisser les
+  commandes de l'accueil grandir avec la taille de police.
+- [Android] Saisir dans la recherche de lieux sans que toute la liste se redessine à chaque touche.
 - [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
   plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
 - [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
   issue de la même phrase de récupération mais différente de l'adresse affichée, si bien que les
   serveurs n'y voyaient pas l'abonnement.
-- [iOS] Afficher la révocation quand un bon ou un achat App Store est refusé pour un compte
-  révoqué. Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une
-  fois la révocation terminée.
+- [iOS] Afficher la révocation quand un bon ou un achat App Store est refusé pour un compte révoqué.
+  Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une fois la
+  révocation terminée.
 - [iOS] Indiquer que le compte utilise déjà son nombre maximal d'appareils simultanés quand ses
   autres appareils occupent toutes les connexions auxquelles il a droit, au lieu d'une simple
   déconnexion.
 - [iOS] Déconnecter le VPN et retirer sa configuration à la déconnexion du compte ou à l'effacement
   du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
   portefeuille qui a quitté l'appareil.
-- [iOS] Garder le port forwarding, les jetons de session et l'écran du compte en état de
-  marche sur un appareil dont l'horloge a plus d'une minute d'écart : chaque requête signée prend
-  désormais l'horloge des serveurs dès le premier refus rencontré.
+- [iOS] Garder le port forwarding, les jetons de session et l'écran du compte en état de marche sur
+  un appareil dont l'horloge a plus d'une minute d'écart : chaque requête signée prend désormais
+  l'horloge des serveurs dès le premier refus rencontré.
 - [iOS] Indiquer que l'horloge de cet appareil est décalée, de combien de secondes et dans quel
-  sens, quand les serveurs refusent le port forwarding pour cette raison, au lieu d'annoncer que
-  les droits de port sont épuisés.
-- [iOS] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce
-  qui, sur un réseau en IPv6 seulement, veut dire un serveur qui répond en IPv6.
+  sens, quand les serveurs refusent le port forwarding pour cette raison, au lieu d'annoncer que les
+  droits de port sont épuisés.
+- [iOS] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce qui, sur un réseau en
+  IPv6 seulement, veut dire un serveur qui répond en IPv6.
 - [iOS] Garder la même identité de session d'un démarrage du VPN au suivant, pour que le tunnel
   retrouve son adresse et le port choisi après un redémarrage.
-
-### Retiré
-- Les méthodes d'accès à l'API « Warren bridges », « Encrypted DNS proxy » et « Domain fronting »,
-  qui reposaient sur des serveurs que Warren n'exploite pas. L'accès direct et les proxys SOCKS5 et
-  Shadowsocks personnalisés restent disponibles.
+- [iOS] Afficher la protection post-quantique que la connexion utilise réellement au lieu du
+  réglage.
+- [iOS] Démarrer le VPN quand le système le lance à la demande, réessayer de charger la liste des
+  serveurs au démarrage en se rabattant sur la dernière copie vérifiée, et terminer la session quand
+  le VPN s'arrête.
+- [iOS] Signaler une erreur au lieu de se fermer quand le moteur du tunnel ou le portefeuille
+  échoue, et afficher la phrase de récupération avec Face ID.
+### Sécurité
+- [Windows, macOS, Linux] Passer à Electron 45.3.3 et à ses correctifs de sécurité.
+- [Windows, macOS, Linux, Android, iOS] N'effacer la phrase de récupération de cet appareil, lors
+  d'une déconnexion depuis un autre appareil, que si le compte l'a signée. Sinon la phrase reste sur
+  l'appareil et l'application le dit.
+- [Windows, macOS, Linux, Android, iOS] Lier chaque mise en place de connexion au moment où elle est
+  faite, pour qu'elle ne puisse pas resservir plus tard.
+- [Windows, macOS, Linux, iOS] N'utiliser la clé post-quantique d'un serveur que si la signature du
+  serveur la couvre.
+- [Windows, macOS, Linux] Exclure la fenêtre des captures d'écran pendant l'affichage de la phrase
+  de récupération, et effacer une phrase copiée du presse-papiers même après la fermeture de son
+  écran.
+- [Windows, macOS, Linux] Lire la phrase de récupération dans la CLI sans écho ou depuis l'entrée
+  standard, jamais en argument, et n'afficher une phrase que dans un terminal sauf demande
+  explicite.
+- [Android] Masquer les mots de récupération tant qu'ils ne sont pas révélés, saisir la phrase sur
+  un clavier qui ne l'apprend pas, et effacer une phrase copiée quand l'application revient après
+  l'écoulement de sa minute.
+- [iOS] Refuser les claviers tiers et masquer la phrase de récupération pendant un enregistrement ou
+  une recopie de l'écran.
+- [Windows, macOS, Linux] Garder internet bloqué quand le service plante ou que ses règles de
+  pare-feu sont retirées : seule une réinitialisation explicite lève le blocage. Sur macOS, les
+  règles sont réappliquées quand le système les perd.
+- [Windows, Linux] Joindre les serveurs DNS situés hors du réseau local uniquement par le tunnel, et
+  bloquer les adresses privées dans le tunnel, hors de la plage du serveur lui-même.
+- [Windows, macOS, Linux] Garder le blocage quand une mise à jour échoue en mode verrouillage, et
+  garder la protection de mise à jour après un redémarrage sous Linux et Windows.
+- [Windows, macOS, Linux, Android] Retenir la version la plus récente vue d'un démarrage à l'autre,
+  pour refuser une mise à jour plus ancienne.
+- [Windows, macOS, Linux] Vérifier les mises à jour avec la clé de signature de leur propre canal,
+  télécharger les installateurs uniquement en HTTPS avec TLS 1.2 ou plus récent, et supprimer les
+  installateurs laissés par une exécution précédente.
+- [Windows, macOS, Linux] Réserver le service à ses propres utilisateurs : sa socket de contrôle est
+  dans un dossier privé et l'application ne se connecte qu'à une socket servie par le système ou par
+  le même utilisateur, les autres comptes ne voient plus les ports redirigés ni l'adresse de l'API,
+  les journaux et les fichiers d'état ne sont lisibles que par les administrateurs, et chaque
+  connexion au service est bornée.
+- [Windows, macOS, Linux] Faire en sorte que les connexions HTTPS du service ne fassent confiance
+  qu'aux racines Let's Encrypt, ne suivent aucune redirection et n'utilisent aucun proxy, ne plus
+  enregistrer la méthode d'accès à l'API et les identifiants de son proxy dans le cache, et lancer
+  les outils système par leur chemin complet.
+- [Linux] Confiner le service et le bloqueur de début de démarrage avec les restrictions systemd que
+  leur travail permet.
+- [Windows] Réserver les journaux, les rapports de plantage et le dossier des secrets aux
+  administrateurs et à SYSTEM, et refuser un dossier atteint par une jonction.
+- [Windows] Compiler les programmes avec Control Flow Guard et l'installateur avec NSIS 3.12, et
+  verrouiller l'installateur universel décompressé jusqu'à son lancement.
+- [macOS] Ne démarrer le service qu'à partir du programme signé livré avec l'application, et lancer
+  l'ancien outil d'installation depuis une copie que seul le système peut modifier pendant une mise
+  à niveau.
+- [Windows, macOS, Linux] Restreindre la fenêtre à la page de l'application : une politique de
+  sécurité du contenu stricte, des messages acceptés seulement depuis cette page, des applications
+  Linux lancées avec la commande de leur propre entrée de bureau, et des réglages de l'interface
+  enregistrés lisibles par l'utilisateur seul.
+- [Windows, macOS, Linux] Retirer les adresses de portefeuille et les valeurs de la taille d'une clé
+  des rapports de problème, y compris celui que collecte un lien de rattachement au forum.
+- [Windows, macOS, Linux, iOS] Garder l'adresse que reçoit le tunnel hors des journaux.
+- [Android] Ne journaliser les erreurs du moteur que par leur type, et garder hors du journal les
+  liens et les applications ou sites qu'ils nomment.
+- [Android] Ne plus laisser un ordinateur connecté en débogage USB profiler l'application publiée.
+- [iOS] Garder App Transport Security activé, et ne partager avec l'extension VPN que la graine du
+  portefeuille.
 
 ## [1.1.57] - 2026-11-09
 ### Modifié
