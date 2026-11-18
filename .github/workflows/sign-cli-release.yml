@@ -114,7 +114,13 @@ jobs:
       - name: Sign the checksum list
         env:
           WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
-        run: bash ci/sign-headless-sums.sh release-files/SHA256SUMS
+        run: |
+          case "$CLI_TAG" in
+            daemon-beta-v*) export WARREN_CHANNEL=beta ;;
+            daemon-v*) export WARREN_CHANNEL=prod ;;
+            *) echo "::error::not a headless release tag: $CLI_TAG"; exit 1 ;;
+          esac
+          bash ci/sign-headless-sums.sh release-files/SHA256SUMS
 
       - name: Attach the signature
         run: gh release upload "$CLI_TAG" release-files/SHA256SUMS.sshsig --repo "$CLI_REPO" --clobber

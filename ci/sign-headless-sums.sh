@@ -147,6 +147,18 @@ sign_sums() ( # sign_sums <sums> <seed hex> <trusted keys file>
 	echo "signed $sums" >&2
 )
 
+# The trust list a channel's installers verify against: each channel signs with
+# its own key once one exists, and a key the channel's clients do not trust must
+# never sign one of its releases.
+trust_file_for() (
+	repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+	case "$1" in
+	prod) echo "$repo/mullvad-update/warren-trusted-metadata-signing-pubkeys" ;;
+	beta | staging) echo "$repo/mullvad-update/warren-trusted-metadata-signing-pubkeys-$1" ;;
+	*) die "unknown release channel '$1'" ;;
+	esac
+)
+
 # Sourced by ci/test-sign-headless-sums.sh, which wants the functions only.
 if [ "${WARREN_SIGN_LIB:-0}" = "1" ]; then
 	return 0 2> /dev/null || exit 0
@@ -157,5 +169,5 @@ fi
 # Out of the environment before any tool runs: every child would inherit it.
 seed="$WARREN_UPDATE_SIGNING_KEY"
 unset WARREN_UPDATE_SIGNING_KEY
-repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-sign_sums "$1" "$seed" "$repo/mullvad-update/warren-trusted-metadata-signing-pubkeys"
+trust="$(trust_file_for "${WARREN_CHANNEL:-prod}")" || exit 1
+sign_sums "$1" "$seed" "$trust"

@@ -129,6 +129,10 @@ jobs:
 
       - name: Build the metadata signer
         if: steps.resolve.outputs.enabled == 'true'
+        # The verifier checks the previous manifests against the trust list of
+        # the channel it publishes, which is compiled in.
+        env:
+          WARREN_PRODUCT_ENV: ${{ inputs.channel }}
         run: cargo build --locked --release -p mullvad-update --bin mullvad-version-metadata --features sign,client
 
       # The asset-name parser decides which platform, architecture and flavour

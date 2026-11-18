@@ -164,5 +164,17 @@ fi
 refuse "the release key file refuses the test key" \
 	sign_sums "$D/SHA256SUMS" "$TEST_SEED" "$SCRIPT_DIR/../mullvad-update/warren-trusted-metadata-signing-pubkeys"
 
+# Each channel signs with its own key once one exists, so the trust list the
+# signer checks against follows the channel the release belongs to.
+keys="$(cd "$SCRIPT_DIR/.." && pwd)/mullvad-update/warren-trusted-metadata-signing-pubkeys"
+if [ "$(trust_file_for beta)" = "$keys-beta" ] \
+	&& [ "$(trust_file_for staging)" = "$keys-staging" ] \
+	&& [ "$(trust_file_for prod)" = "$keys" ]; then
+	ok "each channel is checked against its own trust list"
+else
+	fail "each channel is checked against its own trust list"
+fi
+refuse "an unknown channel has no trust list" trust_file_for nightly
+
 printf '\n%d checks, %d failure(s)\n' "$checks" "$failures"
 [ "$failures" -eq 0 ]

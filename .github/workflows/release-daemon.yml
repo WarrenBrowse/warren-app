@@ -609,6 +609,7 @@ jobs:
       - name: Sign the checksum list
         env:
           WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
+          WARREN_CHANNEL: ${{ needs.resolve.outputs.channel }}
         run: bash ci/sign-headless-sums.sh release-files/SHA256SUMS
 
       - name: Publish it
