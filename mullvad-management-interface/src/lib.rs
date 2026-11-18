@@ -17,7 +17,6 @@ use std::{
     task::{Context, Poll},
 };
 #[cfg(unix)]
-use tipsy::Endpoint as IpcEndpoint;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tonic::transport::{Endpoint, Uri};
 use tonic::transport::{Server, server::Connected};
@@ -197,10 +196,12 @@ pub(crate) async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Chann
 ///
 /// Crate-private on purpose: the only paths outside this crate that make sense
 /// belong to ANOTHER product environment, and those go through
-/// [`grpc_transport_channel_to`], which cannot be handed an unvouched one. The
-/// socket lives in a directory only root can create entries in (on macOS,
-/// `/var/run` is also writable by the `daemon` group, whose only member is
-/// root), so the path itself vouches for the daemon.
+/// [`grpc_transport_channel_to`], which cannot be handed an unvouched one.
+///
+/// Every connection is checked to be served by root or by the client's own
+/// account, the way the GUI checks its daemon: the path can be pointed
+/// elsewhere (`WARREN_RPC_SOCKET_PATH`), and while the daemon is stopped its
+/// directory is the only thing between a client and a look-alike socket.
 #[cfg(unix)]
 pub(crate) async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Channel, Error> {
     use futures::TryFutureExt;
@@ -208,10 +209,37 @@ pub(crate) async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Chann
     // The URI will be ignored
     Endpoint::from_static("lttp://[::]:50051")
         .connect_with_connector(service_fn(move |_: Uri| {
-            IpcEndpoint::connect(ipc_path.clone()).map_ok(hyper_util::rt::tokio::TokioIo::new)
+            let ipc_path = ipc_path.clone();
+            async move { connect_to_daemon_socket(&ipc_path).await }
+                .map_ok(hyper_util::rt::tokio::TokioIo::new)
         }))
         .await
         .map_err(Error::GrpcTransportError)
+}
+
+/// Whether a client running as `own_uid` may talk to a socket served by
+/// `peer_uid`: root's daemon, or one the same account started by hand.
+#[cfg(unix)]
+#[must_use]
+fn daemon_peer_admitted(peer_uid: u32, own_uid: u32) -> bool {
+    peer_uid == 0 || peer_uid == own_uid
+}
+
+/// Connects to the management socket at `path` and keeps the connection only
+/// when the kernel reports, for that very connection, a server the client may
+/// trust (see [`daemon_peer_admitted`]).
+#[cfg(unix)]
+async fn connect_to_daemon_socket(path: &std::path::Path) -> io::Result<tokio::net::UnixStream> {
+    let stream = tokio::net::UnixStream::connect(path).await?;
+    let peer_uid = stream.peer_cred()?.uid();
+    if daemon_peer_admitted(peer_uid, nix::unistd::geteuid().as_raw()) {
+        Ok(stream)
+    } else {
+        Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "the management socket is served by another account",
+        ))
+    }
 }
 
 /// Create a [Channel] to another product environment's management interface.
@@ -938,6 +966,36 @@ mod socket_access_tests {
 mod peer_credential_tests {
     use super::*;
     use futures::StreamExt;
+
+    #[test]
+    fn a_client_talks_only_to_a_daemon_run_by_root_or_by_its_own_account() {
+        assert!(daemon_peer_admitted(0, 501));
+        assert!(
+            daemon_peer_admitted(501, 501),
+            "a daemon started by hand under the developer's own account"
+        );
+        assert!(!daemon_peer_admitted(1001, 501));
+        assert!(!daemon_peer_admitted(501, 0), "root never talks to a user's socket");
+    }
+
+    /// The client reads the server's uid off the connection it holds, so a
+    /// socket swapped in after any check on the path still answers for itself.
+    #[tokio::test]
+    async fn the_client_connects_to_a_socket_its_own_account_serves() {
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .subsec_nanos();
+        let dir = std::env::temp_dir().join(format!("wcl-{}-{unique}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("m.sock");
+        let _listener = tokio::net::UnixListener::bind(&path).unwrap();
+
+        let connected = connect_to_daemon_socket(&path).await;
+
+        let _ = std::fs::remove_dir_all(&dir);
+        assert!(connected.is_ok(), "{connected:?}");
+    }
 
     #[test]
     fn root_and_the_daemon_account_are_privileged_and_nobody_else_is() {
