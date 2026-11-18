@@ -327,117 +327,47 @@ test.describe('Select location', () => {
   });
 
   test.describe('Filter', () => {
-    test.describe('Applied from filter view', () => {
-      test.beforeEach(async () => {
-        await helpers.resetView();
-        await helpers.resetProviders();
-        await helpers.resetOwnership();
+    // The app has no filter view: every Warren exit is run by Warren. A
+    // constraint set from the command line still narrows the list, so its chip
+    // must show it and clear it.
+    test.describe('Set outside the app', () => {
+      test.afterEach(async () => {
+        await helpers.updateMockRelayFilter({});
       });
 
-      test.describe('Filter by provider', () => {
-        test('Should deselect all providers when clicking all providers checkbox', async () => {
-          await routes.filter.expandProviders();
-          await routes.filter.checkAllProvidersCheckbox();
-          expect(await helpers.areAllCheckboxesChecked()).toBe(false);
+      test('Should show and clear a provider filter', async () => {
+        const provider = relayList.countries[0].cities[0].relays[0].provider;
+        await helpers.updateMockRelayFilter({ providers: [provider] });
 
-          await routes.filter.checkAllProvidersCheckbox();
-          expect(await helpers.areAllCheckboxesChecked()).toBe(true);
-        });
+        const providerFilterChip = routes.selectLocation.getFilterChip('Providers: 1');
+        await expect(providerFilterChip).toBeVisible();
 
-        test('Should apply filter when selecting provider', async () => {
-          await routes.filter.expandProviders();
-          await routes.filter.checkAllProvidersCheckbox();
-          expect(await helpers.areAllCheckboxesChecked()).toBe(false);
-          const wireguardRelays = {
-            countries: relayList.countries.map(({ cities, ...country }) => ({
-              ...country,
-              cities: cities.map(({ relays, ...city }) => ({
-                ...city,
-                relays,
-              })),
-            })),
-          };
+        const relaySelectionPaths = helpers.toSelectionPaths(
+          helpers.getRelaysByProvider(relayList, provider),
+        );
+        const relayNames = relaySelectionPaths.map((locatedRelay) => locatedRelay.relay.hostname);
+        await helpers.expandLocatedRelays(relaySelectionPaths);
+        await expect(routes.selectLocation.getRelaysMatching(relayNames)).toHaveCount(
+          relayNames.length,
+        );
 
-          // Select one provider
-          const provider = wireguardRelays.countries[0].cities[0].relays[0].provider;
-          await routes.filter.checkProviderCheckbox(provider);
-
-          await Promise.all([
-            util.ipc.settings.setRelaySettings.handle(),
-            routes.filter.applyFilter(),
-          ]);
-          await helpers.updateMockRelayFilter({
-            providers: [provider],
-          });
-          await util.expectRoute(RoutePath.selectLocation);
-          const providerFilterChip = routes.selectLocation.getFilterChip('Providers: 1');
-          await expect(providerFilterChip).toBeVisible();
-
-          const relaySelectionPaths = helpers.toSelectionPaths(
-            helpers.getRelaysByProvider(wireguardRelays, provider),
-          );
-          const relays = relaySelectionPaths.map((locatedRelay) => locatedRelay.relay);
-          const relayNames = relays.map((relay) => relay.hostname);
-
-          // Expand all accordions
-          await helpers.expandLocatedRelays(relaySelectionPaths);
-
-          const buttons = routes.selectLocation.getRelaysMatching(relayNames);
-
-          // Expect all filtered relays to have a button
-          await expect(buttons).toHaveCount(relays.length);
-
-          // Clear filter
-          await providerFilterChip.click();
-
-          // Get all relays and expand accordions
-          const allLocatedRelays = helpers.toSelectionPaths(relayList);
-          await helpers.expandLocatedRelays(allLocatedRelays);
-
-          // Should not have same length as all relays
-          await expect(buttons).not.toHaveCount(allLocatedRelays.length);
-        });
+        await Promise.all([
+          util.ipc.settings.setRelaySettings.handle(),
+          providerFilterChip.click(),
+        ]);
+        await helpers.updateMockRelayFilter({});
+        await expect(providerFilterChip).not.toBeVisible();
       });
 
-      test.describe('Filter by ownership', () => {
-        test('Should apply filter when selecting ownership', async () => {
-          // Select rented only
-          await routes.filter.expandOwnership();
-          await routes.filter.selectOwnershipOption('Rented only');
-          await helpers.updateMockRelayFilter({
-            ownership: Ownership.rented,
-          });
+      test('Should show and clear an ownership filter', async () => {
+        await helpers.updateMockRelayFilter({ ownership: Ownership.rented });
 
-          await routes.filter.applyFilter();
-          await util.expectRoute(RoutePath.selectLocation);
+        const ownerFilterChip = routes.selectLocation.getFilterChip('Rented');
+        await expect(ownerFilterChip).toBeVisible();
 
-          const ownerFilterChip = routes.selectLocation.getFilterChip('Rented');
-          await expect(ownerFilterChip).toBeVisible();
-
-          const relaySelectionPaths = helpers.toSelectionPaths(
-            helpers.getRelaysByOwner(relayList, false),
-          );
-          const relays = relaySelectionPaths.map((locatedRelay) => locatedRelay.relay);
-          const relayNames = relays.map((relay) => relay.hostname);
-
-          // Expand all accordions
-          await helpers.expandLocatedRelays(relaySelectionPaths);
-
-          const buttons = routes.selectLocation.getRelaysMatching(relayNames);
-
-          // Expect all filtered relays to have a button
-          await expect(buttons).toHaveCount(relays.length);
-
-          // Clear filter
-          await ownerFilterChip.click();
-
-          // Get all relays and expand accordions
-          const allLocatedRelays = helpers.toSelectionPaths(relayList);
-          await helpers.expandLocatedRelays(allLocatedRelays);
-
-          // Should not have same length as all relays
-          await expect(buttons).not.toHaveCount(allLocatedRelays.length);
-        });
+        await Promise.all([util.ipc.settings.setRelaySettings.handle(), ownerFilterChip.click()]);
+        await helpers.updateMockRelayFilter({});
+        await expect(ownerFilterChip).not.toBeVisible();
       });
     });
     test.describe('Filter by obfuscation', () => {

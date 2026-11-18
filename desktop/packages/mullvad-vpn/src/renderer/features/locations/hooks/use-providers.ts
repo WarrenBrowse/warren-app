@@ -1,10 +1,9 @@
 import React from 'react';
 
-import { providersFromRelays } from '../../../components/views/filter/utils';
 import { useRelaySettingsUpdater } from '../../../lib/constraint-updater';
 import { useNormalRelaySettings } from '../../../lib/relay-settings-hooks';
 import { useSelector } from '../../../redux/store';
-import { getActiveProviders } from '../utils';
+import { getActiveProviders, providersFromRelays } from '../utils';
 
 export function useProviders(): {
   providers: string[];

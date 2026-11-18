@@ -41,7 +41,6 @@ export enum RoutePath {
   reportProblem = '/settings/support/report-problem',
   debug = '/settings/debug',
   selectLocation = '/select-location',
-  filter = '/select-location/filter',
   appInfo = '/settings/app-info',
   licenses = '/settings/app-info/licenses',
   changelog = '/settings/changelog',

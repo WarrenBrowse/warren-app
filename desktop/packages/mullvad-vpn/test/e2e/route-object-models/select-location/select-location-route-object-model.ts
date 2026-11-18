@@ -1,15 +1,12 @@
 import { type Locator, Page } from 'playwright';
 
-import { RoutePath } from '../../../../src/shared/routes';
 import { TestUtils } from '../../utils';
 import { createSelectors } from './selectors';
 
 export class SelectLocationRouteObjectModel {
-  private readonly utils: TestUtils;
   private readonly selectors: ReturnType<typeof createSelectors>;
 
-  constructor(page: Page, util: TestUtils) {
-    this.utils = util;
+  constructor(page: Page, _util: TestUtils) {
     this.selectors = createSelectors(page);
   }
 
@@ -81,11 +78,5 @@ export class SelectLocationRouteObjectModel {
 
   getDeleteCustomListButton() {
     return this.selectors.deleteCustomListButton();
-  }
-
-  async gotoFilter() {
-    await this.selectors.selectLocationMenuButton().click();
-    await this.selectors.filterMenuOption().click();
-    await this.utils.expectRoute(RoutePath.filter);
   }
 }

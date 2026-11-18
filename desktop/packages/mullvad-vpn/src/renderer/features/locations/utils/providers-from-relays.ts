@@ -1,4 +1,4 @@
-import { IRelayLocationCountryRedux } from '../../../../redux/settings/reducers';
+import { IRelayLocationCountryRedux } from '../../../redux/settings/reducers';
 import { removeDuplicates } from './remove-duplicates';
 
 // Returns all available providers in the provided relay list.

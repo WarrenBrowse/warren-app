@@ -6,7 +6,6 @@ import { AntiCensorshipRouteObjectModel } from './anti-censorship';
 import { DaitaSettingsRouteObjectModel } from './daita-settings';
 import { DeviceRevokedRouteObjectModel } from './device-revoked';
 import { ExpiredRouteObjectModel } from './expired';
-import { FilterRouteObjectModel } from './filter';
 import { LaunchRouteObjectModel } from './launch';
 import { LoginRouteObjectModel } from './login';
 import { MainRouteObjectModel } from './main';
@@ -34,7 +33,6 @@ export class RoutesObjectModel {
   readonly settings: SettingsRouteObjectModel;
   readonly userInterfaceSettings: UserInterfaceSettingsRouteObjectModel;
   readonly selectLanguage: SelectLanguageRouteObjectModel;
-  readonly filter: FilterRouteObjectModel;
   readonly selectLocation: SelectLocationRouteObjectModel;
   readonly vpnSettings: VpnSettingsRouteObjectModel;
   readonly antiCensorship: AntiCensorshipRouteObjectModel;
@@ -55,7 +53,6 @@ export class RoutesObjectModel {
     this.deviceRevoked = new DeviceRevokedRouteObjectModel(utils);
     this.settings = new SettingsRouteObjectModel(page, utils);
     this.userInterfaceSettings = new UserInterfaceSettingsRouteObjectModel(page, utils);
-    this.filter = new FilterRouteObjectModel(page, utils);
     this.selectLocation = new SelectLocationRouteObjectModel(page, utils);
     this.vpnSettings = new VpnSettingsRouteObjectModel(page, utils);
     this.antiCensorship = new AntiCensorshipRouteObjectModel(page, utils);

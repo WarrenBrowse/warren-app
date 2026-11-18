@@ -44,12 +44,6 @@ msgstr ""
 msgid "Add"
 msgstr ""
 
-msgid "Any"
-msgstr ""
-
-msgid "Apply"
-msgstr ""
-
 msgid "Automatic"
 msgstr ""
 
@@ -190,9 +184,6 @@ msgid "New list"
 msgstr ""
 
 msgid "Next"
-msgstr ""
-
-msgid "No matching servers found"
 msgstr ""
 
 msgid "No result for <b>%(searchTerm)s</b>."
@@ -1622,37 +1613,12 @@ msgctxt "error-boundary-view"
 msgid "Something went wrong. Please contact us at %(email)s"
 msgstr ""
 
-#. Title label in navigation bar
-msgctxt "filter-nav"
-msgid "Filter"
-msgstr ""
-
-msgctxt "filter-view"
-msgid "All providers"
-msgstr ""
-
 msgctxt "filter-view"
 msgid "Owned"
 msgstr ""
 
 msgctxt "filter-view"
-msgid "Ownership"
-msgstr ""
-
-msgctxt "filter-view"
-msgid "Providers"
-msgstr ""
-
-msgctxt "filter-view"
 msgid "Rented"
-msgstr ""
-
-msgctxt "filter-view"
-msgid "Rented only"
-msgstr ""
-
-msgctxt "filter-view"
-msgid "Warren owned only"
 msgstr ""
 
 msgctxt "forum-activity-view"

@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 
-import { Ownership } from '../../../../../shared/daemon-rpc-types';
-import { filterLocationsByOwnershipAndProviders } from '../../../../features/locations/utils';
-import { useSelector } from '../../../../redux/store';
-import { providersFromRelays } from '../utils';
+import { Ownership } from '../../../../shared/daemon-rpc-types';
+import { useSelector } from '../../../redux/store';
+import { filterLocationsByOwnershipAndProviders, providersFromRelays } from '../utils';
 
 // Returns only the providers that are compatible with the other filters
 export function useFilteredProviders(providers: string[], ownership: Ownership): string[] {

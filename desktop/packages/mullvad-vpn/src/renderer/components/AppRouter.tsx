@@ -24,7 +24,6 @@ import {
   DeviceRevokedView,
   EditApiAccessView,
   ExpiredAccountErrorView,
-  FilterView,
   ForumActivityView,
   ForumSignInCodeView,
   KeysView,
@@ -114,7 +113,6 @@ export default function AppRouter() {
           <Route exact path={RoutePath.reportProblem} component={ReportProblemView} />
           <Route exact path={RoutePath.debug} component={DebugView} />
           <Route exact path={RoutePath.selectLocation} component={SelectLocationView} />
-          <Route exact path={RoutePath.filter} component={FilterView} />
           <Route exact path={RoutePath.appInfo} component={AppInfoView} />
           <Route exact path={RoutePath.licenses} component={LicensesView} />
           <Route exact path={RoutePath.changelog} component={ChangelogView} />

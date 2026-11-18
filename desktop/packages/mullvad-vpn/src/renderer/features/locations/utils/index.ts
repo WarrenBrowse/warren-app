@@ -5,6 +5,7 @@ export * from './filter-locations-by-ownership-and-providers';
 export * from './get-quic-filter';
 export * from './filter-locations-by-filters';
 export * from './get-active-providers';
+export * from './providers-from-relays';
 export * from './get-location-children';
 export * from './is-daita-filter-active';
 export * from './is-lwo-filter-active';

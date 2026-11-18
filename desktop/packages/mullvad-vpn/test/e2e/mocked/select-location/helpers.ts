@@ -11,7 +11,6 @@ import {
   Ownership,
   type Recents,
 } from '../../../../src/shared/daemon-rpc-types';
-import { RoutePath } from '../../../../src/shared/routes';
 import { RoutesObjectModel } from '../../route-object-models';
 import { MockedTestUtils } from '../mocked-utils';
 
@@ -21,20 +20,7 @@ export type RelaySelectionPath = {
   relay: IRelayListHostname;
 };
 
-export const createHelpers = (page: Page, routes: RoutesObjectModel, utils: MockedTestUtils) => {
-  const areAllCheckboxesChecked = async () => {
-    const checkboxes = page.getByRole('checkbox');
-    const count = await checkboxes.count();
-    for (let i = 0; i < count; i++) {
-      const checkbox = checkboxes.nth(i);
-      const checked = await checkbox.isChecked();
-      if (!checked) {
-        return false;
-      }
-    }
-    return true;
-  };
-
+export const createHelpers = (_page: Page, routes: RoutesObjectModel, utils: MockedTestUtils) => {
   const expandLocatedRelays = async (locatedRelays: RelaySelectionPath[]) => {
     for (const locatedRelay of locatedRelays) {
       await routes.selectLocation.toggleAccordion(locatedRelay.country.name);
@@ -80,22 +66,6 @@ export const createHelpers = (page: Page, routes: RoutesObjectModel, utils: Mock
     };
   };
 
-  const getRelaysByOwner = (relayList: IRelayList, owned: boolean): IRelayList => {
-    return {
-      countries: relayList.countries
-        .map((country) => ({
-          ...country,
-          cities: country.cities
-            .map((city) => ({
-              ...city,
-              relays: city.relays.filter((relay) => relay.owned === owned),
-            }))
-            .filter((city) => city.relays.length > 0),
-        }))
-        .filter((country) => country.cities.length > 0),
-    };
-  };
-
   const getRelaysByObfuscation = (
     relayList: IRelayList,
     relayCondition: (relay: IRelayListHostname) => boolean,
@@ -113,28 +83,6 @@ export const createHelpers = (page: Page, routes: RoutesObjectModel, utils: Mock
         }))
         .filter((country) => country.cities.length > 0),
     };
-  };
-
-  const resetOwnership = async () => {
-    await routes.filter.expandOwnership();
-    await routes.filter.selectOwnershipOption('Any');
-    await routes.filter.collapseOwnership();
-  };
-
-  const resetProviders = async () => {
-    await routes.filter.expandProviders();
-    const allCheckboxesChecked = await areAllCheckboxesChecked();
-    if (!allCheckboxesChecked) {
-      await routes.filter.checkAllProvidersCheckbox();
-    }
-    await routes.filter.collapseProviders();
-  };
-
-  const resetView = async () => {
-    const currentRoute = await utils.getCurrentRoute();
-    if (currentRoute === RoutePath.selectLocation) {
-      await routes.selectLocation.gotoFilter();
-    }
   };
 
   const updateMockRelayFilter = async ({
@@ -231,16 +179,11 @@ export const createHelpers = (page: Page, routes: RoutesObjectModel, utils: Mock
   };
 
   return {
-    areAllCheckboxesChecked,
     expandLocatedRelays,
     toSelectionPaths,
     getRelaysByHostnames,
-    getRelaysByOwner,
     getRelaysByProvider,
     getRelaysByObfuscation,
-    resetOwnership,
-    resetProviders,
-    resetView,
     updateMockRelayFilter,
     updateMockSettings: mockSettings,
     updateEntryLocation: mockEntryLocation,

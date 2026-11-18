@@ -4,7 +4,6 @@ export const createSelectors = (page: Page) => ({
   entryButton: () => page.getByRole('button', { name: 'Entry' }),
   exitButton: () => page.getByRole('button', { name: 'Exit' }),
   selectLocationMenuButton: () => page.getByRole('button', { name: 'Open select location menu' }),
-  filterMenuOption: () => page.getByRole('button', { name: 'Filter' }),
   filterChip: (label: string) => {
     return page.locator('button', { hasText: label });
   },
