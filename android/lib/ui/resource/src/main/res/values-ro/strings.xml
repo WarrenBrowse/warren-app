@@ -174,7 +174,6 @@
     <string name="reset_to_default_button">Resetează la valorile implicite</string>
     <string name="automatic">Automat</string>
     <string name="off">Dezactivat</string>
-    <string name="none">Niciunul</string>
     <string name="on">Activat</string>
     <string name="search_placeholder">Căutați...</string>
     <string name="search_no_matches_for_text">Niciun rezultat pentru \"%s\", vă rugăm să încercați o altă căutare</string>
@@ -187,7 +186,6 @@
     <string name="settings_notifications">Notificări</string>
     <string name="enable_anyway">Activează oricum</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
-    <string name="port_x">Port: %s</string>
     <string name="feature_quantum_resistant">Rezistență cuantică</string>
     <string name="feature_custom_dns">DNS personalizat</string>
     <string name="dns_content_blockers">Blocatoare de conținut DNS</string>

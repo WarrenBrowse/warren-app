@@ -166,7 +166,6 @@
     <string name="reset_to_default_button">Återställ till standard</string>
     <string name="automatic">Automatisk</string>
     <string name="off">Av</string>
-    <string name="none">Inget</string>
     <string name="on">På</string>
     <string name="search_placeholder">Sök efter …</string>
     <string name="search_no_matches_for_text">Inga resultat hittades för \"%1$s\", försök med en annan sökning</string>
@@ -179,7 +178,6 @@
     <string name="settings_notifications">Meddelanden</string>
     <string name="enable_anyway">Aktivera ändå</string>
     <string name="udp_over_tcp">UDP över TCP</string>
-    <string name="port_x">Port: %1$s</string>
     <string name="feature_quantum_resistant">Kvantresistens</string>
     <string name="feature_custom_dns">Anpassad DNS</string>
     <string name="dns_content_blockers">DNS-innehållsblockerare</string>

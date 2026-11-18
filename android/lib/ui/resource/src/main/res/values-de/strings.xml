@@ -166,7 +166,6 @@
     <string name="reset_to_default_button">Auf Standard zurücksetzen</string>
     <string name="automatic">Automatisch</string>
     <string name="off">Aus</string>
-    <string name="none">Keine</string>
     <string name="on">Ein</string>
     <string name="search_placeholder">Suchen nach …</string>
     <string name="search_no_matches_for_text">Kein Ergebnis für „%1$s“, bitte versuchen Sie einen anderen Suchbegriff</string>
@@ -179,7 +178,6 @@
     <string name="settings_notifications">Benachrichtigungen</string>
     <string name="enable_anyway">Trotzdem aktivieren</string>
     <string name="udp_over_tcp">UDP über TCP</string>
-    <string name="port_x">Port: %1$s</string>
     <string name="feature_quantum_resistant">Quantenresistenz</string>
     <string name="feature_custom_dns">Eigenes DNS</string>
     <string name="dns_content_blockers">DNS-Inhaltssperren</string>

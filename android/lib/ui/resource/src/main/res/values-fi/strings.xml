@@ -166,7 +166,6 @@
     <string name="reset_to_default_button">Palauta oletusarvo</string>
     <string name="automatic">Automaattinen</string>
     <string name="off">Pois</string>
-    <string name="none">Ei mitään</string>
     <string name="on">Päällä</string>
     <string name="search_placeholder">Hae...</string>
     <string name="search_no_matches_for_text">Haulle \"%1$s\" ei löytynyt tuloksia. Kokeile toista hakua.</string>
@@ -179,7 +178,6 @@
     <string name="settings_notifications">Ilmoitukset</string>
     <string name="enable_anyway">Ota silti käyttöön</string>
     <string name="udp_over_tcp">UDP TCP:n kautta</string>
-    <string name="port_x">Portti: %1$s</string>
     <string name="feature_quantum_resistant">Kvanttihyökkäysten esto</string>
     <string name="feature_custom_dns">Mukautettu DNS</string>
     <string name="dns_content_blockers">DNS-sisällönestotoiminnot</string>

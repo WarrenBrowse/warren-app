@@ -162,7 +162,6 @@
     <string name="reset_to_default_button">重置为默认值</string>
     <string name="automatic">自动</string>
     <string name="off">关</string>
-    <string name="none">无</string>
     <string name="on">开</string>
     <string name="search_placeholder">搜索…</string>
     <string name="search_no_matches_for_text">“%1$s”无结果，请尝试其他搜索</string>
@@ -175,7 +174,6 @@
     <string name="settings_notifications">通知</string>
     <string name="enable_anyway">仍然启用</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
-    <string name="port_x">端口：%1$s</string>
     <string name="feature_quantum_resistant">量子阻力</string>
     <string name="feature_custom_dns">自定义 DNS</string>
     <string name="dns_content_blockers">DNS 内容阻止程序</string>

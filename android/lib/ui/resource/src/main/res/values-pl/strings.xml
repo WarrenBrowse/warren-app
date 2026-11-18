@@ -174,7 +174,6 @@
     <string name="reset_to_default_button">Przywróć domyślne</string>
     <string name="automatic">Automatycznie</string>
     <string name="off">Wył.</string>
-    <string name="none">Brak</string>
     <string name="on">Wł.</string>
     <string name="search_placeholder">Wyszukaj...</string>
     <string name="search_no_matches_for_text">Brak wyników dla hasła „%1$s”, spróbuj innego wyszukiwania</string>
@@ -187,7 +186,6 @@
     <string name="settings_notifications">Powiadomienia</string>
     <string name="enable_anyway">Mimo to włącz</string>
     <string name="udp_over_tcp">UDP-przez-TCP</string>
-    <string name="port_x">Port: %1$s</string>
     <string name="feature_quantum_resistant">Odporność na ataki z użyciem komputerów kwantowych</string>
     <string name="feature_custom_dns">Niestandardowy serwer DNS</string>
     <string name="dns_content_blockers">Funkcje blokowania treści DNS</string>

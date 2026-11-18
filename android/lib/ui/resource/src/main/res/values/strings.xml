@@ -175,7 +175,6 @@
     <string name="reset_to_default_button">Reset to default</string>
     <string name="automatic">Automatic</string>
     <string name="off">Off</string>
-    <string name="none">None</string>
     <string name="on">On</string>
     <string name="search_placeholder">Search for...</string>
     <string name="search_no_matches_for_text">No result for \"%s\", please try a different search</string>
@@ -188,7 +187,6 @@
     <string name="settings_notifications">Notifications</string>
     <string name="enable_anyway">Enable anyway</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
-    <string name="port_x">Port: %s</string>
     <string name="feature_quantum_resistant">Quantum resistance</string>
     <string name="feature_custom_dns">Custom DNS</string>
     <string name="dns_content_blockers">DNS content blockers</string>

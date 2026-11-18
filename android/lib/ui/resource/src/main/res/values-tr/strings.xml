@@ -166,7 +166,6 @@
     <string name="reset_to_default_button">Varsayılana sıfırla</string>
     <string name="automatic">Otomatik</string>
     <string name="off">Kapalı</string>
-    <string name="none">Hiçbiri</string>
     <string name="on">Açık</string>
     <string name="search_placeholder">Ara...</string>
     <string name="search_no_matches_for_text">\"%1$s\" için sonuç yok, lütfen farklı bir arama yapın</string>
@@ -179,7 +178,6 @@
     <string name="settings_notifications">Bildirimler</string>
     <string name="enable_anyway">Yine de etkinleştir</string>
     <string name="udp_over_tcp">TCP üzerinden UDP</string>
-    <string name="port_x">Port: %1$s</string>
     <string name="feature_quantum_resistant">Kuantum direnci</string>
     <string name="feature_custom_dns">Özel DNS</string>
     <string name="dns_content_blockers">DNS içerik engelleyiciler</string>

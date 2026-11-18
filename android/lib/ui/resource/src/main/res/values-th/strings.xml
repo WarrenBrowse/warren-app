@@ -162,7 +162,6 @@
     <string name="reset_to_default_button">รีเซ็ตเป็นค่าเริ่มต้น</string>
     <string name="automatic">อัตโนมัติ</string>
     <string name="off">ปิด</string>
-    <string name="none">ไม่มี</string>
     <string name="on">เปิด</string>
     <string name="search_placeholder">ค้นหา…</string>
     <string name="search_no_matches_for_text">ไม่พบผลลัพธ์สำหรับ \"%1$s\" โปรดลองใช้คำค้นหาอื่น</string>
@@ -175,7 +174,6 @@
     <string name="settings_notifications">การแจ้งเตือน</string>
     <string name="enable_anyway">เปิดใช้งานต่อไป</string>
     <string name="udp_over_tcp">UDP-ผ่าน-TCP</string>
-    <string name="port_x">พอร์ต: %1$s</string>
     <string name="feature_quantum_resistant">การต่อต้านควอนตัม</string>
     <string name="feature_custom_dns">DNS แบบกำหนดเอง</string>
     <string name="dns_content_blockers">ตัวบล็อกเนื้อหา DNS</string>

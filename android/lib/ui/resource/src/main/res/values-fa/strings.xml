@@ -166,7 +166,6 @@
     <string name="reset_to_default_button">بازنشانی به حالت پیش‌فرض</string>
     <string name="automatic">خودکار</string>
     <string name="off">خاموش</string>
-    <string name="none">هیچکدام</string>
     <string name="on">روشن</string>
     <string name="search_placeholder">جست‌وجو برای...</string>
     <string name="search_no_matches_for_text">هیچ نتیجه‌ای برای «%1$s» یافت نشد، لطفاً جستجوی دیگری انجام دهید</string>
@@ -179,7 +178,6 @@
     <string name="settings_notifications">اعلان‌ها</string>
     <string name="enable_anyway">با این حال فعال شود</string>
     <string name="udp_over_tcp">‏UDP روی TCP</string>
-    <string name="port_x">پورت: %1$s</string>
     <string name="feature_quantum_resistant">مقاومت کوانتومی</string>
     <string name="feature_custom_dns">DNS سفارشی</string>
     <string name="dns_content_blockers">مسدودکننده‌های محتوای DNS</string>

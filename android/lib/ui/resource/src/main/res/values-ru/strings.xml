@@ -174,7 +174,6 @@
     <string name="reset_to_default_button">Восстановить значение по умолчанию</string>
     <string name="automatic">Автоматически</string>
     <string name="off">Выкл.</string>
-    <string name="none">Нет</string>
     <string name="on">Вкл.</string>
     <string name="search_placeholder">Поиск...</string>
     <string name="search_no_matches_for_text">По запросу «%1$s» ничего не найдено, попробуйте другой запрос</string>
@@ -187,7 +186,6 @@
     <string name="settings_notifications">Уведомления</string>
     <string name="enable_anyway">Всё равно включить</string>
     <string name="udp_over_tcp">UDP через TCP</string>
-    <string name="port_x">Порт: %1$s</string>
     <string name="feature_quantum_resistant">Квантовая устойчивость</string>
     <string name="feature_custom_dns">Пользовательский DNS</string>
     <string name="dns_content_blockers">DNS-блокировщики контента</string>

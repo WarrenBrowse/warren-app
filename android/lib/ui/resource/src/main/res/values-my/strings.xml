@@ -162,7 +162,6 @@
     <string name="reset_to_default_button">ပုံသေသို့ ပြန်လည်သတ်မှတ်ရန်</string>
     <string name="automatic">အလိုအလျောက်</string>
     <string name="off">ပိတ်</string>
-    <string name="none">မရှိ</string>
     <string name="on">ဖွင့်</string>
     <string name="search_placeholder">ရှာရန်...</string>
     <string name="search_no_matches_for_text">\"%1$s\" အတွက် ရလဒ်မရှိပါ၊ အခြားရှာဖွေမှုတစ်ခုကို စမ်းလုပ်ကြည့်ပါ</string>
@@ -175,7 +174,6 @@
     <string name="settings_notifications">အသိပေးချက်များ</string>
     <string name="enable_anyway">မည်သို့ပင်ဖြစ်စေ ဖွင့်ရန်</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
-    <string name="port_x">ပေါ့တ်- %1$s</string>
     <string name="feature_quantum_resistant">Quantum ခုခံမှု</string>
     <string name="feature_custom_dns">စိတ်ကြိုက် DNS</string>
     <string name="dns_content_blockers">DNS အကြောင်းအရာ ပိတ်ဆို့မှုများ</string>

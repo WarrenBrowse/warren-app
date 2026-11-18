@@ -166,7 +166,6 @@
     <string name="reset_to_default_button">Standaardwaarde herstellen</string>
     <string name="automatic">Automatisch</string>
     <string name="off">Uit</string>
-    <string name="none">Geen</string>
     <string name="on">Aan</string>
     <string name="search_placeholder">Zoeken naar...</string>
     <string name="search_no_matches_for_text">Geen resultaat voor \"%1$s\", probeer een andere zoekopdracht</string>
@@ -179,7 +178,6 @@
     <string name="settings_notifications">Notificaties</string>
     <string name="enable_anyway">Toch inschakelen</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
-    <string name="port_x">Poort: %1$s</string>
     <string name="feature_quantum_resistant">Kwantumbestendigheid</string>
     <string name="feature_custom_dns">Aangepaste DNS</string>
     <string name="dns_content_blockers">DNS-contentblokkeringen</string>

@@ -182,7 +182,6 @@
     <string name="reset_to_default_button">إعادة التعيين إلى الإعدادات الافتراضية</string>
     <string name="automatic">تلقائي</string>
     <string name="off">إيقاف</string>
-    <string name="none">لا يوجد</string>
     <string name="on">تشغيل</string>
     <string name="search_placeholder">ابحث عن...</string>
     <string name="search_no_matches_for_text">لم يتم العثور على نتائج للبحث عن \"%1$s\"، يُرجى تجربة بحث مختلف</string>
@@ -195,7 +194,6 @@
     <string name="settings_notifications">الإشعارات</string>
     <string name="enable_anyway">التفعيل على أي حال</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
-    <string name="port_x">المنفذ: %1$s</string>
     <string name="feature_quantum_resistant">مقاومة هجمات الحواسيب الكمّية</string>
     <string name="feature_custom_dns">DNS مُخصَّص</string>
     <string name="dns_content_blockers">أدوات حظر محتوى DNS</string>

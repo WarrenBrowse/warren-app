@@ -162,7 +162,6 @@
     <string name="reset_to_default_button">기본값으로 재설정</string>
     <string name="automatic">자동</string>
     <string name="off">끄기</string>
-    <string name="none">없음</string>
     <string name="on">켜기</string>
     <string name="search_placeholder">검색...</string>
     <string name="search_no_matches_for_text">\"%1$s\" 검색 결과가 없습니다. 다른 검색어를 시도하세요</string>
@@ -175,7 +174,6 @@
     <string name="settings_notifications">알림</string>
     <string name="enable_anyway">그래도 사용</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
-    <string name="port_x">포트: %1$s</string>
     <string name="feature_quantum_resistant">양자 저항</string>
     <string name="feature_custom_dns">사용자 지정 DNS</string>
     <string name="dns_content_blockers">DNS 콘텐츠 차단기</string>

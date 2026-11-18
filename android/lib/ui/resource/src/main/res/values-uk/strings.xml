@@ -174,7 +174,6 @@
     <string name="reset_to_default_button">Скинути до значень за замовчуванням</string>
     <string name="automatic">Автоматично</string>
     <string name="off">Вимк.</string>
-    <string name="none">Немає</string>
     <string name="on">Увімк.</string>
     <string name="search_placeholder">Пошук…</string>
     <string name="search_no_matches_for_text">За запитом «%1$s» нічого не знайдено, спробуйте інший запит</string>
@@ -187,7 +186,6 @@
     <string name="settings_notifications">Сповіщення</string>
     <string name="enable_anyway">Усе одно увімкнути</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
-    <string name="port_x">Порт: %1$s</string>
     <string name="feature_quantum_resistant">Квантова стійкість</string>
     <string name="feature_custom_dns">Користувацький DNS</string>
     <string name="dns_content_blockers">DNS-блокувальники контенту</string>

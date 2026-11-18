@@ -162,7 +162,6 @@
     <string name="reset_to_default_button">重設為預設值</string>
     <string name="automatic">自動</string>
     <string name="off">關閉</string>
-    <string name="none">無</string>
     <string name="on">開啟</string>
     <string name="search_placeholder">搜尋…</string>
     <string name="search_no_matches_for_text">找不到「%1$s」的結果，請使改用其他搜尋條件。</string>
@@ -175,7 +174,6 @@
     <string name="settings_notifications">通知</string>
     <string name="enable_anyway">仍然啟用</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
-    <string name="port_x">連接埠：%1$s</string>
     <string name="feature_quantum_resistant">抗量子</string>
     <string name="feature_custom_dns">自訂 DNS</string>
     <string name="dns_content_blockers">DNS 內容封鎖程式</string>

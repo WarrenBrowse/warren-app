@@ -162,7 +162,6 @@
     <string name="reset_to_default_button">デフォルトにリセット</string>
     <string name="automatic">自動</string>
     <string name="off">オフ</string>
-    <string name="none">なし</string>
     <string name="on">オン</string>
     <string name="search_placeholder">検索...</string>
     <string name="search_no_matches_for_text">「%1$s」の結果はありません。別の検索をお試しください。</string>
@@ -175,7 +174,6 @@
     <string name="settings_notifications">通知</string>
     <string name="enable_anyway">それでも有効にする</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
-    <string name="port_x">ポート: %1$s</string>
     <string name="feature_quantum_resistant">耐量子</string>
     <string name="feature_custom_dns">カスタムDNS</string>
     <string name="dns_content_blockers">DNSコンテンツブロッカー</string>

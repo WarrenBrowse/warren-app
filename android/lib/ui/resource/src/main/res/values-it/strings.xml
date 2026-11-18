@@ -169,7 +169,6 @@
     <string name="reset_to_default_button">Ripristina predefiniti</string>
     <string name="automatic">Automatico</string>
     <string name="off">Off</string>
-    <string name="none">Niente</string>
     <string name="on">On</string>
     <string name="search_placeholder">Cerca...</string>
     <string name="search_no_matches_for_text">Nessun risultato per \"%1$s\", prova una ricerca diversa</string>
@@ -182,7 +181,6 @@
     <string name="settings_notifications">Notifiche</string>
     <string name="enable_anyway">Abilita comunque</string>
     <string name="udp_over_tcp">UDP-over-TCP</string>
-    <string name="port_x">Porta: %1$s</string>
     <string name="feature_quantum_resistant">Resistenza ad attacchi quantistici</string>
     <string name="feature_custom_dns">DNS personalizzato</string>
     <string name="dns_content_blockers">Blocchi dei contenuti DNS</string>
