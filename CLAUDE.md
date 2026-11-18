@@ -101,10 +101,15 @@ Reproduce the CI conditions before pushing a new spec: hide
 `desktop/node_modules/electron/path.txt` and run with a `PATH` that has no
 cargo.
 
-The Playwright suites are a different story: no workflow runs them, and
-`test/e2e/mocked` is red from `main.spec.ts` (it still asserts the Mullvad window title) with
-`maxFailures: 1` cutting the rest of the run. Run a single mocked spec with
-`npm run build:test && npx playwright test mocked/<name>`.
+The mocked Playwright suite (`test/e2e/mocked`) runs in warren-tests.yml's
+`desktop-e2e-mocked` job on a hosted Ubuntu runner, under xvfb with
+`NO_SANDBOX=1`: Node and the Electron binary, no cargo, no daemon. A spec
+whose fixtures belong to one platform pins it with `WARREN_E2E_PLATFORM`, so
+it renders the same on a Linux runner and on your Mac. Run one spec with
+`npm run build:test && npx playwright test mocked/<name>`; the catalogs and
+the renderer are read from `build/`, so rebuild after editing either. The
+`test/e2e/installed` suite needs an installed app and a daemon, and no
+workflow runs it.
 
 ## Scenery art is generated, never hand-converted
 

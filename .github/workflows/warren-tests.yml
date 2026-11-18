@@ -565,6 +565,63 @@ jobs:
         shell: bash
         run: bash ci/test-git-config-global.sh
 
+  # The mocked Playwright suite drives the real renderer and main process in
+  # Electron against a scripted daemon: onboarding, login and backup, settings,
+  # app routing, notifications, upgrades. Nothing ran it before, so it rotted
+  # red for months while every spec it covers kept shipping. Node and the
+  # Electron binary only: no cargo, no daemon, no network beyond the installs.
+  desktop-e2e-mocked:
+    name: Desktop UI flows (mocked Playwright)
+    runs-on: ubuntu-24.04
+    # A healthy run is ~8 min on a hosted runner; a wedged Electron must not
+    # hold the runner for the GitHub 6h default.
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: desktop/packages/mullvad-vpn
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
+
+      - name: Setup Node
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5.0.0
+        with:
+          node-version-file: desktop/package.json
+          cache: 'npm'
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install dependencies (workspace root)
+        working-directory: desktop
+        run: npm ci
+
+      # `.npmrc` disables install scripts, so the Electron binary is fetched
+      # explicitly, the way `scripts/install-scripts.sh` does it.
+      - name: Install the Electron binary
+        working-directory: desktop/node_modules/electron
+        run: npm exec install-electron
+
+      - name: Build workspace package types
+        working-directory: desktop
+        run: npm run build-typescript -w windows-utils -w nseventforwarder
+
+      - name: Build the test bundle
+        run: npm run build:test
+
+      # Ubuntu 24.04 restricts unprivileged user namespaces, which the
+      # Chromium sandbox needs; the specs pass --no-sandbox when NO_SANDBOX=1.
+      - name: Mocked UI suite
+        env:
+          NO_SANDBOX: '1'
+        run: npm run e2e:no-build
+
+      - name: Upload the failure traces and screenshots
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        with:
+          name: desktop-e2e-mocked-results
+          path: desktop/packages/mullvad-vpn/test-results
+          retention-days: 7
+
   windows-watchdog:
     name: Windows step watchdog (native cases)
     # What the Unix suite stubs out, on the machine the release builds use:
