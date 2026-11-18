@@ -36,7 +36,6 @@ public struct WarrenMnemonicInputView: View {
         self.onComplete = onComplete
     }
 
-    private var wordCount: Int { WarrenMnemonicText.wordCount(phrase) }
     private var isValidLength: Bool { WarrenMnemonicText.isValidWordCount(phrase) }
 
     public var body: some View {
@@ -72,7 +71,7 @@ public struct WarrenMnemonicInputView: View {
                 .privacySensitive()
                 .modifier(WarrenHiddenWhileCaptured())
 
-            Text("\(wordCount) / \(WarrenMnemonicText.target(for: phrase)) words")
+            Text(WarrenMnemonicText.counter(for: phrase))
                 .font(.warrenTinySemiBold)
                 .foregroundColor(.white.opacity(0.6))
                 .accessibilityIdentifier("walletMnemonicWordCount")

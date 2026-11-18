@@ -95,6 +95,38 @@ final class WarrenWalletInteractorTests: XCTestCase {
         // Total length : 6 + 1 (ellipsis) + 6 = 13
         XCTAssertEqual(short?.count, 13)
     }
+    /// Shown when the device offers neither biometrics nor a passcode, which
+    /// used to be an English literal in every language.
+    func testTheAuthenticationUnavailableMessageIsLocalized() throws {
+        let german = try XCTUnwrap(Bundle.main.path(forResource: "de", ofType: "lproj").flatMap(Bundle.init(path:)))
+
+        XCTAssertEqual(
+            WarrenWalletInteractor.authenticationUnavailableMessage(bundle: german),
+            "Die Authentifizierung ist auf diesem Gerät nicht verfügbar."
+        )
+    }
+
+    /// The system shows this text when the app first reaches the local
+    /// network. It read the Mullvad sentence about testing "a new method".
+    func testTheLocalNetworkPermissionSaysWhatTheAppUsesItFor() throws {
+        let key = "NSLocalNetworkUsageDescription"
+        let english = try XCTUnwrap(Bundle.main.object(forInfoDictionaryKey: key) as? String)
+        XCTAssertEqual(
+            english,
+            "Lets the app test and use a proxy you add under API access when that proxy is on your local network."
+        )
+        let languages = Bundle.main.localizations.filter { $0 != "en" && $0 != "Base" }
+        XCTAssertEqual(languages.count, 23)
+        for language in languages {
+            let bundle = try XCTUnwrap(Bundle.main.path(forResource: language, ofType: "lproj").flatMap(Bundle.init(path:)))
+            let value = bundle.localizedString(forKey: key, value: nil, table: "InfoPlist")
+            XCTAssertNotEqual(value, key, "\(language): missing")
+            XCTAssertNotEqual(value, english, "\(language): untranslated")
+            XCTAssertFalse(value.contains("\u{2014}") || value.contains("\u{2013}"), "\(language): dash")
+        }
+        let french = try XCTUnwrap(Bundle.main.path(forResource: "fr", ofType: "lproj").flatMap(Bundle.init(path:)))
+        XCTAssertTrue(french.localizedString(forKey: key, value: nil, table: "InfoPlist").contains("proxy"))
+    }
 }
 
 /// Deleting the account asks for the end of the wallet address, which the

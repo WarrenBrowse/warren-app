@@ -31,6 +31,18 @@ enum WarrenMnemonicText {
         wordCount(input) > 12 ? 24 : 12
     }
 
+    /// The counter under the phrase field. Worded as "Words: 3 / 12" so no
+    /// language has to inflect the noun for the count.
+    static func counter(for input: String, bundle: Bundle = .main) -> String {
+        let format = NSLocalizedString(
+            "Words: %lld / %lld",
+            tableName: "Wallet",
+            bundle: bundle,
+            comment: "Words typed so far, out of the phrase length."
+        )
+        return String(format: format, wordCount(input), target(for: input))
+    }
+
     /// Canonicalizes a pasted phrase before it goes to the daemon: trims,
     /// lowercases, and collapses runs of whitespace to single spaces.
     ///

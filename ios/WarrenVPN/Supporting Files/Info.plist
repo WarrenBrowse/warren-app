@@ -31,7 +31,7 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>Reveal the recovery phrase for your Warren wallet</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>The app needs this to connect and test a new method.</string>
+	<string>Lets the app test and use a proxy you add under API access when that proxy is on your local network.</string>
 	<key>ApplicationSecurityGroupIdentifier</key>
 	<string>$(SECURITY_GROUP_IDENTIFIER)</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>

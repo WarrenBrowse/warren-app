@@ -57,6 +57,15 @@ final class WarrenMnemonicTextTests: XCTestCase {
         XCTAssertEqual(WarrenMnemonicText.target(for: twelve + " thirteen"), 24)
         XCTAssertEqual(WarrenMnemonicText.target(for: twentyFour), 24)
     }
+
+    /// The counter under the phrase field was an English literal, so every
+    /// language read "3 / 12 words".
+    func testTheWordCounterIsLocalized() throws {
+        let french = try XCTUnwrap(Bundle.main.path(forResource: "fr", ofType: "lproj").flatMap(Bundle.init(path:)))
+
+        XCTAssertEqual(WarrenMnemonicText.counter(for: "legal winner thank", bundle: french), "Mots : 3 / 12")
+        XCTAssertEqual(WarrenMnemonicText.counter(for: "legal winner thank"), "Words: 3 / 12")
+    }
 }
 
 /// Ticking "I have written it down" proves nothing: before a new account is

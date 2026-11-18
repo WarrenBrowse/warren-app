@@ -233,6 +233,17 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
         }
     }
 
+    /// Why the phrase cannot be revealed when the device offers neither
+    /// biometrics nor a passcode and the system gives no reason.
+    static func authenticationUnavailableMessage(bundle: Bundle = .main) -> String {
+        NSLocalizedString(
+            "Authentication is unavailable on this device.",
+            tableName: "Wallet",
+            bundle: bundle,
+            comment: "The device offers neither biometrics nor a passcode."
+        )
+    }
+
     /// Loads the wallet mnemonic from the Keychain after biometric or
     /// passcode authentication.
     ///
@@ -246,7 +257,7 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
         var error: NSError?
         let policy: LAPolicy = .deviceOwnerAuthentication
         guard context.canEvaluatePolicy(policy, error: &error) else {
-            let message = error?.localizedDescription ?? "Authentication unavailable"
+            let message = error?.localizedDescription ?? Self.authenticationUnavailableMessage()
             Task { @MainActor in
                 completion(.failure(.authenticationFailed(message)))
             }
