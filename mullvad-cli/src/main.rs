@@ -92,12 +92,6 @@ enum Cli {
     #[clap(subcommand)]
     ApiAccess(api_access::ApiAccess),
 
-    /// Inherited obfuscation settings (udp2tcp, Shadowsocks, LWO). The Warren
-    /// tunnel always runs over QUIC on port 443 and does not read them, so the
-    /// command is kept for existing scripts and hidden from help.
-    #[clap(subcommand, hide = true)]
-    AntiCensorship(anti_censorship::AntiCensorship),
-
     #[clap(subcommand)]
     SplitTunnel(split_tunnel::SplitTunnel),
 
@@ -252,7 +246,6 @@ async fn run() -> Result<()> {
         Cli::Dns(cmd) => cmd.handle().await,
         Cli::Doctor => doctor::run().await,
         Cli::Lan(cmd) => cmd.handle().await,
-        Cli::AntiCensorship(cmd) => cmd.handle().await,
         Cli::ApiAccess(cmd) => cmd.handle().await,
         Cli::Unblock(cmd) => cmd.handle().await,
         Cli::Version => version::print().await,
