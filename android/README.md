@@ -18,12 +18,8 @@ structure and can therefore be opened in Android Studio or any other IDE or edit
 
 ### Building the app
 
-The easiest and recommended way to build the Android project is to use the containerized build
-(which requires `podman`):
-```
-../building/containerized-build.sh android
-```
-See the [build instructions](./docs/BuildInstructions.md) for further information.
+See the [build instructions](./docs/BuildInstructions.md): the native libraries compile the sibling
+repositories of the workspace by path, so build on a machine that has them checked out.
 
 ## Linting and formatting
 

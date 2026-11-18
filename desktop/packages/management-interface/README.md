@@ -16,9 +16,6 @@ then used to generate the node gRPC bindings.
 
 ### Build and publish image
 
-> Note: These steps should be run on the build server. See:
-> [building/README.md](../../../building/README.md)
-
 ```bash
 cd desktop/packages/management-interface
 bash building/build-and-publish-container-image.sh

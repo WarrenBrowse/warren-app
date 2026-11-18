@@ -1,72 +1,26 @@
 # Build instructions
 
-This document aims to explain how to build the Warren Android app. It's strongly recommended and
-primarily supported to build the app using the provided container, as it ensures the correct build
-environment.
+This document aims to explain how to build the Warren Android app. The native libraries compile
+the sibling repositories (`warrenguard`, `warren-sdk-rs`, `warren-contract`) by path, so the build
+runs on a machine with the whole workspace checked out, natively or in the nix devshell.
 
 ## Build process
 
 The build process consist of two main steps. First building the native libraries (`warren-jni`)
 and then building the Android app/project which will bundle the previously built native libraries.
-Building the native libraries requires some specific toolchains and packages to be installed, so
-it's recommended to build using the provided build script and container image.
+Building the native libraries requires some specific toolchains and packages to be installed, listed
+below.
 
 The native libraries doesn't have to be rebuilt very often, only when including daemon changes or
 after cleaning the project, so apart from that it's possible to build the Android app/project using
 the Gradle CLI or the Android Studio GUI.
 
-## Build with provided container (recommended)
-
-> __*NOTE:*__ Build with provided container is only supported on Linux and may not work on other
-> platforms.
-
-Building both the native libraries and Android project can easily be achieved by running the
-[containerized-build.sh](../building/containerized-build.sh) script, which helps using the correct
-tag and mounting volumes. The script relies on [podman](https://podman.io/getting-started/installation.html)
-by default, however another container runner such as [docker](https://docs.docker.com/get-started/)
-can be used by setting the `CONTAINER_RUNNER` environment variable.
-
-After the native libraries have been built, subsequent builds can that doesn't rely on changes to
-the native libraries can be ran using the Gradle CLI or the Android Studio GUI. This requires
-either:
-* Rust to be installed, since a tooled called `mullvad-version` is used to resolved the version
-  information for the Android app.
-
-or
-
-* Specifying custom version information by following [these instructions](#override-version-code-and-version-name).
-
-### Setup:
-
-- Install [podman](https://podman.io/getting-started/installation.html) and make sure it's
-  configured to run in rootless mode.
-
-- OPTIONAL: Get the latest **stable** Rust toolchain via [rustup.rs](https://rustup.rs/).
-
-### Debug build
-Run the following command to trigger a full debug build:
-```bash
-../building/containerized-build.sh android
-```
-
-### Release build
-1. Configure a signing key by following [these instructions](#configure-signing-key).
-2. Run the following command to build:
-```bash
-../building/containerized-build.sh android fullRelease
-```
-3. Sign the release artifacts using apksigner with the following command:
-```bash
-apksigner sign --ks app-keys.jks (WarrenVPN)(version)(.apk|.aab)
-```
-
-## Build without the provided container
+## Build natively
 
 > __*NOTE:*__ This guide is only supported on Linux and may not work on other platforms, if you are
 > using macOS please refer to [macOS build instructions](./docs/BuildInstructions.macos.md)
 
-Building without the provided container requires installing multiple Sdk:s and toolchains, and is
-therefore more complex.
+It requires installing multiple Sdk:s and toolchains.
 
 ### Setup build environment
 These steps explain how to manually setup the build environment on a Linux system.
