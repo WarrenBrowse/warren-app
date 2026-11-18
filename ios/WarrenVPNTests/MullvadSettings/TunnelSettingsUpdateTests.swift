@@ -32,6 +32,25 @@ final class TunnelSettingsUpdateTests: XCTestCase {
         XCTAssertEqual(settings.dnsSettings.customDNSDomains, [.ipv4(IPv4Address("1.2.3.4")!)])
     }
 
+    /// The exit decodes the blocked categories from the last octet of its resolver in
+    /// 10.66.255.0/26, inside the tunnel pool and away from the range overlays such as
+    /// Tailscale claim.
+    func testBlockingOptionsNameTheExitsResolverForThatSetOfCategories() {
+        XCTAssertNil(DNSBlockingOptions().serverAddress)
+        XCTAssertEqual(DNSBlockingOptions.blockAdvertising.serverAddress, IPv4Address("10.66.255.1"))
+        XCTAssertEqual(
+            DNSBlockingOptions([.blockAdvertising, .blockTracking]).serverAddress,
+            IPv4Address("10.66.255.3")
+        )
+        XCTAssertEqual(
+            DNSBlockingOptions([
+                .blockAdvertising, .blockTracking, .blockMalware,
+                .blockAdultContent, .blockGambling, .blockSocialMedia,
+            ]).serverAddress,
+            IPv4Address("10.66.255.63")
+        )
+    }
+
     func testApplyObfuscation() {
         // Given:
         var settings = LatestTunnelSettings()

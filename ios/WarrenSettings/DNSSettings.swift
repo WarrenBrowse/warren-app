@@ -21,11 +21,13 @@ public struct DNSBlockingOptions: OptionSet, Codable, Sendable {
     public static let blockGambling = DNSBlockingOptions(rawValue: 1 << 4)
     public static let blockSocialMedia = DNSBlockingOptions(rawValue: 1 << 5)
 
+    /// The exit's resolver for this set of categories: 10.66.255.<mask>, inside the
+    /// tunnel pool. Never inside 100.64.0.0/10, which Tailscale and other overlays claim.
     public var serverAddress: IPv4Address? {
         if isEmpty {
             return nil
         } else {
-            return IPv4Address("100.64.0.\(rawValue)")
+            return IPv4Address("10.66.255.\(rawValue)")
         }
     }
 
