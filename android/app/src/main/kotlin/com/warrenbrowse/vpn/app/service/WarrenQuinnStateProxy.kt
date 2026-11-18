@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 /**
@@ -47,12 +47,16 @@ class WarrenQuinnStateProxy :
     private val _state = MutableStateFlow<WarrenTunnelState>(WarrenTunnelState.Disconnected)
     val tunnelState: StateFlow<WarrenTunnelState> = _state.asStateFlow()
 
+    private val _postQuantumSealed = MutableStateFlow(false)
+
     // Lossless typed projection consumed by ConnectionProxy, the main
     // connection card and the quick settings tile. Carries the real endpoint
-    // hosts, the feature flags and the distinct Failed/Blocking states.
+    // hosts, the feature flags, the seal and the distinct Failed/Blocking
+    // states.
     override val connectedInfo: StateFlow<WarrenConnectedInfo> =
-        tunnelState
-            .map { it.toConnectedInfo() }
+        combine(tunnelState, _postQuantumSealed) { state, sealed ->
+                state.toConnectedInfo(sealed)
+            }
             .stateIn(
                 scope = scope,
                 started = SharingStarted.Eagerly,
@@ -120,6 +124,11 @@ class WarrenQuinnStateProxy :
         _effectiveMtu.value = mtu
     }
 
+    /** Called by [WarrenVpnService] when the seal the session dials with changes. */
+    fun updatePostQuantumSealed(sealed: Boolean) {
+        _postQuantumSealed.value = sealed
+    }
+
     /** Called by [WarrenVpnService] on every landed failover. */
     fun updateFailoverCount(count: Int) {
         _failoverCount.value = count
@@ -129,7 +138,7 @@ class WarrenQuinnStateProxy :
         const val NATPMP_IDLE = "{\"state\":\"idle\"}"
     }
 
-    private fun WarrenTunnelState.toConnectedInfo(): WarrenConnectedInfo =
+    private fun WarrenTunnelState.toConnectedInfo(postQuantum: Boolean): WarrenConnectedInfo =
         when (this) {
             is WarrenTunnelState.Disconnected -> WarrenConnectedInfo.Disconnected
             is WarrenTunnelState.Connecting ->
@@ -157,6 +166,7 @@ class WarrenQuinnStateProxy :
                     daita = daita,
                     assignedNatPmpPort = assignedNatPmpPort,
                     exitPubkeyHex = exitId.ifEmpty { null },
+                    postQuantum = postQuantum,
                 )
             is WarrenTunnelState.Failed ->
                 WarrenConnectedInfo.Failed(reason, expired, flapping, banLapsesAtUnixSecs)

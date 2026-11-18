@@ -96,6 +96,26 @@ class WarrenQuinnStateProxyTest {
     }
 
     @Test
+    fun `the session's seal reaches the connected card, whichever arrives first`() = runTest {
+        val proxy = WarrenQuinnStateProxy()
+        val connected =
+            WarrenTunnelState.Connected(
+                exitId = "3cb7f0e1d2c3b4a5",
+                assignedNatPmpPort = null,
+                multiHop = false,
+                daita = false,
+            )
+
+        proxy.updatePostQuantumSealed(true)
+        proxy.update(connected)
+        val sealed = proxy.connectedInfo.value as WarrenConnectedInfo.Connected
+        proxy.updatePostQuantumSealed(false)
+        val classical = proxy.connectedInfo.value as WarrenConnectedInfo.Connected
+
+        assertEquals(listOf(true, false), listOf(sealed.postQuantum, classical.postQuantum))
+    }
+
+    @Test
     fun `a release after flapping reaches the connection card as such`() = runTest {
         val proxy = WarrenQuinnStateProxy()
         proxy.update(WarrenTunnelState.Failed("dropped", flapping = true))

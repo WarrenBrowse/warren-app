@@ -101,7 +101,9 @@ sealed interface WarrenConnectedInfo {
     /**
      * Tunnel up. [exitEndpointHost] / [entryEndpointHost] are "host:port" literals from the active
      * `WarrenTunnelConfig` ([entryEndpointHost] is null for single-hop), [exitPubkeyHex] the key of
-     * the exit it runs on, multi-hop or not.
+     * the exit it runs on, multi-hop or not. [postQuantum] is the seal the session dialled with:
+     * true on X-Wing, false when the exit publishes no signed ML-KEM key and the session fell back
+     * to X25519.
      */
     data class Connected(
         val exitEndpointHost: String,
@@ -110,6 +112,7 @@ sealed interface WarrenConnectedInfo {
         val daita: Boolean,
         val assignedNatPmpPort: Int?,
         val exitPubkeyHex: String? = null,
+        val postQuantum: Boolean = false,
     ) : WarrenConnectedInfo
 
     /**

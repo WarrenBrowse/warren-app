@@ -266,6 +266,15 @@ class WarrenQuinnAdapterTest {
 
         override fun effectiveMtu(): Int = mtuVerdict
 
+        @Volatile
+        var sealedPostQuantum: Boolean = false
+            set(value) {
+                field = value
+                publish()
+            }
+
+        override fun postQuantumSealed(): Boolean = sealedPostQuantum
+
         /** The exit key of every exit-down report the adapter posted, in order. */
         val exitDownReports = mutableListOf<String>()
 
@@ -1388,6 +1397,27 @@ class WarrenQuinnAdapterTest {
             adapter.disconnect()
             awaitReal("a torn-down session must clear the verdict") {
                 adapter.effectiveMtu.value == null
+            }
+        }
+
+    /**
+     * The seal the engine dialled with rides the status wake, and a torn-down
+     * session takes it along: the chip says what protects the live session,
+     * never the previous one.
+     */
+    @Test
+    fun `ensure the post-quantum seal reaches the adapter and clears with the session`() =
+        runTest {
+            val platform = RecordingPlatform()
+            val (adapter, _) = connectedAdapter(platform)
+            assertEquals(false, adapter.postQuantumSealed.value)
+
+            platform.sealedPostQuantum = true
+            awaitReal("the seal must reach the adapter") { adapter.postQuantumSealed.value }
+
+            adapter.disconnect()
+            awaitReal("a torn-down session must clear the seal") {
+                !adapter.postQuantumSealed.value
             }
         }
 

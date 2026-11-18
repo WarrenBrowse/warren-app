@@ -478,6 +478,22 @@ class ConnectionProxyTest {
     }
 
     @Test
+    fun `Connected on the post-quantum seal is quantum resistant and shows its chip`() = runTest {
+        val state = mapped(connectedInfo().copy(postQuantum = true)) as TunnelState.Connected
+
+        assertTrue(state.endpoint.quantumResistant)
+        assertTrue(state.featureIndicators.contains(FeatureIndicator.QUANTUM_RESISTANCE))
+    }
+
+    @Test
+    fun `Connected on the classical seal claims no quantum resistance`() = runTest {
+        val state = mapped(connectedInfo()) as TunnelState.Connected
+
+        assertFalse(state.endpoint.quantumResistant)
+        assertFalse(state.featureIndicators.contains(FeatureIndicator.QUANTUM_RESISTANCE))
+    }
+
+    @Test
     fun `Connected with an unparseable host falls back to the sentinel endpoint`() = runTest {
         val state = mapped(
             WarrenConnectedInfo.Connected(

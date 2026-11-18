@@ -255,6 +255,7 @@ pub async fn run_session(
         cancel_rx,
     )
     .await;
+    crate::android_jni::set_post_quantum_seal(false);
     crate::android_app_routes::reset_status();
 }
 
@@ -460,6 +461,9 @@ async fn run_multi_hop_session(
         };
     #[cfg(not(feature = "pq-hpke"))]
     let exit_mlkem768_pubkey: Option<Vec<u8>> = None;
+    crate::android_jni::set_post_quantum_seal(crate::seal::seals_post_quantum(
+        exit_mlkem768_pubkey.as_deref(),
+    ));
 
     // v7 anonymous admission (default). The supervisor calls
     // the provider once per session establishment and is handed the whole

@@ -128,6 +128,11 @@ class WarrenQuinnAdapter(
     private val _effectiveMtu = MutableStateFlow<Int?>(null)
     val effectiveMtu: StateFlow<Int?> = _effectiveMtu.asStateFlow()
 
+    // Whether the session dials with the post-quantum seal (X-Wing) rather
+    // than the X25519 fallback, for the quantum-resistance chip.
+    private val _postQuantumSealed = MutableStateFlow(false)
+    val postQuantumSealed: StateFlow<Boolean> = _postQuantumSealed.asStateFlow()
+
     // When the last automatic recovery landed (`SystemClock.elapsedRealtime`),
     // null until one did. The desktop "Last" row next to "Reconnects".
     private val _lastAutoRecoveryAtMs = MutableStateFlow<Long?>(null)
@@ -487,6 +492,8 @@ class WarrenQuinnAdapter(
                 if (wedged != _pathWedged.value) _pathWedged.value = wedged
                 val reducedMtu = platform.effectiveMtu().takeIf { it > 0 }
                 if (reducedMtu != _effectiveMtu.value) _effectiveMtu.value = reducedMtu
+                val sealed = platform.postQuantumSealed()
+                if (sealed != _postQuantumSealed.value) _postQuantumSealed.value = sealed
                 if (code != lastSeen) {
                     lastSeen = code
                     Logger.i("WarrenQuinnAdapter: native status $code")
@@ -837,6 +844,7 @@ class WarrenQuinnAdapter(
         _natPmpStatus.value = NATPMP_IDLE
         _appRoutesStatus.value = APP_ROUTES_NONE
         _effectiveMtu.value = null
+        _postQuantumSealed.value = false
         _state.value = WarrenTunnelState.Disconnected
     }
 
@@ -861,6 +869,7 @@ class WarrenQuinnAdapter(
         _natPmpStatus.value = NATPMP_IDLE
         _appRoutesStatus.value = APP_ROUTES_NONE
         _effectiveMtu.value = null
+        _postQuantumSealed.value = false
         // Only an unexpected drop counts as a flap; a user teardown must not
         // record one. The blackhole-up-FIRST behaviour (block, then retry) is
         // the Mullvad fail-closed model and lives in KillSwitchPolicy.
@@ -962,6 +971,7 @@ class WarrenQuinnAdapter(
         _natPmpStatus.value = NATPMP_IDLE
         _appRoutesStatus.value = APP_ROUTES_NONE
         _effectiveMtu.value = null
+        _postQuantumSealed.value = false
         flapDetector.reset()
         if (failsClosed(config)) {
             Logger.w("WarrenQuinnAdapter: account unauthorized; blocking (subscription expired)")
@@ -985,6 +995,7 @@ class WarrenQuinnAdapter(
     private fun onTerminalRefusal(config: WarrenTunnelConfig, reason: String) {
         _natPmpStatus.value = NATPMP_IDLE
         _effectiveMtu.value = null
+        _postQuantumSealed.value = false
         flapDetector.reset()
         if (failsClosed(config)) {
             Logger.w("WarrenQuinnAdapter: terminal refusal; blocking")
@@ -1009,6 +1020,7 @@ class WarrenQuinnAdapter(
         _natPmpStatus.value = NATPMP_IDLE
         _appRoutesStatus.value = APP_ROUTES_NONE
         _effectiveMtu.value = null
+        _postQuantumSealed.value = false
         Logger.w("WarrenQuinnAdapter: no entry reachable on this network; blocking")
         enterBlockingMode(config, NO_DIALABLE_NETWORK)
         (_state.value as? WarrenTunnelState.Blocking)?.let {
@@ -1028,6 +1040,7 @@ class WarrenQuinnAdapter(
         _natPmpStatus.value = NATPMP_IDLE
         _appRoutesStatus.value = APP_ROUTES_NONE
         _effectiveMtu.value = null
+        _postQuantumSealed.value = false
         flapDetector.reset()
         if (config.lockdownMode) {
             Logger.w("WarrenQuinnAdapter: account banned; blocking")

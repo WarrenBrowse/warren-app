@@ -373,6 +373,13 @@ object WarrenJni {
     external fun getEffectiveMtu(): Int
 
     /**
+     * Whether the running session seals post-quantum (X-Wing). The dial prefers the seal and falls
+     * back to X25519 when the exit publishes no signed ML-KEM key, so this is the outcome of the
+     * negotiation, never the setting. Read on every [awaitStatusChange] wake.
+     */
+    external fun isPostQuantumSealed(): Boolean
+
+    /**
      * Returns the live NAT-PMP port-forwarding status as a JSON object: `{"state":
      * "idle"|"requesting"|"mapped"|"rate_limited"|"failed"|"refused", "external_port": Int?,
      * "lifetime_secs": Int?, "retry_after_secs": Int?, "reason": String?}`. `refused` is an exit

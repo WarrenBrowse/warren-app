@@ -240,6 +240,7 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
                             info.multiHop,
                             info.daita,
                             info.assignedNatPmpPort,
+                            info.postQuantum,
                         ),
                 )
             is WarrenConnectedInfo.Failed ->
@@ -299,7 +300,7 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
         TunnelEndpoint(
             entryEndpoint = info.entryEndpointHost?.let(::parseEndpoint),
             endpoint = parseEndpoint(info.exitEndpointHost) ?: sentinelEndpoint,
-            quantumResistant = false,
+            quantumResistant = info.postQuantum,
             obfuscation = null,
             daita = info.daita,
             exitPubkeyHex = info.exitPubkeyHex,
@@ -320,12 +321,17 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
         )
     }
 
+    // The seal is the session's outcome, known only once connected: the dial
+    // prefers X-Wing and falls back to X25519 when the exit publishes no
+    // signed ML-KEM key, so the chip never stands for the setting.
     private fun buildFeatureIndicators(
         multiHop: Boolean,
         daita: Boolean,
         assignedNatPmpPort: Int?,
+        postQuantum: Boolean = false,
     ): List<FeatureIndicator> =
         buildList {
+            if (postQuantum) add(FeatureIndicator.QUANTUM_RESISTANCE)
             if (daita && multiHop) {
                 add(FeatureIndicator.DAITA_MULTIHOP)
             } else {

@@ -172,6 +172,10 @@ mod status_watch;
 #[cfg(any(test, target_os = "android"))]
 mod path_metrics;
 
+// Whether the session seals post-quantum, host-tested; `tunnel` publishes it.
+#[cfg(any(test, target_os = "android"))]
+mod seal;
+
 // The exit a location pin (or a drop retry) dials, chosen over the verified
 // relay list with the shared `warren_discovery_core::pick_exit` rule;
 // host-tested on the JSON contract the JNI export carries.

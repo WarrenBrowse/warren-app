@@ -155,6 +155,20 @@ pub(crate) fn reset_effective_mtu() {
     set_effective_mtu(None);
 }
 
+/// Whether the running session's dial seals post-quantum (X-Wing), read by
+/// Kotlin through `isPostQuantumSealed` for the quantum-resistance chip. The
+/// session prefers the seal and falls back to X25519 when the exit publishes
+/// no signed ML-KEM key, so this is the outcome, not the setting.
+static POST_QUANTUM_SEAL: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Publish the seal the session dials with; wakes the waiter only on a change.
+#[cfg(feature = "tunnel")]
+pub(crate) fn set_post_quantum_seal(sealed: bool) {
+    if POST_QUANTUM_SEAL.swap(sealed, std::sync::atomic::Ordering::Relaxed) != sealed {
+        SESSION_STATUS.bump();
+    }
+}
+
 /// Latest in-tunnel egress verdict: `true` while the exit answers the client
 /// and forwards nothing to the internet. Its own cell rather than a second
 /// writer on [`PATH_HEALTH`], because the two publishers run on unrelated
@@ -702,6 +716,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_disconnectTunnel(
         // `tokio::select!` falls through; we also do it here for symmetry
         // so the status flip is observable even before the task wakes.
         SESSION_STATUS.store(crate::redial::SessionStatus::Disconnected as i32);
+        POST_QUANTUM_SEAL.store(false, std::sync::atomic::Ordering::Relaxed);
         reset_natpmp_status();
         reset_path_health();
         reset_egress_dead();
@@ -890,6 +905,17 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getEffectiveMtu(
     _class: JClass<'_>,
 ) -> jint {
     EFFECTIVE_MTU.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// Whether the running session seals post-quantum (see
+/// [`POST_QUANTUM_SEAL`]). Read by Kotlin alongside `getTunnelStatus()` on
+/// every status wake.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_isPostQuantumSealed(
+    _env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jboolean {
+    jboolean::from(POST_QUANTUM_SEAL.load(std::sync::atomic::Ordering::Relaxed))
 }
 
 /// Returns a JSON-encoded array of [`RelayInfo`] objects describing the

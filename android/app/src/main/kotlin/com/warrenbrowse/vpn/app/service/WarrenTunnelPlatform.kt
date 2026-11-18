@@ -82,6 +82,9 @@ interface WarrenTunnelPlatform {
     /** Engine "Reduced MTU" verdict in bytes, `0` while the path is not reduced. */
     fun effectiveMtu(): Int
 
+    /** Whether the running session seals post-quantum (X-Wing) rather than with X25519 alone. */
+    fun postQuantumSealed(): Boolean
+
     /** Waits for the previous session to finish winding down. */
     fun awaitTunnelClosed(timeoutMs: Long): Boolean
 
@@ -255,6 +258,8 @@ class AndroidTunnelPlatform(
     override fun pathHealth(): Int = WarrenJni.getPathHealth()
 
     override fun effectiveMtu(): Int = WarrenJni.getEffectiveMtu()
+
+    override fun postQuantumSealed(): Boolean = WarrenJni.isPostQuantumSealed()
 
     override fun awaitTunnelClosed(timeoutMs: Long): Boolean =
         WarrenJni.awaitTunnelClosed(timeoutMs.toInt()) == 1

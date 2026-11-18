@@ -157,6 +157,11 @@ class WarrenVpnService : LifecycleVpnService() {
             quinnAdapter.effectiveMtu.collect { mtu -> quinnStateProxy.updateEffectiveMtu(mtu) }
         }
         lifecycleScope.launch {
+            quinnAdapter.postQuantumSealed.collect { sealed ->
+                quinnStateProxy.updatePostQuantumSealed(sealed)
+            }
+        }
+        lifecycleScope.launch {
             quinnAdapter.lastAutoRecoveryAtMs.collect { at ->
                 quinnStateProxy.updateLastAutoRecoveryAt(at)
             }
