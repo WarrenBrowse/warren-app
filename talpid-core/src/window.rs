@@ -149,10 +149,10 @@ where
     if raw_callback != 0 {
         // SAFETY: this procedure is only installed by `create_hidden_window::<F>`, which stores
         // a `Box<F>` pointer in the user data first and frees it only after its message loop has
-        // ended. The callback runs on the window's own thread. A re-entrant message sent while
-        // the callback runs would create a second `&mut F`; `F: Fn`, so a shared reference would
-        // be enough and would remove that aliasing.
-        let typed_callback = unsafe { &mut *(raw_callback as *mut F) };
+        // ended. The callback runs on the window's own thread. A message sent while the callback
+        // runs re-enters this procedure, so the callback is only ever borrowed shared, which
+        // `F: Fn` allows, and two live borrows never alias a `&mut`.
+        let typed_callback = unsafe { &*(raw_callback as *const F) };
         return typed_callback(window, message, wparam, lparam);
     }
     // SAFETY: forwards unchanged the arguments Windows passed to this window procedure.
