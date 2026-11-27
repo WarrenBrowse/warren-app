@@ -66,6 +66,13 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] App Transport Security rămâne activ, iar cu extensia VPN se partajează doar sămânța
   portofelului.
 
+## [1.1.61] - 2026-11-27
+### Reparat
+- [macOS] Fereastra se deschide din nou la clic pe pictograma din bara de meniu după actualizarea
+  la 1.1.60 pe macOS 27. Un modul nativ al aplicației era construit într-o formă pe care macOS 27
+  refuză să o încarce, iar fereastra nu era pregătită niciodată. Aplicația se deschide acum fără
+  acest modul, iar publicarea refuză o astfel de versiune.
+
 ## [1.1.60] - 2026-11-27
 ### Adăugat
 - [Windows, macOS, Linux] Raportați o problemă din colacul de salvare de pe ecranul principal:

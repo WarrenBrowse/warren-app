@@ -1,6 +1,5 @@
-### Adăugat
-- [Windows, macOS, Linux] Raportați o problemă din colacul de salvare de pe ecranul principal:
-  descrieți-o într-o propoziție și trimiteți. Aplicația vă creează contul de forum dacă e nevoie,
-  publică subiectul cu jurnalele și îl deschide în browser, deja conectat. Unde și cât de des apare
-  problema devin opționale, sub „Mai multe detalii". Rapoartele rămân listate pe acel ecran, fiecare
-  cu „Trimiteți jurnale noi".
+### Reparat
+- [macOS] Fereastra se deschide din nou la clic pe pictograma din bara de meniu după actualizarea
+  la 1.1.60 pe macOS 27. Un modul nativ al aplicației era construit într-o formă pe care macOS 27
+  refuză să o încarce, iar fereastra nu era pregătită niciodată. Aplicația se deschide acum fără
+  acest modul, iar publicarea refuză o astfel de versiune.

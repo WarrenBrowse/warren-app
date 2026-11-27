@@ -70,6 +70,13 @@ par l'application, gardez-le tel quel.
 - [iOS] Garder App Transport Security activé, et ne partager avec l'extension VPN que la graine du
   portefeuille.
 
+## [1.1.61] - 2026-11-27
+### Corrigé
+- [macOS] Rouvrir la fenêtre au clic sur l'icône de la barre des menus après la mise à jour vers
+  la 1.1.60 sous macOS 27. Un module natif de l'app était construit sous une forme que macOS 27
+  refuse de charger, et la fenêtre n'était jamais préparée. L'app s'ouvre désormais sans ce module,
+  et la publication refuse une telle version.
+
 ## [1.1.60] - 2026-11-27
 ### Ajouté
 - [Windows, macOS, Linux] Signaler un problème depuis la bouée de l'écran d'accueil : décrivez-le en
