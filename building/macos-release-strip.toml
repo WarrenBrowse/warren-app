@@ -1,0 +1,17 @@
+# Passed with `cargo --config building/macos-release-strip.toml` by every
+# release build of a binary that ships on macOS.
+#
+# The release profile asks for `strip = true`, and on Apple targets rustc
+# strips with rust-objcopy (llvm-objcopy), which can leave the string table on
+# a 4-byte boundary. The dyld of macOS 27 refuses to load a library with that
+# layout when it was built against the 27 SDK: beta 1.1.60's nseventforwarder
+# module never loaded. The x86_64 slice of its daemon carried the same defect,
+# which Apple's validator refuses in an executable too. Apple's linker emits
+# a well-formed table, so it does the stripping instead: -x drops the local
+# symbols (the most a dylib can lose, as `strip -x`), -S the debug map and the
+# build paths it records.
+#
+# Not in .cargo/config.toml: there it would strip the debug builds lldb reads.
+# ci/check-macho-loadable.py refuses a release that still carries the defect.
+[target.'cfg(target_vendor = "apple")']
+rustflags = ["-Cstrip=none", "-Clink-arg=-Wl,-x,-S"]

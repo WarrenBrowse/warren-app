@@ -496,6 +496,13 @@ jobs:
         shell: bash
         run: python3 ci/test_check_swarm.py
 
+      # The macOS release refuses a binary dyld would not load: beta 1.1.60
+      # shipped one and its menu bar icon stopped answering clicks.
+      - name: Mach-O loadability checker unit tests
+        working-directory: .
+        shell: bash
+        run: python3 ci/test_check_macho_loadable.py
+
       # The macOS pkg scripts only ever run inside a real install, so a wrong
       # abort there is invisible until a user double-clicks the installer. It
       # shipped once: every FIRST install failed. Gated on the release path

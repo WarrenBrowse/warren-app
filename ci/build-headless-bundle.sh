@@ -200,6 +200,7 @@ case "$platform" in
                 exit 1
             }
         done
+        python3 -I "$SCRIPT_DIR/check-macho-loadable.py" "$stage/bin"
 
         install -m 0644 build/relays.json "$stage/resources/relays.json"
         install -m 0644 build/warren-relays.json "$stage/resources/warren-relays.json"

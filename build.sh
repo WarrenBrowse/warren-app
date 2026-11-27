@@ -141,6 +141,9 @@ if [[ "$OPTIMIZE" == "true" ]]; then
     CARGO_ARGS+=(--release)
     RUST_BUILD_MODE="release"
     NPM_PACK_ARGS+=(--release)
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        CARGO_ARGS+=(--config "$SCRIPT_DIR/building/macos-release-strip.toml")
+    fi
 else
     RUST_BUILD_MODE="debug"
     NPM_PACK_ARGS+=(--no-compression)
@@ -642,6 +645,19 @@ if [[ "$DAEMON_ONLY" == "false" ]]; then
     esac
     popd
     popd
+
+    # Beta 1.1.60 shipped a native module dyld refused, and the menu bar icon
+    # stopped answering. The installer's payload is what users get, so that is
+    # what gets checked.
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        for pkg in dist/*"$PRODUCT_VERSION"*.pkg; do
+            log_info "Checking that dyld loads every binary in $pkg"
+            pkg_check_dir="$(mktemp -d)"
+            pkgutil --expand-full "$pkg" "$pkg_check_dir/payload"
+            python3 -I ci/check-macho-loadable.py "$pkg_check_dir/payload"
+            rm -rf "$pkg_check_dir"
+        done
+    fi
 else
     log_header "Packing Warren VPN daemon-only packages $PRODUCT_VERSION"
 

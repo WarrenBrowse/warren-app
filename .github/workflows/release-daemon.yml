@@ -411,6 +411,7 @@ jobs:
         run: |
           for target in aarch64-apple-darwin x86_64-apple-darwin; do
             cargo build --release --target "$target" \
+              --config building/macos-release-strip.toml \
               -p mullvad-daemon -p mullvad-cli -p mullvad-setup -p mullvad-problem-report
           done
       - name: Assemble the universal bundle
