@@ -1,5 +1,5 @@
 // Shared types for the community-forum in-app report:
-// the Settings, Support, "Report a problem" form, filed through the connect
+// the "Report a problem" form behind the home lifebuoy, filed through the connect
 // broker with the wallet signature and the redacted logs, the way the
 // Android app files it. The description is public under the anonymous forum
 // name; the logs go privately to the support team.
@@ -26,15 +26,17 @@ export const FORUM_REPORT_FREQUENCIES: readonly ForumReportFrequency[] = [
   'once',
 ];
 
-/** Shortest description the broker accepts (its `MIN_MESSAGE_CHARS`). */
-export const FORUM_REPORT_MIN_DESCRIPTION_CHARS = 20;
+/** Shortest description the broker accepts (its `MIN_REPORT_DESCRIPTION_CHARS`). */
+export const FORUM_REPORT_MIN_DESCRIPTION_CHARS = 10;
 /** Longest description and longest steps the broker accepts. */
 export const FORUM_REPORT_MAX_DESCRIPTION_CHARS = 4_000;
 
 /** The form as the renderer hands it to main. */
 export interface IForumReportForm {
-  area: ForumReportArea;
-  frequency: ForumReportFrequency;
+  // Both optional: the broker files a report without them, and the logs
+  // answer the question better than a guess picked to get past the form.
+  area?: ForumReportArea;
+  frequency?: ForumReportFrequency;
   whatHappened: string;
   // Optional; blank is sent as no field at all.
   steps?: string;
@@ -61,6 +63,10 @@ export type ForumReportResult =
       logs: ForumReportLogs;
       // The forum identity the answer carried, when it did.
       identity?: ForumIdentity;
+      // The broker's one-shot link that opens the topic already signed in,
+      // only when it points at the connect page the app vouches for. Single
+      // use: once opened, the topic URL is what reopens the topic.
+      loginUrl?: string;
     }
   // Never paid: the website help form is the channel.
   | { kind: 'subscription-required' }
@@ -93,4 +99,90 @@ export type ForumReportSaveOutcome = 'saved' | 'cancelled' | 'failed';
 /** True when the failure is the upload deadline with logs attached. */
 export function isForumReportUploadTimeout(result: ForumReportResult): boolean {
   return result.kind === 'failed' && result.reason === 'upload-timeout';
+}
+
+/**
+ * What became of new logs sent to one of the reporter's own topics
+ * (`POST /v1/forum/report/logs`).
+ */
+export type ForumReportLogsResult =
+  | { kind: 'attached' }
+  // The topic is not this wallet's: another device's wallet filed it.
+  | { kind: 'not-author' }
+  // The topic is closed: a new report is the way to reach the team.
+  | { kind: 'topic-closed' }
+  | { kind: 'subscription-required' }
+  | { kind: 'clock-skew' }
+  | { kind: 'rate-limited' }
+  | { kind: 'too-large' }
+  | { kind: 'server-error' }
+  | { kind: 'no-identity' }
+  // The logs could not be collected on this machine.
+  | { kind: 'collect-failed' }
+  | { kind: 'failed'; reason: string };
+
+/**
+ * A report this app filed, kept so the person can find it again and send new
+ * logs to it. All of it is public on the forum already: the topic, and the
+ * first words of the description its title is made of.
+ */
+export interface IForumReportRecord {
+  topicId: number;
+  summary: string;
+  // ISO 8601, when the report was filed.
+  createdAt: string;
+}
+
+/** How many filed reports the app remembers. */
+export const FORUM_REPORT_RECORDS_MAX = 10;
+
+const SUMMARY_CHARS = 60;
+
+/** The list line of a report: its description on one line, clipped. */
+export function forumReportSummary(whatHappened: string): string {
+  const chars = Array.from(whatHappened.split(/\s+/).filter(Boolean).join(' '));
+  return chars.length > SUMMARY_CHARS
+    ? `${chars.slice(0, SUMMARY_CHARS).join('')}…`
+    : chars.join('');
+}
+
+/** `list` with `record` on top, one entry per topic, capped. */
+export function recordForumReport(
+  list: readonly IForumReportRecord[],
+  record: IForumReportRecord,
+): IForumReportRecord[] {
+  return [record, ...list.filter((r) => r.topicId !== record.topicId)].slice(
+    0,
+    FORUM_REPORT_RECORDS_MAX,
+  );
+}
+
+function isForumReportRecord(value: unknown): value is IForumReportRecord {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const { topicId, summary, createdAt } = value as Record<string, unknown>;
+  return (
+    typeof topicId === 'number' &&
+    Number.isSafeInteger(topicId) &&
+    topicId > 0 &&
+    typeof summary === 'string' &&
+    typeof createdAt === 'string' &&
+    !Number.isNaN(Date.parse(createdAt))
+  );
+}
+
+/**
+ * The stored list as the app may use it. Read entry by entry rather than
+ * validated whole: the settings loader throws away the WHOLE settings file on
+ * one malformed value, and a damaged report list must not reset the app.
+ */
+export function sanitizeForumReportRecords(value: unknown): IForumReportRecord[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .filter(isForumReportRecord)
+    .map(({ topicId, summary, createdAt }) => ({ topicId, summary, createdAt }))
+    .slice(0, FORUM_REPORT_RECORDS_MAX);
 }

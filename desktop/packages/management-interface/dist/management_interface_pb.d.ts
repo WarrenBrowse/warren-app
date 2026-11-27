@@ -1953,6 +1953,31 @@ export namespace ForumReportRequest {
     }
 }
 
+export class ForumReportLogsRequest extends jspb.Message { 
+    getTopicId(): number;
+    setTopicId(value: number): ForumReportLogsRequest;
+    getLogGz(): Uint8Array | string;
+    getLogGz_asU8(): Uint8Array;
+    getLogGz_asB64(): string;
+    setLogGz(value: Uint8Array | string): ForumReportLogsRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ForumReportLogsRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ForumReportLogsRequest): ForumReportLogsRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ForumReportLogsRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ForumReportLogsRequest;
+    static deserializeBinaryFromReader(message: ForumReportLogsRequest, reader: jspb.BinaryReader): ForumReportLogsRequest;
+}
+
+export namespace ForumReportLogsRequest {
+    export type AsObject = {
+        topicId: number,
+        logGz: Uint8Array | string,
+    }
+}
+
 export class WarrenForumDigestDemand extends jspb.Message { 
     getDemand(): WarrenForumDigestDemand.Demand;
     setDemand(value: WarrenForumDigestDemand.Demand): WarrenForumDigestDemand;

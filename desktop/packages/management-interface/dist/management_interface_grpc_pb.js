@@ -338,6 +338,17 @@ function deserialize_mullvad_daemon_management_interface_ForumLoginSignature(buf
   return management_interface_pb.ForumLoginSignature.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_ForumReportLogsRequest(arg) {
+  if (!(arg instanceof management_interface_pb.ForumReportLogsRequest)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.ForumReportLogsRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_ForumReportLogsRequest(buffer_arg) {
+  return management_interface_pb.ForumReportLogsRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_ForumReportRequest(arg) {
   if (!(arg instanceof management_interface_pb.ForumReportRequest)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.ForumReportRequest');
@@ -1300,6 +1311,24 @@ signForumReport: {
     responseType: management_interface_pb.ForumLoginSignature,
     requestSerialize: serialize_mullvad_daemon_management_interface_ForumReportRequest,
     requestDeserialize: deserialize_mullvad_daemon_management_interface_ForumReportRequest,
+    responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
+  },
+  // Signs new logs for one of the user's own forum topics, filed from the
+// app with no browser: the daemon builds the canonical
+// `{"log_gz_b64":..,"topic_id":..}` body through the shared crate and signs
+// `POST /v1/forum/report/logs`. The broker checks that the signer authored
+// the topic. Errors like SignForumReport: FAILED_PRECONDITION without an
+// identity, INVALID_ARGUMENT for topic 0, an empty log or one over the
+// 12,000,000 byte cap.
+signForumReportLogs: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SignForumReportLogs',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.ForumReportLogsRequest,
+    responseType: management_interface_pb.ForumLoginSignature,
+    requestSerialize: serialize_mullvad_daemon_management_interface_ForumReportLogsRequest,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_ForumReportLogsRequest,
     responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
   },

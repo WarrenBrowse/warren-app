@@ -579,6 +579,15 @@ pub enum DaemonCommand {
         String,
         Option<Vec<u8>>,
     ),
+    /// Signs new logs for one of the reporter's own forum topics: the topic
+    /// id and the gzipped problem report; replies like [`Self::SignForumReport`].
+    SignForumReportLogs(
+        oneshot::Sender<
+            Result<(mullvad_api::warren_auth::WarrenAuthHeaders, String), ForumReportSignError>,
+        >,
+        u64,
+        Vec<u8>,
+    ),
     /// Replaces the BIP39 mnemonic (= restore identity). BIP39
     /// validation + atomic write. The daemon hot-swaps the
     /// in-memory `WarrenAuthSigner` and triggers `account_manager.login`
@@ -2108,6 +2117,9 @@ impl Daemon {
             }
             SignForumReport(tx, report_json, log_gz) => {
                 self.on_sign_forum_report(tx, report_json, log_gz)
+            }
+            SignForumReportLogs(tx, topic_id, log_gz) => {
+                self.on_sign_forum_report_logs(tx, topic_id, log_gz)
             }
             SetWarrenMnemonic(tx, mnemonic) => self.on_set_warren_mnemonic(tx, mnemonic),
             SubmitVoucher(tx, voucher) => self.on_submit_voucher(tx, voucher),
@@ -4874,6 +4886,31 @@ fn signed_forum_report_for(
     signed_forum_report(signer, report_json, log_gz, timestamp)
 }
 
+/// New logs for one of the reporter's own topics, signed for
+/// [`warren_forum::FORUM_REPORT_LOGS_PATH`] over the shared body, refused
+/// like [`signed_forum_report_for`] when the identity moved meanwhile.
+fn signed_forum_report_logs_for(
+    signer: &mullvad_api::warren_auth::WarrenAuthSigner,
+    authorized_as: &str,
+    topic_id: u64,
+    log_gz: &[u8],
+    timestamp: u64,
+) -> Result<(mullvad_api::warren_auth::WarrenAuthHeaders, String), ForumReportSignError> {
+    if signer.pubkey_ss58() != authorized_as {
+        return Err(ForumReportSignError::NoIdentity);
+    }
+    let body = warren_forum::report_logs_body(topic_id, log_gz)?;
+    // serde_json emits UTF-8 and the log field is base64: the bytes are text.
+    let body = String::from_utf8(body)
+        .map_err(|_| ForumReportSignError::Build(warren_forum::ForumRequestError::Invalid))?;
+    Ok(signed_forum_request(
+        signer,
+        warren_forum::FORUM_REPORT_LOGS_PATH,
+        body,
+        timestamp,
+    ))
+}
+
 /// Why the daemon could not sign an in-app report.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 #[non_exhaustive]
@@ -5157,6 +5194,67 @@ mod forum_report_tests {
         assert_eq!(
             super::signed_forum_report(&signer, "[1,2]", None, 1_700_000_000),
             Err(ForumReportSignError::Build(ForumRequestError::Invalid))
+        );
+    }
+
+    #[test]
+    fn new_logs_for_a_topic_sign_the_shared_body_for_their_own_path() {
+        let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&[9u8; 32]));
+        let authorized_as = signer.pubkey_ss58();
+        let (headers, body) = super::signed_forum_report_logs_for(
+            &signer,
+            &authorized_as,
+            42,
+            b"hello",
+            1_700_000_000,
+        )
+        .expect("the logs sign");
+        assert_eq!(body, r#"{"log_gz_b64":"aGVsbG8=","topic_id":42}"#);
+        assert_eq!(headers.timestamp, 1_700_000_000);
+        // The signature covers this route, so it can never be replayed on
+        // the attach page with the same bytes.
+        let digest = |path: &str| {
+            use sha2::Digest as _;
+            let body_hash = hex::encode(sha2::Sha256::digest(body.as_bytes()));
+            warren_contract::auth::canonical_message(
+                "POST",
+                path,
+                headers.timestamp,
+                &headers.nonce_hex,
+                &body_hash,
+            )
+        };
+        let key = SigningKey::from_bytes(&[9u8; 32]).verifying_key();
+        let sig_bytes: [u8; 64] = hex::decode(&headers.signature_hex)
+            .expect("hex")
+            .try_into()
+            .expect("64 bytes");
+        let sig = warren_identity::ed25519_dalek::Signature::from_bytes(&sig_bytes);
+        assert!(
+            key.verify_strict(
+                digest(warren_forum::FORUM_REPORT_LOGS_PATH).as_bytes(),
+                &sig
+            )
+            .is_ok()
+        );
+        assert!(
+            key.verify_strict(digest(warren_forum::FORUM_ATTACH_PATH).as_bytes(), &sig)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn new_logs_refuse_a_moved_identity_and_an_unbuildable_body() {
+        let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&[9u8; 32]));
+        let authorized_as = signer.pubkey_ss58();
+        assert_eq!(
+            super::signed_forum_report_logs_for(&signer, &authorized_as, 0, b"x", 1_700_000_000),
+            Err(ForumReportSignError::Build(ForumRequestError::Invalid))
+        );
+        signer.replace_signing_key(SigningKey::from_bytes(&[0u8; 32]));
+        assert_eq!(
+            super::signed_forum_report_logs_for(&signer, &authorized_as, 42, b"x", 1_700_000_000),
+            Err(ForumReportSignError::NoIdentity)
         );
     }
 

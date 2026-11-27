@@ -13,10 +13,12 @@ import {
   buildForumReportJson,
   desktopOsVersion,
   ForumReportFacts,
+  forumReportLogsResultForResponse,
   forumReportPlatform,
   forumReportResultForResponse,
   reportSaveFileName,
   sendForumReport,
+  sendForumReportLogs,
   uploadDeadlineMs,
 } from '../../src/main/forum-report';
 import { ForumReportResult, IForumReportForm } from '../../src/shared/forum-report';
@@ -57,6 +59,17 @@ describe('the report body fields', () => {
 
   it('never carry a log field of their own, which the daemon adds', () => {
     expect(JSON.parse(buildForumReportJson(form, facts))).not.toHaveProperty('log_gz_b64');
+  });
+
+  it('leave out the area and the frequency the reporter did not pick', () => {
+    // The broker files a report without them; a value picked for the form's
+    // sake would read to the support team as the reporter's own answer.
+    const fields = JSON.parse(
+      buildForumReportJson({ ...form, area: undefined, frequency: undefined }, facts),
+    );
+    expect(fields).not.toHaveProperty('area');
+    expect(fields).not.toHaveProperty('frequency');
+    expect(fields.what_happened).toBe(form.whatHappened);
   });
 
   it('omit blank steps instead of sending an empty field, and trim the texts', () => {
@@ -155,6 +168,119 @@ describe('the report outcome table', () => {
         expect(result.reason, fixtureCase.name).toBe(expected.reason);
       }
     }
+  });
+});
+
+describe('the one-shot sign-in link of a created report', () => {
+  const created = (loginUrl: string) =>
+    forumReportResultForResponse(
+      201,
+      JSON.stringify({ status: 'created', topic_id: 9, logs: 'none', login_url: loginUrl }),
+    );
+
+  it('is kept when it is the connect sign-in page with its fragment', () => {
+    const url = 'https://connect.warrenbrowse.com/report-login#t=abc_DEF-123&topic=9';
+    expect(created(url)).toMatchObject({ kind: 'created', topicId: 9, loginUrl: url });
+  });
+
+  it('is dropped anywhere else, so a steered answer cannot become the link the app opens', () => {
+    for (const url of [
+      'http://connect.warrenbrowse.com/report-login#t=a',
+      'https://connect.warrenbrowse.com.evil.example/report-login#t=a',
+      'https://user@connect.warrenbrowse.com/report-login#t=a',
+      'https://connect.warrenbrowse.com:8443/report-login#t=a',
+      'https://connect.warrenbrowse.com/sso#t=a',
+      'https://connect.warrenbrowse.com/report-login?t=a',
+      'https://forum.warrenbrowse.com/report-login#t=a',
+    ]) {
+      const result = created(url);
+      expect(result.kind, url).toBe('created');
+      expect(result, url).not.toHaveProperty('loginUrl');
+    }
+  });
+});
+
+describe('the answer to new logs for a topic', () => {
+  it('classes every broker answer', () => {
+    expect(forumReportLogsResultForResponse(200, '{"status":"attached"}')).toEqual({
+      kind: 'attached',
+    });
+    expect(forumReportLogsResultForResponse(403, '{"error":"not_author"}')).toEqual({
+      kind: 'not-author',
+    });
+    expect(forumReportLogsResultForResponse(403, 'subscription required')).toEqual({
+      kind: 'subscription-required',
+    });
+    expect(forumReportLogsResultForResponse(409, '{"error":"topic_closed"}')).toEqual({
+      kind: 'topic-closed',
+    });
+    expect(forumReportLogsResultForResponse(401, '{"error":"clock_skew"}')).toEqual({
+      kind: 'clock-skew',
+    });
+    expect(forumReportLogsResultForResponse(401, 'unauthorized')).toEqual({
+      kind: 'failed',
+      reason: 'http-401',
+    });
+    expect(forumReportLogsResultForResponse(413, '')).toEqual({ kind: 'too-large' });
+    expect(forumReportLogsResultForResponse(429, '')).toEqual({ kind: 'rate-limited' });
+    expect(forumReportLogsResultForResponse(502, '')).toEqual({ kind: 'server-error' });
+    expect(forumReportLogsResultForResponse(404, '')).toEqual({
+      kind: 'failed',
+      reason: 'http-404',
+    });
+  });
+});
+
+describe('sending new logs for a topic', () => {
+  const signature: ForumLoginSignature = {
+    pubkeySs58: 'wbCTo7no13eynB3yV6tZadBhFxd5h1gyqTic8ksbWbtXw45gX',
+    signatureHex: 'cd'.repeat(64),
+    timestamp: 1_800_000_000,
+    nonceHex: '11'.repeat(16),
+    body: '{"log_gz_b64":"H4sI","topic_id":42}',
+  };
+  const makeDaemon = () => {
+    const signForumReportLogs = vi.fn().mockResolvedValue(signature);
+    return { rpc: { signForumReportLogs } as unknown as DaemonRpc, signForumReportLogs };
+  };
+
+  afterEach(() => forumFetch.mockReset());
+
+  it('posts the signed body verbatim to its own route on the allowlisted broker', async () => {
+    const { rpc, signForumReportLogs } = makeDaemon();
+    forumFetch.mockResolvedValue({
+      status: 200,
+      text: () => Promise.resolve('{"status":"attached"}'),
+    });
+    const logGz = new Uint8Array([0x1f, 0x8b]);
+    expect(await sendForumReportLogs(42, logGz, rpc)).toEqual({ kind: 'attached' });
+    expect(signForumReportLogs).toHaveBeenCalledWith(42, logGz);
+    const [url, init] = forumFetch.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://connect.warrenbrowse.com/v1/forum/report/logs');
+    expect(init.body).toBe(signature.body);
+    expect((init.headers as Record<string, string>)['X-Warren-Sig']).toBe(signature.signatureHex);
+  });
+
+  it('refuses a gzip over the cap before the daemon or the network see it', async () => {
+    const { rpc, signForumReportLogs } = makeDaemon();
+    expect(await sendForumReportLogs(42, new Uint8Array(MAX_LOG_GZ_BYTES + 1), rpc)).toEqual({
+      kind: 'too-large',
+    });
+    expect(signForumReportLogs).not.toHaveBeenCalled();
+    expect(forumFetch).not.toHaveBeenCalled();
+  });
+
+  it('names a daemon without an identity, and a network failure as transport', async () => {
+    const { rpc } = makeDaemon();
+    (rpc.signForumReportLogs as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      Object.assign(new Error('x'), { code: grpcStatus.FAILED_PRECONDITION }),
+    );
+    expect(await sendForumReportLogs(42, new Uint8Array(2), rpc)).toEqual({ kind: 'no-identity' });
+    forumFetch.mockRejectedValue(new Error('offline'));
+    expect(await sendForumReportLogs(42, new Uint8Array(2), rpc)).toEqual({
+      kind: 'failed',
+      reason: 'transport',
+    });
   });
 });
 

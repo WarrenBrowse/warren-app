@@ -1233,6 +1233,42 @@ impl ManagementService for ManagementServiceImpl {
         }
     }
 
+    /// Signs new logs for one of the user's own forum topics. The body and
+    /// its refusals are the shared builder's (`warren_forum::report_logs_body`).
+    /// **No-log policy**: never log the topic id, the pubkey, the signature
+    /// or the log content.
+    async fn sign_forum_report_logs(
+        &self,
+        request: Request<types::ForumReportLogsRequest>,
+    ) -> ServiceResult<types::ForumLoginSignature> {
+        let call = Self::call_of(&request);
+        let request = request.into_inner();
+        log::debug!("sign_forum_report_logs (topic/pubkey/sig NEVER logged)");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::SignForumReportLogs(tx, request.topic_id, request.log_gz),
+        )?;
+        match self.wait_for_result(rx).await? {
+            Ok((headers, body)) => Ok(Response::new(types::ForumLoginSignature {
+                pubkey_ss58: headers.pubkey_ss58,
+                signature_hex: headers.signature_hex,
+                timestamp: headers.timestamp,
+                nonce_hex: headers.nonce_hex,
+                body,
+            })),
+            Err(crate::ForumReportSignError::NoIdentity) => Err(Status::failed_precondition(
+                "no Warren identity bootstrapped",
+            )),
+            Err(crate::ForumReportSignError::Build(
+                warren_forum::ForumRequestError::LogTooLarge,
+            )) => Err(Status::invalid_argument("log_gz exceeds the 12 MB cap")),
+            Err(crate::ForumReportSignError::Build(_)) => Err(Status::invalid_argument(
+                "a real topic id and a non-empty log are required",
+            )),
+        }
+    }
+
     async fn get_warren_account_standing(
         &self,
         request: Request<()>,

@@ -2,7 +2,12 @@ import { status as grpcStatus } from '@grpc/grpc-js';
 
 import { urls } from '../shared/constants/urls';
 import { ForumIdentity } from '../shared/forum-identity';
-import { ForumReportLogs, ForumReportResult, IForumReportForm } from '../shared/forum-report';
+import {
+  ForumReportLogs,
+  ForumReportLogsResult,
+  ForumReportResult,
+  IForumReportForm,
+} from '../shared/forum-report';
 import log from '../shared/logging';
 import { DaemonRpc, ForumLoginSignature } from './daemon-rpc';
 import { MAX_LOG_GZ_BYTES } from './forum-attach';
@@ -82,12 +87,18 @@ export function desktopOsVersion(platform: NodeJS.Platform, release: string, arc
 export function buildForumReportJson(form: IForumReportForm, facts: ForumReportFacts): string {
   const fields: Record<string, string> = {
     platform: facts.platform,
-    area: form.area,
-    frequency: form.frequency,
     what_happened: form.whatHappened.trim(),
     app_version: clipFact(facts.appVersion),
     os_version: clipFact(facts.osVersion),
   };
+  // Left out rather than guessed when the reporter did not pick them: the
+  // support team reads a value here as the reporter's own answer.
+  if (form.area !== undefined) {
+    fields.area = form.area;
+  }
+  if (form.frequency !== undefined) {
+    fields.frequency = form.frequency;
+  }
   const steps = form.steps?.trim() ?? '';
   if (steps.length > 0) {
     fields.steps = steps;
@@ -155,6 +166,16 @@ function isTrustedTopicUrl(url: string): boolean {
   return authority.toLowerCase() === FORUM_HOST.toLowerCase();
 }
 
+const CONNECT_HOST = ALLOWED_CONNECT_HOSTS[0];
+
+// True iff `url` is the broker's one-shot sign-in page on the connect host,
+// carrying its ticket in the fragment: the app opens it in the browser, where
+// it signs the person in, so nothing else may ride on that click.
+function isTrustedReportLoginUrl(url: string): boolean {
+  const prefix = `https://${CONNECT_HOST}/report-login#`;
+  return url.startsWith(prefix) && url.length > prefix.length;
+}
+
 /**
  * Maps the broker's answer to the outcome: the table
  * `fixtures/client-rules/forum_outcomes.json` pins for every client, the same
@@ -175,6 +196,7 @@ export function forumReportResultForResponse(status: number, bodyText: string): 
       return { kind: 'failed', reason: `http-${status}` };
     }
     const topicUrl = record['topic_url'];
+    const loginUrl = record['login_url'];
     const logs = record['logs'];
     const identity: ForumIdentity | undefined = parseForumIdentityResponse(body);
     return {
@@ -183,6 +205,7 @@ export function forumReportResultForResponse(status: number, bodyText: string): 
       ...(typeof topicUrl === 'string' && isTrustedTopicUrl(topicUrl) ? { topicUrl } : {}),
       logs: logs === 'attached' || logs === 'partial' ? (logs as ForumReportLogs) : 'none',
       ...(identity ? { identity } : {}),
+      ...(typeof loginUrl === 'string' && isTrustedReportLoginUrl(loginUrl) ? { loginUrl } : {}),
     };
   }
   switch (status) {
@@ -242,28 +265,125 @@ export async function sendForumReport(
     return { kind: 'failed', reason: 'build' };
   }
 
+  const answer = await postSigned(
+    '/v1/forum/report',
+    signature,
+    logGz !== undefined,
+    'Forum report',
+  );
+  if (answer.kind === 'answered') {
+    return forumReportResultForResponse(answer.status, answer.bodyText);
+  }
+  return { kind: 'failed', reason: answer.kind };
+}
+
+/**
+ * Maps the broker's answer to new logs for a topic. Only the 403 carrying
+ * `not_author` is the topic question; any other 403 is the paywall gate.
+ */
+export function forumReportLogsResultForResponse(
+  status: number,
+  bodyText: string,
+): ForumReportLogsResult {
+  if (status >= 200 && status < 300) {
+    return { kind: 'attached' };
+  }
+  switch (status) {
+    case 401:
+      return bodyText.includes('"error":"clock_skew"')
+        ? { kind: 'clock-skew' }
+        : { kind: 'failed', reason: 'http-401' };
+    case 403:
+      return bodyText.includes('"error":"not_author"')
+        ? { kind: 'not-author' }
+        : { kind: 'subscription-required' };
+    case 409:
+      return bodyText.includes('"error":"topic_closed"')
+        ? { kind: 'topic-closed' }
+        : { kind: 'failed', reason: 'http-409' };
+    case 413:
+      return { kind: 'too-large' };
+    case 429:
+      return { kind: 'rate-limited' };
+    default:
+      return status >= 500 && status < 600
+        ? { kind: 'server-error' }
+        : { kind: 'failed', reason: `http-${status}` };
+  }
+}
+
+/**
+ * Signs and sends new logs for one of the reporter's own topics. Never
+ * throws, and logs neither the topic, the pubkey, the signature nor the log:
+ * a topic id next to this machine's activity is the link the forum handle
+ * exists to break.
+ */
+export async function sendForumReportLogs(
+  topicId: number,
+  logGz: Uint8Array,
+  daemonRpc: DaemonRpc,
+): Promise<ForumReportLogsResult> {
+  if (logGz.byteLength > MAX_LOG_GZ_BYTES) {
+    log.warn(
+      `Forum report logs: gzipped report exceeds the ${MAX_LOG_GZ_BYTES} byte cap, not sent`,
+    );
+    return { kind: 'too-large' };
+  }
+  let signature: ForumLoginSignature;
+  try {
+    signature = await daemonRpc.signForumReportLogs(topicId, logGz);
+  } catch (error) {
+    const code = (error as { code?: number }).code;
+    if (code === grpcStatus.FAILED_PRECONDITION) {
+      log.info('Forum report logs: no Warren identity yet, nothing to sign with');
+      return { kind: 'no-identity' };
+    }
+    log.error(`Forum report logs: daemon could not sign (code ${code ?? 'none'})`);
+    return { kind: 'failed', reason: 'build' };
+  }
+  const answer = await postSigned('/v1/forum/report/logs', signature, true, 'Forum report logs');
+  if (answer.kind === 'answered') {
+    return forumReportLogsResultForResponse(answer.status, answer.bodyText);
+  }
+  return { kind: 'failed', reason: answer.kind };
+}
+
+type PostAnswer =
+  | { kind: 'answered'; status: number; bodyText: string }
+  | { kind: 'transport' }
+  | { kind: 'upload-timeout' };
+
+/**
+ * POSTs a daemon-signed body verbatim to `path` on the allowlisted broker,
+ * under a deadline sized to the body. A deadline run out while logs were
+ * attached is the uplink, which the forms offer to work around, so it is
+ * named apart from a plain transport failure.
+ */
+async function postSigned(
+  path: string,
+  signature: ForumLoginSignature,
+  carriesLogs: boolean,
+  what: string,
+): Promise<PostAnswer> {
   const bodyBytes = Buffer.byteLength(signature.body);
   const deadline = uploadDeadlineMs(bodyBytes);
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), deadline);
   const started = Date.now();
   try {
-    const response = await getForumSession().fetch(
-      `https://${ALLOWED_CONNECT_HOSTS[0]}/v1/forum/report`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Warren-PubKey': signature.pubkeySs58,
-          'X-Warren-Sig': signature.signatureHex,
-          'X-Warren-Timestamp': String(signature.timestamp),
-          'X-Warren-Nonce': signature.nonceHex,
-        },
-        // Sent verbatim: the daemon signed exactly these bytes.
-        body: signature.body,
-        signal: abort.signal,
+    const response = await getForumSession().fetch(`https://${CONNECT_HOST}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Warren-PubKey': signature.pubkeySs58,
+        'X-Warren-Sig': signature.signatureHex,
+        'X-Warren-Timestamp': String(signature.timestamp),
+        'X-Warren-Nonce': signature.nonceHex,
       },
-    );
+      // Sent verbatim: the daemon signed exactly these bytes.
+      body: signature.body,
+      signal: abort.signal,
+    });
     // The deadline bounds the UPLOAD, and the upload is over the moment the
     // broker answers. Leaving it armed over the body read cut a created topic
     // into an `http-201` failure whenever the answer started just under the
@@ -271,24 +391,18 @@ export async function sendForumReport(
     // logs, a second time.
     clearTimeout(timer);
     const bodyText = await response.text().catch(() => '');
-    const result = forumReportResultForResponse(response.status, bodyText);
     log.info(
-      `Forum report: broker answered ${response.status} in ${Date.now() - started} ms for a ${bodyBytes} byte body (${result.kind})`,
+      `${what}: broker answered ${response.status} in ${Date.now() - started} ms for a ${bodyBytes} byte body`,
     );
-    return result;
+    return { kind: 'answered', status: response.status, bodyText };
   } catch {
     // The cause is not logged: a transport error can quote the request, and
     // the class is all the log needs.
     const timedOut = abort.signal.aborted;
     log.warn(
-      `Forum report: POST to the broker failed (${timedOut ? 'deadline' : 'transport'}) after ${Date.now() - started} ms of a ${deadline / 1000} s deadline for a ${bodyBytes} byte body`,
+      `${what}: POST to the broker failed (${timedOut ? 'deadline' : 'transport'}) after ${Date.now() - started} ms of a ${deadline / 1000} s deadline for a ${bodyBytes} byte body`,
     );
-    // A deadline run out WITH logs attached is the uplink, not the network:
-    // the form offers the resend without them on this reason.
-    if (timedOut && logGz !== undefined) {
-      return { kind: 'failed', reason: 'upload-timeout' };
-    }
-    return { kind: 'failed', reason: 'transport' };
+    return timedOut && carriesLogs ? { kind: 'upload-timeout' } : { kind: 'transport' };
   } finally {
     clearTimeout(timer);
   }

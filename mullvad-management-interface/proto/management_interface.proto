@@ -157,6 +157,15 @@ service ManagementService {
   // cap (INVALID_ARGUMENT), the broker's 16,000,000 base64 characters.
   rpc SignForumReport(ForumReportRequest) returns (ForumLoginSignature) {}
 
+  // Signs new logs for one of the user's own forum topics, filed from the
+  // app with no browser: the daemon builds the canonical
+  // `{"log_gz_b64":..,"topic_id":..}` body through the shared crate and signs
+  // `POST /v1/forum/report/logs`. The broker checks that the signer authored
+  // the topic. Errors like SignForumReport: FAILED_PRECONDITION without an
+  // identity, INVALID_ARGUMENT for topic 0, an empty log or one over the
+  // 12,000,000 byte cap.
+  rpc SignForumReportLogs(ForumReportLogsRequest) returns (ForumLoginSignature) {}
+
   // Warren multi-hop (M4.E.D / two-relayed QUIC HPKE doctrine).
   // OFF by default per doctrine `warren_multihop_doctrine_v1` (full
   // bandwidth single-hop, opt-in privacy). entry_country / exit_country
@@ -964,6 +973,13 @@ message ForumAttachLogsRequest {
 // 12,000,000 bytes otherwise).
 message ForumReportRequest {
   string report_json = 1;
+  bytes log_gz = 2;
+}
+
+// New logs for one of the user's own forum topics: the topic id and the
+// gzipped redacted problem report (non-empty, max 12,000,000 bytes).
+message ForumReportLogsRequest {
+  uint64 topic_id = 1;
   bytes log_gz = 2;
 }
 

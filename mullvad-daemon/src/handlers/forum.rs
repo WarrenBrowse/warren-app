@@ -177,4 +177,45 @@ impl Daemon {
             }
         });
     }
+
+    /// Signs new logs for one of the reporter's own topics
+    /// (`POST /v1/forum/report/logs`), at the broker's clock like the report.
+    /// The broker checks that the signer authored the topic.
+    ///
+    /// **No-log policy**: the topic id, the pubkey, the signature and the log
+    /// content are never logged; a topic id next to a wallet signature is the
+    /// link the pairwise forum handle exists to break.
+    pub(crate) fn on_sign_forum_report_logs(
+        &self,
+        tx: oneshot::Sender<
+            Result<(mullvad_api::warren_auth::WarrenAuthHeaders, String), ForumReportSignError>,
+        >,
+        topic_id: u64,
+        log_gz: Vec<u8>,
+    ) {
+        if !self.warren_identity.has_user_identity() {
+            log::debug!("on_sign_forum_report_logs: not signed (no identity)");
+            Self::oneshot_send(
+                tx,
+                Err(ForumReportSignError::NoIdentity),
+                "sign_forum_report_logs",
+            );
+            return;
+        }
+        let signer = self.warren_identity.signer();
+        let authorized_as = signer.pubkey_ss58();
+        tokio::spawn(async move {
+            let timestamp =
+                warren_api_clock::forum_signing_timestamp(warren_forum::connect_host()).await;
+            let result =
+                signed_forum_report_logs_for(&signer, &authorized_as, topic_id, &log_gz, timestamp);
+            match &result {
+                Ok(_) => log::debug!("on_sign_forum_report_logs: signed"),
+                Err(err) => log::debug!("on_sign_forum_report_logs: not signed ({err:?})"),
+            }
+            if tx.send(result).is_err() {
+                log::warn!("Unable to send sign_forum_report_logs to the daemon command sender");
+            }
+        });
+    }
 }

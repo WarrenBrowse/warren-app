@@ -446,6 +446,31 @@ export class DaemonRpc extends GrpcClient {
     };
   }
 
+  /**
+   * Signs new logs for one of the user's own forum topics: the daemon builds
+   * the canonical `POST /v1/forum/report/logs` body and signs it, and the
+   * body must be POSTed verbatim. The signing key never leaves the daemon.
+   */
+  public async signForumReportLogs(
+    topicId: number,
+    logGz: Uint8Array,
+  ): Promise<ForumLoginSignature> {
+    const request = new grpcTypes.ForumReportLogsRequest();
+    request.setTopicId(topicId);
+    request.setLogGz(logGz);
+    const response = await this.call<
+      grpcTypes.ForumReportLogsRequest,
+      grpcTypes.ForumLoginSignature
+    >(this.client.signForumReportLogs, request);
+    return {
+      pubkeySs58: response.getPubkeySs58(),
+      signatureHex: response.getSignatureHex(),
+      timestamp: response.getTimestamp(),
+      nonceHex: response.getNonceHex(),
+      body: response.getBody(),
+    };
+  }
+
   public async submitVoucher(voucherCode: string): Promise<VoucherResponse> {
     try {
       const response = await this.callString<grpcTypes.VoucherSubmission>(

@@ -900,6 +900,27 @@ pub fn attach_body(sid: &str, topic_id: u64, log_gz: &[u8]) -> Result<Vec<u8>, F
     )
 }
 
+/// The path a reporter's new logs for one of their own topics are signed for
+/// and posted to: the app's "Send new logs" on a report it filed, with no
+/// browser and no attach session.
+pub const FORUM_REPORT_LOGS_PATH: &str = "/v1/forum/report/logs";
+
+/// The canonical body of [`FORUM_REPORT_LOGS_PATH`]: the topic and the
+/// gzipped redacted report as `log_gz_b64`, through the shared report-body
+/// builder so the cap and the alphabet are every other upload's.
+///
+/// # Errors
+///
+/// [`ForumRequestError::Invalid`] for [`PRE_TOPIC_ID`], a topic over
+/// [`MAX_FORUM_TOPIC_ID`] or an empty log; [`ForumRequestError::LogTooLarge`]
+/// over [`MAX_LOG_GZ_BYTES`].
+pub fn report_logs_body(topic_id: u64, log_gz: &[u8]) -> Result<Vec<u8>, ForumRequestError> {
+    if topic_id == PRE_TOPIC_ID || topic_id > MAX_FORUM_TOPIC_ID || log_gz.is_empty() {
+        return Err(ForumRequestError::Invalid);
+    }
+    report_body(&format!(r#"{{"topic_id":{topic_id}}}"#), Some(log_gz))
+}
+
 /// Build the signed attach-logs upload for `sid` and `topic_id` against
 /// `host` with `signing_key`, stamped with the corrected `timestamp`. The
 /// mirror of the desktop daemon's `sign_forum_attach_logs`: the body is
@@ -2667,6 +2688,37 @@ mod tests {
             attach_body(SID, PRE_TOPIC_ID, b"hello").expect("pre-topic builds"),
             format!(r#"{{"log_gz_b64":"aGVsbG8=","sid":"{SID}","topic_id":0}}"#).into_bytes()
         );
+    }
+
+    #[test]
+    fn the_report_logs_body_pins_the_wire_contract() {
+        // warren-connect's `POST /v1/forum/report/logs` reads these two
+        // fields; keys ascending, standard base64, like every other upload.
+        assert_eq!(
+            report_logs_body(42, b"hello").expect("builds"),
+            br#"{"log_gz_b64":"aGVsbG8=","topic_id":42}"#.to_vec()
+        );
+        assert_eq!(FORUM_REPORT_LOGS_PATH, "/v1/forum/report/logs");
+    }
+
+    #[test]
+    fn the_report_logs_body_refuses_no_topic_an_empty_log_and_the_caps() {
+        // Topic 0 is the attach flow's pre-topic marker: a real topic only.
+        assert_eq!(
+            report_logs_body(PRE_TOPIC_ID, b"x"),
+            Err(ForumRequestError::Invalid)
+        );
+        assert_eq!(
+            report_logs_body(MAX_FORUM_TOPIC_ID + 1, b"x"),
+            Err(ForumRequestError::Invalid)
+        );
+        assert_eq!(report_logs_body(42, b""), Err(ForumRequestError::Invalid));
+        let over = vec![0u8; MAX_LOG_GZ_BYTES + 1];
+        assert_eq!(
+            report_logs_body(42, &over),
+            Err(ForumRequestError::LogTooLarge)
+        );
+        assert!(report_logs_body(MAX_FORUM_TOPIC_ID, b"x").is_ok());
     }
 
     #[test]
