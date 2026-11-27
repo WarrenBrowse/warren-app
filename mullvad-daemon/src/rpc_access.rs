@@ -126,6 +126,7 @@ rpc_classes! {
         SignForumNotificationsSeen => Identity,
         SignForumAttachLogs => Identity,
         SignForumReport => Identity,
+        SignForumReportLogs => Identity,
 
         // Account and device.
         CreateNewAccount => InstallWallet,
