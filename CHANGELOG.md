@@ -74,10 +74,10 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [1.1.60] - 2026-11-27
 ### Added
-- [Desktop] Report a problem from the lifebuoy on the home screen: describe it in a sentence and
-  send. The app creates your forum account if needed, files the topic with your logs, and opens it
-  in your browser already signed in. Where and how often it happens are optional, folded under
-  "More details". Your reports stay listed on that screen, each with "Send new logs".
+- [Windows, macOS, Linux] Report a problem from the lifebuoy on the home screen: describe it in a
+  sentence and send. The app creates your forum account if needed, files the topic with your logs,
+  and opens it in your browser already signed in. Where and how often it happens are optional,
+  folded under "More details". Your reports stay listed on that screen, each with "Send new logs".
 
 ## [1.1.59] - 2026-11-18
 ### Added

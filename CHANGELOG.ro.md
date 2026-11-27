@@ -68,11 +68,11 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 
 ## [1.1.60] - 2026-11-27
 ### Adăugat
-- [Desktop] Raportați o problemă din colacul de salvare de pe ecranul principal: descrieți-o într-o
-  propoziție și trimiteți. Aplicația vă creează contul de forum dacă e nevoie, publică subiectul cu
-  jurnalele și îl deschide în browser, deja conectat. Unde și cât de des apare problema devin
-  opționale, sub „Mai multe detalii". Rapoartele rămân listate pe acel ecran, fiecare cu „Trimiteți
-  jurnale noi".
+- [Windows, macOS, Linux] Raportați o problemă din colacul de salvare de pe ecranul principal:
+  descrieți-o într-o propoziție și trimiteți. Aplicația vă creează contul de forum dacă e nevoie,
+  publică subiectul cu jurnalele și îl deschide în browser, deja conectat. Unde și cât de des apare
+  problema devin opționale, sub „Mai multe detalii". Rapoartele rămân listate pe acel ecran, fiecare
+  cu „Trimiteți jurnale noi".
 
 ## [1.1.59] - 2026-11-18
 ### Adăugat

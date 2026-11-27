@@ -72,11 +72,11 @@ par l'application, gardez-le tel quel.
 
 ## [1.1.60] - 2026-11-27
 ### Ajouté
-- [Desktop] Signaler un problème depuis la bouée de l'écran d'accueil : décrivez-le en une phrase
-  et envoyez. L'app crée votre compte forum si besoin, publie le sujet avec vos journaux, et l'ouvre
-  dans votre navigateur déjà connecté. Où et à quelle fréquence le problème survient deviennent
-  facultatifs, repliés sous « Plus de détails ». Vos rapports restent listés sur cet écran, chacun
-  avec « Envoyer de nouveaux journaux ».
+- [Windows, macOS, Linux] Signaler un problème depuis la bouée de l'écran d'accueil : décrivez-le en
+  une phrase et envoyez. L'app crée votre compte forum si besoin, publie le sujet avec vos journaux,
+  et l'ouvre dans votre navigateur déjà connecté. Où et à quelle fréquence le problème survient
+  deviennent facultatifs, repliés sous « Plus de détails ». Vos rapports restent listés sur cet
+  écran, chacun avec « Envoyer de nouveaux journaux ».
 
 ## [1.1.59] - 2026-11-18
 ### Ajouté

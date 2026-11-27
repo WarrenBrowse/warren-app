@@ -1,6 +1,6 @@
 ### Adăugat
-- [Desktop] Raportați o problemă din colacul de salvare de pe ecranul principal: descrieți-o într-o
-  propoziție și trimiteți. Aplicația vă creează contul de forum dacă e nevoie, publică subiectul cu
-  jurnalele și îl deschide în browser, deja conectat. Unde și cât de des apare problema devin
-  opționale, sub „Mai multe detalii". Rapoartele rămân listate pe acel ecran, fiecare cu „Trimiteți
-  jurnale noi".
+- [Windows, macOS, Linux] Raportați o problemă din colacul de salvare de pe ecranul principal:
+  descrieți-o într-o propoziție și trimiteți. Aplicația vă creează contul de forum dacă e nevoie,
+  publică subiectul cu jurnalele și îl deschide în browser, deja conectat. Unde și cât de des apare
+  problema devin opționale, sub „Mai multe detalii". Rapoartele rămân listate pe acel ecran, fiecare
+  cu „Trimiteți jurnale noi".
