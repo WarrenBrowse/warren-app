@@ -151,6 +151,7 @@ import NotificationController, {
   NotificationControllerDelegate,
   NotificationSender,
 } from './notification-controller';
+import { loadOptionalModule } from './optional-module';
 import { PENDING_PURCHASES_FILE, SealedPendingPurchaseStore } from './pending-purchase-store';
 import { isMacOs13OrNewer } from './platform-version';
 import { ForwardedPortFile, renderForwardedPortFile } from './port-forward-status-file';
@@ -1136,13 +1137,27 @@ class ApplicationMain
   private loadSplitTunneling = async () => {
     // Only import split tunneling library on correct OS.
     if (process.platform === 'linux') {
-      this.linuxSplitTunneling = await import('./linux-split-tunneling');
+      this.linuxSplitTunneling = await loadOptionalModule(
+        'Split tunneling',
+        () => import('./linux-split-tunneling'),
+      );
     } else if (process.platform === 'win32') {
-      const { WindowsSplitTunnelingAppListRetriever } = await import('./windows-split-tunneling');
-      this.splitTunneling = new WindowsSplitTunnelingAppListRetriever();
+      // windows-split-tunneling loads the windows-utils native module.
+      const module = await loadOptionalModule(
+        'Split tunneling app list',
+        () => import('./windows-split-tunneling'),
+      );
+      if (module) {
+        this.splitTunneling = new module.WindowsSplitTunnelingAppListRetriever();
+      }
     } else if (process.platform === 'darwin') {
-      const { MacOsSplitTunnelingAppListRetriever } = await import('./macos-split-tunneling');
-      this.splitTunneling = new MacOsSplitTunnelingAppListRetriever();
+      const module = await loadOptionalModule(
+        'Split tunneling app list',
+        () => import('./macos-split-tunneling'),
+      );
+      if (module) {
+        this.splitTunneling = new module.MacOsSplitTunnelingAppListRetriever();
+      }
     }
   };
 

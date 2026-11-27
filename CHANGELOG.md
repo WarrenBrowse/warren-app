@@ -39,6 +39,9 @@ Line wrap the file at 100 chars.                                              Th
   call the account row the wallet address, as the desktop app does.
 
 ### Fixed
+- [macOS] Fix the menu bar icon doing nothing when clicked after updating to 1.1.60 on macOS 27.
+  A native module of the app was built in a shape macOS 27 refuses to load, and the window was
+  never set up. The app now opens without that module, and the release refuses such a build.
 - [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
   the servers that require one grant the port instead of refusing it.
 - [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same

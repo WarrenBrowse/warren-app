@@ -18,6 +18,7 @@ import {
   unsetIpcWebContents,
 } from './ipc-event-channel';
 import { WebContentsConsoleInput } from './logging';
+import { installOutsideClickHide } from './macos-outside-click';
 import { openDialogOptions } from './open-dialog-options';
 import { isMacOs11OrNewer } from './platform-version';
 import { resolveBin } from './proc';
@@ -196,6 +197,11 @@ export default class UserInterface implements WindowControllerDelegate {
       }
     }
 
+    // The tray is the only way into the app, so its handlers go in before any
+    // platform step that can fail.
+    this.installWindowCloseHandler();
+    this.installTrayClickHandlers();
+
     switch (process.platform) {
       case 'win32':
         this.installWindowsMenubarAppWindowHandlers();
@@ -210,9 +216,6 @@ export default class UserInterface implements WindowControllerDelegate {
         window.setMenuBarVisibility(false);
         break;
     }
-
-    this.installWindowCloseHandler();
-    this.installTrayClickHandlers();
 
     try {
       if (process.env.NODE_ENV === 'development' && process.env.VITE_DEV_SERVER_URL) {
@@ -617,21 +620,19 @@ export default class UserInterface implements WindowControllerDelegate {
     });
   }
 
-  // setup NSEvent forwarder to fix inconsistent window.blur on macOS
-  // see https://github.com/electron/electron/issues/8689
   private async installMacOsMenubarAppWindowHandlers() {
     if (this.delegate.isUnpinnedWindow()) {
       return;
     }
 
-    const nseventforwarder = await import('nseventforwarder');
-    let nseventforwarderStop: ReturnType<typeof nseventforwarder.start>;
-
-    this.windowController.window?.on(
-      'show',
-      () => (nseventforwarderStop = nseventforwarder.start(() => this.windowController.hide())),
-    );
-    this.windowController.window?.on('hide', () => nseventforwarderStop?.());
+    const window = this.windowController.window;
+    if (window) {
+      await installOutsideClickHide(
+        window,
+        () => this.windowController.hide(),
+        () => import('nseventforwarder'),
+      );
+    }
     this.windowController.window?.on('blur', () => {
       // Make sure to hide the menubar window when other program captures the focus.
       // But avoid doing that when dev tools capture the focus to make it possible to inspect the UI
