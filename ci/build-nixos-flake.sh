@@ -75,9 +75,13 @@ docker volume ls --quiet --filter 'name=warren-nix-store-' \
     docker volume rm "$stale" > /dev/null 2>&1 && echo "removed superseded nix store $stale" || true
 done
 
+# The token is passed by name, so its value never appears on a command line;
+# the container script hands it to nix for the GitHub API (see there).
+export WARREN_GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 cid="$(docker create --platform linux/amd64 \
     --volume "$store_volume:/nix" \
     --env "WARREN_FLAKE_DIR_NAME=$flake_dir_name" \
+    --env WARREN_GITHUB_TOKEN \
     "$image" sh /tmp/warren-nixos/in-container-build.sh)"
 trap 'docker rm -f "$cid" > /dev/null 2>&1 || true' EXIT
 

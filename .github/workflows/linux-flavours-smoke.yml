@@ -134,6 +134,8 @@ jobs:
             "downloads/$WARREN_DEB" nixos-stage "$WARREN_VERSION" "$WARREN_ASSET_BASE"
 
       - name: Build the flake with nix and pack the tarball
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           prefix="${WARREN_DEB%%-"$WARREN_VERSION"-*}"
           bash ci/build-nixos-flake.sh \

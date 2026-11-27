@@ -10,6 +10,15 @@ set -eu
 export NIX_CONFIG="experimental-features = nix-command flakes
 filter-syscalls = false"
 
+# Locking a `github:` input goes through the GitHub API, which gives an
+# anonymous caller 60 requests an hour per address, shared with every other
+# job a hosted runner's address serves: beta-v1.1.60 lost its release to that
+# 403. The job token lifts the limit; it reaches this script by name only.
+if [ -n "${WARREN_GITHUB_TOKEN:-}" ]; then
+    NIX_CONFIG="$NIX_CONFIG
+access-tokens = github.com=$WARREN_GITHUB_TOKEN"
+fi
+
 WORK=/tmp/warren-nixos
 FLAKE="$WORK/flake"
 OUT="$WORK/out"

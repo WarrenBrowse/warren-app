@@ -671,6 +671,8 @@ jobs:
       # built, its binaries are run out of the store, and the NixOS module is
       # evaluated into a real unit before anything is published.
       - name: Build it with nix and pack the published tarball
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           bash ci/build-nixos-flake.sh \
             nixos-stage "downloads/$WARREN_DEB" "release-assets/$WARREN_NIXOS_TARBALL"
