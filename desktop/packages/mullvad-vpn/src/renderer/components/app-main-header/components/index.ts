@@ -3,4 +3,5 @@ export * from './AppMainHeaderAccountButton';
 export * from './AppMainHeaderForumButton';
 export * from './AppMainHeaderPubKey';
 export * from './AppMainHeaderSettingsButton';
+export * from './AppMainHeaderSupportButton';
 export * from './AppMainHeaderTimeLeft';

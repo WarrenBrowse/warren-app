@@ -1,3 +1,4 @@
+import { IForumReportRecord } from './forum-report';
 import { ThemePreference } from './theme';
 import { StoredTorrentClient } from './torrent-client';
 
@@ -107,6 +108,11 @@ export interface IGuiSettingsState {
   // reference per warning (never the reference itself). The warning stays
   // listed in the port-forwarding view; only the banner goes.
   dismissedStrikes?: Array<string>;
+  // The forum reports this app filed, newest first, so the person can find
+  // them again and send new logs to one. Public facts only (the topic and the
+  // first words of its description, both on the forum). Read through
+  // `sanitizeForumReportRecords`, never trusted as stored.
+  forumReports?: Array<IForumReportRecord>;
 }
 
 /**

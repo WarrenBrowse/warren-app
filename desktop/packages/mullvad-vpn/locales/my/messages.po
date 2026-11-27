@@ -4113,9 +4113,6 @@ msgctxt "forum-login"
 msgid "Close"
 msgstr "ပိတ်ရန်"
 
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr "အသိုက်အဝန်း ဖိုရမ်"
 
 msgctxt "accessibility"
 msgid "How to contest a warning"
@@ -4663,3 +4660,51 @@ msgstr "အခြား ငွေပြန်အမ်းလိပ်စာဖ�
 msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr "ဖိုရမ်သို့ ဝင်ရောက်ရန် Warren စာရင်းသွင်းမှု လိုအပ်သည်။ ဤပိုက်ဆံအိတ်သည် ဘယ်တော့မှ စာရင်းမသွင်းခဲ့ပါ။ ဝက်ဘ်ဆိုက်ရှိ အကူအညီဖောင်ကို အစားသုံးပါ။"
+
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr "နောက်ထပ်အသေးစိတ် (မဖြစ်မနေမဟုတ်)"
+
+msgctxt "report-problem"
+msgid "Report another problem"
+msgstr "အခြားပြဿနာကို ရီပို့တ်လုပ်ရန်"
+
+msgctxt "report-problem"
+msgid "Send new logs"
+msgstr "မှတ်တမ်းအသစ်များ ပေးပို့ရန်"
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
+msgstr "မှတ်တမ်းများ ပေးပို့နေသည်၊ ခဏစောင့်ပါ။"
+
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr "နောက်ဆက်တွဲ ဆွေးနွေးမှုကို ထိုဖိုရမ်ခေါင်းစဉ်တွင် သင့်အမည်ဝှက်ဖြင့် အများမြင်အောင် ဆောင်ရွက်ပါသည်။ ပံ့ပိုးရေးအဖွဲ့က ထိုနေရာတွင် ပြန်ဖြေပြီး သင်လည်း အသေးစိတ်ထည့်ရန် ပြန်စာရေးနိုင်ပါသည်။ မှတ်တမ်းအသစ်များကို ဤမျက်နှာပြင်မှ အချိန်မရွေး ပေးပို့နိုင်ပါသည်။"
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
+msgstr "ဤစက်ပေါ်တွင် မှတ်တမ်းများ စုဆောင်း၍ မရပါ။"
+
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr "မှတ်တမ်းများ ပေးပို့၍ မရပါ။ ချိတ်ဆက်မှုကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။"
+
+msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr "မှတ်တမ်းအသစ်များ ပံ့ပိုးရေးအဖွဲ့ထံ ရောက်ပါပြီ။"
+
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
+msgstr "ခေါင်းစဉ်ကို သင့်ဘရောက်ဆာတွင် ဖွင့်ပြီးပါပြီ။"
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr "ဤအစီရင်ခံစာကို ပိတ်ထားပါသည်။ အဖွဲ့ထံ ဆက်သွယ်ရန် ပြဿနာကို ထပ်မံ ရီပို့တ်လုပ်ပါ။"
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
+msgstr "ဤအစီရင်ခံစာကို အခြားပိုက်ဆံအိတ်ဖြင့် ပေးပို့ထားသဖြင့် ၎င်း၏မှတ်တမ်းများကို ဤနေရာမှ ပေးပို့၍ မရပါ။"
+
+msgctxt "report-problem"
+msgid "Your reports"
+msgstr "သင့်အစီရင်ခံစာများ"

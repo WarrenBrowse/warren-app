@@ -8,8 +8,10 @@ import {
   clampReportText,
   createdReportNotice,
   descriptionChars,
+  inferReportArea,
   initialReportProblemFormState,
   noticeForForumReportResult,
+  noticeForReportLogsResult,
   offersSaveLogs,
   REPORT_TEXT_OVERRUN_CHARS,
   reportFormPayload,
@@ -52,10 +54,10 @@ describe('the report form gate', () => {
     expect(canSendReport(initialReportProblemFormState)).toBe(false);
   });
 
-  it('sends only once the area, the frequency and a long enough description are there', () => {
+  it('sends on a long enough description alone, the details being optional', () => {
+    const descriptionOnly = setReportWhatHappened(initialReportProblemFormState, description);
+    expect(canSendReport(descriptionOnly)).toBe(true);
     expect(canSendReport(filled)).toBe(true);
-    expect(canSendReport({ ...filled, area: undefined })).toBe(false);
-    expect(canSendReport({ ...filled, frequency: undefined })).toBe(false);
     expect(
       canSendReport(
         setReportWhatHappened(filled, 'x'.repeat(FORUM_REPORT_MIN_DESCRIPTION_CHARS - 1)),
@@ -64,6 +66,13 @@ describe('the report form gate', () => {
     expect(
       canSendReport(setReportWhatHappened(filled, 'x'.repeat(FORUM_REPORT_MIN_DESCRIPTION_CHARS))),
     ).toBe(true);
+  });
+
+  it('asks for no more than a short sentence', () => {
+    expect(FORUM_REPORT_MIN_DESCRIPTION_CHARS).toBe(10);
+    expect(canSendReport(setReportWhatHappened(initialReportProblemFormState, 'No internet'))).toBe(
+      true,
+    );
   });
 
   it('counts the description trimmed, the way the broker measures it', () => {
@@ -142,6 +151,34 @@ describe('the payload handed to main', () => {
 
   it('carries the logs switch', () => {
     expect(reportFormPayload(setReportIncludeLogs(filled, false)).includeLogs).toBe(false);
+  });
+
+  it('leaves the details the reporter did not give unset rather than guessed', () => {
+    const payload = reportFormPayload(
+      setReportWhatHappened(initialReportProblemFormState, description),
+    );
+    expect(payload.area).toBeUndefined();
+    expect(payload.frequency).toBeUndefined();
+  });
+});
+
+describe('the area the form starts on', () => {
+  it('is the connection when the tunnel is blocking the internet', () => {
+    expect(inferReportArea({ tunnelBlocking: true, subscriptionExpired: false })).toBe(
+      'connection',
+    );
+  });
+
+  it('is the subscription when it has run out', () => {
+    expect(inferReportArea({ tunnelBlocking: false, subscriptionExpired: true })).toBe('wallet');
+  });
+
+  it('is left unset when nothing on this machine says where the problem is', () => {
+    expect(inferReportArea({ tunnelBlocking: false, subscriptionExpired: false })).toBeUndefined();
+  });
+
+  it('prefers the blocked tunnel, the one that takes the internet away', () => {
+    expect(inferReportArea({ tunnelBlocking: true, subscriptionExpired: true })).toBe('connection');
   });
 });
 
@@ -273,5 +310,33 @@ describe('keeping the logs when the broker did not take the report', () => {
     expect(
       setReportWhatHappened(saved, 'something else entirely, at length').saveOutcome,
     ).toBeUndefined();
+  });
+});
+
+describe('the notice for new logs sent to a filed report', () => {
+  it('confirms a delivery and names every refusal in its own words', () => {
+    const attached = noticeForReportLogsResult({ kind: 'attached' });
+    expect(attached.ok).toBe(true);
+    const kinds = [
+      'not-author',
+      'topic-closed',
+      'subscription-required',
+      'clock-skew',
+      'rate-limited',
+      'too-large',
+      'server-error',
+      'no-identity',
+      'collect-failed',
+    ] as const;
+    const texts = new Set<string>([attached.text]);
+    for (const kind of kinds) {
+      const notice = noticeForReportLogsResult({ kind });
+      expect(notice.ok, kind).toBe(false);
+      texts.add(notice.text);
+    }
+    const failed = noticeForReportLogsResult({ kind: 'failed', reason: 'transport' });
+    expect(failed.ok).toBe(false);
+    texts.add(failed.text);
+    expect(texts.size).toBe(kinds.length + 2);
   });
 });

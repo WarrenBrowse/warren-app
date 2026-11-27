@@ -10,6 +10,7 @@ import {
   AppMainHeaderForumButton,
   AppMainHeaderPubKey,
   AppMainHeaderSettingsButton,
+  AppMainHeaderSupportButton,
   AppMainHeaderTimeLeft,
 } from './components';
 
@@ -88,6 +89,7 @@ const AppMainHeaderNamespace = Object.assign(AppMainHeader, {
   AccountButton: AppMainHeaderBarAccountButton,
   ForumButton: AppMainHeaderForumButton,
   SettingsButton: AppMainHeaderSettingsButton,
+  SupportButton: AppMainHeaderSupportButton,
   Footer: AppMainFooter,
 });
 

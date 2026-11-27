@@ -1,10 +1,8 @@
 import { useCallback } from 'react';
 
-import { urls } from '../../../../shared/constants';
 import { unreadLabel } from '../../../../shared/forum-identity';
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
-import { useAppContext } from '../../../context';
 import { IconButton, IconButtonProps, MainHeader } from '../../../lib/components';
 import { useForumHeaderButton, useForumUnreadCount } from '../../../lib/forum-activity';
 import { TransitionType, useHistory } from '../../../lib/history';
@@ -13,49 +11,29 @@ import { ToolbarBadge, ToolbarGlyph } from './ToolbarBadge';
 export type MainHeaderForumButtonProps = Omit<IconButtonProps, 'icon'>;
 
 /**
- * The header's forum slot, which carries one of two buttons or none at all
- * (see `forumHeaderButton`).
+ * The header's forum slot: the activity bell and its unread badge for a
+ * wallet with a forum account, opening the activity panel, or nothing.
  *
- * With a forum account, the activity bell and its unread badge, opening the
- * activity panel. Without one, a lifebuoy opening the forum itself in the
- * browser: the bell would be inert for a wallet that has never signed in,
- * while the forum is where help and an account both come from. Forum
- * notifications off removes the slot entirely, lifebuoy included.
+ * The shared rule (`forumHeaderButton`) puts a lifebuoy into the forum in
+ * this slot for a wallet without an account. The desktop header carries its
+ * own lifebuoy next to it on every state, opening the in-app report (see
+ * `AppMainHeaderSupportButton`), which is where an account now comes from,
+ * so the slot draws nothing for that case rather than a second lifebuoy
+ * going somewhere else. The forum itself stays one click away in Settings,
+ * Support.
  */
 export function AppMainHeaderForumButton(props: MainHeaderForumButtonProps) {
   const history = useHistory();
   const button = useForumHeaderButton();
   const unread = useForumUnreadCount();
-  const { openUrl } = useAppContext();
 
   const openForumActivity = useCallback(
     () => history.push(RoutePath.forumActivity, { transition: TransitionType.show }),
     [history],
   );
-  const openForum = useCallback(() => openUrl(urls.forum), [openUrl]);
 
-  if (button === 'none') {
+  if (button !== 'activity') {
     return null;
-  }
-
-  if (button === 'community') {
-    return (
-      <MainHeader.IconButton
-        onClick={openForum}
-        data-testid="forum-community-button"
-        aria-label={
-          // TRANSLATORS: Accessible name of the header button that opens the
-          // TRANSLATORS: community forum, shown before the user has a forum
-          // TRANSLATORS: account.
-          messages.pgettext('accessibility', 'Community forum')
-        }
-        aria-description={messages.pgettext('accessibility', 'Opens externally')}
-        {...props}>
-        {/* Same outline weight as the bell it stands in for, so the header
-            keeps one stroke across its three buttons. */}
-        <IconButton.Icon icon="lifebuoy-outline" />
-      </MainHeader.IconButton>
-    );
   }
 
   const label =

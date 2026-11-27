@@ -4143,9 +4143,6 @@ msgctxt "forum-login"
 msgid "Close"
 msgstr "Закрыть"
 
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr "Форум сообщества"
 
 msgctxt "accessibility"
 msgid "How to contest a warning"
@@ -4699,3 +4696,51 @@ msgstr "Отказ с другим адресом для возврата уже
 msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr "Для доступа к форуму нужна подписка Warren. У этого кошелька её никогда не было: воспользуйтесь формой помощи на сайте."
+
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr "Подробнее (необязательно)"
+
+msgctxt "report-problem"
+msgid "Report another problem"
+msgstr "Сообщить о другой проблеме"
+
+msgctxt "report-problem"
+msgid "Send new logs"
+msgstr "Отправить новые журналы"
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
+msgstr "Журналы отправляются, подождите."
+
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr "Дальнейшее обсуждение идёт в этой теме форума, публично под вашим псевдонимом: команда поддержки отвечает там, а вы можете ответить, чтобы добавить подробности. Новые журналы можно отправить с этого экрана в любой момент."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
+msgstr "Не удалось собрать журналы на этом устройстве."
+
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr "Не удалось отправить журналы. Проверьте подключение и повторите попытку."
+
+msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr "Новые журналы получены командой поддержки."
+
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
+msgstr "Тема открылась в вашем браузере."
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr "Этот отчёт закрыт. Сообщите о проблеме ещё раз, чтобы связаться с командой."
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
+msgstr "Этот отчёт отправлен с другого кошелька, поэтому его журналы нельзя отправить отсюда."
+
+msgctxt "report-problem"
+msgid "Your reports"
+msgstr "Ваши отчёты"

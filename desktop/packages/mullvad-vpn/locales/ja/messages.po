@@ -4113,9 +4113,6 @@ msgctxt "forum-login"
 msgid "Close"
 msgstr "閉じる"
 
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr "コミュニティフォーラム"
 
 msgctxt "accessibility"
 msgid "How to contest a warning"
@@ -4663,3 +4660,51 @@ msgstr "別の返金先アドレスで撤回がすでに記録されています
 msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr "フォーラムへのアクセスには Warren のサブスクリプションが必要です。このウォレットは一度も登録していません。代わりにウェブサイトのヘルプフォームをご利用ください。"
+
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr "詳細（任意）"
+
+msgctxt "report-problem"
+msgid "Report another problem"
+msgstr "別の問題を報告する"
+
+msgctxt "report-problem"
+msgid "Send new logs"
+msgstr "新しいログを送信"
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
+msgstr "ログを送信しています。お待ちください。"
+
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr "このフォーラムのトピックで、あなたのペンネームのまま公開でやり取りします。サポートチームがそこで回答し、あなたも返信して詳細を追加できます。新しいログはこの画面からいつでも送信できます。"
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
+msgstr "このデバイスでログを収集できませんでした。"
+
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr "ログを送信できませんでした。接続を確認して、もう一度お試しください。"
+
+msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr "新しいログがサポートチームに届きました。"
+
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
+msgstr "トピックがブラウザで開きました。"
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr "このレポートはクローズされています。チームに連絡するには、問題をもう一度報告してください。"
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
+msgstr "このレポートは別のウォレットで送信されたため、ここからログを送信できません。"
+
+msgctxt "report-problem"
+msgid "Your reports"
+msgstr "あなたのレポート"

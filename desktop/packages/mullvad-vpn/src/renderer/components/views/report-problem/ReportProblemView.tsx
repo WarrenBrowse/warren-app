@@ -2,10 +2,12 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
+import { hasExpired } from '../../../../shared/account-expiry';
 import { Url, urls } from '../../../../shared/constants';
 import {
   FORUM_REPORT_AREAS,
   FORUM_REPORT_FREQUENCIES,
+  FORUM_REPORT_MAX_DESCRIPTION_CHARS,
   FORUM_REPORT_MIN_DESCRIPTION_CHARS,
   ForumReportArea,
   ForumReportFrequency,
@@ -19,6 +21,7 @@ import {
   canSendReport,
   createdReportNotice,
   descriptionChars,
+  inferReportArea,
   initialReportProblemFormState,
   noticeForForumReportResult,
   offersSaveLogs,
@@ -35,17 +38,20 @@ import {
   stepsChars,
 } from '../../../features/report-problem/form-state';
 import { Button, Text } from '../../../lib/components';
+import { Accordion } from '../../../lib/components/accordion';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { Listbox } from '../../../lib/components/listbox';
 import { Switch } from '../../../lib/components/switch';
 import { View } from '../../../lib/components/view';
 import { colors, Radius, spacings } from '../../../lib/foundations';
 import { useHistory } from '../../../lib/history';
+import { useSelector } from '../../../redux/store';
 import { AppNavigationHeader } from '../..';
 import { BackAction } from '../../keyboard-navigation';
 import { NavigationContainer } from '../../NavigationContainer';
 import { NavigationScrollbars } from '../../NavigationScrollbars';
 import { SettingsListItem } from '../../settings-list-item';
+import { YourReports } from './YourReports';
 
 const StyledForm = styled.form`
   display: flex;
@@ -104,6 +110,20 @@ const StyledCreated = styled.p`
   line-height: 19px;
 `;
 
+const StyledPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${spacings.medium};
+  padding: 0 ${spacings.medium} ${spacings.medium};
+`;
+
+const StyledDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${spacings.medium};
+  padding-top: ${spacings.small};
+`;
+
 function areaLabel(area: ForumReportArea): string {
   switch (area) {
     case 'browsing':
@@ -153,18 +173,28 @@ function frequencyLabel(frequency: ForumReportFrequency): string {
 }
 
 /**
- * The in-app bug report: the forum's "Report a bug" form, filed with the
- * wallet signature and the redacted logs through the connect broker, so a
- * user who cannot complete the browser sign-in can still be heard. The
- * description is public under the forum pseudonym; the logs go privately
- * to the support team, and can be read here before they leave the machine.
- * The Android "Report a problem" screen is the reference; the rules live in
- * `features/report-problem/form-state.ts`.
+ * The in-app bug report, one click from the home lifebuoy: the forum's
+ * "Report a bug" form, filed with the wallet signature and the redacted logs
+ * through the connect broker, which creates the forum account when there is
+ * none. The description is the only thing asked; the details the forum form
+ * has wait folded under it, and the logs, on by default, go privately to the
+ * support team and can be read before they leave the machine. A filed report
+ * ends on its topic, opened in the browser already signed in, and the reports
+ * this app filed stay listed below the form so new logs can follow.
  */
 export function ReportProblemView() {
   const { pop } = useHistory();
   const { openUrl } = useAppContext();
-  const [state, setState] = useState<ReportProblemFormState>(initialReportProblemFormState);
+  const tunnelBlocking = useSelector((state) => state.connection.status.state === 'error');
+  const expiry = useSelector((state) => state.account.expiry);
+  const subscriptionExpired = expiry !== undefined && hasExpired(expiry);
+  const initialArea = useRef(inferReportArea({ tunnelBlocking, subscriptionExpired })).current;
+  const freshState = useCallback(
+    (): ReportProblemFormState => ({ ...initialReportProblemFormState, area: initialArea }),
+    [initialArea],
+  );
+  const [state, setState] = useState<ReportProblemFormState>(freshState);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const whatHappenedId = React.useId();
   const stepsId = React.useId();
   const includeLogsId = React.useId();
@@ -269,11 +299,21 @@ export function ReportProblemView() {
   }, [send, state]);
 
   const handleOpenHelpForm = useCallback(() => openUrl(urls.help), [openUrl]);
+  const handleAnotherReport = useCallback(() => {
+    setState(freshState());
+    setDetailsOpen(false);
+  }, [freshState]);
 
   const chars = descriptionChars(state);
   // The broker caps the steps at the same length; without a counter the sole
   // symptom of an over-cap paste is a 422 whose notice names the description.
   const steps = stepsChars(state);
+  // The counter speaks only when it has something to say: under the minimum
+  // once typing started, or over the cap. A number under every keystroke
+  // reads as a quota to fill.
+  const showsCounter =
+    (chars > 0 && chars < FORUM_REPORT_MIN_DESCRIPTION_CHARS) ||
+    chars > FORUM_REPORT_MAX_DESCRIPTION_CHARS;
   const result = state.result;
   // Main kept the URL only when it points at the forum origin the app vouches
   // for, which is what the Url type spells.
@@ -296,297 +336,360 @@ export function ReportProblemView() {
           <AppNavigationHeader title={title} />
           <NavigationScrollbars>
             <View.Content>
-              <StyledForm onSubmit={handleSubmit}>
-                <Text variant="bodySmall" color="whiteOnDarkBlue60">
-                  {
-                    // TRANSLATORS: Explains where the report and the logs go.
-                    messages.pgettext(
-                      'report-problem',
-                      'Your description is posted on the community forum under your forum pseudonym. The technical logs, if you include them, go privately to the support team and never appear publicly.',
-                    )
-                  }
-                </Text>
-
-                <Listbox value={state.area} onValueChange={handleArea}>
-                  <Listbox.Header>
-                    <Listbox.Header.Item>
-                      <Listbox.Header.Item.Label>
-                        {
-                          // TRANSLATORS: Label of the choice of where the problem happens.
-                          messages.pgettext('report-problem', 'Where does the problem happen?')
-                        }
-                      </Listbox.Header.Item.Label>
-                    </Listbox.Header.Item>
-                  </Listbox.Header>
-                  <Listbox.Options>
-                    {FORUM_REPORT_AREAS.map((area) => (
-                      <Listbox.Options.Option key={area} value={area} disabled={state.sending}>
-                        <Listbox.Options.Option.Trigger>
-                          <Listbox.Options.Option.Item>
-                            <Listbox.Options.Option.Item.Label>
-                              {areaLabel(area)}
-                            </Listbox.Options.Option.Item.Label>
-                          </Listbox.Options.Option.Item>
-                        </Listbox.Options.Option.Trigger>
-                      </Listbox.Options.Option>
-                    ))}
-                  </Listbox.Options>
-                </Listbox>
-
-                <StyledField htmlFor={whatHappenedId}>
-                  {
-                    // TRANSLATORS: Label of the description field.
-                    messages.pgettext('report-problem', 'What happened?')
-                  }
-                  <StyledTextarea
-                    id={whatHappenedId}
-                    value={state.whatHappened}
-                    onChange={handleWhatHappened}
-                    rows={5}
-                    disabled={state.sending}
-                    placeholder={
-                      // TRANSLATORS: Placeholder of the description field.
+              {result?.kind === 'created' ? (
+                <StyledPanel role="status">
+                  <StyledCreated>{createdReportNotice(result)}</StyledCreated>
+                  {result.identity && (
+                    <Text variant="labelTiny" color="whiteOnDarkBlue60">
+                      {sprintf(
+                        // TRANSLATORS: Names the forum pseudonym the report was posted under.
+                        // TRANSLATORS: Available placeholders:
+                        // TRANSLATORS: %(handle)s - the forum name
+                        messages.pgettext('report-problem', 'Posted as %(handle)s.'),
+                        { handle: result.identity.handle },
+                      )}
+                    </Text>
+                  )}
+                  <Text variant="bodySmall" color="whiteOnDarkBlue60">
+                    {
+                      // TRANSLATORS: Explains, once a report is filed, where its follow-up happens.
                       messages.pgettext(
                         'report-problem',
-                        'What did you see, and what did you expect instead? Copy any error message. Never include your wallet address.',
+                        'The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time.',
                       )
                     }
-                  />
-                  <Text variant="labelTiny" color="whiteOnDarkBlue60">
-                    {sprintf(
-                      // TRANSLATORS: Character counter under the description field.
-                      // TRANSLATORS: Available placeholders:
-                      // TRANSLATORS: %(count)d - characters typed so far
-                      // TRANSLATORS: %(min)d - the shortest description the forum accepts
-                      messages.pgettext(
-                        'report-problem',
-                        '%(count)d characters (at least %(min)d)',
-                      ),
-                      { count: chars, min: FORUM_REPORT_MIN_DESCRIPTION_CHARS },
-                    )}
                   </Text>
-                </StyledField>
-
-                <StyledField htmlFor={stepsId}>
-                  {
-                    // TRANSLATORS: Label of the optional steps-to-reproduce field.
-                    messages.pgettext('report-problem', 'How can we make it happen too? (optional)')
-                  }
-                  <StyledTextarea
-                    id={stepsId}
-                    value={state.steps}
-                    onChange={handleSteps}
-                    rows={3}
-                    disabled={state.sending}
-                    placeholder={
-                      // TRANSLATORS: Placeholder of the steps-to-reproduce field.
+                  {result.openedInBrowser && (
+                    <Text variant="labelTiny" color="whiteOnDarkBlue60">
+                      {
+                        // TRANSLATORS: Shown when the app opened the new forum topic in the browser.
+                        messages.pgettext('report-problem', 'The topic opened in your browser.')
+                      }
+                    </Text>
+                  )}
+                  {topicUrl !== undefined && (
+                    <Button type="button" onClick={handleOpenTopic}>
+                      <Button.Text>
+                        {
+                          // TRANSLATORS: Button that opens the created forum topic.
+                          messages.pgettext('report-problem', 'Open the topic')
+                        }
+                      </Button.Text>
+                    </Button>
+                  )}
+                  <Button type="button" onClick={handleAnotherReport}>
+                    <Button.Text>
+                      {
+                        // TRANSLATORS: Button that clears the form for a new report.
+                        messages.pgettext('report-problem', 'Report another problem')
+                      }
+                    </Button.Text>
+                  </Button>
+                </StyledPanel>
+              ) : (
+                <StyledForm onSubmit={handleSubmit}>
+                  <Text variant="bodySmall" color="whiteOnDarkBlue60">
+                    {
+                      // TRANSLATORS: Explains where the report and the logs go.
                       messages.pgettext(
                         'report-problem',
-                        'What did you do just before? Step by step if you can.',
+                        'Your description is posted on the community forum under your forum pseudonym. The technical logs, if you include them, go privately to the support team and never appear publicly.',
                       )
                     }
-                  />
-                  <Text variant="labelTiny" color="whiteOnDarkBlue60">
-                    {sprintf(
-                      // TRANSLATORS: Character counter under the optional
-                      // TRANSLATORS: steps-to-reproduce field, which has a
-                      // TRANSLATORS: maximum but no minimum.
-                      // TRANSLATORS: Available placeholders:
-                      // TRANSLATORS: %(count)d - characters typed so far
-                      messages.pgettext('report-problem', '%(count)d characters'),
-                      { count: steps },
-                    )}
                   </Text>
-                </StyledField>
 
-                <Listbox value={state.frequency} onValueChange={handleFrequency}>
-                  <Listbox.Header>
-                    <Listbox.Header.Item>
-                      <Listbox.Header.Item.Label>
-                        {
-                          // TRANSLATORS: Label of the choice of how often the problem happens.
-                          messages.pgettext('report-problem', 'How often does it happen?')
-                        }
-                      </Listbox.Header.Item.Label>
-                    </Listbox.Header.Item>
-                  </Listbox.Header>
-                  <Listbox.Options>
-                    {FORUM_REPORT_FREQUENCIES.map((frequency) => (
-                      <Listbox.Options.Option
-                        key={frequency}
-                        value={frequency}
-                        disabled={state.sending}>
-                        <Listbox.Options.Option.Trigger>
-                          <Listbox.Options.Option.Item>
-                            <Listbox.Options.Option.Item.Label>
-                              {frequencyLabel(frequency)}
-                            </Listbox.Options.Option.Item.Label>
-                          </Listbox.Options.Option.Item>
-                        </Listbox.Options.Option.Trigger>
-                      </Listbox.Options.Option>
-                    ))}
-                  </Listbox.Options>
-                </Listbox>
-
-                <FlexColumn gap="small">
-                  <SettingsListItem labelId={includeLogsId}>
-                    <SettingsListItem.Item>
-                      <Switch
-                        inputId={includeLogsId}
-                        descriptionId={includeLogsDescriptionId}
-                        checked={state.includeLogs}
-                        onCheckedChange={handleIncludeLogs}
-                        disabled={state.sending}>
-                        <Switch.Label>
-                          {
-                            // TRANSLATORS: Label of the switch that attaches the logs.
-                            messages.pgettext('report-problem', 'Include technical logs')
-                          }
-                        </Switch.Label>
-                        <SettingsListItem.Item.ActionGroup>
-                          <Switch.Input />
-                        </SettingsListItem.Item.ActionGroup>
-                      </Switch>
-                    </SettingsListItem.Item>
-                    <SettingsListItem.Footer>
-                      <SettingsListItem.Footer.Text id={includeLogsDescriptionId}>
-                        {
-                          // TRANSLATORS: Description of the switch that attaches the logs.
+                  <StyledField htmlFor={whatHappenedId}>
+                    {
+                      // TRANSLATORS: Label of the description field.
+                      messages.pgettext('report-problem', 'What happened?')
+                    }
+                    <StyledTextarea
+                      id={whatHappenedId}
+                      value={state.whatHappened}
+                      onChange={handleWhatHappened}
+                      rows={5}
+                      autoFocus
+                      disabled={state.sending}
+                      placeholder={
+                        // TRANSLATORS: Placeholder of the description field.
+                        messages.pgettext(
+                          'report-problem',
+                          'What did you see, and what did you expect instead? Copy any error message. Never include your wallet address.',
+                        )
+                      }
+                    />
+                    {showsCounter && (
+                      <Text variant="labelTiny" color="whiteOnDarkBlue60" role="status">
+                        {sprintf(
+                          // TRANSLATORS: Character counter under the description field.
+                          // TRANSLATORS: Available placeholders:
+                          // TRANSLATORS: %(count)d - characters typed so far
+                          // TRANSLATORS: %(min)d - the shortest description the forum accepts
                           messages.pgettext(
                             'report-problem',
-                            'Redacted logs from this app, visible to the support team only.',
-                          )
-                        }
-                      </SettingsListItem.Footer.Text>
-                    </SettingsListItem.Footer>
-                  </SettingsListItem>
-                  {state.includeLogs && (
+                            '%(count)d characters (at least %(min)d)',
+                          ),
+                          { count: chars, min: FORUM_REPORT_MIN_DESCRIPTION_CHARS },
+                        )}
+                      </Text>
+                    )}
+                  </StyledField>
+
+                  <FlexColumn gap="small">
+                    <SettingsListItem labelId={includeLogsId}>
+                      <SettingsListItem.Item>
+                        <Switch
+                          inputId={includeLogsId}
+                          descriptionId={includeLogsDescriptionId}
+                          checked={state.includeLogs}
+                          onCheckedChange={handleIncludeLogs}
+                          disabled={state.sending}>
+                          <Switch.Label>
+                            {
+                              // TRANSLATORS: Label of the switch that attaches the logs.
+                              messages.pgettext('report-problem', 'Include technical logs')
+                            }
+                          </Switch.Label>
+                          <SettingsListItem.Item.ActionGroup>
+                            <Switch.Input />
+                          </SettingsListItem.Item.ActionGroup>
+                        </Switch>
+                      </SettingsListItem.Item>
+                      <SettingsListItem.Footer>
+                        <SettingsListItem.Footer.Text id={includeLogsDescriptionId}>
+                          {
+                            // TRANSLATORS: Description of the switch that attaches the logs.
+                            messages.pgettext(
+                              'report-problem',
+                              'Redacted logs from this app, visible to the support team only.',
+                            )
+                          }
+                        </SettingsListItem.Footer.Text>
+                      </SettingsListItem.Footer>
+                    </SettingsListItem>
+                    {state.includeLogs && (
+                      <FlexColumn gap="tiny">
+                        <Button type="button" disabled={busy} onClick={handleViewLogs} width="fit">
+                          <Button.Text>
+                            {
+                              // TRANSLATORS: Button that opens the logs about to be sent.
+                              messages.pgettext('report-problem', 'View the logs')
+                            }
+                          </Button.Text>
+                        </Button>
+                        <Text variant="labelTiny" color="whiteOnDarkBlue60" role="status">
+                          {state.collecting
+                            ? // TRANSLATORS: Shown while the logs are being collected.
+                              messages.pgettext(
+                                'report-problem',
+                                'Preparing the report, please wait.',
+                              )
+                            : ''}
+                        </Text>
+                        {state.collectFailed && (
+                          <StyledRefusal role="alert">
+                            {
+                              // TRANSLATORS: Shown when the logs could not be collected.
+                              messages.pgettext(
+                                'report-problem',
+                                'The logs could not be collected. You can still send the description.',
+                              )
+                            }
+                          </StyledRefusal>
+                        )}
+                      </FlexColumn>
+                    )}
+                  </FlexColumn>
+
+                  <Accordion expanded={detailsOpen} onExpandedChange={setDetailsOpen}>
+                    <Accordion.Container>
+                      <Accordion.Header>
+                        <Accordion.Header.AccordionTrigger>
+                          <Accordion.Header.Item>
+                            <Accordion.Header.Item.Title>
+                              {
+                                // TRANSLATORS: Folded section holding the optional fields of a report.
+                                messages.pgettext('report-problem', 'More details (optional)')
+                              }
+                            </Accordion.Header.Item.Title>
+                            <Accordion.Header.Item.ActionGroup>
+                              <Accordion.Header.Item.Chevron />
+                            </Accordion.Header.Item.ActionGroup>
+                          </Accordion.Header.Item>
+                        </Accordion.Header.AccordionTrigger>
+                      </Accordion.Header>
+                      <Accordion.Content>
+                        <StyledDetails>
+                          <Listbox value={state.area} onValueChange={handleArea}>
+                            <Listbox.Header>
+                              <Listbox.Header.Item>
+                                <Listbox.Header.Item.Label>
+                                  {
+                                    // TRANSLATORS: Label of the choice of where the problem happens.
+                                    messages.pgettext(
+                                      'report-problem',
+                                      'Where does the problem happen?',
+                                    )
+                                  }
+                                </Listbox.Header.Item.Label>
+                              </Listbox.Header.Item>
+                            </Listbox.Header>
+                            <Listbox.Options>
+                              {FORUM_REPORT_AREAS.map((area) => (
+                                <Listbox.Options.Option
+                                  key={area}
+                                  value={area}
+                                  disabled={state.sending}>
+                                  <Listbox.Options.Option.Trigger>
+                                    <Listbox.Options.Option.Item>
+                                      <Listbox.Options.Option.Item.Label>
+                                        {areaLabel(area)}
+                                      </Listbox.Options.Option.Item.Label>
+                                    </Listbox.Options.Option.Item>
+                                  </Listbox.Options.Option.Trigger>
+                                </Listbox.Options.Option>
+                              ))}
+                            </Listbox.Options>
+                          </Listbox>
+
+                          <StyledField htmlFor={stepsId}>
+                            {
+                              // TRANSLATORS: Label of the optional steps-to-reproduce field.
+                              messages.pgettext(
+                                'report-problem',
+                                'How can we make it happen too? (optional)',
+                              )
+                            }
+                            <StyledTextarea
+                              id={stepsId}
+                              value={state.steps}
+                              onChange={handleSteps}
+                              rows={3}
+                              disabled={state.sending}
+                              placeholder={
+                                // TRANSLATORS: Placeholder of the steps-to-reproduce field.
+                                messages.pgettext(
+                                  'report-problem',
+                                  'What did you do just before? Step by step if you can.',
+                                )
+                              }
+                            />
+                            {steps > FORUM_REPORT_MAX_DESCRIPTION_CHARS && (
+                              <Text variant="labelTiny" color="whiteOnDarkBlue60" role="status">
+                                {sprintf(
+                                  // TRANSLATORS: Character counter under the optional
+                                  // TRANSLATORS: steps-to-reproduce field, which has a
+                                  // TRANSLATORS: maximum but no minimum.
+                                  // TRANSLATORS: Available placeholders:
+                                  // TRANSLATORS: %(count)d - characters typed so far
+                                  messages.pgettext('report-problem', '%(count)d characters'),
+                                  { count: steps },
+                                )}
+                              </Text>
+                            )}
+                          </StyledField>
+
+                          <Listbox value={state.frequency} onValueChange={handleFrequency}>
+                            <Listbox.Header>
+                              <Listbox.Header.Item>
+                                <Listbox.Header.Item.Label>
+                                  {
+                                    // TRANSLATORS: Label of the choice of how often the problem happens.
+                                    messages.pgettext('report-problem', 'How often does it happen?')
+                                  }
+                                </Listbox.Header.Item.Label>
+                              </Listbox.Header.Item>
+                            </Listbox.Header>
+                            <Listbox.Options>
+                              {FORUM_REPORT_FREQUENCIES.map((frequency) => (
+                                <Listbox.Options.Option
+                                  key={frequency}
+                                  value={frequency}
+                                  disabled={state.sending}>
+                                  <Listbox.Options.Option.Trigger>
+                                    <Listbox.Options.Option.Item>
+                                      <Listbox.Options.Option.Item.Label>
+                                        {frequencyLabel(frequency)}
+                                      </Listbox.Options.Option.Item.Label>
+                                    </Listbox.Options.Option.Item>
+                                  </Listbox.Options.Option.Trigger>
+                                </Listbox.Options.Option>
+                              ))}
+                            </Listbox.Options>
+                          </Listbox>
+                        </StyledDetails>
+                      </Accordion.Content>
+                    </Accordion.Container>
+                  </Accordion>
+
+                  {notice && (
                     <FlexColumn gap="tiny">
-                      <Button type="button" disabled={busy} onClick={handleViewLogs} width="fit">
+                      <StyledRefusal role="alert" aria-live="assertive">
+                        {notice.text}
+                      </StyledRefusal>
+                      {notice.action === 'open-help-form' && (
+                        <Button type="button" width="fit" onClick={handleOpenHelpForm}>
+                          <Button.Text>
+                            {
+                              // TRANSLATORS: Button that opens the website help form.
+                              messages.pgettext('report-problem', 'Open the help form')
+                            }
+                          </Button.Text>
+                        </Button>
+                      )}
+                      {notice.action === 'send-without-logs' && (
+                        <Button
+                          type="button"
+                          width="fit"
+                          disabled={busy}
+                          onClick={handleSendWithoutLogs}>
+                          <Button.Text>
+                            {
+                              // TRANSLATORS: Button that resends the report with the logs left out.
+                              messages.pgettext('report-problem', 'Send without the logs')
+                            }
+                          </Button.Text>
+                        </Button>
+                      )}
+                    </FlexColumn>
+                  )}
+
+                  {offersSaveLogs(state) && (
+                    <FlexColumn gap="tiny">
+                      <Button type="button" width="fit" disabled={busy} onClick={handleSaveLogs}>
                         <Button.Text>
                           {
-                            // TRANSLATORS: Button that opens the logs about to be sent.
-                            messages.pgettext('report-problem', 'View the logs')
+                            // TRANSLATORS: Button that writes the collected logs to a file the person picks.
+                            messages.pgettext('report-problem', 'Save the logs')
                           }
                         </Button.Text>
                       </Button>
                       <Text variant="labelTiny" color="whiteOnDarkBlue60" role="status">
-                        {state.collecting
-                          ? // TRANSLATORS: Shown while the logs are being collected.
-                            messages.pgettext(
-                              'report-problem',
-                              'Preparing the report, please wait.',
-                            )
-                          : ''}
+                        {state.saveOutcome === 'saved' ? savedLogsHint() : ''}
                       </Text>
-                      {state.collectFailed && (
+                      {state.saveOutcome === 'failed' && (
                         <StyledRefusal role="alert">
                           {
-                            // TRANSLATORS: Shown when the logs could not be collected.
-                            messages.pgettext(
-                              'report-problem',
-                              'The logs could not be collected. You can still send the description.',
-                            )
+                            // TRANSLATORS: Shown when the logs could not be written to the chosen file.
+                            messages.pgettext('report-problem', 'The logs could not be saved.')
                           }
                         </StyledRefusal>
                       )}
                     </FlexColumn>
                   )}
-                </FlexColumn>
 
-                {result?.kind === 'created' && (
-                  <FlexColumn gap="tiny" role="status">
-                    <StyledCreated>{createdReportNotice(result)}</StyledCreated>
-                    {result.identity && (
-                      <Text variant="labelTiny" color="whiteOnDarkBlue60">
-                        {sprintf(
-                          // TRANSLATORS: Names the anonymous forum handle the report was posted under.
-                          // TRANSLATORS: Available placeholders:
-                          // TRANSLATORS: %(handle)s - the forum name
-                          messages.pgettext('report-problem', 'Posted as %(handle)s.'),
-                          { handle: result.identity.handle },
-                        )}
-                      </Text>
-                    )}
-                    {topicUrl !== undefined && (
-                      <Button type="button" width="fit" onClick={handleOpenTopic}>
-                        <Button.Text>
-                          {
-                            // TRANSLATORS: Button that opens the created forum topic.
-                            messages.pgettext('report-problem', 'Open the topic')
-                          }
-                        </Button.Text>
-                      </Button>
-                    )}
-                  </FlexColumn>
-                )}
-
-                {notice && (
-                  <FlexColumn gap="tiny">
-                    <StyledRefusal role="alert" aria-live="assertive">
-                      {notice.text}
-                    </StyledRefusal>
-                    {notice.action === 'open-help-form' && (
-                      <Button type="button" width="fit" onClick={handleOpenHelpForm}>
-                        <Button.Text>
-                          {
-                            // TRANSLATORS: Button that opens the website help form.
-                            messages.pgettext('report-problem', 'Open the help form')
-                          }
-                        </Button.Text>
-                      </Button>
-                    )}
-                    {notice.action === 'send-without-logs' && (
-                      <Button
-                        type="button"
-                        width="fit"
-                        disabled={busy}
-                        onClick={handleSendWithoutLogs}>
-                        <Button.Text>
-                          {
-                            // TRANSLATORS: Button that resends the report with the logs left out.
-                            messages.pgettext('report-problem', 'Send without the logs')
-                          }
-                        </Button.Text>
-                      </Button>
-                    )}
-                  </FlexColumn>
-                )}
-
-                {offersSaveLogs(state) && (
-                  <FlexColumn gap="tiny">
-                    <Button type="button" width="fit" disabled={busy} onClick={handleSaveLogs}>
-                      <Button.Text>
-                        {
-                          // TRANSLATORS: Button that writes the collected logs to a file the person picks.
-                          messages.pgettext('report-problem', 'Save the logs')
-                        }
-                      </Button.Text>
-                    </Button>
-                    <Text variant="labelTiny" color="whiteOnDarkBlue60" role="status">
-                      {state.saveOutcome === 'saved' ? savedLogsHint() : ''}
-                    </Text>
-                    {state.saveOutcome === 'failed' && (
-                      <StyledRefusal role="alert">
-                        {
-                          // TRANSLATORS: Shown when the logs could not be written to the chosen file.
-                          messages.pgettext('report-problem', 'The logs could not be saved.')
-                        }
-                      </StyledRefusal>
-                    )}
-                  </FlexColumn>
-                )}
-
-                <Button type="submit" variant="success" disabled={!canSendReport(state)}>
-                  <Button.Text>
-                    {state.sending
-                      ? // TRANSLATORS: Send button label while the report is being sent.
-                        messages.pgettext('report-problem', 'Sending, please wait.')
-                      : // TRANSLATORS: Send button label.
-                        messages.pgettext('report-problem', 'Send the report')}
-                  </Button.Text>
-                </Button>
-              </StyledForm>
+                  <Button type="submit" variant="success" disabled={!canSendReport(state)}>
+                    <Button.Text>
+                      {state.sending
+                        ? // TRANSLATORS: Send button label while the report is being sent.
+                          messages.pgettext('report-problem', 'Sending, please wait.')
+                        : // TRANSLATORS: Send button label.
+                          messages.pgettext('report-problem', 'Send the report')}
+                    </Button.Text>
+                  </Button>
+                </StyledForm>
+              )}
+              <YourReports />
             </View.Content>
           </NavigationScrollbars>
         </NavigationContainer>

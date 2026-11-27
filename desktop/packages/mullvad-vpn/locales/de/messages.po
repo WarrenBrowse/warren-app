@@ -4123,9 +4123,6 @@ msgctxt "forum-login"
 msgid "Close"
 msgstr "Schließen"
 
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr "Community-Forum"
 
 msgctxt "accessibility"
 msgid "How to contest a warning"
@@ -4675,3 +4672,51 @@ msgstr "Ein Widerruf mit einer anderen Erstattungsadresse ist bereits erfasst: S
 msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr "Der Forumzugang erfordert ein Warren-Abonnement. Diese Wallet hat nie eines abgeschlossen: Nutze stattdessen das Hilfeformular auf der Website."
+
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr "Weitere Details (optional)"
+
+msgctxt "report-problem"
+msgid "Report another problem"
+msgstr "Weiteres Problem melden"
+
+msgctxt "report-problem"
+msgid "Send new logs"
+msgstr "Neue Protokolle senden"
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
+msgstr "Protokolle werden gesendet, bitte warten."
+
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr "Die Nachverfolgung findet in diesem Forumsthema statt, öffentlich unter deinem Pseudonym: Das Support-Team antwortet dort, und du kannst antworten, um Details zu ergänzen. Neue Protokolle kannst du jederzeit von diesem Bildschirm aus senden."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
+msgstr "Die Protokolle konnten auf diesem Gerät nicht gesammelt werden."
+
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr "Die Protokolle konnten nicht gesendet werden. Prüfe die Verbindung und versuche es erneut."
+
+msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr "Die neuen Protokolle haben das Support-Team erreicht."
+
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
+msgstr "Das Thema wurde in deinem Browser geöffnet."
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr "Dieser Bericht ist geschlossen. Melde das Problem erneut, um das Team zu erreichen."
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
+msgstr "Dieser Bericht wurde mit einer anderen Wallet gesendet, daher können seine Protokolle nicht von hier gesendet werden."
+
+msgctxt "report-problem"
+msgid "Your reports"
+msgstr "Deine Berichte"

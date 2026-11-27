@@ -4123,9 +4123,6 @@ msgctxt "forum-login"
 msgid "Close"
 msgstr "بستن"
 
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr "انجمن جامعه"
 
 msgctxt "accessibility"
 msgid "How to contest a warning"
@@ -4675,3 +4672,51 @@ msgstr "یک انصراف با نشانی بازپرداخت دیگری از ق�
 msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr "دسترسی به انجمن به اشتراک Warren نیاز دارد. این کیف پول هرگز اشتراکی نداشته است: به‌جای آن از فرم کمک وب‌سایت استفاده کنید."
+
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr "جزئیات بیشتر (اختیاری)"
+
+msgctxt "report-problem"
+msgid "Report another problem"
+msgstr "گزارش مشکلی دیگر"
+
+msgctxt "report-problem"
+msgid "Send new logs"
+msgstr "ارسال لاگ‌های جدید"
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
+msgstr "در حال ارسال لاگ‌ها، لطفاً صبر کنید."
+
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr "پیگیری در همین موضوع انجمن انجام می‌شود، به‌صورت عمومی با نام مستعار شما: تیم پشتیبانی آنجا پاسخ می‌دهد و شما می‌توانید برای افزودن جزئیات پاسخ دهید. هر زمان بخواهید می‌توانید از همین صفحه لاگ‌های جدید بفرستید."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
+msgstr "لاگ‌ها روی این دستگاه جمع‌آوری نشدند."
+
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr "لاگ‌ها ارسال نشدند. اتصال را بررسی کنید و دوباره تلاش کنید."
+
+msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr "لاگ‌های جدید به تیم پشتیبانی رسید."
+
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
+msgstr "موضوع در مرورگر شما باز شد."
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr "این گزارش بسته شده است. برای رسیدن به تیم، مشکل را دوباره گزارش کنید."
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
+msgstr "این گزارش با کیف پول دیگری فرستاده شده است، بنابراین لاگ‌های آن از اینجا قابل ارسال نیست."
+
+msgctxt "report-problem"
+msgid "Your reports"
+msgstr "گزارش‌های شما"

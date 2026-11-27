@@ -41,7 +41,12 @@ import { ForumAttachResult, IForumAttachRequest } from './forum-attach';
 import { ForumIdentity } from './forum-identity';
 import { ForumLoginApproval, IForumLoginRequest } from './forum-login';
 import { ForumNotificationsResult } from './forum-notifications';
-import { ForumReportResult, ForumReportSaveOutcome, IForumReportForm } from './forum-report';
+import {
+  ForumReportLogsResult,
+  ForumReportResult,
+  ForumReportSaveOutcome,
+  IForumReportForm,
+} from './forum-report';
 import { IGuiSettingsState } from './gui-settings-state';
 import { invoke, invokeSync, notifyRenderer, send } from './ipc-helpers';
 import {
@@ -298,6 +303,9 @@ export const ipcSchema = {
     discard: invoke<string, void>(),
     send: invoke<IForumReportForm, ForumReportResult>(),
     save: invoke<string | undefined, ForumReportSaveOutcome>(),
+    // New logs for one of the reports this app filed (by topic id): main
+    // collects a fresh report, the daemon signs, main posts it.
+    sendLogs: invoke<number, ForumReportLogsResult>(),
   },
   daemon: {
     isPerformingPostUpgrade: notifyRenderer<boolean>(),

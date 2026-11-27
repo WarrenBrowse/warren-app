@@ -75,6 +75,7 @@ export function HomeHeader() {
       </InitialFocus>
       <MainHeaderToneProvider value={iconTone}>
         <StyledToolbar>
+          <AppMainHeader.SupportButton />
           <AppMainHeader.ForumButton />
           <AppMainHeader.AccountButton />
           <AppMainHeader.SettingsButton />

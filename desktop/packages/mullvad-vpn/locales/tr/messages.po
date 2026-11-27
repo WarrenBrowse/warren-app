@@ -4123,9 +4123,6 @@ msgctxt "forum-login"
 msgid "Close"
 msgstr "Kapat"
 
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr "Topluluk forumu"
 
 msgctxt "accessibility"
 msgid "How to contest a warning"
@@ -4675,3 +4672,51 @@ msgstr "Başka bir iade adresiyle bir cayma zaten kayıtlı: %(url)s adresindeki
 msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr "Foruma erişim için Warren aboneliği gerekir. Bu cüzdan hiç abone olmadı: bunun yerine web sitesindeki yardım formunu kullanın."
+
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr "Daha fazla ayrıntı (isteğe bağlı)"
+
+msgctxt "report-problem"
+msgid "Report another problem"
+msgstr "Başka bir sorun bildir"
+
+msgctxt "report-problem"
+msgid "Send new logs"
+msgstr "Yeni günlükleri gönder"
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
+msgstr "Günlükler gönderiliyor, lütfen bekleyin."
+
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr "Takip, forumdaki bu konuda, takma adınızla herkese açık olarak yapılır: destek ekibi orada yanıt verir, siz de ayrıntı eklemek için yanıt yazabilirsiniz. Bu ekrandan istediğiniz zaman yeni günlükler gönderebilirsiniz."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
+msgstr "Günlükler bu cihazda toplanamadı."
+
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr "Günlükler gönderilemedi. Bağlantıyı kontrol edip tekrar deneyin."
+
+msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr "Yeni günlükler destek ekibine ulaştı."
+
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
+msgstr "Konu tarayıcınızda açıldı."
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr "Bu rapor kapatıldı. Ekibe ulaşmak için sorunu yeniden bildirin."
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
+msgstr "Bu rapor başka bir cüzdanla gönderildi, bu yüzden günlükleri buradan gönderilemez."
+
+msgctxt "report-problem"
+msgid "Your reports"
+msgstr "Raporlarınız"

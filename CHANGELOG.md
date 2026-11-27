@@ -23,6 +23,10 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 ### Added
+- [Desktop] Report a problem from the lifebuoy on the home screen: describe it in a sentence and
+  send. The app creates your forum account if needed, files the topic with your logs, and opens it
+  in your browser already signed in. Where and how often it happens are optional, folded under
+  "More details". Your reports stay listed on that screen, each with "Send new logs".
 - [iOS] Add a light theme for the connect screen, and a Theme setting: System, Dark or Light. System
   follows the appearance of the device, and stays dark when the device states none.
 - [iOS] Show the warnings recorded against your account when a forwarded port is closed after an

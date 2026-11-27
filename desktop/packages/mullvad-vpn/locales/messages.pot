@@ -293,13 +293,6 @@ msgctxt "accessibility"
 msgid "Collapse %(location)s"
 msgstr ""
 
-#. Accessible name of the header button that opens the
-#. community forum, shown before the user has a forum
-#. account.
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr ""
-
 #. Accessibility label for a button that connects to a location.
 #. Available placeholders:
 #. %(location)s - The name of the location that will be connected to when the button is clicked.
@@ -3433,6 +3426,11 @@ msgctxt "report-problem"
 msgid "It happened once"
 msgstr ""
 
+#. Folded section holding the optional fields of a report.
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr ""
+
 #. Button that opens the website help form.
 msgctxt "report-problem"
 msgid "Open the help form"
@@ -3443,7 +3441,7 @@ msgctxt "report-problem"
 msgid "Open the topic"
 msgstr ""
 
-#. Names the anonymous forum handle the report was posted under.
+#. Names the forum pseudonym the report was posted under.
 #. Available placeholders:
 #. %(handle)s - the forum name
 msgctxt "report-problem"
@@ -3459,10 +3457,16 @@ msgctxt "report-problem"
 msgid "Redacted logs from this app, visible to the support team only."
 msgstr ""
 
+#. Accessible name of the header lifebuoy that opens the bug report form.
 #. Title of the in-app bug report view.
 #. Navigation row to the in-app bug report form.
 msgctxt "report-problem"
 msgid "Report a problem"
+msgstr ""
+
+#. Button that clears the form for a new report.
+msgctxt "report-problem"
+msgid "Report another problem"
 msgstr ""
 
 #. Button that writes the collected logs to a file the person picks.
@@ -3476,6 +3480,10 @@ msgid "Send a description and your logs to the support team"
 msgstr ""
 
 msgctxt "report-problem"
+msgid "Send new logs"
+msgstr ""
+
+msgctxt "report-problem"
 msgid "Send the report"
 msgstr ""
 
@@ -3486,6 +3494,10 @@ msgstr ""
 
 msgctxt "report-problem"
 msgid "Sending the logs took too long on this connection."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
 msgstr ""
 
 msgctxt "report-problem"
@@ -3506,12 +3518,21 @@ msgctxt "report-problem"
 msgid "Sometimes"
 msgstr ""
 
+#. Explains, once a report is filed, where its follow-up happens.
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr ""
+
 msgctxt "report-problem"
 msgid "The forum could not take the report right now. Please try again later."
 msgstr ""
 
 msgctxt "report-problem"
 msgid "The logs are too large to send."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
 msgstr ""
 
 #. Shown when the logs could not be collected.
@@ -3524,17 +3545,38 @@ msgctxt "report-problem"
 msgid "The logs could not be saved."
 msgstr ""
 
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr ""
+
 #. Shown once the logs have been written to the chosen file.
 msgctxt "report-problem"
 msgid "The logs were saved. You can attach them to the help form on the website."
 msgstr ""
 
 msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr ""
+
+msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."
+msgstr ""
+
+#. Shown when the app opened the new forum topic in the browser.
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
 msgstr ""
 
 msgctxt "report-problem"
 msgid "This device’s clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
 msgstr ""
 
 msgctxt "report-problem"
@@ -3586,6 +3628,11 @@ msgstr ""
 
 msgctxt "report-problem"
 msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr ""
+
+#. Heading of the list of reports this app has filed.
+msgctxt "report-problem"
+msgid "Your reports"
 msgstr ""
 
 msgctxt "report-problem"

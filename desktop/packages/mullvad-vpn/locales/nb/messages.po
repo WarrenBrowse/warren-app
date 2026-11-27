@@ -4123,9 +4123,6 @@ msgctxt "forum-login"
 msgid "Close"
 msgstr "Lukk"
 
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr "Fellesskapsforum"
 
 msgctxt "accessibility"
 msgid "How to contest a warning"
@@ -4675,3 +4672,51 @@ msgstr "En angring med en annen refusjonsadresse er allerede registrert: skriv t
 msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr "Tilgang til forumet krever et Warren-abonnement. Denne lommeboken har aldri hatt et: bruk hjelpeskjemaet på nettstedet i stedet."
+
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr "Flere detaljer (valgfritt)"
+
+msgctxt "report-problem"
+msgid "Report another problem"
+msgstr "Rapporter et annet problem"
+
+msgctxt "report-problem"
+msgid "Send new logs"
+msgstr "Send nye logger"
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
+msgstr "Sender loggene, vent litt."
+
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr "Oppfølgingen skjer i det emnet på forumet, offentlig under pseudonymet ditt: supportteamet svarer der, og du kan svare for å legge til detaljer. Du kan sende nye logger fra denne skjermen når som helst."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
+msgstr "Loggene kunne ikke samles inn på denne enheten."
+
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr "Loggene kunne ikke sendes. Sjekk tilkoblingen og prøv igjen."
+
+msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr "De nye loggene nådde supportteamet."
+
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
+msgstr "Emnet ble åpnet i nettleseren din."
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr "Denne rapporten er lukket. Rapporter problemet på nytt for å nå teamet."
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
+msgstr "Denne rapporten ble sendt med en annen lommebok, så loggene kan ikke sendes herfra."
+
+msgctxt "report-problem"
+msgid "Your reports"
+msgstr "Rapportene dine"

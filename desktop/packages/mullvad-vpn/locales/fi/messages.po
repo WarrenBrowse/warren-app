@@ -4123,9 +4123,6 @@ msgctxt "forum-login"
 msgid "Close"
 msgstr "Sulje"
 
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr "Yhteisöfoorumi"
 
 msgctxt "accessibility"
 msgid "How to contest a warning"
@@ -4675,3 +4672,51 @@ msgstr "Peruutus toisella palautusosoitteella on jo kirjattu: kirjoita meille oh
 msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr "Foorumille pääsy vaatii Warren-tilauksen. Tällä lompakolla ei ole koskaan ollut tilausta: käytä sen sijaan verkkosivuston ohjelomaketta."
+
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr "Lisätietoja (valinnainen)"
+
+msgctxt "report-problem"
+msgid "Report another problem"
+msgstr "Raportoi toinen ongelma"
+
+msgctxt "report-problem"
+msgid "Send new logs"
+msgstr "Lähetä uudet lokit"
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
+msgstr "Lähetetään lokeja, odota hetki."
+
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr "Seuranta tapahtuu tuossa foorumin aiheessa, julkisesti nimimerkilläsi: tukitiimi vastaa siellä, ja voit vastata lisätäksesi tietoja. Voit lähettää uusia lokeja tästä näkymästä milloin tahansa."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
+msgstr "Lokeja ei voitu kerätä tällä laitteella."
+
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr "Lokeja ei voitu lähettää. Tarkista yhteys ja yritä uudelleen."
+
+msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr "Uudet lokit saapuivat tukitiimille."
+
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
+msgstr "Aihe avautui selaimessasi."
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr "Tämä raportti on suljettu. Raportoi ongelma uudelleen tavoittaaksesi tiimin."
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
+msgstr "Tämä raportti lähetettiin toisella lompakolla, joten sen lokeja ei voi lähettää täältä."
+
+msgctxt "report-problem"
+msgid "Your reports"
+msgstr "Raporttisi"

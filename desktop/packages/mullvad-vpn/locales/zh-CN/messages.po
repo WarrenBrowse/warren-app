@@ -4113,9 +4113,6 @@ msgctxt "forum-login"
 msgid "Close"
 msgstr "关闭"
 
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr "社区论坛"
 
 msgctxt "accessibility"
 msgid "How to contest a warning"
@@ -4663,3 +4660,51 @@ msgstr "已有使用其他退款地址的撤回记录：请通过帮助页面 %(
 msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr "访问论坛需要 Warren 订阅。此钱包从未订阅过，请改用网站上的帮助表单。"
+
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr "更多详情（可选）"
+
+msgctxt "report-problem"
+msgid "Report another problem"
+msgstr "报告其他问题"
+
+msgctxt "report-problem"
+msgid "Send new logs"
+msgstr "发送新日志"
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
+msgstr "正在发送日志，请稍候。"
+
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr "后续沟通将在该论坛主题中以您的化名公开进行：支持团队会在那里回复，您也可以回复以补充细节。您可以随时在此页面发送新日志。"
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
+msgstr "无法在此设备上收集日志。"
+
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr "无法发送日志。请检查网络连接后重试。"
+
+msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr "新日志已送达支持团队。"
+
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
+msgstr "主题已在您的浏览器中打开。"
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr "此报告已关闭。请重新报告问题以联系团队。"
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
+msgstr "此报告是用另一个钱包提交的，因此无法从这里发送其日志。"
+
+msgctxt "report-problem"
+msgid "Your reports"
+msgstr "您的报告"

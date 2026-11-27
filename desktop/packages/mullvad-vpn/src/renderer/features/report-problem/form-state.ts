@@ -3,6 +3,7 @@ import {
   FORUM_REPORT_MIN_DESCRIPTION_CHARS,
   ForumReportArea,
   ForumReportFrequency,
+  ForumReportLogsResult,
   ForumReportResult,
   ForumReportSaveOutcome,
   IForumReportForm,
@@ -51,6 +52,31 @@ export const initialReportProblemFormState: ReportProblemFormState = {
   result: undefined,
 };
 
+/** What this machine knows when the form opens. */
+export interface ReportContext {
+  // The tunnel is in its error state and blocks the traffic.
+  tunnelBlocking: boolean;
+  // The subscription has run out.
+  subscriptionExpired: boolean;
+}
+
+/**
+ * The area the form starts on, from what this machine can tell for sure and
+ * nothing else: a blocked tunnel is a connection problem whatever the person
+ * would call it, an expired subscription is the subscription's. Anything
+ * else stays unset, because a wrong guess sent unseen reads to the support
+ * team as the reporter's own answer, and the logs say the rest.
+ */
+export function inferReportArea(context: ReportContext): ForumReportArea | undefined {
+  if (context.tunnelBlocking) {
+    return 'connection';
+  }
+  if (context.subscriptionExpired) {
+    return 'wallet';
+  }
+  return undefined;
+}
+
 /**
  * How far past the cap the fields still take keys: the counter then shows
  * the overrun to trim instead of the field silently refusing to type.
@@ -76,8 +102,6 @@ export function stepsChars(state: ReportProblemFormState): number {
 export function canSendReport(state: ReportProblemFormState): boolean {
   const chars = descriptionChars(state);
   return (
-    state.area !== undefined &&
-    state.frequency !== undefined &&
     chars >= FORUM_REPORT_MIN_DESCRIPTION_CHARS &&
     chars <= FORUM_REPORT_MAX_DESCRIPTION_CHARS &&
     // The broker measures `steps` against the same cap. Left unchecked, an
@@ -95,9 +119,8 @@ export function canSendReport(state: ReportProblemFormState): boolean {
 export function reportFormPayload(state: ReportProblemFormState): IForumReportForm {
   const steps = state.steps.trim();
   return {
-    // Guarded by canSendReport; the fallbacks only satisfy the type.
-    area: state.area ?? 'other',
-    frequency: state.frequency ?? 'once',
+    area: state.area,
+    frequency: state.frequency,
     whatHappened: state.whatHappened.trim(),
     steps: steps.length > 0 ? steps : undefined,
     includeLogs: state.includeLogs,
@@ -312,5 +335,66 @@ export function noticeForForumReportResult(result: ForumReportResult): ReportNot
           'The report could not be sent. Check the connection and try again.',
         ),
       };
+  }
+}
+
+/** What a "Send new logs" on a filed report says, and whether it worked. */
+export function noticeForReportLogsResult(result: ForumReportLogsResult): {
+  text: string;
+  ok: boolean;
+} {
+  switch (result.kind) {
+    case 'attached':
+      return {
+        ok: true,
+        // TRANSLATORS: Shown once new logs for a filed report reached the team.
+        text: messages.pgettext('report-problem', 'The new logs reached the support team.'),
+      };
+    case 'not-author':
+      return {
+        ok: false,
+        // TRANSLATORS: Shown when the report was filed by another wallet.
+        text: messages.pgettext(
+          'report-problem',
+          'This report was filed with another wallet, so its logs cannot be sent from here.',
+        ),
+      };
+    case 'topic-closed':
+      return {
+        ok: false,
+        // TRANSLATORS: Shown when the forum topic of the report is closed.
+        text: messages.pgettext(
+          'report-problem',
+          'This report is closed. Report the problem again to reach the team.',
+        ),
+      };
+    case 'collect-failed':
+      return {
+        ok: false,
+        // TRANSLATORS: Shown when the logs could not be gathered for a filed report.
+        text: messages.pgettext(
+          'report-problem',
+          'The logs could not be collected on this device.',
+        ),
+      };
+    case 'failed':
+      return {
+        ok: false,
+        // TRANSLATORS: Shown when new logs for a filed report could not be sent.
+        text: messages.pgettext(
+          'report-problem',
+          'The logs could not be sent. Check the connection and try again.',
+        ),
+      };
+    case 'subscription-required':
+    case 'clock-skew':
+    case 'rate-limited':
+    case 'too-large':
+    case 'server-error':
+    case 'no-identity': {
+      // The same words as the report itself, which names each of these.
+      const notice = noticeForForumReportResult({ kind: result.kind });
+      return { ok: false, text: notice?.text ?? '' };
+    }
   }
 }

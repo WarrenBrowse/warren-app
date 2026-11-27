@@ -4123,9 +4123,6 @@ msgctxt "forum-login"
 msgid "Close"
 msgstr "Fechar"
 
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr "Fórum da comunidade"
 
 msgctxt "accessibility"
 msgid "How to contest a warning"
@@ -4675,3 +4672,51 @@ msgstr "Já existe uma desistência registada com outro endereço de reembolso: 
 msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr "O acesso ao fórum requer uma subscrição Warren. Esta carteira nunca subscreveu: usa antes o formulário de ajuda do site."
+
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr "Mais detalhes (opcional)"
+
+msgctxt "report-problem"
+msgid "Report another problem"
+msgstr "Reportar outro problema"
+
+msgctxt "report-problem"
+msgid "Send new logs"
+msgstr "Enviar novos registos"
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
+msgstr "A enviar os registos, aguarda."
+
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr "O acompanhamento é feito nesse tópico do fórum, em público sob o teu pseudónimo: a equipa de suporte responde lá e podes responder para acrescentar detalhes. Podes enviar novos registos a partir deste ecrã a qualquer momento."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
+msgstr "Não foi possível recolher os registos neste dispositivo."
+
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr "Não foi possível enviar os registos. Verifica a ligação e tenta novamente."
+
+msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr "Os novos registos chegaram à equipa de suporte."
+
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
+msgstr "O tópico abriu no teu navegador."
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr "Este relatório está fechado. Reporta o problema novamente para chegares à equipa."
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
+msgstr "Este relatório foi enviado com outra carteira, por isso os seus registos não podem ser enviados daqui."
+
+msgctxt "report-problem"
+msgid "Your reports"
+msgstr "Os teus relatórios"

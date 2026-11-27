@@ -14,6 +14,11 @@ par l'application, gardez-le tel quel.
 
 ## [Unreleased]
 ### Ajouté
+- [Desktop] Signaler un problème depuis la bouée de l'écran d'accueil : décrivez-le en une phrase
+  et envoyez. L'app crée votre compte forum si besoin, publie le sujet avec vos journaux, et l'ouvre
+  dans votre navigateur déjà connecté. Où et à quelle fréquence le problème survient deviennent
+  facultatifs, repliés sous « Plus de détails ». Vos rapports restent listés sur cet écran, chacun
+  avec « Envoyer de nouveaux journaux ».
 - [iOS] Un thème clair pour l'écran de connexion, et un réglage Thème : Système, Sombre ou Clair.
   Système suit l'apparence de l'appareil, et reste sombre quand l'appareil n'en indique aucune.
 - [iOS] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est fermé

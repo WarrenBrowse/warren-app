@@ -44,8 +44,10 @@ import { ForumAttachResult, IForumAttachRequest } from '../shared/forum-attach';
 import { ForumIdentity } from '../shared/forum-identity';
 import { IForumLoginRequest } from '../shared/forum-login';
 import {
+  ForumReportLogsResult,
   ForumReportResult,
   ForumReportSaveOutcome,
+  forumReportSummary,
   IForumReportForm,
 } from '../shared/forum-report';
 import { messages, relayLocations } from '../shared/gettext';
@@ -124,6 +126,7 @@ import {
   forumReportPlatform,
   reportSaveFileName,
   sendForumReport,
+  sendForumReportLogs,
 } from './forum-report';
 import SafeStorageForumIdentityStore from './forum-store';
 import { ConnectionObserver } from './grpc-client';
@@ -744,10 +747,53 @@ class ApplicationMain
       }
     }
     const result = await sendForumReport(form, logGz, facts, this.daemonRpc);
-    if (result.kind === 'created' && result.identity !== undefined) {
+    if (result.kind !== 'created') {
+      return result;
+    }
+    if (result.identity !== undefined) {
       this.adoptForumIdentity(result.identity);
     }
-    return result;
+    this.settings.gui.addForumReport({
+      topicId: result.topicId,
+      summary: forumReportSummary(form.whatHappened),
+      createdAt: new Date().toISOString(),
+    });
+    // The report ends on its topic, already signed in when the broker issued
+    // a one-shot link: main opens it because main vouched for it, and the
+    // renderer never holds the ticket. Single use, so it is not handed on.
+    const { loginUrl, ...created } = result;
+    const destination = loginUrl ?? created.topicUrl;
+    if (destination !== undefined) {
+      try {
+        await shell.openExternal(destination);
+        return { ...created, openedInBrowser: true };
+      } catch {
+        log.warn('Forum report: the browser could not be opened on the topic');
+      }
+    }
+    return created;
+  }
+
+  // New logs for one of the reports this app filed. Only a topic in that
+  // list is accepted: the broker checks the authorship anyway, and the app
+  // has no business signing for any other topic.
+  private async sendForumReportLogsRequest(topicId: number): Promise<ForumReportLogsResult> {
+    if (!this.settings.gui.forumReports.some((record) => record.topicId === topicId)) {
+      log.warn('Forum report logs: refused, not a report this app filed');
+      return { kind: 'not-author' };
+    }
+    let reportId: string | undefined;
+    let logGz: Buffer;
+    try {
+      reportId = await problemReport.collectLogs(this.loggedInPubkey());
+      logGz = gzipSync(await fs.promises.readFile(problemReport.getProblemReportPath(reportId)));
+    } catch (error) {
+      log.error(`Forum report logs: could not collect the problem report: ${String(error)}`);
+      return { kind: 'collect-failed' };
+    } finally {
+      this.deleteCollectedReport(reportId);
+    }
+    return sendForumReportLogs(topicId, logGz, this.daemonRpc);
   }
 
   // Keeping the collected logs on this machine, which is all the reporter
@@ -2086,6 +2132,9 @@ class ApplicationMain
     });
     IpcMainEventChannel.forumReport.handleSend((form) => this.sendForumReportRequest(form));
     IpcMainEventChannel.forumReport.handleSave((reportId) => this.saveCollectedReport(reportId));
+    IpcMainEventChannel.forumReport.handleSendLogs((topicId) =>
+      this.sendForumReportLogsRequest(topicId),
+    );
 
     IpcMainEventChannel.customLists.handleCreateCustomList((name) => {
       return this.daemonRpc.createCustomList(name);

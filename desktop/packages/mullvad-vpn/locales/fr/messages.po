@@ -4231,9 +4231,6 @@ msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
 msgstr "Si elle est déjà ouverte, fermez %(applicationName)s avant de la lancer d'ici. Sinon, elle risque de ne pas passer par le VPN."
 
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr "Forum communautaire"
 
 msgctxt "accessibility"
 msgid "Remove %(location)s from %(listName)s"
@@ -4671,3 +4668,51 @@ msgstr "Une rétractation avec une autre adresse de remboursement est déjà enr
 msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr "L'accès au forum nécessite un abonnement Warren. Ce portefeuille n'a jamais souscrit : utilisez plutôt le formulaire d'aide du site web."
+
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr "Plus de détails (facultatif)"
+
+msgctxt "report-problem"
+msgid "Report another problem"
+msgstr "Signaler un autre problème"
+
+msgctxt "report-problem"
+msgid "Send new logs"
+msgstr "Envoyer de nouveaux journaux"
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
+msgstr "Envoi des journaux, veuillez patienter."
+
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr "Le suivi se fait sur ce sujet du forum, en public sous votre pseudonyme : l'équipe support y répond, et vous pouvez répondre pour ajouter des détails. Vous pouvez envoyer de nouveaux journaux depuis cet écran à tout moment."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
+msgstr "Les journaux n'ont pas pu être collectés sur cet appareil."
+
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr "Les journaux n'ont pas pu être envoyés. Vérifiez la connexion et réessayez."
+
+msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr "Les nouveaux journaux sont parvenus à l'équipe support."
+
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
+msgstr "Le sujet s'est ouvert dans votre navigateur."
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr "Ce rapport est fermé. Signalez de nouveau le problème pour joindre l'équipe."
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
+msgstr "Ce rapport a été envoyé avec un autre portefeuille : ses journaux ne peuvent pas être envoyés d'ici."
+
+msgctxt "report-problem"
+msgid "Your reports"
+msgstr "Vos rapports"

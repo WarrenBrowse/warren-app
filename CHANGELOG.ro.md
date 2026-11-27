@@ -13,6 +13,11 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 
 ## [Unreleased]
 ### Adăugat
+- [Desktop] Raportați o problemă din colacul de salvare de pe ecranul principal: descrieți-o într-o
+  propoziție și trimiteți. Aplicația vă creează contul de forum dacă e nevoie, publică subiectul cu
+  jurnalele și îl deschide în browser, deja conectat. Unde și cât de des apare problema devin
+  opționale, sub „Mai multe detalii". Rapoartele rămân listate pe acel ecran, fiecare cu „Trimiteți
+  jurnale noi".
 - [iOS] O temă luminoasă pentru ecranul de conectare și o setare Temă: Sistem, Întunecată sau
   Luminoasă. Sistem urmează aspectul dispozitivului și rămâne întunecată când dispozitivul nu indică
   niciunul.

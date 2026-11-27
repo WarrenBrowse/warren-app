@@ -65,8 +65,11 @@ export type ForumReportResult =
       identity?: ForumIdentity;
       // The broker's one-shot link that opens the topic already signed in,
       // only when it points at the connect page the app vouches for. Single
-      // use: once opened, the topic URL is what reopens the topic.
+      // use: once opened, the topic URL is what reopens the topic. Main
+      // opens it and never hands it to the renderer.
       loginUrl?: string;
+      // Main opened the topic in the browser after the send.
+      openedInBrowser?: boolean;
     }
   // Never paid: the website help form is the channel.
   | { kind: 'subscription-required' }

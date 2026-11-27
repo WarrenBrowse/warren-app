@@ -4261,9 +4261,6 @@ msgctxt "port-forwarding-view"
 msgid "Warnings and how to contest them"
 msgstr "Avertismentele și cum le contestați"
 
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr "Forumul comunității"
 
 msgctxt "accessibility"
 msgid "Remove %(location)s from %(listName)s"
@@ -4703,3 +4700,51 @@ msgstr "O retragere cu altă adresă de rambursare este deja înregistrată: scr
 msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr "Accesul la forum necesită un abonament Warren. Acest portofel nu a avut niciodată unul: folosește în schimb formularul de ajutor de pe site."
+
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr "Mai multe detalii (opțional)"
+
+msgctxt "report-problem"
+msgid "Report another problem"
+msgstr "Raportează altă problemă"
+
+msgctxt "report-problem"
+msgid "Send new logs"
+msgstr "Trimiteți jurnale noi"
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
+msgstr "Se trimit jurnalele, te rugăm să aștepți."
+
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr "Urmărirea are loc pe acest subiect al forumului, public, sub pseudonimul tău: echipa de suport răspunde acolo, iar tu poți răspunde ca să adaugi detalii. Poți trimite jurnale noi din acest ecran oricând."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
+msgstr "Jurnalele nu au putut fi colectate pe acest dispozitiv."
+
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr "Jurnalele nu au putut fi trimise. Verifică conexiunea și încearcă din nou."
+
+msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr "Jurnalele noi au ajuns la echipa de suport."
+
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
+msgstr "Subiectul s-a deschis în browser."
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr "Acest raport este închis. Raportează din nou problema ca să ajungi la echipă."
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
+msgstr "Acest raport a fost trimis cu alt portofel, așa că jurnalele lui nu pot fi trimise de aici."
+
+msgctxt "report-problem"
+msgid "Your reports"
+msgstr "Rapoartele tale"

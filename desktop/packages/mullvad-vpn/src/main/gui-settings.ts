@@ -2,6 +2,11 @@ import { app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import {
+  IForumReportRecord,
+  recordForumReport,
+  sanitizeForumReportRecords,
+} from '../shared/forum-report';
 import { IGuiSettingsState, SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
 import log from '../shared/logging';
 import { DEFAULT_THEME_PREFERENCE, parseThemePreference, ThemePreference } from '../shared/theme';
@@ -27,6 +32,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   dismissedAnnouncements: 'Array<string>',
   dismissedNotices: 'Array<string>',
   dismissedStrikes: 'Array<string>',
+  forumReports: 'Array<object>',
 };
 
 const LEGACY_PENDING_PURCHASES_KEY = 'pendingPurchases';
@@ -261,6 +267,19 @@ export default class GuiSettings {
 
   get dismissedStrikes(): Array<string> {
     return this.stateValue.dismissedStrikes ?? [];
+  }
+
+  // The reports this app filed (see gui-settings-state.ts), read entry by
+  // entry: a damaged one is dropped rather than failing the whole file.
+  public addForumReport(record: IForumReportRecord) {
+    this.changeStateAndNotify({
+      ...this.stateValue,
+      forumReports: recordForumReport(this.forumReports, record),
+    });
+  }
+
+  get forumReports(): IForumReportRecord[] {
+    return sanitizeForumReportRecords(this.stateValue.forumReports);
   }
 
   public load() {

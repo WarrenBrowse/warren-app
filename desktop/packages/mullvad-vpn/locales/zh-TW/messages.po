@@ -4113,9 +4113,6 @@ msgctxt "forum-login"
 msgid "Close"
 msgstr "關閉"
 
-msgctxt "accessibility"
-msgid "Community forum"
-msgstr "社群論壇"
 
 msgctxt "accessibility"
 msgid "How to contest a warning"
@@ -4663,3 +4660,51 @@ msgstr "已有使用其他退款地址的撤回記錄：請透過說明頁面 %(
 msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
 msgstr "存取論壇需要 Warren 訂閱。此錢包從未訂閱過，請改用網站上的協助表單。"
+
+msgctxt "report-problem"
+msgid "More details (optional)"
+msgstr "更多詳細資訊（選填）"
+
+msgctxt "report-problem"
+msgid "Report another problem"
+msgstr "回報其他問題"
+
+msgctxt "report-problem"
+msgid "Send new logs"
+msgstr "傳送新記錄檔"
+
+msgctxt "report-problem"
+msgid "Sending the logs, please wait."
+msgstr "正在傳送記錄檔，請稍候。"
+
+msgctxt "report-problem"
+msgid "The follow-up happens on that forum topic, in public under your pseudonym: the support team answers there, and you can reply to add details. You can send new logs from this screen at any time."
+msgstr "後續溝通會在該論壇主題中以您的化名公開進行：支援團隊會在那裡回覆，您也可以回覆以補充細節。您可以隨時從此畫面傳送新記錄檔。"
+
+msgctxt "report-problem"
+msgid "The logs could not be collected on this device."
+msgstr "無法在此裝置上收集記錄檔。"
+
+msgctxt "report-problem"
+msgid "The logs could not be sent. Check the connection and try again."
+msgstr "無法傳送記錄檔。請檢查連線後再試一次。"
+
+msgctxt "report-problem"
+msgid "The new logs reached the support team."
+msgstr "新記錄檔已送達支援團隊。"
+
+msgctxt "report-problem"
+msgid "The topic opened in your browser."
+msgstr "主題已在您的瀏覽器中開啟。"
+
+msgctxt "report-problem"
+msgid "This report is closed. Report the problem again to reach the team."
+msgstr "此報告已關閉。請重新回報問題以聯絡團隊。"
+
+msgctxt "report-problem"
+msgid "This report was filed with another wallet, so its logs cannot be sent from here."
+msgstr "此報告是以另一個錢包送出的，因此無法從這裡傳送其記錄檔。"
+
+msgctxt "report-problem"
+msgid "Your reports"
+msgstr "您的報告"
